@@ -91,8 +91,6 @@ class EventBasedActorTest extends Specification {
   "Single-producer asking" in {
     case class Message(content: Any)
 
-    case class PoisonPill()
-
     class Echo extends EventBasedActor {
       def receive = {
         case Message(c) => reply(Message(c))
@@ -110,8 +108,6 @@ class EventBasedActorTest extends Specification {
 
   "Multi-producer asking" in {
     case class Message(content: Any)
-
-    case class PoisonPill()
 
     class Echo extends EventBasedActor {
       def receive = {
