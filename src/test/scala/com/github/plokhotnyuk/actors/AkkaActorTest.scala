@@ -7,10 +7,14 @@ import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
 import java.util.concurrent.{TimeUnit, CountDownLatch}
 import akka.dispatch.Await
-import akka.util.{FiniteDuration, Timeout, Duration}
+import akka.util.{Timeout, Duration}
+import akka.pattern.ask
 
 @RunWith(classOf[JUnitRunner])
 class AkkaActorTest extends Specification {
+  val oneSec = Duration(1, TimeUnit.SECONDS)
+  implicit val timeout = Timeout(oneSec)
+
   "Single-producer sending" in {
     case class Tick()
 
@@ -69,7 +73,7 @@ class AkkaActorTest extends Specification {
     actorSystem.shutdown()
   }
 
-  "Reply-to-sendert" in {
+  "Ping between actors" in {
     case class Ball(hitCountdown: Int)
 
     val gameOver = new CountDownLatch(1)
@@ -108,9 +112,6 @@ class AkkaActorTest extends Specification {
     val actorSystem = ActorSystem("system")
     val echo = actorSystem.actorOf(Props(new Echo), "echo")
     val n = 1000000
-    import akka.pattern.ask
-    val oneSec = Duration(1, TimeUnit.SECONDS)
-    implicit val timeout = Timeout(oneSec)
     timed("Single-producer asking", n) {
       (1 to n).foreach(i => Await.result(echo ? Message(i), oneSec))
     }
@@ -133,9 +134,6 @@ class AkkaActorTest extends Specification {
     val actorSystem = ActorSystem("system")
     val echo = actorSystem.actorOf(Props(new Echo), "echo")
     val n = 1000000
-    import akka.pattern.ask
-    val oneSec = Duration(1, TimeUnit.SECONDS)
-    implicit val timeout = Timeout(oneSec)
     timed("Multi-producer asking", n) {
       (1 to n).par.foreach(i => Await.result(echo ? Message(i), oneSec))
     }
