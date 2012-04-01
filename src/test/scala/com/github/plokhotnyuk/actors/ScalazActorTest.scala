@@ -18,9 +18,6 @@ class ScalazActorTest extends Specification {
     val n = 20000000
     val bang = new CountDownLatch(1)
 
-    implicit val pool = Executors.newFixedThreadPool(2)
-    implicit val executor = Strategy.Executor
-
     var countdown = n
     val countdownActor = actor[Tick] {
       (t : Tick) => t match {
@@ -33,6 +30,8 @@ class ScalazActorTest extends Specification {
       }
     }
 
+    implicit val pool = Executors.newFixedThreadPool(2)
+    implicit val strategy = Strategy.Executor
     timed("Single-producer sending", n) {
       (1 to n).foreach(i => countdownActor ! Tick())
       bang.await()
@@ -46,9 +45,6 @@ class ScalazActorTest extends Specification {
     val n = 20000000
     val bang = new CountDownLatch(1)
 
-    implicit val pool = Executors.newFixedThreadPool(1)
-    implicit val executor = Strategy.Executor
-
     var countdown = n
     val countdownActor = actor[Tick] {
       (t : Tick) => t match {
@@ -61,6 +57,8 @@ class ScalazActorTest extends Specification {
       }
     }
 
+    implicit val pool = Executors.newFixedThreadPool(1)
+    implicit val strategy = Strategy.Executor
     timed("Multi-producer sending", n) {
       (1 to n).par.foreach(i => countdownActor ! Tick())
       bang.await()
@@ -73,9 +71,6 @@ class ScalazActorTest extends Specification {
 
     val gameOver = new CountDownLatch(1)
 
-    implicit val pool = Executors.newFixedThreadPool(2)
-    implicit val executor = Strategy.Executor
-
     val player =
       (b : Ball) => b match {
         case Ball(0, _, _) => gameOver.countDown()
@@ -85,6 +80,8 @@ class ScalazActorTest extends Specification {
     val ping = actor[Ball](player)
     val pong = actor[Ball](player)
     val n = 20000000
+    implicit val pool = Executors.newFixedThreadPool(2)
+    implicit val strategy = Strategy.Executor
     timed("Ping between actors", n) {
       ping ! Ball(n, pong, ping)
       gameOver.await()
