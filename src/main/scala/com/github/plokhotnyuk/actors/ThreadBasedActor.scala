@@ -4,7 +4,7 @@ import annotation.tailrec
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
-trait ThreadBasedActor {
+abstract class ThreadBasedActor {
   private[this] val mailbox = new ConcurrentLinkedQueue[(Any, ThreadBasedActor)]
   private[this] val doRun = new AtomicBoolean(true)
   private[this] var sender_ : ThreadBasedActor = _

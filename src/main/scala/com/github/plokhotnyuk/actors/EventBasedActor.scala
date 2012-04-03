@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import annotation.tailrec
 import java.util.concurrent.atomic.{AtomicReference, AtomicBoolean}
 
-trait EventBasedActor {
+abstract class EventBasedActor {
   private var processor: EventProcessor = _
   private[this] var sender_ : EventBasedActor = _
 
@@ -83,11 +83,7 @@ object EventProcessor {
     synchronized {
       val firstProcessor = new EventProcessor(null)
       var processor = firstProcessor
-      var i = 1
-      while (i < num) {
-        processor = new EventProcessor(processor)
-        i += 1
-      }
+      (1 until num).foreach(i => processor = new EventProcessor(processor))
       firstProcessor.next = processor
       processorDrum.set(firstProcessor)
     }
