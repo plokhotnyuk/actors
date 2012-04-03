@@ -9,16 +9,22 @@ import java.util.concurrent.{TimeUnit, CountDownLatch}
 import akka.dispatch.Await
 import akka.util.{Timeout, Duration}
 import akka.pattern.ask
+import com.typesafe.config.ConfigFactory._
 
 @RunWith(classOf[JUnitRunner])
 class AkkaActorTest extends Specification {
   val oneSec = Duration(1, TimeUnit.SECONDS)
   implicit val timeout = Timeout(oneSec)
+  val config = load(parseString("""
+  akka.actor.default-dispatcher {
+    throughput = 1024
+  }
+  """))
 
   "Single-producer sending" in {
     case class Tick()
 
-    val n = 10000000
+    val n = 20000000
     val bang = new CountDownLatch(1)
 
     class Countdown extends Actor {
@@ -35,7 +41,7 @@ class AkkaActorTest extends Specification {
       }
     }
 
-    val actorSystem = ActorSystem("system")
+    val actorSystem = ActorSystem("system", config)
     val countdown = actorSystem.actorOf(Props(new Countdown), "countdown")
     timed("Single-producer sending", n) {
       (1 to n).foreach(i => countdown ! Tick())
@@ -47,7 +53,7 @@ class AkkaActorTest extends Specification {
   "Multi-producer sending" in {
     case class Tick()
 
-    val n = 10000000
+    val n = 20000000
     val bang = new CountDownLatch(1)
 
     class Countdown extends Actor {
@@ -64,7 +70,7 @@ class AkkaActorTest extends Specification {
       }
     }
 
-    val actorSystem = ActorSystem("system")
+    val actorSystem = ActorSystem("system", config)
     val countdown = actorSystem.actorOf(Props(new Countdown), "countdown")
     timed("Multi-producer sending", n) {
       (1 to n).par.foreach(i => countdown ! Tick())
@@ -86,10 +92,10 @@ class AkkaActorTest extends Specification {
       }
     }
 
-    val actorSystem = ActorSystem("system")
+    val actorSystem = ActorSystem("system", config)
     val ping = actorSystem.actorOf(Props(new Player), "ping")
     val pong = actorSystem.actorOf(Props(new Player), "pong")
-    val n = 10000000
+    val n = 20000000
     timed("Ping between actors", n) {
       ping.tell(Ball(n), pong)
       gameOver.await()
@@ -109,9 +115,9 @@ class AkkaActorTest extends Specification {
       }
     }
 
-    val actorSystem = ActorSystem("system")
+    val actorSystem = ActorSystem("system", config)
     val echo = actorSystem.actorOf(Props(new Echo), "echo")
-    val n = 1000000
+    val n = 2000000
     timed("Single-producer asking", n) {
       (1 to n).foreach(i => Await.result(echo ? Message(i), oneSec))
     }
@@ -131,9 +137,9 @@ class AkkaActorTest extends Specification {
       }
     }
 
-    val actorSystem = ActorSystem("system")
+    val actorSystem = ActorSystem("system", config)
     val echo = actorSystem.actorOf(Props(new Echo), "echo")
-    val n = 1000000
+    val n = 2000000
     timed("Multi-producer asking", n) {
       (1 to n).par.foreach(i => Await.result(echo ? Message(i), oneSec))
     }
