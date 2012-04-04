@@ -11,7 +11,7 @@ class ThreadBasedActorTest extends Specification {
   "Single-producer sending" in {
     case class Tick()
 
-    val n = 20000000
+    val n = 40000000
     val bang = new CountDownLatch(1)
 
     class Countdown extends ThreadBasedActor {
@@ -38,7 +38,7 @@ class ThreadBasedActorTest extends Specification {
   "Multi-producer sending" in {
     case class Tick()
 
-    val n = 20000000
+    val n = 40000000
     val bang = new CountDownLatch(1)
 
     class Countdown extends ThreadBasedActor {
@@ -76,7 +76,7 @@ class ThreadBasedActorTest extends Specification {
     }
     val ping = new Player
     val pong = new Player
-    val n = 20000000
+    val n = 40000000
     timed("Ping between actors", n) {
       ping.send(Ball(n), pong)
       gameOver.await()
@@ -96,7 +96,7 @@ class ThreadBasedActorTest extends Specification {
     }
 
     val echo = new Echo
-    val n = 10000000
+    val n = 20000000
     timed("Single-producer asking", n) {
       (1 to n).foreach(i => echo ? Message(i))
     }
@@ -116,7 +116,7 @@ class ThreadBasedActorTest extends Specification {
     }
 
     val echo = new Echo
-    val n = 10000000
+    val n = 20000000
     timed("Multi-producer asking", n) {
       (1 to n).par.foreach(i => echo ? Message(i))
     }

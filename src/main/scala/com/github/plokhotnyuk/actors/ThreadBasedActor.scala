@@ -1,13 +1,13 @@
 package com.github.plokhotnyuk.actors
 
 import annotation.tailrec
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 abstract class ThreadBasedActor {
-  private[this] val mailbox = new ConcurrentLinkedQueue[(Any, ThreadBasedActor)]
-  private[this] val doRun = new AtomicBoolean(true)
   private[this] var sender_ : ThreadBasedActor = _
+  private[this] var tail = new Mail(null, null, null)
+  @volatile private[this] var doRun = true
+  private[this] val head = new AtomicReference[Mail](tail)
 
   start()
 
@@ -16,7 +16,8 @@ abstract class ThreadBasedActor {
   }
 
   def send(msg: Any, replyTo: ThreadBasedActor) {
-    mailbox.offer((msg, replyTo))
+    val mail = new Mail(msg, replyTo, null)
+    head.getAndSet(mail).next = mail
   }
 
   def ?(msg: Any): Any = {
@@ -38,7 +39,7 @@ abstract class ThreadBasedActor {
   }
 
   protected def exit() {
-    doRun.set(false)
+    doRun = false
   }
 
   protected def start() {
@@ -50,17 +51,18 @@ abstract class ThreadBasedActor {
   }
 
   private[this] def handleMessages() {
-    while (doRun.get) {
+    while (doRun) {
       handle(message())
     }
   }
 
   @tailrec
   private def message(): Any = {
-    val mail = mailbox.poll()
+    val mail = tail.next
     if (mail != null) {
-      sender_ = mail._2
-      mail._1
+      tail = mail
+      sender_ = mail.sender
+      mail.msg
     } else {
       message()
     }
@@ -73,3 +75,6 @@ abstract class ThreadBasedActor {
     }
   }
 }
+
+final private[actors] class Mail(private[actors] val msg: Any, private[actors] val sender: ThreadBasedActor,
+                           @volatile private[actors] var next: Mail)

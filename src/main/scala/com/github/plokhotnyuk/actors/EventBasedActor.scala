@@ -1,8 +1,7 @@
 package com.github.plokhotnyuk.actors
 
-import java.util.concurrent.ConcurrentLinkedQueue
 import annotation.tailrec
-import java.util.concurrent.atomic.{AtomicReference, AtomicBoolean}
+import java.util.concurrent.atomic.AtomicReference
 
 abstract class EventBasedActor {
   private var processor: EventProcessor = _
@@ -19,7 +18,7 @@ abstract class EventBasedActor {
   }
 
   def send(msg: Any, replyTo: EventBasedActor) {
-    processor.send((replyTo, this, msg))
+    processor.send(new Event(replyTo, this, msg, null))
   }
 
   def ?(msg: Any): Any = {
@@ -52,11 +51,8 @@ abstract class EventBasedActor {
       }
     }
     send(msg, replyTo)
-    var reply: Any = null
-    do {
-      reply = mailbox.get
-    } while (reply == null)
-    reply
+    while (mailbox.get == null) {}
+    mailbox.get
   }
 
   protected def receive: PartialFunction[Any, Unit]
@@ -81,20 +77,20 @@ object EventProcessor {
 
   def initPool(num: Int) {
     synchronized {
-      val firstProcessor = new EventProcessor(null)
-      var processor = firstProcessor
-      (1 until num).foreach(i => processor = new EventProcessor(processor))
-      firstProcessor.next = processor
-      processorDrum.set(firstProcessor)
+      val first = new EventProcessor(null)
+      var current = first
+      (1 until num).foreach(i => current = new EventProcessor(current))
+      first.next = current
+      processorDrum.set(first)
     }
   }
 
   @tailrec
   private[actors] def assignProcessor(): EventProcessor = {
-    val firstProcessor = processorDrum.get
-    val nextProcessor = firstProcessor.next
-    if (processorDrum.compareAndSet(firstProcessor, nextProcessor)) {
-      nextProcessor
+    val first = processorDrum.get
+    val current = first.next
+    if (processorDrum.compareAndSet(first, current)) {
+      current
     } else {
       assignProcessor()
     }
@@ -102,46 +98,47 @@ object EventProcessor {
 
   def shutdownPool() {
     synchronized {
-      val firstProcessor = processorDrum.get
-      var processor = firstProcessor
+      val first = processorDrum.get
+      var current = first
       do {
-        processor.finish()
-        processor = processor.next
-      } while (processor != firstProcessor)
+        current.finish()
+        current = current.next
+      } while (current != first)
       processorDrum.set(null)
     }
   }
 }
 
 private class EventProcessor(private var next: EventProcessor) extends Thread {
-  private[this] val postOffice = new ConcurrentLinkedQueue[(EventBasedActor, EventBasedActor, Any)]
-  private[this] val doRun = new AtomicBoolean(true)
+  private[this] var tail = new Event(null, null, null, null)
+  @volatile private[this] var doRun = true
+  private[this] val head = new AtomicReference[Event](tail)
 
   start()
 
   override def run() {
-    while (doRun.get) {
+    while (doRun) {
       deliver()
     }
   }
 
   private[actors] def finish() {
-    doRun.set(false)
+    doRun = false
   }
 
-  private[actors] def send(mail: (EventBasedActor, EventBasedActor, Any)) {
-    postOffice.offer(mail)
+  private[actors] def send(event: Event) {
+    head.getAndSet(event).next = event
   }
 
   @tailrec
   final private[actors] def deliverOthersUntilMine(me: EventBasedActor): Any = {
-    val mail = postOffice.poll()
-    if (mail != null) {
-      val receiver = mail._2
-      if (receiver == me) {
-        mail._3
+    val event = tail.next
+    if (event != null) {
+      tail = event
+      if (event.receiver == me) {
+        event.msg
       } else {
-        receiver.handle(mail._1, mail._3)
+        event.receiver.handle(event.sender, event.msg)
         deliverOthersUntilMine(me)
       }
     } else {
@@ -150,9 +147,13 @@ private class EventProcessor(private var next: EventProcessor) extends Thread {
   }
 
   private[this] def deliver() {
-    val mail = postOffice.poll()
-    if (mail != null) {
-      mail._2.handle(mail._1, mail._3)
+    val event = tail.next
+    if (event != null) {
+      tail = event
+      event.receiver.handle(event.sender, event.msg)
     }
   }
 }
+
+final private[actors] class Event(private[actors] val sender: EventBasedActor, private[actors] val receiver: EventBasedActor,
+                            private[actors] val msg: Any, @volatile private[actors] var next: Event)
