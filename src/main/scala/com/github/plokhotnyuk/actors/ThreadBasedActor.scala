@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 abstract class ThreadBasedActor {
   private[this] var sender_ : ThreadBasedActor = _
-  private[this] var tail = new Mail(null, null, null)
+  private[this] var tail = new Mail(null, null)
   @volatile private[this] var doRun = true
   private[this] val head = new AtomicReference[Mail](tail)
 
@@ -16,7 +16,7 @@ abstract class ThreadBasedActor {
   }
 
   def send(msg: Any, replyTo: ThreadBasedActor) {
-    val mail = new Mail(msg, replyTo, null)
+    val mail = new Mail(replyTo, msg)
     head.getAndSet(mail).next = mail
   }
 
@@ -76,5 +76,6 @@ abstract class ThreadBasedActor {
   }
 }
 
-final private[actors] class Mail(private[actors] val msg: Any, private[actors] val sender: ThreadBasedActor,
-                           @volatile private[actors] var next: Mail)
+private[actors] class Mail(val sender: ThreadBasedActor, val msg: Any) {
+  @volatile var next: Mail = _
+}

@@ -21,13 +21,12 @@ class ScalaActorTest extends Specification {
       def act() {
         loop {
           react {
-            case Tick() => {
+            case Tick() =>
               countdown -= 1
               if (countdown == 0) {
                 bang.countDown()
                 exit()
               }
-            }
           }
         }
       }
@@ -53,13 +52,12 @@ class ScalaActorTest extends Specification {
       def act() {
         loop {
           react {
-            case Tick() => {
+            case Tick() =>
               countdown -= 1
               if (countdown == 0) {
                 bang.countDown()
                 exit()
               }
-            }
           }
         }
       }

@@ -18,7 +18,7 @@ abstract class EventBasedActor {
   }
 
   def send(msg: Any, replyTo: EventBasedActor) {
-    processor.send(new Event(replyTo, this, msg, null))
+    processor.send(new Event(replyTo, this, msg))
   }
 
   def ?(msg: Any): Any = {
@@ -110,7 +110,7 @@ object EventProcessor {
 }
 
 private class EventProcessor(private var next: EventProcessor) extends Thread {
-  private[this] var tail = new Event(null, null, null, null)
+  private[this] var tail = new Event(null, null, null)
   @volatile private[this] var doRun = true
   private[this] val head = new AtomicReference[Event](tail)
 
@@ -155,5 +155,6 @@ private class EventProcessor(private var next: EventProcessor) extends Thread {
   }
 }
 
-final private[actors] class Event(private[actors] val sender: EventBasedActor, private[actors] val receiver: EventBasedActor,
-                            private[actors] val msg: Any, @volatile private[actors] var next: Event)
+private[actors] class Event(val sender: EventBasedActor, val receiver: EventBasedActor, val msg: Any) {
+  @volatile var next: Event = _
+}

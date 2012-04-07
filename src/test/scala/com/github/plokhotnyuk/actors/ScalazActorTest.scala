@@ -20,13 +20,12 @@ class ScalazActorTest extends Specification {
 
     var countdown = n
     val countdownActor = actor[Tick] {
-      (t : Tick) => t match {
-        case Tick() => {
+      (t: Tick) => t match {
+        case Tick() =>
           countdown -= 1
           if (countdown == 0) {
             bang.countDown()
           }
-        }
       }
     }
 
@@ -47,13 +46,12 @@ class ScalazActorTest extends Specification {
 
     var countdown = n
     val countdownActor = actor[Tick] {
-      (t : Tick) => t match {
-        case Tick() => {
+      (t: Tick) => t match {
+        case Tick() =>
           countdown -= 1
           if (countdown == 0) {
             bang.countDown()
           }
-        }
       }
     }
 
@@ -72,7 +70,7 @@ class ScalazActorTest extends Specification {
     val gameOver = new CountDownLatch(1)
 
     val player =
-      (b : Ball) => b match {
+      (b: Ball) => b match {
         case Ball(0, _, _) => gameOver.countDown()
         case Ball(i, p1, p2) => p1 ! Ball(i - 1, p2, p1)
       }

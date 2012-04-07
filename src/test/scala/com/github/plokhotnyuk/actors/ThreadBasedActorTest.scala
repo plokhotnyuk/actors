@@ -18,13 +18,12 @@ class ThreadBasedActorTest extends Specification {
       private[this] var countdown = n
 
       def receive = {
-        case Tick() => {
+        case Tick() =>
           countdown -= 1
           if (countdown == 0) {
             bang.countDown()
             exit()
           }
-        }
       }
     }
 
@@ -45,13 +44,12 @@ class ThreadBasedActorTest extends Specification {
       private[this] var countdown = n
 
       def receive = {
-        case Tick() => {
+        case Tick() =>
           countdown -= 1
           if (countdown == 0) {
             bang.countDown()
             exit()
           }
-        }
       }
     }
 
