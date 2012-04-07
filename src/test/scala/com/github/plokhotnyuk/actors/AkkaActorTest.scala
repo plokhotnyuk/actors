@@ -12,7 +12,7 @@ import akka.pattern.ask
 import com.typesafe.config.ConfigFactory._
 
 @RunWith(classOf[JUnitRunner])
-class AkkaActorTest extends Specification {
+class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
   val oneSec = Duration(1, TimeUnit.SECONDS)
   implicit val timeout = Timeout(oneSec)
   val config = load(parseString("""

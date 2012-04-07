@@ -10,7 +10,7 @@ import Scalaz._
 import java.util.concurrent.{Executors, CountDownLatch}
 
 @RunWith(classOf[JUnitRunner])
-class ScalazActorTest extends Specification {
+class ScalazActorTest extends Specification with AvailableProcessorsParallelism {
 
   "Single-producer sending" in {
     case class Tick()

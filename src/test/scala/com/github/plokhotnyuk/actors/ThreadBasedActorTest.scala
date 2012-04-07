@@ -7,7 +7,7 @@ import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
 
 @RunWith(classOf[JUnitRunner])
-class ThreadBasedActorTest extends Specification {
+class ThreadBasedActorTest extends Specification with AvailableProcessorsParallelism {
   "Single-producer sending" in {
     case class Tick()
 

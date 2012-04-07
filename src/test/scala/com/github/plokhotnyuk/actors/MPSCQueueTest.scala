@@ -6,8 +6,7 @@ import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
 
 @RunWith(classOf[JUnitRunner])
-class MPSCQueueTest extends Specification {
-
+class MPSCQueueTest extends Specification with AvailableProcessorsParallelism {
   case class Data()
 
   val n = 100000000
