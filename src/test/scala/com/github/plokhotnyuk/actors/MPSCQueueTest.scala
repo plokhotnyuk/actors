@@ -16,10 +16,9 @@ class MPSCQueueTest extends Specification {
     timed("Same producer and consumer", n) {
       val queue = new MPSCQueue[Data]()
       val data = Data()
-      (1 to n).foreach {
-        i =>
-          queue.enqueue(data)
-          queue.dequeue()
+      for (i <- 1 to n) {
+        queue.enqueue(data)
+        queue.dequeue()
       }
     }
   }
@@ -30,10 +29,10 @@ class MPSCQueueTest extends Specification {
       new Thread() {
         override def run() {
           val data = Data()
-          (1 to n).foreach(i => queue.enqueue(data))
+          for (i <- 1 to n) queue.enqueue(data)
         }
       }.start()
-      (1 to n).foreach(i => queue.dequeue())
+      for (i <- 1 to n) queue.dequeue()
     }
   }
 
@@ -46,7 +45,7 @@ class MPSCQueueTest extends Specification {
           (1 to n).par.foreach(i => queue.enqueue(data))
         }
       }.start()
-      (1 to n).foreach(i => queue.dequeue())
+      for (i <- 1 to n) queue.dequeue()
     }
   }
 
@@ -56,12 +55,12 @@ class MPSCQueueTest extends Specification {
       val queue2 = new MPSCQueue[Data]()
       val thread1 = new Thread() {
         override def run() {
-          (1 to n / 2).par.foreach(i => queue1.enqueue(queue2.dequeue()))
+          for (i <- 1 to n / 2) queue1.enqueue(queue2.dequeue())
         }
       }
       val thread2 = new Thread() {
         override def run() {
-          (1 to n / 2).par.foreach(i => queue2.enqueue(queue1.dequeue()))
+          for (i <- 1 to n / 2) queue2.enqueue(queue1.dequeue())
         }
       }
       thread1.start()
