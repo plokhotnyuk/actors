@@ -7,19 +7,19 @@ class MPSCQueue[T >: Null] {
   private[this] var tail = new Node[T](null)
   private[this] val head = new AtomicReference[Node[T]](tail)
 
-  def offer(data: T) {
+  def enqueue(data: T) {
     val node = new Node[T](data)
     head.getAndSet(node).next = node
   }
 
   @tailrec
-  final def poll(): T = {
+  final def dequeue(): T = {
     val next = tail.next
     if (next != null) {
       tail = next
       next.data
     } else {
-      poll()
+      dequeue()
     }
   }
 }

@@ -18,8 +18,8 @@ class MPSCQueueTest extends Specification {
       val data = Data()
       (1 to n).foreach {
         i =>
-          queue.offer(data)
-          queue.poll()
+          queue.enqueue(data)
+          queue.dequeue()
       }
     }
   }
@@ -30,10 +30,10 @@ class MPSCQueueTest extends Specification {
       new Thread() {
         override def run() {
           val data = Data()
-          (1 to n).foreach(i => queue.offer(data))
+          (1 to n).foreach(i => queue.enqueue(data))
         }
       }.start()
-      (1 to n).foreach(i => queue.poll())
+      (1 to n).foreach(i => queue.dequeue())
     }
   }
 
@@ -43,10 +43,32 @@ class MPSCQueueTest extends Specification {
       new Thread() {
         override def run() {
           val data = Data()
-          (1 to n).par.foreach(i => queue.offer(data))
+          (1 to n).par.foreach(i => queue.enqueue(data))
         }
       }.start()
-      (1 to n).foreach(i => queue.poll())
+      (1 to n).foreach(i => queue.dequeue())
+    }
+  }
+
+  "Exchange between queues" in {
+    timed("Exchange between queues", n) {
+      val queue1 = new MPSCQueue[Data]()
+      val queue2 = new MPSCQueue[Data]()
+      val thread1 = new Thread() {
+        override def run() {
+          (1 to n / 2).par.foreach(i => queue1.enqueue(queue2.dequeue()))
+        }
+      }
+      val thread2 = new Thread() {
+        override def run() {
+          (1 to n / 2).par.foreach(i => queue2.enqueue(queue1.dequeue()))
+        }
+      }
+      thread1.start()
+      thread2.start()
+      queue1.enqueue(Data())
+      thread1.join()
+      thread2.join()
     }
   }
 }
