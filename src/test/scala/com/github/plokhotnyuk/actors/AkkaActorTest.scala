@@ -139,4 +139,40 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
     }
     actorSystem.shutdown()
   }
+
+  "Max throughput" in {
+    val n = 40000000
+    val p = availableProcessors / 2
+    val bang = new CountDownLatch(p)
+
+    class Countdown extends Actor {
+      private[this] var countdown = n / p
+
+      def receive = {
+        case _ =>
+          countdown -= 1
+          if (countdown == 0) {
+            bang.countDown()
+            context.stop(self)
+          }
+      }
+    }
+
+    val actorSystem = ActorSystem("system", config)
+    timed("Max throughput", n) {
+      for (j <- 1 to p) {
+        fork {
+          val countdown = actorSystem.actorOf(Props(new Countdown), "countdown" + j)
+          val tick = Tick()
+          var i = n / p
+          while (i > 0) {
+            countdown ! tick
+            i -= 1
+          }
+        }
+      }
+      bang.await()
+    }
+    actorSystem.shutdown()
+  }
 }

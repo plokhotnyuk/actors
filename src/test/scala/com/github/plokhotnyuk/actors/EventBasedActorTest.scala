@@ -122,4 +122,40 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
     }
     EventProcessor.shutdownPool()
   }
+
+  "Max throughput" in {
+    val n = 100000000
+    val p = availableProcessors / 2
+    val bang = new CountDownLatch(p)
+
+    class Countdown extends ThreadBasedActor {
+      private[this] var countdown = n / p
+
+      def receive = {
+        case _ =>
+          countdown -= 1
+          if (countdown == 0) {
+            bang.countDown()
+            exit()
+          }
+      }
+    }
+
+    EventProcessor.initPool(p)
+    timed("Max throughput", n) {
+      for (j <- 1 to p) {
+        fork {
+          val countdown = new Countdown()
+          val tick = Tick()
+          var i = n / p
+          while (i > 0) {
+            countdown ! tick
+            i -= 1
+          }
+        }
+      }
+      bang.await()
+    }
+    EventProcessor.shutdownPool()
+  }
 }
