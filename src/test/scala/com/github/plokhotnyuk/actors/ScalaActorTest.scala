@@ -21,7 +21,7 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
       def act() {
         loop {
           react {
-            case Tick() =>
+            case _ =>
               countdown -= 1
               if (countdown == 0) {
                 bang.countDown()
@@ -32,10 +32,15 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
       }
     }
 
-    val countdown = new Countdown
-    countdown.start()
     timed("Single-producer sending", n) {
-      (1 to n).foreach(i => countdown ! Tick())
+      val countdown = new Countdown()
+      countdown.start()
+      val tick = Tick()
+      var i = n
+      while (i > 0) {
+        countdown ! tick
+        i -= 1
+      }
       bang.await()
     }
   }
@@ -52,7 +57,7 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
       def act() {
         loop {
           react {
-            case Tick() =>
+            case _ =>
               countdown -= 1
               if (countdown == 0) {
                 bang.countDown()
@@ -63,10 +68,11 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
       }
     }
 
-    val countdown = new Countdown
-    countdown.start()
     timed("Multi-producer sending", n) {
-      (1 to n).par.foreach(i => countdown ! Tick())
+      val countdown = new Countdown()
+      countdown.start()
+      val tick = Tick()
+      (1 to n).par.foreach(i => countdown ! tick)
       bang.await()
     }
   }
@@ -88,8 +94,8 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
       }
     }
 
-    val ping = new Player
-    val pong = new Player
+    val ping = new Player()
+    val pong = new Player()
     ping.start()
     pong.start()
     val n = 1000000
@@ -115,7 +121,7 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
       }
     }
 
-    val echo = new Echo
+    val echo = new Echo()
     echo.start()
     val n = 1000000
     timed("Single-producer asking", n) {
@@ -140,7 +146,7 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
       }
     }
 
-    val echo = new Echo
+    val echo = new Echo()
     echo.start()
     val n = 1000000
     timed("Multi-producer asking", n) {

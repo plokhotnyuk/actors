@@ -7,6 +7,7 @@ import com.github.plokhotnyuk.actors.Helper._
 
 @RunWith(classOf[JUnitRunner])
 class MPMCQueueTest extends Specification with AvailableProcessorsParallelism {
+
   case class Data()
 
   val n = 100000000
@@ -15,9 +16,11 @@ class MPMCQueueTest extends Specification with AvailableProcessorsParallelism {
     timed("Same producer and consumer", n) {
       val queue = new MPMCQueue[Data]()
       val data = Data()
-      for (i <- 1 to n) {
+      var i = n
+      while (i > 0) {
         queue.enqueue(data)
         queue.dequeue()
+        i -= 1
       }
     }
   }
@@ -25,26 +28,36 @@ class MPMCQueueTest extends Specification with AvailableProcessorsParallelism {
   "Single-producer sending" in {
     timed("Single-producer sending", n) {
       val queue = new MPMCQueue[Data]()
-      new Thread() {
-        override def run() {
-          val data = Data()
-          for (i <- 1 to n) queue.enqueue(data)
+      fork {
+        val q = queue
+        val data = Data()
+        var i = n
+        while (i > 0) {
+          q.enqueue(data)
+          i -= 1
         }
-      }.start()
-      for (i <- 1 to n) queue.dequeue()
+      }
+      var i = n
+      while (i > 0) {
+        queue.dequeue()
+        i -= 1
+      }
     }
   }
 
   "Multi-producer sending" in {
     timed("Multi-producer sending", n) {
       val queue = new MPMCQueue[Data]()
-      new Thread() {
-        override def run() {
-          val data = Data()
-          (1 to n).par.foreach(i => queue.enqueue(data))
-        }
-      }.start()
-      for (i <- 1 to n) queue.dequeue()
+      fork {
+        val q = queue
+        val data = Data()
+        (1 to n).par.foreach(i => q.enqueue(data))
+      }
+      var i = n
+      while (i > 0) {
+        queue.dequeue()
+        i -= 1
+      }
     }
   }
 
@@ -52,18 +65,24 @@ class MPMCQueueTest extends Specification with AvailableProcessorsParallelism {
     timed("Exchange between queues", n) {
       val queue1 = new MPMCQueue[Data]()
       val queue2 = new MPMCQueue[Data]()
-      val thread1 = new Thread() {
-        override def run() {
-          for (i <- 1 to n / 2) queue1.enqueue(queue2.dequeue())
+      val thread1 = fork {
+        val q1 = queue1
+        val q2 = queue2
+        var i = n
+        while (i > 0) {
+          q1.enqueue(q2.dequeue())
+          i -= 1
         }
       }
-      val thread2 = new Thread() {
-        override def run() {
-          for (i <- 1 to n / 2) queue2.enqueue(queue1.dequeue())
+      val thread2 = fork {
+        val q1 = queue1
+        val q2 = queue2
+        var i = n
+        while (i > 0) {
+          q2.enqueue(q1.dequeue())
+          i -= 1
         }
       }
-      thread1.start()
-      thread2.start()
       queue1.enqueue(Data())
       thread1.join()
       thread2.join()
@@ -73,12 +92,15 @@ class MPMCQueueTest extends Specification with AvailableProcessorsParallelism {
   "Multi-consumer receiving" in {
     timed("Multi-consumer receiving", n) {
       val queue = new MPMCQueue[Data]()
-      new Thread() {
-        override def run() {
-          val data = Data()
-          for (i <- 1 to n) queue.enqueue(data)
+      fork {
+        val q = queue
+        val data = Data()
+        var i = n
+        while (i > 0) {
+          q.enqueue(data)
+          i -= 1
         }
-      }.start()
+      }
       (1 to n).par.foreach(i => queue.dequeue())
     }
   }
@@ -86,12 +108,11 @@ class MPMCQueueTest extends Specification with AvailableProcessorsParallelism {
   "Multi-producer sending multi-consumer receiving" in {
     timed("Multi-producer sending multi-consumer receiving", n) {
       val queue = new MPMCQueue[Data]()
-      new Thread() {
-        override def run() {
-          val data = Data()
-          (1 to n).par.foreach(i => queue.enqueue(data))
-        }
-      }.start()
+      fork {
+        val q = queue
+        val data = Data()
+        (1 to n).par.foreach(i => q.enqueue(data))
+      }
       (1 to n).par.foreach(i => queue.dequeue())
     }
   }

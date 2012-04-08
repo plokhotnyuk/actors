@@ -11,14 +11,14 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
   "Single-producer sending" in {
     case class Tick()
 
-    val n = 40000000
+    val n = 100000000
     val bang = new CountDownLatch(1)
 
     class Countdown extends ThreadBasedActor {
       private[this] var countdown = n
 
       def receive = {
-        case Tick() =>
+        case _ =>
           countdown -= 1
           if (countdown == 0) {
             bang.countDown()
@@ -27,9 +27,14 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
       }
     }
 
-    val countdown = new Countdown
     timed("Single-producer sending", n) {
-      (1 to n).foreach(i => countdown ! Tick())
+      val countdown = new Countdown()
+      val tick = Tick()
+      var i = n
+      while (i > 0) {
+        countdown ! tick
+        i -= 1
+      }
       bang.await()
     }
   }
@@ -37,14 +42,14 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
   "Multi-producer sending" in {
     case class Tick()
 
-    val n = 40000000
+    val n = 100000000
     val bang = new CountDownLatch(1)
 
     class Countdown extends ThreadBasedActor {
       private[this] var countdown = n
 
       def receive = {
-        case Tick() =>
+        case _ =>
           countdown -= 1
           if (countdown == 0) {
             bang.countDown()
@@ -53,9 +58,10 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
       }
     }
 
-    val countdown = new Countdown
     timed("Multi-producer sending", n) {
-      (1 to n).par.foreach(i => countdown ! Tick())
+      val countdown = new Countdown()
+      val tick = Tick()
+      (1 to n).par.foreach(i => countdown ! tick)
       bang.await()
     }
   }
@@ -72,9 +78,9 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
         case Ball(i) => reply(Ball(i - 1))
       }
     }
-    val ping = new Player
-    val pong = new Player
-    val n = 40000000
+    val ping = new Player()
+    val pong = new Player()
+    val n = 100000000
     timed("Ping between actors", n) {
       ping.send(Ball(n), pong)
       gameOver.await()
@@ -93,7 +99,7 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
       }
     }
 
-    val echo = new Echo
+    val echo = new Echo()
     val n = 20000000
     timed("Single-producer asking", n) {
       (1 to n).foreach(i => echo ? Message(i))
@@ -113,7 +119,7 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
       }
     }
 
-    val echo = new Echo
+    val echo = new Echo()
     val n = 20000000
     timed("Multi-producer asking", n) {
       (1 to n).par.foreach(i => echo ? Message(i))

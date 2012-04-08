@@ -34,9 +34,10 @@ abstract class EventBasedActor {
     val replyTo = new EventBasedActor {
       def receive: PartialFunction[Any, Unit] = null // no handler required
 
-      override protected def start() {} // don't assign event processor
+      override protected def start() {
+        processor = otherProcessor
+      }
     }
-    replyTo.processor = otherProcessor
     send(msg, replyTo)
     otherProcessor.deliverOthersUntilMine(replyTo)
   }
@@ -109,9 +110,13 @@ object EventProcessor {
   }
 }
 
+/**
+ * Using of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
+ * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
+ */
 private class EventProcessor(private var next: EventProcessor) extends Thread {
-  private[this] var tail = new Event(null, null, null)
   @volatile private[this] var doRun = true
+  private[this] var tail = new Event(null, null, null)
   private[this] val head = new AtomicReference[Event](tail)
 
   start()
@@ -133,7 +138,7 @@ private class EventProcessor(private var next: EventProcessor) extends Thread {
   @tailrec
   final private[actors] def deliverOthersUntilMine(me: EventBasedActor): Any = {
     val event = tail.next
-    if (event != null) {
+    if (event ne null) {
       tail = event
       if (event.receiver == me) {
         event.msg
@@ -148,7 +153,7 @@ private class EventProcessor(private var next: EventProcessor) extends Thread {
 
   private[this] def deliver() {
     val event = tail.next
-    if (event != null) {
+    if (event ne null) {
       tail = event
       event.receiver.handle(event.sender, event.msg)
     }

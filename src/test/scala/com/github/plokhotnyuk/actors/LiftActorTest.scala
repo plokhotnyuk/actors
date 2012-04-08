@@ -13,23 +13,24 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
   "Single-producer sending" in {
     case class Tick()
 
-    val n = 10000000
+    val n = 20000000
     val bang = new CountDownLatch(1)
 
     class Countdown extends LiftActor {
       private[this] var countdown = n
 
       def messageHandler = {
-        case Tick() =>
+        case _ =>
           countdown -= 1
           if (countdown == 0) {
             bang.countDown()
           }
       }
     }
-    val countdown = new Countdown
     timed("Single-producer sending", n) {
-      (1 to n).foreach(i => countdown ! Tick())
+      val countdown = new Countdown()
+      val tick = Tick()
+      (1 to n).foreach(i => countdown ! tick)
       bang.await()
     }
   }
@@ -37,23 +38,24 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
   "Multi-producer sending" in {
     case class Tick()
 
-    val n = 10000000
+    val n = 20000000
     val bang = new CountDownLatch(1)
 
     class Countdown extends LiftActor {
       private[this] var countdown = n
 
       def messageHandler = {
-        case Tick() =>
+        case _ =>
           countdown -= 1
           if (countdown == 0) {
             bang.countDown()
           }
       }
     }
-    val countdown = new Countdown
     timed("Multi-producer sending", n) {
-      (1 to n).par.foreach(i => countdown ! Tick())
+      val countdown = new Countdown()
+      val tick = Tick()
+      (1 to n).par.foreach(i => countdown ! tick)
       bang.await()
     }
   }
@@ -72,11 +74,11 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
       }
     }
 
-    val ping = new Player
-    val pong = new Player
+    val ping = new Player()
+    val pong = new Player()
     ping.competitor = pong
     pong.competitor = ping
-    val n = 10000000
+    val n = 2000000
     timed("Ping between actors", n) {
       ping.send(Ball(n))
       gameOver.await()
@@ -92,7 +94,7 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
       }
     }
 
-    val echo = new Echo
+    val echo = new Echo()
     val n = 1000000
     timed("Single-producer asking", n) {
       (1 to n).foreach(i => echo !? Message(i))
@@ -108,8 +110,8 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
       }
     }
 
-    val echo = new Echo
-    val n = 1000000
+    val echo = new Echo()
+    val n = 2000000
     timed("Multi-producer asking", n) {
       (1 to n).par.foreach(i => echo !? Message(i))
     }

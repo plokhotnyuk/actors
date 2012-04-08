@@ -15,24 +15,28 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
   "Single-producer sending" in {
     case class Tick()
 
-    val n = 20000000
+    val n = 40000000
     val bang = new CountDownLatch(1)
 
     var countdown = n
     val countdownActor = actor[Tick] {
-      (t: Tick) => t match {
-        case Tick() =>
-          countdown -= 1
-          if (countdown == 0) {
-            bang.countDown()
-          }
-      }
+      (t: Tick) =>
+        countdown -= 1
+        if (countdown == 0) {
+          bang.countDown()
+        }
     }
 
     implicit val pool = Executors.newFixedThreadPool(2)
     implicit val strategy = Strategy.Executor
     timed("Single-producer sending", n) {
-      (1 to n).foreach(i => countdownActor ! Tick())
+      val countdown = countdownActor
+      val tick = Tick()
+      var i = n
+      while (i > 0) {
+        countdown ! tick
+        i -= 1
+      }
       bang.await()
     }
     pool.shutdown()
@@ -41,24 +45,24 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
   "Multi-producer sending" in {
     case class Tick()
 
-    val n = 20000000
+    val n = 40000000
     val bang = new CountDownLatch(1)
 
     var countdown = n
     val countdownActor = actor[Tick] {
-      (t: Tick) => t match {
-        case Tick() =>
-          countdown -= 1
-          if (countdown == 0) {
-            bang.countDown()
-          }
-      }
+      (t: Tick) =>
+        countdown -= 1
+        if (countdown == 0) {
+          bang.countDown()
+        }
     }
 
     implicit val pool = Executors.newFixedThreadPool(1)
     implicit val strategy = Strategy.Executor
     timed("Multi-producer sending", n) {
-      (1 to n).par.foreach(i => countdownActor ! Tick())
+      val countdown = countdownActor
+      val tick = Tick()
+      (1 to n).par.foreach(i => countdown ! tick)
       bang.await()
     }
     pool.shutdown()

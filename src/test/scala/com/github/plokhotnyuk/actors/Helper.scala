@@ -2,7 +2,7 @@ package com.github.plokhotnyuk.actors
 
 object Helper {
 
-  def timed[T](name: String, n: Int)(benchmark: => T) = {
+  def timed[T](name: String, n: Int)(benchmark: => T): T = {
     printf("\n%s:\n", name)
     val start = System.nanoTime
     val result = benchmark
@@ -12,5 +12,15 @@ object Helper {
     printf("%,d ns/op\n", duration / n)
     printf("%,d ops/s\n", (n * 1000000000L) / duration)
     result
+  }
+
+  def fork[T](code: => Unit): Thread = {
+    val thread = new Thread {
+      override def run() {
+        code
+      }
+    }
+    thread.start()
+    thread
   }
 }

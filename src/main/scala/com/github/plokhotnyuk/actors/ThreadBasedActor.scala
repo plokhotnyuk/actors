@@ -3,10 +3,14 @@ package com.github.plokhotnyuk.actors
 import annotation.tailrec
 import java.util.concurrent.atomic.AtomicReference
 
+/**
+ * Using of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
+ * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
+ */
 abstract class ThreadBasedActor {
   private[this] var sender_ : ThreadBasedActor = _
-  private[this] var tail = new Mail(null, null)
   @volatile private[this] var doRun = true
+  private[this] var tail = new Mail(null, null)
   private[this] val head = new AtomicReference[Mail](tail)
 
   start()
@@ -59,7 +63,7 @@ abstract class ThreadBasedActor {
   @tailrec
   private def message(): Any = {
     val mail = tail.next
-    if (mail != null) {
+    if (mail ne null) {
       tail = mail
       sender_ = mail.sender
       mail.msg

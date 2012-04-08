@@ -24,14 +24,14 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
   "Single-producer sending" in {
     case class Tick()
 
-    val n = 20000000
+    val n = 40000000
     val bang = new CountDownLatch(1)
 
     class Countdown extends Actor {
       private[this] var countdown = n
 
       def receive = {
-        case Tick() =>
+        case _ =>
           countdown -= 1
           if (countdown == 0) {
             bang.countDown()
@@ -41,9 +41,14 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
     }
 
     val actorSystem = ActorSystem("system", config)
-    val countdown = actorSystem.actorOf(Props(new Countdown), "countdown")
     timed("Single-producer sending", n) {
-      (1 to n).foreach(i => countdown ! Tick())
+      val countdown = actorSystem.actorOf(Props(new Countdown), "countdown")
+      val tick = Tick()
+      var i = n
+      while (i > 0) {
+        countdown ! tick
+        i -= 1
+      }
       bang.await()
     }
     actorSystem.shutdown()
@@ -52,14 +57,14 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
   "Multi-producer sending" in {
     case class Tick()
 
-    val n = 20000000
+    val n = 40000000
     val bang = new CountDownLatch(1)
 
     class Countdown extends Actor {
       private[this] var countdown = n
 
       def receive = {
-        case Tick() =>
+        case _ =>
           countdown -= 1
           if (countdown == 0) {
             bang.countDown()
@@ -69,9 +74,10 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
     }
 
     val actorSystem = ActorSystem("system", config)
-    val countdown = actorSystem.actorOf(Props(new Countdown), "countdown")
     timed("Multi-producer sending", n) {
-      (1 to n).par.foreach(i => countdown ! Tick())
+      val countdown = actorSystem.actorOf(Props(new Countdown), "countdown")
+      val tick = Tick()
+      (1 to n).par.foreach(i => countdown ! tick)
       bang.await()
     }
     actorSystem.shutdown()
@@ -115,7 +121,7 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
 
     val actorSystem = ActorSystem("system", config)
     val echo = actorSystem.actorOf(Props(new Echo), "echo")
-    val n = 2000000
+    val n = 1000000
     timed("Single-producer asking", n) {
       (1 to n).foreach(i => Await.result(echo ? Message(i), oneSec))
     }
@@ -137,7 +143,7 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
 
     val actorSystem = ActorSystem("system", config)
     val echo = actorSystem.actorOf(Props(new Echo), "echo")
-    val n = 2000000
+    val n = 1000000
     timed("Multi-producer asking", n) {
       (1 to n).par.foreach(i => Await.result(echo ? Message(i), oneSec))
     }
