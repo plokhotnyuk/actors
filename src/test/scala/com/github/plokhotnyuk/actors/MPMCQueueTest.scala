@@ -7,9 +7,6 @@ import com.github.plokhotnyuk.actors.Helper._
 
 @RunWith(classOf[JUnitRunner])
 class MPMCQueueTest extends Specification with AvailableProcessorsParallelism {
-
-  case class Data()
-
   val n = 100000000
 
   "Same producer and consumer" in {

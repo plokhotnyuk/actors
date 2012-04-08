@@ -9,8 +9,6 @@ import com.github.plokhotnyuk.actors.Helper._
 @RunWith(classOf[JUnitRunner])
 class EventBasedActorTest extends Specification with AvailableProcessorsParallelism {
   "Single-producer sending" in {
-    case class Tick()
-
     val n = 100000000
     val bang = new CountDownLatch(1)
 
@@ -41,8 +39,6 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
   }
 
   "Multi-producer sending" in {
-    case class Tick()
-
     val n = 100000000
     val bang = new CountDownLatch(1)
 
@@ -69,8 +65,6 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
   }
 
   "Ping between actors" in {
-    case class Ball(hitCountdown: Int)
-
     val gameOver = new CountDownLatch(1)
 
     class Player extends EventBasedActor {
@@ -92,37 +86,39 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
   }
 
   "Single-producer asking" in {
-    case class Message(content: Any)
-
     class Echo extends EventBasedActor {
       def receive = {
-        case Message(c) => reply(Message(c))
+        case _@message => reply(message)
       }
     }
 
     EventProcessor.initPool(2)
-    val echo = new Echo
     val n = 20000000
     timed("Single-producer asking", n) {
-      (1 to n).foreach(i => echo ? Message(i))
+      val echo = new Echo()
+      val message = Message()
+      var i = n
+      while (i > 0) {
+        echo ? message
+        i -= 1
+      }
     }
     EventProcessor.shutdownPool()
   }
 
   "Multi-producer asking" in {
-    case class Message(content: Any)
-
     class Echo extends EventBasedActor {
       def receive = {
-        case Message(c) => reply(Message(c))
+        case _@message => reply(message)
       }
     }
 
     EventProcessor.initPool(1)
-    val echo = new Echo
     val n = 20000000
     timed("Multi-producer asking", n) {
-      (1 to n).par.foreach(i => echo ? Message(i))
+      val echo = new Echo
+      val message = Message()
+      (1 to n).par.foreach(i => echo ? message)
     }
     EventProcessor.shutdownPool()
   }

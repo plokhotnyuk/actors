@@ -13,8 +13,6 @@ import java.util.concurrent.{Executors, CountDownLatch}
 class ScalazActorTest extends Specification with AvailableProcessorsParallelism {
 
   "Single-producer sending" in {
-    case class Tick()
-
     val n = 40000000
     val bang = new CountDownLatch(1)
 
@@ -43,8 +41,6 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
   }
 
   "Multi-producer sending" in {
-    case class Tick()
-
     val n = 40000000
     val bang = new CountDownLatch(1)
 
@@ -69,23 +65,21 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
   }
 
   "Ping between actors" in {
-    case class Ball(hitCountdown: Int, player1: Actor[Ball], player2: Actor[Ball])
-
     val gameOver = new CountDownLatch(1)
 
     val player =
-      (b: Ball) => b match {
-        case Ball(0, _, _) => gameOver.countDown()
-        case Ball(i, p1, p2) => p1 ! Ball(i - 1, p2, p1)
+      (b: BallZ) => b match {
+        case BallZ(0, _, _) => gameOver.countDown()
+        case BallZ(i, p1, p2) => p1 ! BallZ(i - 1, p2, p1)
       }
 
-    val ping = actor[Ball](player)
-    val pong = actor[Ball](player)
+    val ping = actor[BallZ](player)
+    val pong = actor[BallZ](player)
     val n = 20000000
     implicit val pool = Executors.newFixedThreadPool(2)
     implicit val strategy = Strategy.Executor
     timed("Ping between actors", n) {
-      ping ! Ball(n, pong, ping)
+      ping ! BallZ(n, pong, ping)
       gameOver.await()
     }
     pool.shutdown()

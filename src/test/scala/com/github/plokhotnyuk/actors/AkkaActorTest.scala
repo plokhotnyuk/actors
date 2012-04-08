@@ -13,8 +13,7 @@ import com.typesafe.config.ConfigFactory._
 
 @RunWith(classOf[JUnitRunner])
 class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
-  val oneSec = Duration(1, TimeUnit.SECONDS)
-  implicit val timeout = Timeout(oneSec)
+  implicit val timeout = Timeout(Duration(1, TimeUnit.SECONDS))
   val config = load(parseString("""
   akka.actor.default-dispatcher {
     throughput = 1024
@@ -22,8 +21,6 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
   """))
 
   "Single-producer sending" in {
-    case class Tick()
-
     val n = 40000000
     val bang = new CountDownLatch(1)
 
@@ -55,8 +52,6 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
   }
 
   "Multi-producer sending" in {
-    case class Tick()
-
     val n = 40000000
     val bang = new CountDownLatch(1)
 
@@ -84,8 +79,6 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
   }
 
   "Ping between actors" in {
-    case class Ball(hitCountdown: Int)
-
     val gameOver = new CountDownLatch(1)
 
     class Player extends Actor {
@@ -108,46 +101,42 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
   }
 
   "Single-producer asking" in {
-    case class Message(content: Any)
-
-    case class PoisonPill()
-
     class Echo extends Actor {
       def receive = {
-        case Message(c) => sender ! Message(c)
-        case PoisonPill() => context.stop(self)
+        case _@message => sender ! message
       }
     }
 
     val actorSystem = ActorSystem("system", config)
-    val echo = actorSystem.actorOf(Props(new Echo), "echo")
     val n = 1000000
     timed("Single-producer asking", n) {
-      (1 to n).foreach(i => Await.result(echo ? Message(i), oneSec))
+      val echo = actorSystem.actorOf(Props(new Echo), "echo")
+      val message = Message()
+      val oneSec = Duration(1, TimeUnit.SECONDS)
+      var i = n
+      while (i > 0) {
+        Await.result(echo ? message, oneSec)
+        i -= 1
+      }
     }
-    echo ! PoisonPill()
     actorSystem.shutdown()
   }
 
   "Multi-producer asking" in {
-    case class Message(content: Any)
-
-    case class PoisonPill()
-
     class Echo extends Actor {
       def receive = {
-        case Message(c) => sender ! Message(c)
-        case PoisonPill() => context.stop(self)
+        case _@message => sender ! message
       }
     }
 
     val actorSystem = ActorSystem("system", config)
-    val echo = actorSystem.actorOf(Props(new Echo), "echo")
     val n = 1000000
     timed("Multi-producer asking", n) {
-      (1 to n).par.foreach(i => Await.result(echo ? Message(i), oneSec))
+      val echo = actorSystem.actorOf(Props(new Echo), "echo")
+      val message = Message()
+      val oneSec = Duration(1, TimeUnit.SECONDS)
+      (1 to n).par.foreach(i => Await.result(echo ? message, oneSec))
     }
-    echo ! PoisonPill()
     actorSystem.shutdown()
   }
 }

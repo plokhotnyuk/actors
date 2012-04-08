@@ -1,17 +1,15 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent.CountDownLatch
-import actors.Actor
 import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
+import actors.{Exit, Actor}
 
 @RunWith(classOf[JUnitRunner])
 class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
   "Single-producer sending" in {
-    case class Tick()
-
     val n = 1000000
     val bang = new CountDownLatch(1)
 
@@ -46,8 +44,6 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
   }
 
   "Multi-producer sending" in {
-    case class Tick()
-
     val n = 1000000
     val bang = new CountDownLatch(1)
 
@@ -78,8 +74,6 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
   }
 
   "Ping between actors" in {
-    case class Ball(hitCountdown: Int)
-
     val gameOver = new CountDownLatch(1)
 
     class Player extends Actor {
@@ -106,53 +100,48 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
   }
 
   "Single-producer asking" in {
-    case class Message(content: Any)
-
-    case class PoisonPill()
-
     class Echo extends Actor {
       def act() {
         loop {
           react {
-            case Message(c) => sender ! Message(c)
-            case PoisonPill() => exit()
+            case _@message => sender ! message
           }
         }
       }
     }
 
-    val echo = new Echo()
-    echo.start()
     val n = 1000000
     timed("Single-producer asking", n) {
-      (1 to n).foreach(i => echo !? Message(i))
+      val echo = new Echo()
+      echo.start()
+      val message = Message()
+      var i = n
+      while (i > 0) {
+        echo !? message
+        i -= 1
+      }
+      echo ! Exit(null, null)
     }
-    echo ! PoisonPill()
   }
 
   "Multi-producer asking" in {
-    case class Message(content: Any)
-
-    case class PoisonPill()
-
     class Echo extends Actor {
       def act() {
         loop {
           react {
-            case Message(c) => sender ! Message(c)
-            case PoisonPill() => exit()
+            case _@message => sender ! message
           }
         }
       }
     }
 
-    val echo = new Echo()
-    echo.start()
     val n = 1000000
     timed("Multi-producer asking", n) {
-      (1 to n).par.foreach(i => echo !? Message(i))
+      val echo = new Echo()
+      echo.start()
+      val message = Message()
+      (1 to n).par.foreach(i => echo !? message)
+      echo ! Exit(null, null)
     }
-    echo ! PoisonPill()
   }
 }
-

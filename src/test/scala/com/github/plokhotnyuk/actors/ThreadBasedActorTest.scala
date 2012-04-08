@@ -9,8 +9,6 @@ import com.github.plokhotnyuk.actors.Helper._
 @RunWith(classOf[JUnitRunner])
 class ThreadBasedActorTest extends Specification with AvailableProcessorsParallelism {
   "Single-producer sending" in {
-    case class Tick()
-
     val n = 100000000
     val bang = new CountDownLatch(1)
 
@@ -40,8 +38,6 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
   }
 
   "Multi-producer sending" in {
-    case class Tick()
-
     val n = 100000000
     val bang = new CountDownLatch(1)
 
@@ -67,8 +63,6 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
   }
 
   "Ping between actors" in {
-    case class Ball(hitCountdown: Int)
-
     val gameOver = new CountDownLatch(1)
 
     class Player extends ThreadBasedActor {
@@ -88,42 +82,38 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
   }
 
   "Single-producer asking" in {
-    case class Message(content: Any)
-
-    case class PoisonPill()
-
     class Echo extends ThreadBasedActor {
       def receive = {
-        case Message(c) => reply(Message(c))
-        case PoisonPill() => exit()
+        case _@message => reply(message)
       }
     }
 
-    val echo = new Echo()
     val n = 20000000
     timed("Single-producer asking", n) {
-      (1 to n).foreach(i => echo ? Message(i))
+      val echo = new Echo()
+      val message = Message()
+      var i = n
+      while (i > 0) {
+        echo ? message
+        i -= 1
+      }
+      echo.exit()
     }
-    echo ! PoisonPill()
   }
 
   "Multi-producer asking" in {
-    case class Message(content: Any)
-
-    case class PoisonPill()
-
     class Echo extends ThreadBasedActor {
       def receive = {
-        case Message(c) => reply(Message(c))
-        case PoisonPill() => exit()
+        case _@message => reply(message)
       }
     }
 
-    val echo = new Echo()
     val n = 20000000
     timed("Multi-producer asking", n) {
-      (1 to n).par.foreach(i => echo ? Message(i))
+      val echo = new Echo()
+      val message = Message()
+      (1 to n).par.foreach(i => echo ? message)
+      echo.exit()
     }
-    echo ! PoisonPill()
   }
 }

@@ -34,16 +34,16 @@ abstract class ThreadBasedActor {
     replyTo.message()
   }
 
+  def exit() {
+    doRun = false
+  }
+
   protected def receive: PartialFunction[Any, Unit]
 
   protected def sender: ThreadBasedActor = sender_
 
   protected def reply(msg: Any) {
     sender_.send(msg, this)
-  }
-
-  protected def exit() {
-    doRun = false
   }
 
   protected def start() {

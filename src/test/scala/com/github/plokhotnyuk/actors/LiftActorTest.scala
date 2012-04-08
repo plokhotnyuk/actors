@@ -11,8 +11,6 @@ import com.github.plokhotnyuk.actors.Helper._
 class LiftActorTest extends Specification with AvailableProcessorsParallelism {
 
   "Single-producer sending" in {
-    case class Tick()
-
     val n = 20000000
     val bang = new CountDownLatch(1)
 
@@ -30,14 +28,16 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
     timed("Single-producer sending", n) {
       val countdown = new Countdown()
       val tick = Tick()
-      (1 to n).foreach(i => countdown ! tick)
+      var i = n
+      while (i > 0) {
+        countdown ! tick
+        i -= 1
+      }
       bang.await()
     }
   }
 
   "Multi-producer sending" in {
-    case class Tick()
-
     val n = 20000000
     val bang = new CountDownLatch(1)
 
@@ -61,8 +61,6 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
   }
 
   "Ping between actors" in {
-    case class Ball(hitCountdown: Int)
-
     val gameOver = new CountDownLatch(1)
 
     class Player extends LiftActor {
@@ -86,34 +84,36 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
   }
 
   "Single-producer asking" in {
-    case class Message(content: Any)
-
     class Echo extends LiftActor {
       def messageHandler = {
-        case Message(c) => reply(Message(c))
+        case _@message => reply(message)
       }
     }
 
-    val echo = new Echo()
     val n = 1000000
     timed("Single-producer asking", n) {
-      (1 to n).foreach(i => echo !? Message(i))
+      val echo = new Echo()
+      val message = Message()
+      var i = n
+      while (i > 0) {
+        echo !? message
+        i -= 1
+      }
     }
   }
 
   "Multi-producer asking" in {
-    case class Message(content: Any)
-
     class Echo extends LiftActor {
       def messageHandler = {
-        case Message(c) => reply(Message(c))
+        case _@message => reply(message)
       }
     }
 
-    val echo = new Echo()
     val n = 2000000
     timed("Multi-producer asking", n) {
-      (1 to n).par.foreach(i => echo !? Message(i))
+      val echo = new Echo()
+      val message = Message()
+      (1 to n).par.foreach(i => echo !? message)
     }
   }
 }
