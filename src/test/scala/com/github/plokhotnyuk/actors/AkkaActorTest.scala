@@ -13,7 +13,7 @@ import com.typesafe.config.ConfigFactory._
 
 @RunWith(classOf[JUnitRunner])
 class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
-  implicit val timeout = Timeout(Duration(1, TimeUnit.SECONDS))
+  implicit val timeout = Timeout(Duration(10, TimeUnit.SECONDS))
   val config = load(parseString("""
   akka.actor.default-dispatcher {
     throughput = 1024
@@ -112,10 +112,10 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
     timed("Single-producer asking", n) {
       val echo = actorSystem.actorOf(Props(new Echo), "echo")
       val message = Message()
-      val oneSec = Duration(1, TimeUnit.SECONDS)
+      val tenSec = Duration(10, TimeUnit.SECONDS)
       var i = n
       while (i > 0) {
-        Await.result(echo ? message, oneSec)
+        Await.result(echo ? message, tenSec)
         i -= 1
       }
     }
@@ -134,8 +134,8 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
     timed("Multi-producer asking", n) {
       val echo = actorSystem.actorOf(Props(new Echo), "echo")
       val message = Message()
-      val oneSec = Duration(1, TimeUnit.SECONDS)
-      (1 to n).par.foreach(i => Await.result(echo ? message, oneSec))
+      val tenSec = Duration(10, TimeUnit.SECONDS)
+      (1 to n).par.foreach(i => Await.result(echo ? message, tenSec))
     }
     actorSystem.shutdown()
   }
