@@ -128,7 +128,7 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
     val p = availableProcessors / 2
     val bang = new CountDownLatch(p)
 
-    class Countdown extends ThreadBasedActor {
+    class Countdown extends EventBasedActor {
       private[this] var countdown = n / p
 
       def receive = {
@@ -136,7 +136,6 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
           countdown -= 1
           if (countdown == 0) {
             bang.countDown()
-            exit()
           }
       }
     }
