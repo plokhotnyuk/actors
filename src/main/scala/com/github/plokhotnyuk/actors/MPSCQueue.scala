@@ -9,12 +9,13 @@ import annotation.tailrec
  *
  * @tparam T type of data to queue/dequeue
  */
-class MPSCQueue[T >: Null] {
-  private[this] var tail = new Node[T](null)
+class MPSCQueue[T] {
+  private[this] var tail = new Node[T]()
   private[this] val head = new AtomicReference[Node[T]](tail)
 
   def enqueue(data: T) {
-    val node = new Node[T](data)
+    val node = new Node[T]()
+    node.data = data
     head.getAndSet(node).next = node
   }
 
@@ -30,6 +31,7 @@ class MPSCQueue[T >: Null] {
   }
 }
 
-private[actors] class Node[T >: Null](val data: T) {
+private[actors] class Node[T]() {
+  var data: T = _
   @volatile var next: Node[T] = _
 }
