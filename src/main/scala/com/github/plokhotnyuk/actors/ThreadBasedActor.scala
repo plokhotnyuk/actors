@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicReference
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  */
 abstract class ThreadBasedActor {
-  private[this] var sender_ : ThreadBasedActor = _
   @volatile private[this] var doRun = true
   private[this] var tail = new Mail(null, null)
   private[this] val head = new AtomicReference[Mail](tail)
@@ -40,10 +39,10 @@ abstract class ThreadBasedActor {
 
   protected def receive: PartialFunction[Any, Unit]
 
-  protected def sender: ThreadBasedActor = sender_
+  protected def sender: ThreadBasedActor = tail.sender
 
   protected def reply(msg: Any) {
-    sender_.send(msg, this)
+    tail.sender.send(msg, this)
   }
 
   protected def start() {
@@ -65,7 +64,6 @@ abstract class ThreadBasedActor {
     val mail = tail.next
     if (mail ne null) {
       tail = mail
-      sender_ = mail.sender
       mail.msg
     } else {
       message()
