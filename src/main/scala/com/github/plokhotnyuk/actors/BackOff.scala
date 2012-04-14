@@ -1,11 +1,11 @@
 package com.github.plokhotnyuk.actors
 
 trait BackOff {
-  protected var backOffThreshold = 1024
+  protected def backOffThreshold = 1024
   private[this] var spin = backOffThreshold
 
   def backOff() {
-    spin -= 1;
+    spin -= 1
     if (spin == 0) {
       spin = backOffThreshold
       Thread.`yield`()
