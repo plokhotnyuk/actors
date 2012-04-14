@@ -43,17 +43,9 @@ abstract class EventBasedActor {
   }
 
   private[this] def sendAndReceive(msg: Any): Any = {
-    val mailbox = new AtomicReference[Any](null)
-    val replyTo = new EventBasedActor {
-      def receive: PartialFunction[Any, Unit] = null // no handler required
-
-      override private[actors] def handle(from: EventBasedActor, msg: Any) {
-        mailbox.set(msg)
-      }
-    }
+    val replyTo = new TempEventBasedActor
     send(msg, replyTo)
-    while (mailbox.get == null) {}
-    mailbox.get
+    replyTo.message()
   }
 
   protected def receive: PartialFunction[Any, Unit]
@@ -74,6 +66,23 @@ abstract class EventBasedActor {
     if (handler.isDefinedAt(msg)) {
       handler.apply(msg)
     }
+  }
+}
+
+private[actors] class TempEventBasedActor extends EventBasedActor with BackOff {
+  @volatile var mailbox: Any = _
+
+  def receive: PartialFunction[Any, Unit] = null // no handler required
+
+  override private[actors] def handle(from: EventBasedActor, msg: Any) {
+    mailbox = msg
+  }
+
+  def message() {
+    while (mailbox == null) {
+      backOff()
+    }
+    mailbox
   }
 }
 
@@ -118,8 +127,8 @@ object EventProcessor {
  * Using of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  */
-private class EventProcessor(private var next: EventProcessor) extends Thread {
-  var t0, t1, t2, t3, t4, t5, t6: Long = _
+private class EventProcessor(private var next: EventProcessor) extends Thread with BackOff {
+  var t0, t1, t2, t3, t4, t5: Long = _
   @volatile private[this] var doRun = 1L
   private[this] var tail = new Event(null, null, null)
   var h0, h1, h2, h3, h4, h5, h6: Long = _
@@ -163,6 +172,7 @@ private class EventProcessor(private var next: EventProcessor) extends Thread {
         deliverOthersUntilMine(me)
       }
     } else {
+      backOff()
       deliverOthersUntilMine(me)
     }
   }
@@ -172,6 +182,8 @@ private class EventProcessor(private var next: EventProcessor) extends Thread {
     if (event ne null) {
       tail = event
       event.receiver.handle(event.sender, event.msg)
+    } else {
+      backOff()
     }
   }
 }

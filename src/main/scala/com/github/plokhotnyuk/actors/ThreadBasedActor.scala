@@ -7,8 +7,8 @@ import java.util.concurrent.atomic.AtomicReference
  * Using of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  */
-abstract class ThreadBasedActor {
-  var t0, t1, t2, t3, t4, t5, t6: Long = _
+abstract class ThreadBasedActor extends BackOff {
+  var t0, t1, t2, t3, t4, t5: Long = _
   @volatile private[this] var doRun = 1L
   private[this] var tail = new Mail(null, null)
   var h0, h1, h2, h3, h4, h5, h6: Long = _
@@ -78,6 +78,7 @@ abstract class ThreadBasedActor {
       tail = mail
       mail.msg
     } else {
+      backOff()
       message()
     }
   }
