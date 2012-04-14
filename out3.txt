@@ -1,0 +1,328 @@
+
+D:\Projects\com\github\plokhotnyuk\actors>set MAVEN_OPTS=-server -Xms256m -Xmx1024m -XX:MaxPermSize=256m 
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Actors 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-clean-plugin:2.4.1:clean (default-clean) @ actors ---
+[INFO] Deleting D:\Projects\com\github\plokhotnyuk\actors\target
+[INFO] 
+[INFO] --- maven-resources-plugin:2.4.3:resources (default-resources) @ actors ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory D:\Projects\com\github\plokhotnyuk\actors\src\main\resources
+[INFO] 
+[INFO] --- maven-scala-plugin:2.15.2:compile (compile) @ actors ---
+[INFO] Checking for multiple versions of scala
+[INFO] includes = [**/*.scala,**/*.java,]
+[INFO] excludes = []
+[INFO] D:\Projects\com\github\plokhotnyuk\actors\src\main\scala:-1: info: compiling
+[INFO] Compiling 5 source files to D:\Projects\com\github\plokhotnyuk\actors\target\classes at 1334412384600
+[INFO] prepare-compile in 0 s
+[INFO] compile in 4 s
+[INFO] 
+[INFO] --- maven-resources-plugin:2.4.3:testResources (default-testResources) @ actors ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory D:\Projects\com\github\plokhotnyuk\actors\src\test\resources
+[INFO] 
+[INFO] --- maven-scala-plugin:2.15.2:testCompile (testCompile) @ actors ---
+[INFO] Checking for multiple versions of scala
+[INFO] includes = [**/*.scala,**/*.java,]
+[INFO] excludes = []
+[INFO] D:\Projects\com\github\plokhotnyuk\actors\src\test\scala:-1: info: compiling
+[INFO] Compiling 11 source files to D:\Projects\com\github\plokhotnyuk\actors\target\test-classes at 1334412389452
+[INFO] prepare-compile in 0 s
+[INFO] compile in 10 s
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.12:test (default-test) @ actors ---
+[INFO] Surefire report directory: D:\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running com.github.plokhotnyuk.actors.AkkaActorTest
+
+Single-producer sending:
+4,501,545,190 ns
+40,000,000 ops
+112 ns/op
+8,885,837 ops/s
+
+Multi-producer sending:
+21,352,527,327 ns
+40,000,000 ops
+533 ns/op
+1,873,314 ops/s
+
+Ping between actors:
+13,777,159,444 ns
+20,000,000 ops
+688 ns/op
+1,451,678 ops/s
+
+Single-producer asking:
+5,825,392,459 ns
+1,000,000 ops
+5,825 ns/op
+171,662 ops/s
+
+Multi-producer asking:
+5,698,968,440 ns
+1,000,000 ops
+5,698 ns/op
+175,470 ops/s
+
+Max throughput:
+7,978,106,560 ns
+40,000,000 ops
+199 ns/op
+5,013,720 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 60.423 sec
+Running com.github.plokhotnyuk.actors.EventBasedActorTest
+
+Single-producer sending:
+7,150,782,870 ns
+100,000,000 ops
+71 ns/op
+13,984,482 ops/s
+
+Multi-producer sending:
+5,970,992,950 ns
+100,000,000 ops
+59 ns/op
+16,747,633 ops/s
+
+Ping between actors:
+12,012,542,427 ns
+100,000,000 ops
+120 ns/op
+8,324,632 ops/s
+
+Single-producer asking:
+7,620,983,597 ns
+20,000,000 ops
+381 ns/op
+2,624,333 ops/s
+
+Multi-producer asking:
+10,813,900,980 ns
+20,000,000 ops
+540 ns/op
+1,849,471 ops/s
+
+Max throughput:
+6,330,621,940 ns
+100,000,000 ops
+63 ns/op
+15,796,236 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 50.84 sec
+Running com.github.plokhotnyuk.actors.LiftActorTest
+
+Single-producer sending:
+5,097,112,846 ns
+20,000,000 ops
+254 ns/op
+3,923,789 ops/s
+
+Multi-producer sending:
+9,354,585,533 ns
+20,000,000 ops
+467 ns/op
+2,137,988 ops/s
+
+Ping between actors:
+4,604,618,983 ns
+2,000,000 ops
+2,302 ns/op
+434,346 ops/s
+
+Single-producer asking:
+7,125,199,335 ns
+1,000,000 ops
+7,125 ns/op
+140,346 ops/s
+
+Multi-producer asking:
+4,590,130,305 ns
+2,000,000 ops
+2,295 ns/op
+435,717 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 31.559 sec
+Running com.github.plokhotnyuk.actors.MPMCQueueTest
+
+Same producer and consumer:
+6,251,249,601 ns
+100,000,000 ops
+62 ns/op
+15,996,801 ops/s
+
+Single-producer sending:
+4,567,062,357 ns
+100,000,000 ops
+45 ns/op
+21,895,912 ops/s
+
+Multi-producer sending:
+7,820,914,922 ns
+100,000,000 ops
+78 ns/op
+12,786,227 ops/s
+
+Exchange between queues:
+23,483,614,223 ns
+100,000,000 ops
+234 ns/op
+4,258,288 ops/s
+
+Multi-consumer receiving:
+6,031,477,921 ns
+100,000,000 ops
+60 ns/op
+16,579,684 ops/s
+
+Multi-producer sending multi-consumer receiving:
+6,787,260,013 ns
+100,000,000 ops
+67 ns/op
+14,733,485 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 55.739 sec
+Running com.github.plokhotnyuk.actors.MPSCQueueTest
+
+Same producer and consumer:
+3,837,424,600 ns
+100,000,000 ops
+38 ns/op
+26,059,143 ops/s
+
+Single-producer sending:
+5,238,380,523 ns
+100,000,000 ops
+52 ns/op
+19,089,869 ops/s
+
+Multi-producer sending:
+5,474,403,496 ns
+100,000,000 ops
+54 ns/op
+18,266,830 ops/s
+
+Exchange between queues:
+7,813,387,281 ns
+100,000,000 ops
+78 ns/op
+12,798,546 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.104 sec
+Running com.github.plokhotnyuk.actors.ScalaActorTest
+
+Single-producer sending:
+3,005,364,989 ns
+1,000,000 ops
+3,005 ns/op
+332,738 ops/s
+
+Multi-producer sending:
+3,364,564,247 ns
+1,000,000 ops
+3,364 ns/op
+297,215 ops/s
+
+Ping between actors:
+2,865,770,499 ns
+1,000,000 ops
+2,865 ns/op
+348,946 ops/s
+
+Single-producer asking:
+8,769,091,482 ns
+1,000,000 ops
+8,769 ns/op
+114,036 ops/s
+
+Multi-producer asking:
+6,731,582,300 ns
+1,000,000 ops
+6,731 ns/op
+148,553 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 25.49 sec
+Running com.github.plokhotnyuk.actors.ScalazActorTest
+
+Single-producer sending:
+4,542,486,081 ns
+40,000,000 ops
+113 ns/op
+8,805,750 ops/s
+
+Multi-producer sending:
+4,775,302,280 ns
+40,000,000 ops
+119 ns/op
+8,376,433 ops/s
+
+Ping between actors:
+18,208,983,676 ns
+20,000,000 ops
+910 ns/op
+1,098,358 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 28.329 sec
+Running com.github.plokhotnyuk.actors.ThreadBasedActorTest
+
+Single-producer sending:
+5,873,488,601 ns
+100,000,000 ops
+58 ns/op
+17,025,656 ops/s
+
+Multi-producer sending:
+5,921,993,996 ns
+100,000,000 ops
+59 ns/op
+16,886,204 ops/s
+
+Ping between actors:
+9,219,298,940 ns
+100,000,000 ops
+92 ns/op
+10,846,811 ops/s
+
+Single-producer asking:
+5,962,633,152 ns
+20,000,000 ops
+298 ns/op
+3,354,222 ops/s
+
+Multi-producer asking:
+17,301,013,128 ns
+20,000,000 ops
+865 ns/op
+1,156,001 ops/s
+
+Max throughput:
+5,596,103,881 ns
+100,000,000 ops
+55 ns/op
+17,869,575 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 50.747 sec
+
+Results :
+
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] 
+[INFO] --- maven-jar-plugin:2.3.1:jar (default-jar) @ actors ---
+[INFO] Building jar: D:\Projects\com\github\plokhotnyuk\actors\target\actors-1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- maven-install-plugin:2.3.1:install (default-install) @ actors ---
+[INFO] Installing D:\Projects\com\github\plokhotnyuk\actors\target\actors-1.0-SNAPSHOT.jar to C:\Users\Andrew\.m2\repository\com\github\plokhotnyuk\actors\actors\1.0-SNAPSHOT\actors-1.0-SNAPSHOT.jar
+[INFO] Installing D:\Projects\com\github\plokhotnyuk\actors\pom.xml to C:\Users\Andrew\.m2\repository\com\github\plokhotnyuk\actors\actors\1.0-SNAPSHOT\actors-1.0-SNAPSHOT.pom
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 5:48.430s
+[INFO] Finished at: Sat Apr 14 17:12:11 EEST 2012
+[INFO] Final Memory: 11M/305M
+[INFO] ------------------------------------------------------------------------
