@@ -10,7 +10,9 @@ import annotation.tailrec
  * @tparam T type of data to queue/dequeue
  */
 class MPSCQueue[T] {
+  var t0, t1, t2, t3, t4, t5, t6: Long = _
   private[this] var tail = new Node[T]()
+  var h0, h1, h2, h3, h4, h5, h6: Long = _
   private[this] val head = new AtomicReference[Node[T]](tail)
 
   def enqueue(data: T) {
