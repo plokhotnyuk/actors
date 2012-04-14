@@ -7,25 +7,30 @@ Evaluation of API and performance of different actor libraries (and lock-free qu
 Hardware required
 -----------------
 CPU: 2 cores or more
-RAM: 6Gb or more
+RAM: min 6Gb for 64-bit or 3Gb for 32-bit
 
 Software installed required
 ---------------------------
-JDK: 1.7.0_03 (64-bit) or newer
+JDK: 1.7.0_03 or newer
 Maven: 3.0.4 or newer
 
 Building & running benchmarks
 -----------------------------
-Use following command-line instructions:
+Use following command-line instructions for JDK 64-bit:
 mvn -B clean install > outX.txt
+For JDK 32-bit use the 32-bit profile:
+mvn -B clean install -P 32-bit > outX.txt
 
 Test result descriptions
 ------------------------
 out1.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max turbo 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, JDK 1.7.0_03
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max turbo 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, JDK 1.7.0_03 64-bit
 
 out2.txt (outdated)
-2 x Intel(R) Xeon(R) Processor E5540 @ 2.53 GHz, RAM 24Gb DDR2-1066, Ubuntu 11 Server edition, JDK 1.7.0_03
+2 x Intel(R) Xeon(R) Processor E5540 @ 2.53GHz, RAM 24Gb DDR2-1066, Ubuntu 11 Server edition, JDK 1.7.0_03 64-bit
 
-out4.txt
-Intel(R) Core(TM) i7-2630QM @ 2.00 GHz (max turbo 2.90GHz), RAM 8Gb DDR3-1600, Windows 7 sp1, JDK 1.7.0_03
+out3.txt
+Intel(R) Core(TM)2 Duo CPU E6850 @ 3.00GHz, RAM 4Gb, Windows 7, JDK 1.7.0_03 32-bit
+
+out4.txt (outdated)
+Intel(R) Core(TM) i7-2630QM @ 2.00GHz (max turbo 2.90GHz), RAM 8Gb DDR3-1600, Windows 7 sp1, JDK 1.7.0_03 64-bit
