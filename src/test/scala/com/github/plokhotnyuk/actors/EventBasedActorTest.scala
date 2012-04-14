@@ -24,7 +24,7 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
       }
     }
 
-    EventProcessor.initPool(2)
+    EventProcessor.initPool(1)
     timed("Single-producer sending", n) {
       val countdown = new Countdown()
       val tick = Tick()
@@ -92,7 +92,7 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
       }
     }
 
-    EventProcessor.initPool(2)
+    EventProcessor.initPool(1)
     val n = 20000000
     timed("Single-producer asking", n) {
       val echo = new Echo()
