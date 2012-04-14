@@ -1,7 +1,7 @@
 package com.github.plokhotnyuk.actors
 
 trait BackOff {
-  protected def backOffThreshold = 1024
+  protected var backOffThreshold = 1024
   private[this] var spin = backOffThreshold
 
   def backOff() {
