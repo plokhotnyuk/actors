@@ -41,6 +41,10 @@ abstract class ThreadBasedActor {
 
   protected def receive: PartialFunction[Any, Unit]
 
+  def handleError: PartialFunction[Throwable, Unit] = {
+    case _@ex => ex.printStackTrace()
+  }
+
   protected def sender: ThreadBasedActor = tail.sender
 
   protected def reply(msg: Any) {
@@ -57,7 +61,13 @@ abstract class ThreadBasedActor {
 
   private[this] def handleMessages() {
     while (doRun != 0L) {
-      handle(message())
+      try {
+        while (doRun != 0L) {
+          receive.apply(message())
+        }
+      } catch {
+        handleError
+      }
     }
   }
 
@@ -69,13 +79,6 @@ abstract class ThreadBasedActor {
       mail.msg
     } else {
       message()
-    }
-  }
-
-  private[this] def handle(msg: Any) {
-    val handler = receive
-    if (handler.isDefinedAt(msg)) {
-      handler.apply(msg)
     }
   }
 }

@@ -58,6 +58,10 @@ abstract class EventBasedActor {
 
   protected def receive: PartialFunction[Any, Unit]
 
+  def handleError: PartialFunction[Throwable, Unit] = {
+    case _@ex => ex.printStackTrace()
+  }
+
   protected def sender: EventBasedActor = sender_
 
   protected def reply(msg: Any) {
@@ -125,7 +129,13 @@ private class EventProcessor(private var next: EventProcessor) extends Thread {
 
   override def run() {
     while (doRun != 0L) {
-      deliver()
+      try {
+        while (doRun != 0L) {
+          deliver()
+        }
+      } catch {
+        tail.receiver.handleError
+      }
     }
   }
 
@@ -145,7 +155,11 @@ private class EventProcessor(private var next: EventProcessor) extends Thread {
       if (event.receiver == me) {
         event.msg
       } else {
-        event.receiver.handle(event.sender, event.msg)
+        try {
+          event.receiver.handle(event.sender, event.msg)
+        } catch {
+          event.receiver.handleError
+        }
         deliverOthersUntilMine(me)
       }
     } else {
