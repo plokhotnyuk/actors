@@ -5,9 +5,10 @@ import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
 import scalaz._
+import concurrent.Strategy
 import Scalaz._
-import java.util.concurrent.CountDownLatch
-import scala.concurrent.forkjoin.ForkJoinPool
+import java.util.concurrent.{TimeUnit, CountDownLatch}
+import akka.jsr166y.ForkJoinPool
 
 @RunWith(classOf[JUnitRunner])
 class ScalazActorTest extends Specification with AvailableProcessorsParallelism {
@@ -17,6 +18,8 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
     val bang = new CountDownLatch(1)
 
     var countdown = n
+    implicit val executor = new ForkJoinPool()
+    import Strategy.Executor
     val countdownActor = actor[Tick] {
       (t: Tick) =>
         countdown -= 1
@@ -25,7 +28,6 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
         }
     }
 
-    implicit val pool = new ForkJoinPool()
     timed("Single-producer sending", n) {
       val countdown = countdownActor
       val tick = Tick()
@@ -36,7 +38,8 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
       }
       bang.await()
     }
-    pool.shutdown()
+    executor.shutdown()
+    executor.awaitTermination(10L, TimeUnit.SECONDS)
   }
 
   "Multi-producer sending" in {
@@ -44,6 +47,8 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
     val bang = new CountDownLatch(1)
 
     var countdown = n
+    implicit val executor = new ForkJoinPool()
+    import Strategy.Executor
     val countdownActor = actor[Tick] {
       (t: Tick) =>
         countdown -= 1
@@ -52,14 +57,14 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
         }
     }
 
-    implicit val pool = new ForkJoinPool()
     timed("Multi-producer sending", n) {
       val countdown = countdownActor
       val tick = Tick()
       (1 to n).par.foreach(i => countdown ! tick)
       bang.await()
     }
-    pool.shutdown()
+    executor.shutdown()
+    executor.awaitTermination(10L, TimeUnit.SECONDS)
   }
 
   "Ping between actors" in {
@@ -71,14 +76,16 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
         case BallZ(i, p1, p2) => p1 ! BallZ(i - 1, p2, p1)
       }
 
+    implicit val executor = new ForkJoinPool()
+    import Strategy.Executor
     val ping = actor[BallZ](player)
     val pong = actor[BallZ](player)
     val n = 20000000
-    implicit val pool = new ForkJoinPool()
     timed("Ping between actors", n) {
       ping ! BallZ(n, pong, ping)
       gameOver.await()
     }
-    pool.shutdown()
+    executor.shutdown()
+    executor.awaitTermination(10L, TimeUnit.SECONDS)
   }
 }
