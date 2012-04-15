@@ -5,9 +5,10 @@ import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
 import scalaz._
-import concurrent.{Actor, Strategy}
+import concurrent.Strategy
 import Scalaz._
-import java.util.concurrent.{Executors, CountDownLatch}
+import java.util.concurrent.CountDownLatch
+import scala.concurrent.forkjoin.ForkJoinPool
 
 @RunWith(classOf[JUnitRunner])
 class ScalazActorTest extends Specification with AvailableProcessorsParallelism {
@@ -25,7 +26,7 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
         }
     }
 
-    implicit val pool = Executors.newFixedThreadPool(2)
+    implicit val pool = new ForkJoinPool()
     implicit val strategy = Strategy.Executor
     timed("Single-producer sending", n) {
       val countdown = countdownActor
@@ -53,7 +54,7 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
         }
     }
 
-    implicit val pool = Executors.newFixedThreadPool(1)
+    implicit val pool = new ForkJoinPool()
     implicit val strategy = Strategy.Executor
     timed("Multi-producer sending", n) {
       val countdown = countdownActor
@@ -76,7 +77,7 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
     val ping = actor[BallZ](player)
     val pong = actor[BallZ](player)
     val n = 20000000
-    implicit val pool = Executors.newFixedThreadPool(2)
+    implicit val pool = new ForkJoinPool()
     implicit val strategy = Strategy.Executor
     timed("Ping between actors", n) {
       ping ! BallZ(n, pong, ping)
