@@ -85,5 +85,5 @@ abstract class ThreadBasedActor extends BackOff {
 }
 
 private[actors] class Mail(val sender: ThreadBasedActor, val msg: Any) {
-  @volatile var next: Mail = _
+  @volatile private[actors] var next: Mail = _
 }

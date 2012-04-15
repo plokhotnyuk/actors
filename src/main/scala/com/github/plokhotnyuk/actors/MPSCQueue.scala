@@ -34,6 +34,6 @@ class MPSCQueue[T] {
 }
 
 private[actors] class Node[T]() {
-  var data: T = _
-  @volatile var next: Node[T] = _
+  private[actors] var data: T = _
+  @volatile private[actors] var next: Node[T] = _
 }

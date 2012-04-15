@@ -70,7 +70,7 @@ abstract class EventBasedActor {
 }
 
 private[actors] class TempEventBasedActor extends EventBasedActor with BackOff {
-  @volatile var mailbox: Any = _
+  @volatile private[this] var mailbox: Any = _
 
   def receive: PartialFunction[Any, Unit] = null // no handler required
 
@@ -78,7 +78,7 @@ private[actors] class TempEventBasedActor extends EventBasedActor with BackOff {
     mailbox = msg
   }
 
-  def message() {
+  private[actors] def message() {
     while (mailbox == null) {
       backOff()
     }
@@ -189,5 +189,5 @@ private class EventProcessor(private var next: EventProcessor) extends Thread wi
 }
 
 private[actors] class Event(val sender: EventBasedActor, val receiver: EventBasedActor, val msg: Any) {
-  @volatile var next: Event = _
+  @volatile private[actors] var next: Event = _
 }
