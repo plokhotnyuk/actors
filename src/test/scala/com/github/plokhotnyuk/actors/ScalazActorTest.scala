@@ -27,7 +27,6 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
     }
 
     implicit val pool = new ForkJoinPool()
-    implicit val strategy = Strategy.Executor
     timed("Single-producer sending", n) {
       val countdown = countdownActor
       val tick = Tick()
@@ -55,7 +54,6 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
     }
 
     implicit val pool = new ForkJoinPool()
-    implicit val strategy = Strategy.Executor
     timed("Multi-producer sending", n) {
       val countdown = countdownActor
       val tick = Tick()
@@ -78,7 +76,6 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
     val pong = actor[BallZ](player)
     val n = 20000000
     implicit val pool = new ForkJoinPool()
-    implicit val strategy = Strategy.Executor
     timed("Ping between actors", n) {
       ping ! BallZ(n, pong, ping)
       gameOver.await()
