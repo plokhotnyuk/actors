@@ -5,7 +5,6 @@ import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
 import scalaz._
-import concurrent.Strategy
 import Scalaz._
 import java.util.concurrent.CountDownLatch
 import scala.concurrent.forkjoin.ForkJoinPool
