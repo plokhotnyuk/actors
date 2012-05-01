@@ -22,7 +22,7 @@ abstract class ThreadBasedActor extends BackOff {
 
   def send(msg: Any, replyTo: ThreadBasedActor) {
     val mail = new Mail(replyTo, msg)
-    head.getAndSet(mail).next = mail
+    head.getAndSet(mail).lazySet(mail)
   }
 
   def ?(msg: Any): Any = {
@@ -73,7 +73,7 @@ abstract class ThreadBasedActor extends BackOff {
 
   @tailrec
   private def message(): Any = {
-    val mail = tail.next
+    val mail = tail.get
     if (mail ne null) {
       tail = mail
       mail.msg
@@ -84,6 +84,4 @@ abstract class ThreadBasedActor extends BackOff {
   }
 }
 
-private[actors] class Mail(val sender: ThreadBasedActor, val msg: Any) {
-  @volatile private[actors] var next: Mail = _
-}
+private[actors] class Mail(val sender: ThreadBasedActor, val msg: Any) extends AtomicReference[Mail]

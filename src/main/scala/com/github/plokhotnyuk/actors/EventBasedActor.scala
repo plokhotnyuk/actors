@@ -153,12 +153,12 @@ private class EventProcessor(private var next: EventProcessor) extends Thread wi
   }
 
   private[actors] def send(event: Event) {
-    head.getAndSet(event).next = event
+    head.getAndSet(event).lazySet(event)
   }
 
   @tailrec
   final private[actors] def deliverOthersUntilMine(me: EventBasedActor): Any = {
-    val event = tail.next
+    val event = tail.get
     if (event ne null) {
       tail = event
       if (event.receiver == me) {
@@ -178,7 +178,7 @@ private class EventProcessor(private var next: EventProcessor) extends Thread wi
   }
 
   private[this] def deliver() {
-    val event = tail.next
+    val event = tail.get
     if (event ne null) {
       tail = event
       event.receiver.handle(event.sender, event.msg)
@@ -188,6 +188,4 @@ private class EventProcessor(private var next: EventProcessor) extends Thread wi
   }
 }
 
-private[actors] class Event(val sender: EventBasedActor, val receiver: EventBasedActor, val msg: Any) {
-  @volatile private[actors] var next: Event = _
-}
+private[actors] class Event(val sender: EventBasedActor, val receiver: EventBasedActor, val msg: Any) extends AtomicReference[Event]

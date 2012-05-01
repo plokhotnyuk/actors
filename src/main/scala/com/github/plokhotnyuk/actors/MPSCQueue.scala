@@ -10,20 +10,20 @@ import annotation.tailrec
  * @tparam T type of data to queue/dequeue
  */
 class MPSCQueue[T] {
+  private[this] var anyData: T = _  // Don't know how to simplify this
   var t0, t1, t2, t3, t4, t5, t6: Long = _
-  private[this] var tail = new Node[T]()
+  private[this] var tail = new Node[T](anyData)
   var h0, h1, h2, h3, h4, h5, h6: Long = _
   private[this] val head = new AtomicReference[Node[T]](tail)
 
   def enqueue(data: T) {
-    val node = new Node[T]()
-    node.data = data
-    head.getAndSet(node).next = node
+    val node = new Node[T](data)
+    head.getAndSet(node).lazySet(node)
   }
 
   @tailrec
   final def dequeue(): T = {
-    val next = tail.next
+    val next = tail.get
     if (next ne null) {
       tail = next
       next.data
@@ -33,7 +33,4 @@ class MPSCQueue[T] {
   }
 }
 
-private[actors] class Node[T]() {
-  private[actors] var data: T = _
-  @volatile private[actors] var next: Node[T] = _
-}
+private[actors] class Node[T](val data: T) extends AtomicReference[Node[T]]
