@@ -4,7 +4,8 @@ import java.util.concurrent.atomic.AtomicReference
 import annotation.tailrec
 
 /**
- * Non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
+ * Version of multi producer/single consumer lock-free unbounded queue
+ * based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  *
  * @tparam T type of data to queue/dequeue

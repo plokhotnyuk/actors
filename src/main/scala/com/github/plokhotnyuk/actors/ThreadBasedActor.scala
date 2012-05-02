@@ -4,7 +4,7 @@ import annotation.tailrec
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * Using of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
+ * Based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  */
 abstract class ThreadBasedActor extends BackOff {

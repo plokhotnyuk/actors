@@ -6,6 +6,10 @@ import scalaz.concurrent.{Strategy, Effect}
 import java.util.concurrent.atomic.{AtomicReference, AtomicBoolean}
 import annotation.tailrec
 
+/**
+ * Based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
+ * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
+ */
 final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_), batchSize: Int = 1024)(implicit val strategy: Strategy) {
   private[this] var anyMsg: A = _  // Don't know how to simplify this
   private[this] var tail = new Node2[A](anyMsg)
