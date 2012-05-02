@@ -5,7 +5,7 @@ import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
 import scalaz._
-import concurrent.Strategy
+import concurrent.{Actor, Strategy}
 import Scalaz._
 import java.util.concurrent.{TimeUnit, CountDownLatch}
 import akka.jsr166y.ForkJoinPool
@@ -67,22 +67,28 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
     executor.awaitTermination(10L, TimeUnit.SECONDS)
   }
 
+
   "Ping between actors" in {
     val gameOver = new CountDownLatch(1)
-
-    val player =
-      (b: BallZ) => b match {
-        case BallZ(0, _, _) => gameOver.countDown()
-        case BallZ(i, p1, p2) => p1 ! BallZ(i - 1, p2, p1)
-      }
-
     implicit val executor = new ForkJoinPool()
     import Strategy.Executor
-    val ping = actor[BallZ](player)
-    val pong = actor[BallZ](player)
+    var ping: Actor[Ball] = null
+    var pong: Actor[Ball] = null
+    ping = actor[Ball](
+      (b: Ball) => b match {
+        case Ball(0) => gameOver.countDown()
+        case Ball(i) => pong ! Ball(i - 1)
+      }
+    )
+    pong = actor[Ball](
+      (b: Ball) => b match {
+        case Ball(0) => gameOver.countDown()
+        case Ball(i) => ping ! Ball(i - 1)
+      }
+    )
     val n = 20000000
     timed("Ping between actors", n) {
-      ping ! BallZ(n, pong, ping)
+      ping ! Ball(n)
       gameOver.await()
     }
     executor.shutdown()
