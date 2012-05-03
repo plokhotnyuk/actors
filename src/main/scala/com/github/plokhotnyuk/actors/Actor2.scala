@@ -18,17 +18,22 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
 
   val toEffect: Effect[A] = effect[A]((a) => this ! a)
 
+  def apply(a: A) {
+    this ! a
+  }
+
   def !(a: A) {
     val node = new Node2[A](a)
     head.getAndSet(node).lazySet(node)
     trySchedule()
   }
 
-  def apply(a: A) {
-    this ! a
-  }
-
-  private[this] def trySchedule(): Any = if (suspended.compareAndSet(true, false)) act(())
+  private[this] def trySchedule(): Any = if (suspended.compareAndSet(true, false))
+    try { act(()) } catch {
+      case ex =>
+        suspended.set(true)
+        throw new RuntimeException(ex)
+    }
 
   private[this] val act: Effect[Unit] = effect {
     (u: Unit) =>
