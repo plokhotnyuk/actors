@@ -13,7 +13,7 @@ import scalaz.concurrent.Strategy
 class ScalazActor2Test extends Specification with AvailableProcessorsParallelism {
 
   "Single-producer sending" in {
-    val n = 40000000
+    val n = 100000000
     val bang = new CountDownLatch(1)
 
     var countdown = n
@@ -70,24 +70,57 @@ class ScalazActor2Test extends Specification with AvailableProcessorsParallelism
     val gameOver = new CountDownLatch(1)
     implicit val executor = new ForkJoinPool()
     import Strategy.Executor
-    var ping: Actor2[Int] = null
-    var pong: Actor2[Int] = null
-    ping = actor2[Int](
-      (b: Int) => b match {
-        case 0 => gameOver.countDown()
-        case i => pong ! i - 1
+    var ping: Actor2[Ball] = null
+    var pong: Actor2[Ball] = null
+    ping = actor2[Ball](
+      (b: Ball) => b match {
+        case Ball(0) => gameOver.countDown()
+        case Ball(i) => pong ! Ball(i - 1)
       }
     )
-    pong = actor2[Int](
-      (b: Int) => b match {
-        case 0 => gameOver.countDown()
-        case i => ping ! i - 1
+    pong = actor2[Ball](
+      (b: Ball) => b match {
+        case Ball(0) => gameOver.countDown()
+        case Ball(i) => ping ! Ball(i - 1)
       }
     )
     val n = 20000000
     timed("Ping between actors", n) {
-      ping ! n
+      ping ! Ball(n)
       gameOver.await()
+    }
+    executor.shutdown()
+    executor.awaitTermination(10L, TimeUnit.SECONDS)
+  }
+
+  "Max throughput" in {
+    val n = 100000000
+    val p = availableProcessors / 2
+    val bang = new CountDownLatch(p)
+
+    implicit val executor = new ForkJoinPool()
+    import Strategy.Executor
+    timed("Max throughput", n) {
+      for (j <- 1 to p) {
+        fork {
+          var countdown = n / p
+          val countdownActor = actor2[Tick] {
+            (t: Tick) =>
+              countdown -= 1
+              if (countdown == 0) {
+                bang.countDown()
+              }
+          }
+
+          val tick = Tick()
+          var i = n
+          while (i > 0) {
+            countdownActor ! tick
+            i -= 1
+          }
+        }
+      }
+      bang.await()
     }
     executor.shutdown()
     executor.awaitTermination(10L, TimeUnit.SECONDS)
