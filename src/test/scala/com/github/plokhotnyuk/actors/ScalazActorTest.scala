@@ -103,24 +103,28 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
     implicit val executor = new ForkJoinPool()
     import Strategy.Executor
     timed("Max throughput", n) {
-      for (j <- 1 to p) {
-        fork {
-          var countdown = n / p
-          val countdownActor = actor[Tick] {
-            (t: Tick) =>
-              countdown -= 1
-              if (countdown == 0) {
-                bang.countDown()
-              }
-          }
+      (1 to p) map {
+        j =>
+          fork {
+            var countdown = n / p
+            val countdownActor = actor[Tick] {
+              (t: Tick) =>
+                countdown -= 1
+                if (countdown == 0) {
+                  bang.countDown()
+                }
+            }
 
-          val tick = Tick()
-          var i = n
-          while (i > 0) {
-            countdownActor ! tick
-            i -= 1
+            val tick = Tick()
+            var i = n
+            while (i > 0) {
+              countdownActor ! tick
+              i -= 1
+            }
           }
-        }
+      } map {
+        thread =>
+          thread.join()
       }
       bang.await()
     }
