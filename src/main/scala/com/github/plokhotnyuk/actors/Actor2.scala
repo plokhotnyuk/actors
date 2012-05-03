@@ -37,7 +37,9 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
 
   private[this] val act: Effect[Unit] = effect {
     (u: Unit) =>
-      batchWork(batchSize)
+      try {
+        batchWork(batchSize)
+      } catch { case ex => onError(ex) }
       suspended.set(true)
       if (tail.get ne null) trySchedule()
   }
@@ -47,9 +49,7 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
     val next = tail.get
     if (next ne null) {
       tail = next
-      try {
-        e(next.msg)
-      } catch { case ex => onError(ex) }
+      e(next.msg)
       if (i > 0) batchWork(i - 1)
     }
   }
