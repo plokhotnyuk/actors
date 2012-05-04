@@ -11,27 +11,24 @@ import actors.{Exit, Actor}
 class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
   "Single-producer sending" in {
     val n = 1000000
-    val bang = new CountDownLatch(1)
+    timed("Single-producer sending", n) {
+      val bang = new CountDownLatch(1)
+      val countdown = new Actor {
+        private[this] var countdown = n
 
-    class Countdown extends Actor {
-      private[this] var countdown = n
-
-      def act() {
-        loop {
-          react {
-            case _ =>
-              countdown -= 1
-              if (countdown == 0) {
-                bang.countDown()
-                exit()
-              }
+        def act() {
+          loop {
+            react {
+              case _ =>
+                countdown -= 1
+                if (countdown == 0) {
+                  bang.countDown()
+                  exit()
+                }
+            }
           }
         }
       }
-    }
-
-    timed("Single-producer sending", n) {
-      val countdown = new Countdown()
       countdown.start()
       val tick = Tick()
       var i = n
@@ -45,27 +42,24 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
 
   "Multi-producer sending" in {
     val n = 1000000
-    val bang = new CountDownLatch(1)
+    timed("Multi-producer sending", n) {
+      val bang = new CountDownLatch(1)
+      val countdown = new Actor {
+        private[this] var countdown = n
 
-    class Countdown extends Actor {
-      private[this] var countdown = n
-
-      def act() {
-        loop {
-          react {
-            case _ =>
-              countdown -= 1
-              if (countdown == 0) {
-                bang.countDown()
-                exit()
-              }
+        def act() {
+          loop {
+            react {
+              case _ =>
+                countdown -= 1
+                if (countdown == 0) {
+                  bang.countDown()
+                  exit()
+                }
+            }
           }
         }
       }
-    }
-
-    timed("Multi-producer sending", n) {
-      val countdown = new Countdown()
       countdown.start()
       val tick = Tick()
       (1 to n).par.foreach(i => countdown ! tick)
@@ -74,45 +68,50 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
   }
 
   "Ping between actors" in {
-    val gameOver = new CountDownLatch(1)
-
-    class Player extends Actor {
-      def act() {
-        loop {
-          react {
-            case Ball(0) => gameOver.countDown(); exit()
-            case Ball(1) => sender ! Ball(0); exit()
-            case Ball(i) => sender ! Ball(i - 1)
+    val n = 1000000
+    timed("Ping between actors", n) {
+      val gameOver = new CountDownLatch(1)
+      val ping = new Actor {
+        def act() {
+          loop {
+            react {
+              case Ball(0) => gameOver.countDown(); exit()
+              case Ball(1) => sender ! Ball(0); exit()
+              case Ball(i) => sender ! Ball(i - 1)
+            }
           }
         }
       }
-    }
-
-    val ping = new Player()
-    val pong = new Player()
-    ping.start()
-    pong.start()
-    val n = 1000000
-    timed("Ping between actors", n) {
+      val pong = new Actor {
+        def act() {
+          loop {
+            react {
+              case Ball(0) => gameOver.countDown(); exit()
+              case Ball(1) => sender ! Ball(0); exit()
+              case Ball(i) => sender ! Ball(i - 1)
+            }
+          }
+        }
+      }
+      ping.start()
+      pong.start()
       ping.send(Ball(n), pong)
       gameOver.await()
     }
   }
 
   "Single-producer asking" in {
-    class Echo extends Actor {
-      def act() {
-        loop {
-          react {
-            case _@message => sender ! message
+    val n = 1000000
+    timed("Single-producer asking", n) {
+      val echo = new Actor {
+        def act() {
+          loop {
+            react {
+              case _@msg => sender ! msg
+            }
           }
         }
       }
-    }
-
-    val n = 1000000
-    timed("Single-producer asking", n) {
-      val echo = new Echo()
       echo.start()
       val message = Message()
       var i = n
@@ -125,19 +124,17 @@ class ScalaActorTest extends Specification with AvailableProcessorsParallelism {
   }
 
   "Multi-producer asking" in {
-    class Echo extends Actor {
-      def act() {
-        loop {
-          react {
-            case _@message => sender ! message
+    val n = 1000000
+    timed("Multi-producer asking", n) {
+      val echo = new Actor {
+        def act() {
+          loop {
+            react {
+              case _@msg => sender ! msg
+            }
           }
         }
       }
-    }
-
-    val n = 1000000
-    timed("Multi-producer asking", n) {
-      val echo = new Echo()
       echo.start()
       val message = Message()
       (1 to n).par.foreach(i => echo !? message)

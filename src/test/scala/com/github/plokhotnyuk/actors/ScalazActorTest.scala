@@ -12,26 +12,25 @@ import akka.jsr166y.ForkJoinPool
 
 @RunWith(classOf[JUnitRunner])
 class ScalazActorTest extends Specification with AvailableProcessorsParallelism {
-  implicit val executor = new ForkJoinPool()
+  implicit val executor = new ForkJoinPool(2)
   import Strategy.Executor
 
   "Single-producer sending" in {
-    val n = 40000000
-    val bang = new CountDownLatch(1)
-    var countdown = n
-    val countdownActor = actor[Tick] {
-      (t: Tick) =>
-        countdown -= 1
-        if (countdown == 0) {
-          bang.countDown()
-        }
-    }
+    val n = 50000000
     timed("Single-producer sending", n) {
-      val countdown = countdownActor
+      val bang = new CountDownLatch(1)
+      var countdown = n
+      val countdownActor = actor[Tick] {
+        (t: Tick) =>
+          countdown -= 1
+          if (countdown == 0) {
+            bang.countDown()
+          }
+      }
       val tick = Tick()
       var i = n
       while (i > 0) {
-        countdown ! tick
+        countdownActor ! tick
         i -= 1
       }
       bang.await()
@@ -39,52 +38,50 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
   }
 
   "Multi-producer sending" in {
-    val n = 40000000
-    val bang = new CountDownLatch(1)
-    var countdown = n
-    val countdownActor = actor[Tick] {
-      (t: Tick) =>
-        countdown -= 1
-        if (countdown == 0) {
-          bang.countDown()
-        }
-    }
+    val n = 50000000
     timed("Multi-producer sending", n) {
-      val countdown = countdownActor
+      val bang = new CountDownLatch(1)
+      var countdown = n
+      val countdownActor = actor[Tick] {
+        (t: Tick) =>
+          countdown -= 1
+          if (countdown == 0) {
+            bang.countDown()
+          }
+      }
       val tick = Tick()
-      (1 to n).par.foreach(i => countdown ! tick)
+      (1 to n).par.foreach(i => countdownActor ! tick)
       bang.await()
     }
   }
 
   "Ping between actors" in {
-    val gameOver = new CountDownLatch(1)
-    var ping: Actor[Ball] = null
-    var pong: Actor[Ball] = null
-    ping = actor[Ball](
-      (b: Ball) => b match {
-        case Ball(0) => gameOver.countDown()
-        case Ball(i) => pong ! Ball(i - 1)
-      }
-    )
-    pong = actor[Ball](
-      (b: Ball) => b match {
-        case Ball(0) => gameOver.countDown()
-        case Ball(i) => ping ! Ball(i - 1)
-      }
-    )
-    val n = 20000000
+    val n = 25000000
     timed("Ping between actors", n) {
+      val gameOver = new CountDownLatch(1)
+      var pong: Actor[Ball] = null
+      val ping = actor[Ball](
+        (b: Ball) => b match {
+          case Ball(0) => gameOver.countDown()
+          case Ball(i) => pong ! Ball(i - 1)
+        }
+      )
+      pong = actor[Ball](
+        (b: Ball) => b match {
+          case Ball(0) => gameOver.countDown()
+          case Ball(i) => ping ! Ball(i - 1)
+        }
+      )
       ping ! Ball(n)
       gameOver.await()
     }
   }
 
   "Max throughput" in {
-    val n = 40000000
-    val p = availableProcessors / 2
-    val bang = new CountDownLatch(p)
+    val n = 50000000
     timed("Max throughput", n) {
+      val p = availableProcessors / 2
+      val bang = new CountDownLatch(p)
       for (j <- 1 to p) {
         fork {
           var countdown = n / p

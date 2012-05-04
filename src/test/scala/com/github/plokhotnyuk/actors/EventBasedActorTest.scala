@@ -10,23 +10,20 @@ import com.github.plokhotnyuk.actors.Helper._
 class EventBasedActorTest extends Specification with AvailableProcessorsParallelism {
   "Single-producer sending" in {
     val n = 100000000
-    val bang = new CountDownLatch(1)
-
-    class Countdown extends EventBasedActor {
-      private[this] var countdown = n
-
-      def receive = {
-        case _ =>
-          countdown -= 1
-          if (countdown == 0) {
-            bang.countDown()
-          }
-      }
-    }
-
     EventProcessor.initPool(1)
     timed("Single-producer sending", n) {
-      val countdown = new Countdown()
+      val bang = new CountDownLatch(1)
+      val countdown = new EventBasedActor {
+        private[this] var countdown = n
+
+        def receive = {
+          case _ =>
+            countdown -= 1
+            if (countdown == 0) {
+              bang.countDown()
+            }
+        }
+      }
       val tick = Tick()
       var i = n
       while (i > 0) {
@@ -40,23 +37,20 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
 
   "Multi-producer sending" in {
     val n = 100000000
-    val bang = new CountDownLatch(1)
-
-    class Countdown extends EventBasedActor {
-      private[this] var countdown = n
-
-      def receive = {
-        case _ =>
-          countdown -= 1
-          if (countdown == 0) {
-            bang.countDown()
-          }
-      }
-    }
-
     EventProcessor.initPool(1)
     timed("Multi-producer sending", n) {
-      val countdown = new Countdown()
+      val bang = new CountDownLatch(1)
+      val countdown = new EventBasedActor {
+        private[this] var countdown = n
+
+        def receive = {
+          case _ =>
+            countdown -= 1
+            if (countdown == 0) {
+              bang.countDown()
+            }
+        }
+      }
       val tick = Tick()
       (1 to n).par.foreach(i => countdown ! tick)
       bang.await()
@@ -65,20 +59,22 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
   }
 
   "Ping between actors" in {
-    val gameOver = new CountDownLatch(1)
-
-    class Player extends EventBasedActor {
-      def receive = {
-        case Ball(0) => gameOver.countDown()
-        case Ball(i) => reply(Ball(i - 1))
-      }
-    }
-
-    EventProcessor.initPool(2)
-    val ping = new Player
-    val pong = new Player
     val n = 100000000
+    EventProcessor.initPool(2)
     timed("Ping between actors", n) {
+      val gameOver = new CountDownLatch(1)
+      val ping = new EventBasedActor {
+        def receive = {
+          case Ball(0) => gameOver.countDown()
+          case Ball(i) => reply(Ball(i - 1))
+        }
+      }
+      val pong = new EventBasedActor {
+        def receive = {
+          case Ball(0) => gameOver.countDown()
+          case Ball(i) => reply(Ball(i - 1))
+        }
+      }
       ping.send(Ball(n), pong)
       gameOver.await()
     }
@@ -86,16 +82,14 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
   }
 
   "Single-producer asking" in {
-    class Echo extends EventBasedActor {
-      def receive = {
-        case _@message => reply(message)
-      }
-    }
-
-    EventProcessor.initPool(1)
     val n = 20000000
+    EventProcessor.initPool(1)
     timed("Single-producer asking", n) {
-      val echo = new Echo()
+      val echo = new EventBasedActor {
+        def receive = {
+          case _@msg => reply(msg)
+        }
+      }
       val message = Message()
       var i = n
       while (i > 0) {
@@ -107,16 +101,14 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
   }
 
   "Multi-producer asking" in {
-    class Echo extends EventBasedActor {
-      def receive = {
-        case _@message => reply(message)
-      }
-    }
-
-    EventProcessor.initPool(1)
     val n = 20000000
+    EventProcessor.initPool(1)
     timed("Multi-producer asking", n) {
-      val echo = new Echo
+      val echo = new EventBasedActor {
+        def receive = {
+          case _@msg => reply(msg)
+        }
+      }
       val message = Message()
       (1 to n).par.foreach(i => echo ? message)
     }
@@ -126,25 +118,22 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
   "Max throughput" in {
     val n = 100000000
     val p = availableProcessors / 2
-    val bang = new CountDownLatch(p)
-
-    class Countdown extends EventBasedActor {
-      private[this] var countdown = n / p
-
-      def receive = {
-        case _ =>
-          countdown -= 1
-          if (countdown == 0) {
-            bang.countDown()
-          }
-      }
-    }
-
     EventProcessor.initPool(p)
     timed("Max throughput", n) {
+      val bang = new CountDownLatch(p)
       for (j <- 1 to p) {
         fork {
-          val countdown = new Countdown()
+          val countdown = new EventBasedActor() {
+            private[this] var countdown = n / p
+
+            def receive = {
+              case _ =>
+                countdown -= 1
+                if (countdown == 0) {
+                  bang.countDown()
+                }
+            }
+          }
           val tick = Tick()
           var i = n / p
           while (i > 0) {

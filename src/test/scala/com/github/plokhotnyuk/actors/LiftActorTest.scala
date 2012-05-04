@@ -11,21 +11,19 @@ import com.github.plokhotnyuk.actors.Helper._
 class LiftActorTest extends Specification with AvailableProcessorsParallelism {
   "Single-producer sending" in {
     val n = 20000000
-    val bang = new CountDownLatch(1)
-
-    class Countdown extends LiftActor {
-      private[this] var countdown = n
-
-      def messageHandler = {
-        case _ =>
-          countdown -= 1
-          if (countdown == 0) {
-            bang.countDown()
-          }
-      }
-    }
     timed("Single-producer sending", n) {
-      val countdown = new Countdown()
+      val bang = new CountDownLatch(1)
+      val countdown = new LiftActor {
+        private[this] var countdown = n
+
+        def messageHandler = {
+          case _ =>
+            countdown -= 1
+            if (countdown == 0) {
+              bang.countDown()
+            }
+        }
+      }
       val tick = Tick()
       var i = n
       while (i > 0) {
@@ -38,21 +36,19 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
 
   "Multi-producer sending" in {
     val n = 20000000
-    val bang = new CountDownLatch(1)
-
-    class Countdown extends LiftActor {
-      private[this] var countdown = n
-
-      def messageHandler = {
-        case _ =>
-          countdown -= 1
-          if (countdown == 0) {
-            bang.countDown()
-          }
-      }
-    }
     timed("Multi-producer sending", n) {
-      val countdown = new Countdown()
+      val bang = new CountDownLatch(1)
+      val countdown = new LiftActor {
+        private[this] var countdown = n
+
+        def messageHandler = {
+          case _ =>
+            countdown -= 1
+            if (countdown == 0) {
+              bang.countDown()
+            }
+        }
+      }
       val tick = Tick()
       (1 to n).par.foreach(i => countdown ! tick)
       bang.await()
@@ -60,38 +56,35 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
   }
 
   "Ping between actors" in {
-    val gameOver = new CountDownLatch(1)
-
-    class Player extends LiftActor {
-      var competitor: Player = _
-
-      def messageHandler = {
-        case Ball(0) => gameOver.countDown()
-        case Ball(i) => competitor.send(Ball(i - 1))
-      }
-    }
-
-    val ping = new Player()
-    val pong = new Player()
-    ping.competitor = pong
-    pong.competitor = ping
     val n = 2000000
     timed("Ping between actors", n) {
+      val gameOver = new CountDownLatch(1)
+      var pong: LiftActor = null
+      val ping = new LiftActor {
+        def messageHandler = {
+          case Ball(0) => gameOver.countDown()
+          case Ball(i) => pong.send(Ball(i - 1))
+        }
+      }
+      pong = new LiftActor {
+        def messageHandler = {
+          case Ball(0) => gameOver.countDown()
+          case Ball(i) => ping.send(Ball(i - 1))
+        }
+      }
       ping.send(Ball(n))
       gameOver.await()
     }
   }
 
   "Single-producer asking" in {
-    class Echo extends LiftActor {
-      def messageHandler = {
-        case _@message => reply(message)
-      }
-    }
-
     val n = 1000000
     timed("Single-producer asking", n) {
-      val echo = new Echo()
+      val echo = new LiftActor {
+        def messageHandler = {
+          case _@msg => reply(msg)
+        }
+      }
       val message = Message()
       var i = n
       while (i > 0) {
@@ -102,15 +95,13 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
   }
 
   "Multi-producer asking" in {
-    class Echo extends LiftActor {
-      def messageHandler = {
-        case _@message => reply(message)
-      }
-    }
-
     val n = 2000000
     timed("Multi-producer asking", n) {
-      val echo = new Echo()
+      val echo = new LiftActor {
+        def messageHandler = {
+          case _@msg => reply(msg)
+        }
+      }
       val message = Message()
       (1 to n).par.foreach(i => echo !? message)
     }
