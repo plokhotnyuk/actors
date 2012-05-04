@@ -31,7 +31,7 @@ class AkkaActorTest extends Specification {
   val actorSystem = ActorSystem("system", config)
 
   "Single-producer sending" in {
-    val n = 50000000
+    val n = 40000000
     timed("Single-producer sending", n) {
       val bang = new CountDownLatch(1)
       val countdown = actorSystem.actorOf(Props(new Actor {
@@ -57,7 +57,7 @@ class AkkaActorTest extends Specification {
   }
 
   "Multi-producer sending" in {
-    val n = 50000000
+    val n = 40000000
     timed("Multi-producer sending", n) {
       val bang = new CountDownLatch(1)
       val countdownActor = actorSystem.actorOf(Props(new Actor {
@@ -89,7 +89,7 @@ class AkkaActorTest extends Specification {
   }
 
   "Ping between actors" in {
-    val n = 25000000
+    val n = 20000000
     timed("Ping between actors", n) {
       val gameOver = new CountDownLatch(1)
       val ping = actorSystem.actorOf(Props(new Actor {
@@ -155,7 +155,7 @@ class AkkaActorTest extends Specification {
   }
 
   "Max throughput" in {
-    val n = 50000000
+    val n = 40000000
     timed("Max throughput", n) {
       val p = availableProcessors / 2
       val bang = new CountDownLatch(p)
