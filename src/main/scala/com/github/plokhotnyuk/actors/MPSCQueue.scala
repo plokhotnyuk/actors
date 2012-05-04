@@ -12,9 +12,7 @@ import annotation.tailrec
  */
 class MPSCQueue[T] {
   private[this] var anyData: T = _  // Don't know how to simplify this
-  var t0, t1, t2, t3, t4, t5, t6: Long = _
   private[this] var tail = new Node[T](anyData)
-  var h0, h1, h2, h3, h4, h5, h6: Long = _
   private[this] val head = new AtomicReference[Node[T]](tail)
 
   def enqueue(data: T) {

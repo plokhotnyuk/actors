@@ -8,10 +8,8 @@ import java.util.concurrent.atomic.AtomicReference
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  */
 abstract class ThreadBasedActor extends BackOff {
-  var t0, t1, t2, t3, t4, t5: Long = _
   @volatile private[this] var doRun = 1L
   private[this] var tail = new Mail(null, null)
-  var h0, h1, h2, h3, h4, h5, h6: Long = _
   private[this] val head = new AtomicReference[Mail](tail)
 
   start()
