@@ -11,7 +11,7 @@ import java.util.concurrent.CountDownLatch
 import akka.jsr166y.ForkJoinPool
 
 @RunWith(classOf[JUnitRunner])
-class ScalazActorTest extends Specification with AvailableProcessorsParallelism {
+class ScalazActorTest extends Specification {
   implicit val executor = new ForkJoinPool(2)
   import Strategy.Executor
 
@@ -49,8 +49,18 @@ class ScalazActorTest extends Specification with AvailableProcessorsParallelism 
             bang.countDown()
           }
       }
-      val tick = Tick()
-      (1 to n).par.foreach(i => countdownActor ! tick)
+      val p = availableProcessors
+      for (j <- 1 to p) {
+        fork {
+          val tick = Tick()
+          val countdown = countdownActor
+          var i = n / p
+          while (i > 0) {
+            countdown ! tick
+            i -= 1
+          }
+        }
+      }
       bang.await()
     }
   }

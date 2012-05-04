@@ -8,7 +8,7 @@ import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
 
 @RunWith(classOf[JUnitRunner])
-class LiftActorTest extends Specification with AvailableProcessorsParallelism {
+class LiftActorTest extends Specification {
   "Single-producer sending" in {
     val n = 20000000
     timed("Single-producer sending", n) {
@@ -38,7 +38,7 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
     val n = 20000000
     timed("Multi-producer sending", n) {
       val bang = new CountDownLatch(1)
-      val countdown = new LiftActor {
+      val countdownActor = new LiftActor {
         private[this] var countdown = n
 
         def messageHandler = {
@@ -49,8 +49,18 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
             }
         }
       }
-      val tick = Tick()
-      (1 to n).par.foreach(i => countdown ! tick)
+      val p = availableProcessors
+      for (j <- 1 to p) {
+        fork {
+          val tick = Tick()
+          val countdown = countdownActor
+          var i = n / p
+          while (i > 0) {
+            countdown ! tick
+            i -= 1
+          }
+        }
+      }
       bang.await()
     }
   }
@@ -97,13 +107,26 @@ class LiftActorTest extends Specification with AvailableProcessorsParallelism {
   "Multi-producer asking" in {
     val n = 2000000
     timed("Multi-producer asking", n) {
-      val echo = new LiftActor {
+      val p = availableProcessors
+      val done = new CountDownLatch(p)
+      val echoActor = new LiftActor {
         def messageHandler = {
           case _@msg => reply(msg)
         }
       }
-      val message = Message()
-      (1 to n).par.foreach(i => echo !? message)
+      for (j <- 1 to p) {
+        fork {
+          val message = Message()
+          val echo = echoActor
+          var i = n / p
+          while (i > 0) {
+            echo !? message
+            i -= 1
+          }
+          done.countDown()
+        }
+      }
+      done.await()
     }
   }
 }

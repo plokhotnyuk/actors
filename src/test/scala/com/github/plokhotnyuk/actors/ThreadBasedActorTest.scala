@@ -7,7 +7,7 @@ import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
 
 @RunWith(classOf[JUnitRunner])
-class ThreadBasedActorTest extends Specification with AvailableProcessorsParallelism {
+class ThreadBasedActorTest extends Specification {
   "Single-producer sending" in {
     val n = 100000000
     timed("Single-producer sending", n) {
@@ -38,7 +38,7 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
     val n = 100000000
     timed("Multi-producer sending", n) {
       val bang = new CountDownLatch(1)
-      val countdown = new ThreadBasedActor {
+      val countdownActor = new ThreadBasedActor {
         private[this] var countdown = n
 
         def receive = {
@@ -50,8 +50,18 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
             }
         }
       }
-      val tick = Tick()
-      (1 to n).par.foreach(i => countdown ! tick)
+      val p = availableProcessors
+      for (j <- 1 to p) {
+        fork {
+          val tick = Tick()
+          val countdown = countdownActor
+          var i = n / p
+          while (i > 0) {
+            countdown ! tick
+            i -= 1
+          }
+        }
+      }
       bang.await()
     }
   }
@@ -100,14 +110,26 @@ class ThreadBasedActorTest extends Specification with AvailableProcessorsParalle
   "Multi-producer asking" in {
     val n = 20000000
     timed("Multi-producer asking", n) {
-      val echo = new ThreadBasedActor {
+      val p = availableProcessors
+      val done = new CountDownLatch(p)
+      val echoActor = new ThreadBasedActor {
         def receive = {
           case _@msg => reply(msg)
         }
       }
-      val message = Message()
-      (1 to n).par.foreach(i => echo ? message)
-      echo.exit()
+      for (j <- 1 to p) {
+        fork {
+          val message = Message()
+          val echo = echoActor
+          var i = n / p
+          while (i > 0) {
+            echo ? message
+            i -= 1
+          }
+          done.countDown()
+        }
+      }
+      done.await()
     }
   }
 

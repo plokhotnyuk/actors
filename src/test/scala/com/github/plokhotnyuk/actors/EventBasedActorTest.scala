@@ -7,7 +7,7 @@ import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
 
 @RunWith(classOf[JUnitRunner])
-class EventBasedActorTest extends Specification with AvailableProcessorsParallelism {
+class EventBasedActorTest extends Specification {
   "Single-producer sending" in {
     val n = 100000000
     EventProcessor.initPool(1)
@@ -40,7 +40,7 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
     EventProcessor.initPool(1)
     timed("Multi-producer sending", n) {
       val bang = new CountDownLatch(1)
-      val countdown = new EventBasedActor {
+      val countdownActor = new EventBasedActor {
         private[this] var countdown = n
 
         def receive = {
@@ -51,8 +51,18 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
             }
         }
       }
-      val tick = Tick()
-      (1 to n).par.foreach(i => countdown ! tick)
+      val p = availableProcessors
+      for (j <- 1 to p) {
+        fork {
+          val tick = Tick()
+          val countdown = countdownActor
+          var i = n / p
+          while (i > 0) {
+            countdown ! tick
+            i -= 1
+          }
+        }
+      }
       bang.await()
     }
     EventProcessor.shutdownPool()
@@ -104,13 +114,26 @@ class EventBasedActorTest extends Specification with AvailableProcessorsParallel
     val n = 20000000
     EventProcessor.initPool(1)
     timed("Multi-producer asking", n) {
-      val echo = new EventBasedActor {
+      val p = availableProcessors
+      val done = new CountDownLatch(p)
+      val echoActor = new EventBasedActor {
         def receive = {
           case _@msg => reply(msg)
         }
       }
-      val message = Message()
-      (1 to n).par.foreach(i => echo ? message)
+      for (j <- 1 to p) {
+        fork {
+          val message = Message()
+          val echo = echoActor
+          var i = n / p
+          while (i > 0) {
+            echo ? message
+            i -= 1
+          }
+          done.countDown()
+        }
+      }
+      done.await()
     }
     EventProcessor.shutdownPool()
   }

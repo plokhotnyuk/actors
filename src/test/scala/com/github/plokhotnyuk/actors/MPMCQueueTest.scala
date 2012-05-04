@@ -6,7 +6,7 @@ import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
 
 @RunWith(classOf[JUnitRunner])
-class MPMCQueueTest extends Specification with AvailableProcessorsParallelism {
+class MPMCQueueTest extends Specification {
   val n = 100000000
 
   "Same producer and consumer" in {
@@ -45,10 +45,17 @@ class MPMCQueueTest extends Specification with AvailableProcessorsParallelism {
   "Multi-producer sending" in {
     timed("Multi-producer sending", n) {
       val queue = new MPMCQueue[Data]()
-      fork {
-        val q = queue
-        val data = Data()
-        (1 to n).par.foreach(i => q.enqueue(data))
+      val p = availableProcessors
+      for (j <- 1 to p) {
+        fork {
+          val q = queue
+          val data = Data()
+          var i = n / p
+          while (i > 0) {
+            q.enqueue(data)
+            i -= 1
+          }
+        }
       }
       var i = n
       while (i > 0) {

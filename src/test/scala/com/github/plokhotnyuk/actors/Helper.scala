@@ -1,6 +1,7 @@
 package com.github.plokhotnyuk.actors
 
 object Helper {
+  val availableProcessors = Runtime.getRuntime.availableProcessors()
 
   def timed[T](name: String, n: Int)(benchmark: => T): T = {
     printf("\n%s:\n", name)

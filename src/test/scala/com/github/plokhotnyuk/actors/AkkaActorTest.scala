@@ -12,7 +12,7 @@ import akka.pattern.ask
 import com.typesafe.config.ConfigFactory._
 
 @RunWith(classOf[JUnitRunner])
-class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
+class AkkaActorTest extends Specification {
   implicit val timeout = Timeout(Duration(10, TimeUnit.SECONDS))
   val config = load(parseString("""
   akka {
@@ -60,7 +60,7 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
     val n = 50000000
     timed("Multi-producer sending", n) {
       val bang = new CountDownLatch(1)
-      val countdown = actorSystem.actorOf(Props(new Actor {
+      val countdownActor = actorSystem.actorOf(Props(new Actor {
         private[this] var countdown = n
 
         def receive = {
@@ -72,8 +72,18 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
             }
         }
       }), "countdown2")
-      val tick = Tick()
-      (1 to n).par.foreach(i => countdown ! tick)
+      val p = availableProcessors
+      for (j <- 1 to p) {
+        fork {
+          val tick = Tick()
+          val countdown = countdownActor
+          var i = n / p
+          while (i > 0) {
+            countdown ! tick
+            i -= 1
+          }
+        }
+      }
       bang.await()
     }
   }
@@ -120,14 +130,27 @@ class AkkaActorTest extends Specification with AvailableProcessorsParallelism {
   "Multi-producer asking" in {
     val n = 1000000
     timed("Multi-producer asking", n) {
-      val echo = actorSystem.actorOf(Props(new Actor {
+      val p = availableProcessors
+      val done = new CountDownLatch(p)
+      val echoActor = actorSystem.actorOf(Props(new Actor {
         def receive = {
           case _@msg => sender ! msg
         }
       }), "echo2")
-      val message = Message()
-      val tenSec = Duration(10, TimeUnit.SECONDS)
-      (1 to n).par.foreach(i => Await.result(echo ? message, tenSec))
+      for (j <- 1 to p) {
+        fork {
+          val message = Message()
+          val tenSec = Duration(10, TimeUnit.SECONDS)
+          val echo = echoActor
+          var i = n / p
+          while (i > 0) {
+            Await.result(echo ? message, tenSec)
+            i -= 1
+          }
+          done.countDown()
+        }
+      }
+      done.await()
     }
   }
 

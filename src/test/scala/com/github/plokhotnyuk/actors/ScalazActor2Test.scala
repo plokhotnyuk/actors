@@ -10,8 +10,8 @@ import Scalaz2._
 import scalaz.concurrent.Strategy
 
 @RunWith(classOf[JUnitRunner])
-class ScalazActor2Test extends Specification with AvailableProcessorsParallelism {
-  implicit val executor = new ForkJoinPool(2)
+class ScalazActor2Test extends Specification {
+  implicit val executor = new ForkJoinPool(availableProcessors)
   import Strategy.Executor
 
   "Single-producer sending" in {
@@ -48,8 +48,18 @@ class ScalazActor2Test extends Specification with AvailableProcessorsParallelism
             bang.countDown()
           }
       }
-      val tick = Tick()
-      (1 to n).par.foreach(i => countdownActor ! tick)
+      val p = availableProcessors
+      for (j <- 1 to p) {
+        fork {
+          val tick = Tick()
+          val countdown = countdownActor
+          var i = n / p
+          while (i > 0) {
+            countdown ! tick
+            i -= 1
+          }
+        }
+      }
       bang.await()
     }
   }
