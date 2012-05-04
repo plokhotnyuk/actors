@@ -8,7 +8,6 @@ import java.util.concurrent.locks.LockSupport
 
 @RunWith(classOf[JUnitRunner])
 class PausingTest extends Specification {
-
   "Thread.`yield`()" in {
     val n = 10000000
     timed("Thread.`yield`()", n) {

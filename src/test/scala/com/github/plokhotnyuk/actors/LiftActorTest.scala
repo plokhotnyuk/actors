@@ -9,7 +9,6 @@ import com.github.plokhotnyuk.actors.Helper._
 
 @RunWith(classOf[JUnitRunner])
 class LiftActorTest extends Specification with AvailableProcessorsParallelism {
-
   "Single-producer sending" in {
     val n = 20000000
     val bang = new CountDownLatch(1)

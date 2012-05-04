@@ -62,7 +62,7 @@ class MPMCQueueTest extends Specification with AvailableProcessorsParallelism {
     timed("Exchange between queues", n) {
       val queue1 = new MPMCQueue[Data]()
       val queue2 = new MPMCQueue[Data]()
-      val thread1 = fork {
+      fork {
         val q1 = queue1
         val q2 = queue2
         var i = n
@@ -71,18 +71,14 @@ class MPMCQueueTest extends Specification with AvailableProcessorsParallelism {
           i -= 1
         }
       }
-      val thread2 = fork {
-        val q1 = queue1
-        val q2 = queue2
-        var i = n
-        while (i > 0) {
-          q2.enqueue(q1.dequeue())
-          i -= 1
-        }
-      }
       queue1.enqueue(Data())
-      thread1.join()
-      thread2.join()
+      val q1 = queue1
+      val q2 = queue2
+      var i = n
+      while (i > 0) {
+        q2.enqueue(q1.dequeue())
+        i -= 1
+      }
     }
   }
 
