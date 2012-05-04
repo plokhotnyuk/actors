@@ -72,42 +72,11 @@ class MPMCQueueTest extends Specification with AvailableProcessorsParallelism {
         }
       }
       queue1.enqueue(Data())
-      val q1 = queue1
-      val q2 = queue2
       var i = n
       while (i > 0) {
-        q2.enqueue(q1.dequeue())
+        queue2.enqueue(queue1.dequeue())
         i -= 1
       }
     }
   }
-
-  "Multi-consumer receiving" in {
-    timed("Multi-consumer receiving", n) {
-      val queue = new MPMCQueue[Data]()
-      fork {
-        val q = queue
-        val data = Data()
-        var i = n
-        while (i > 0) {
-          q.enqueue(data)
-          i -= 1
-        }
-      }
-      (1 to n).par.foreach(i => queue.dequeue())
-    }
-  }
-/* Commented out due live-lock when running on Core2 Duo with JDK 1.6.0_31
-  "Multi-producer sending multi-consumer receiving" in {
-    timed("Multi-producer sending multi-consumer receiving", n) {
-      val queue = new MPMCQueue[Data]()
-      fork {
-        val q = queue
-        val data = Data()
-        (1 to n).par.foreach(i => q.enqueue(data))
-      }
-      (1 to n).par.foreach(i => queue.dequeue())
-    }
-  }
-*/
 }

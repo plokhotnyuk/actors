@@ -7,7 +7,7 @@ import com.github.plokhotnyuk.actors.Helper._
 import scalaz._
 import concurrent.{Actor, Strategy}
 import Scalaz._
-import java.util.concurrent.{TimeUnit, CountDownLatch}
+import java.util.concurrent.CountDownLatch
 import akka.jsr166y.ForkJoinPool
 
 @RunWith(classOf[JUnitRunner])

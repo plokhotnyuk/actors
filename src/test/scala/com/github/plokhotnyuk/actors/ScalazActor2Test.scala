@@ -4,7 +4,7 @@ import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
-import java.util.concurrent.{TimeUnit, CountDownLatch}
+import java.util.concurrent.CountDownLatch
 import akka.jsr166y.ForkJoinPool
 import Scalaz2._
 import scalaz.concurrent.Strategy

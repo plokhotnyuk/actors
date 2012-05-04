@@ -72,11 +72,9 @@ class MPSCQueueTest extends Specification with AvailableProcessorsParallelism {
         }
       }
       queue1.enqueue(Data())
-      val q1 = queue1
-      val q2 = queue2
       var i = n / 2
       while (i > 0) {
-        q2.enqueue(q1.dequeue())
+        queue2.enqueue(queue1.dequeue())
         i -= 1
       }
     }
