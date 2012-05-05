@@ -1,5 +1,3 @@
-
-C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors>set MAVEN_OPTS=-server -Xms128m -Xmx1024m -XX:MaxPermSize=256m -XX:+TieredCompilation 
 [INFO] Scanning for projects...
 [INFO]                                                                         
 [INFO] ------------------------------------------------------------------------
@@ -19,7 +17,7 @@ C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors>set MAVEN_OPTS=-server -X
 [INFO] includes = [**/*.scala,**/*.java,]
 [INFO] excludes = []
 [INFO] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\scala:-1: info: compiling
-[INFO] Compiling 6 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\classes at 1336128085512
+[INFO] Compiling 7 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\classes at 1336247038736
 [INFO] prepare-compile in 0 s
 [INFO] compile in 4 s
 [INFO] 
@@ -33,7 +31,7 @@ C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors>set MAVEN_OPTS=-server -X
 [INFO] includes = [**/*.scala,**/*.java,]
 [INFO] excludes = []
 [INFO] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala:-1: info: compiling
-[INFO] Compiling 12 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\test-classes at 1336128090176
+[INFO] Compiling 13 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\test-classes at 1336247043509
 [INFO] prepare-compile in 0 s
 [INFO] compile in 12 s
 [INFO] 
@@ -47,314 +45,352 @@ C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors>set MAVEN_OPTS=-server -X
 -------------------------------------------------------
  T E S T S
 -------------------------------------------------------
+Running com.github.plokhotnyuk.actors.AkkaActor2Test
+
+Single-producer sending:
+2,968,913,051 ns
+40,000,000 ops
+74 ns/op
+13,472,944 ops/s
+
+Multi-producer sending:
+5,154,989,772 ns
+40,000,000 ops
+128 ns/op
+7,759,472 ops/s
+
+Ping between actors:
+6,405,509,977 ns
+20,000,000 ops
+320 ns/op
+3,122,311 ops/s
+
+Single-producer asking:
+5,561,538,876 ns
+1,000,000 ops
+5,561 ns/op
+179,806 ops/s
+
+Multi-producer asking:
+2,951,419,426 ns
+1,000,000 ops
+2,951 ns/op
+338,820 ops/s
+
+Max throughput:
+2,415,977,855 ns
+40,000,000 ops
+60 ns/op
+16,556,443 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 26.344 sec
 Running com.github.plokhotnyuk.actors.AkkaActorTest
 
 Single-producer sending:
-3,868,269,384 ns
+3,715,383,225 ns
 40,000,000 ops
-96 ns/op
-10,340,541 ops/s
+92 ns/op
+10,766,049 ops/s
 
 Multi-producer sending:
-6,022,754,580 ns
+6,107,676,310 ns
 40,000,000 ops
-150 ns/op
-6,641,479 ops/s
+152 ns/op
+6,549,135 ops/s
 
 Ping between actors:
-6,985,587,422 ns
+6,639,438,234 ns
 20,000,000 ops
-349 ns/op
-2,863,037 ops/s
+331 ns/op
+3,012,303 ops/s
 
 Single-producer asking:
-5,885,994,351 ns
+5,356,635,441 ns
 1,000,000 ops
-5,885 ns/op
-169,894 ops/s
+5,356 ns/op
+186,684 ops/s
 
 Multi-producer asking:
-3,361,928,304 ns
+3,426,624,969 ns
 1,000,000 ops
-3,361 ns/op
-297,448 ops/s
+3,426 ns/op
+291,832 ops/s
 
 Max throughput:
-2,644,276,791 ns
+2,491,323,196 ns
 40,000,000 ops
-66 ns/op
-15,127,009 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 29.669 sec
+62 ns/op
+16,055,724 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 28.632 sec
 Running com.github.plokhotnyuk.actors.EventBasedActorTest
 
 Single-producer sending:
-5,228,101,466 ns
+4,787,149,349 ns
 100,000,000 ops
-52 ns/op
-19,127,402 ops/s
+47 ns/op
+20,889,258 ops/s
 
 Multi-producer sending:
-5,982,805,045 ns
+6,160,233,424 ns
 100,000,000 ops
-59 ns/op
-16,714,567 ops/s
+61 ns/op
+16,233,151 ops/s
 
 Ping between actors:
-11,225,705,418 ns
+10,273,919,079 ns
 100,000,000 ops
-112 ns/op
-8,908,126 ops/s
+102 ns/op
+9,733,384 ops/s
 
 Single-producer asking:
-5,130,316,885 ns
+4,867,145,288 ns
 20,000,000 ops
-256 ns/op
-3,898,394 ops/s
+243 ns/op
+4,109,184 ops/s
 
 Multi-producer asking:
-4,285,045,462 ns
+4,341,553,618 ns
 20,000,000 ops
-214 ns/op
-4,667,395 ops/s
+217 ns/op
+4,606,645 ops/s
 
 Max throughput:
-2,963,449,357 ns
+2,725,931,375 ns
 100,000,000 ops
-29 ns/op
-33,744,460 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 35.506 sec
+27 ns/op
+36,684,709 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 33.836 sec
 Running com.github.plokhotnyuk.actors.LiftActorTest
 
 Single-producer sending:
-2,388,922,977 ns
+2,358,001,151 ns
 20,000,000 ops
-119 ns/op
-8,371,973 ops/s
+117 ns/op
+8,481,760 ops/s
 
 Multi-producer sending:
-2,588,426,540 ns
+2,587,212,100 ns
 20,000,000 ops
 129 ns/op
-7,726,701 ops/s
+7,730,328 ops/s
 
 Ping between actors:
-5,763,367,766 ns
+5,294,763,202 ns
 2,000,000 ops
-2,881 ns/op
-347,019 ops/s
+2,647 ns/op
+377,731 ops/s
 
 Single-producer asking:
-6,514,256,800 ns
+6,337,332,232 ns
 1,000,000 ops
-6,514 ns/op
-153,509 ops/s
+6,337 ns/op
+157,795 ops/s
 
 Multi-producer asking:
-3,178,333,154 ns
+3,211,984,528 ns
 2,000,000 ops
-1,589 ns/op
-629,260 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 21.107 sec
+1,605 ns/op
+622,668 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.436 sec
 Running com.github.plokhotnyuk.actors.MPMCQueueTest
 
 Same producer and consumer:
-3,654,141,019 ns
+3,693,423,369 ns
 100,000,000 ops
 36 ns/op
-27,366,212 ops/s
+27,075,152 ops/s
 
 Single-producer sending:
-4,981,815,029 ns
+4,234,024,289 ns
 100,000,000 ops
-49 ns/op
-20,073,005 ops/s
+42 ns/op
+23,618,192 ops/s
 
 Multi-producer sending:
-7,780,941,353 ns
+8,350,528,598 ns
 100,000,000 ops
-77 ns/op
-12,851,915 ops/s
+83 ns/op
+11,975,289 ops/s
 
 Exchange between queues:
-18,745,973,048 ns
+15,714,778,442 ns
 100,000,000 ops
-187 ns/op
-5,334,479 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 35.817 sec
+157 ns/op
+6,363,436 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 32.651 sec
 Running com.github.plokhotnyuk.actors.MPSCQueueTest
 
 Same producer and consumer:
-1,589,463,105 ns
+1,584,701,334 ns
 100,000,000 ops
 15 ns/op
-62,914,326 ops/s
+63,103,373 ops/s
 
 Single-producer sending:
-2,551,061,087 ns
+2,293,661,764 ns
 100,000,000 ops
-25 ns/op
-39,199,374 ops/s
+22 ns/op
+43,598,407 ops/s
 
 Multi-producer sending:
-6,719,457,438 ns
+6,473,104,564 ns
 100,000,000 ops
-67 ns/op
-14,882,153 ops/s
+64 ns/op
+15,448,537 ops/s
 
 Exchange between queues:
-5,828,047,512 ns
+4,461,230,290 ns
 100,000,000 ops
-58 ns/op
-17,158,405 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.347 sec
+44 ns/op
+22,415,341 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.444 sec
 Running com.github.plokhotnyuk.actors.PausingTest
 
 Thread.`yield`():
-687,596,995 ns
+689,113,648 ns
 10,000,000 ops
 68 ns/op
-14,543,402 ops/s
+14,511,394 ops/s
 
 Thread.sleep(0):
-787,913,243 ns
+801,629,689 ns
 10,000,000 ops
-78 ns/op
-12,691,752 ops/s
+80 ns/op
+12,474,587 ops/s
 
 lock.wait(0, 1):
-15,592,421,787 ns
+15,591,276,242 ns
 1,000 ops
-15,592,421 ns/op
+15,591,276 ns/op
 64 ops/s
 
 LockSupport.parkNanos(1):
-15,597,286,824 ns
+15,597,231,339 ns
 1,000 ops
-15,597,286 ns/op
+15,597,231 ns/op
 64 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 33.337 sec
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 33.353 sec
 Running com.github.plokhotnyuk.actors.ScalaActorTest
 
 Single-producer sending:
-3,745,237,410 ns
+3,194,697,262 ns
 1,000,000 ops
-3,745 ns/op
-267,005 ops/s
+3,194 ns/op
+313,018 ops/s
 
 Multi-producer sending:
-4,631,151,123 ns
+4,444,385,799 ns
 1,000,000 ops
-4,631 ns/op
-215,929 ops/s
+4,444 ns/op
+225,002 ops/s
 
 Ping between actors:
-4,764,391,868 ns
+4,754,006,505 ns
 1,000,000 ops
-4,764 ns/op
-209,890 ops/s
+4,754 ns/op
+210,348 ops/s
 
 Single-producer asking:
-8,017,974,579 ns
+8,574,116,531 ns
 1,000,000 ops
-8,017 ns/op
-124,719 ops/s
+8,574 ns/op
+116,630 ops/s
 
 Multi-producer asking:
-7,289,145,171 ns
+7,160,526,286 ns
 1,000,000 ops
-7,289 ns/op
-137,190 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 29.109 sec
+7,160 ns/op
+139,654 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 28.782 sec
 Running com.github.plokhotnyuk.actors.ScalazActor2Test
 
 Single-producer sending:
-1,916,211,612 ns
+1,820,190,298 ns
 40,000,000 ops
-47 ns/op
-20,874,521 ops/s
+45 ns/op
+21,975,724 ops/s
 
 Multi-producer sending:
-3,092,258,311 ns
+2,773,654,257 ns
 40,000,000 ops
-77 ns/op
-12,935,529 ops/s
+69 ns/op
+14,421,408 ops/s
 
 Ping between actors:
-6,148,641,140 ns
+6,218,515,085 ns
 20,000,000 ops
-307 ns/op
-3,252,751 ops/s
+310 ns/op
+3,216,201 ops/s
 
 Max throughput:
-1,532,815,637 ns
+1,635,879,177 ns
 40,000,000 ops
-38 ns/op
-26,095,767 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.619 sec
+40 ns/op
+24,451,683 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.416 sec
 Running com.github.plokhotnyuk.actors.ScalazActorTest
 
 Single-producer sending:
-4,271,814,597 ns
+4,101,059,250 ns
 40,000,000 ops
-106 ns/op
-9,363,702 ops/s
+102 ns/op
+9,753,577 ops/s
 
 Multi-producer sending:
-4,195,814,374 ns
+4,095,706,003 ns
 40,000,000 ops
-104 ns/op
-9,533,310 ops/s
+102 ns/op
+9,766,325 ops/s
 
 Ping between actors:
-6,541,819,970 ns
+6,292,968,645 ns
 20,000,000 ops
-327 ns/op
-3,057,253 ops/s
+314 ns/op
+3,178,150 ops/s
 
 Max throughput:
-2,020,960,751 ns
+2,922,455,448 ns
 40,000,000 ops
-50 ns/op
-19,792,566 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.096 sec
+73 ns/op
+13,687,120 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.596 sec
 Running com.github.plokhotnyuk.actors.ThreadBasedActorTest
 
 Single-producer sending:
-4,153,614,672 ns
+4,227,622,385 ns
 100,000,000 ops
-41 ns/op
-24,075,415 ops/s
+42 ns/op
+23,653,957 ops/s
 
 Multi-producer sending:
-7,659,666,921 ns
+7,797,112,143 ns
 100,000,000 ops
-76 ns/op
-13,055,397 ops/s
+77 ns/op
+12,825,261 ops/s
 
 Ping between actors:
-7,968,902,319 ns
+7,441,253,389 ns
 100,000,000 ops
-79 ns/op
-12,548,779 ops/s
+74 ns/op
+13,438,596 ops/s
 
 Single-producer asking:
-4,447,179,905 ns
+4,036,575,447 ns
 20,000,000 ops
-222 ns/op
-4,497,232 ops/s
+201 ns/op
+4,954,694 ops/s
 
 Multi-producer asking:
-2,983,476,172 ns
+3,305,463,831 ns
 20,000,000 ops
-149 ns/op
-6,703,589 ops/s
+165 ns/op
+6,050,588 ops/s
 
 Max throughput:
-2,328,974,849 ns
+1,979,117,390 ns
 100,000,000 ops
-23 ns/op
-42,937,346 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 30.295 sec
+19 ns/op
+50,527,573 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 29.547 sec
 
 Results :
 
@@ -370,7 +406,7 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 4:46.896s
-[INFO] Finished at: Fri May 04 13:46:11 EEST 2012
-[INFO] Final Memory: 14M/218M
+[INFO] Total time: 5:04.884s
+[INFO] Finished at: Sat May 05 22:49:02 EEST 2012
+[INFO] Final Memory: 10M/223M
 [INFO] ------------------------------------------------------------------------

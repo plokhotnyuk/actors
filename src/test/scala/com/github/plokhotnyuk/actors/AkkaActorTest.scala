@@ -10,11 +10,12 @@ import akka.dispatch.Await
 import akka.util.{Timeout, Duration}
 import akka.pattern.ask
 import com.typesafe.config.ConfigFactory._
+import com.typesafe.config.Config
 
 @RunWith(classOf[JUnitRunner])
 class AkkaActorTest extends Specification {
   implicit val timeout = Timeout(Duration(10, TimeUnit.SECONDS))
-  val config = load(parseString("""
+  def config: Config = load(parseString("""
   akka {
     daemonic = on
     actor.default-dispatcher {
