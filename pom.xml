@@ -135,7 +135,7 @@
     </build>
     <profiles>
         <profile>
-            <id>32-bit</id>
+            <id>jdk32</id>
             <build>
                 <pluginManagement>
                     <plugins>
@@ -145,6 +145,57 @@
                             <version>2.12</version>
                             <configuration>
                                 <argLine>-server -Xms1280m -Xmx1280m -Xss1m -XX:NewSize=960m -XX:+TieredCompilation -XX:+UseParNewGC -XX:+UseNUMA</argLine>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+        <profile>
+            <id>jrockit64</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.scala-tools</groupId>
+                            <artifactId>maven-scala-plugin</artifactId>
+                            <version>2.15.2</version>
+                            <inherited>false</inherited>
+                            <configuration>
+                                <charset>${project.build.sourceEncoding}</charset>
+                                <args>
+                                    <arg>-unchecked</arg>
+                                    <arg>-deprecation</arg>
+                                    <arg>-explaintypes</arg>
+                                </args>
+                                <jvmArgs>
+                                    <jvmArg>-server</jvmArg>
+                                    <jvmArg>-Xms1g</jvmArg>
+                                    <jvmArg>-Xmx1g</jvmArg>
+                                    <jvmArg>-Xss1m</jvmArg>
+                                </jvmArgs>
+                            </configuration>
+                            <executions>
+                                <execution>
+                                    <id>compile</id>
+                                    <goals>
+                                        <goal>compile</goal>
+                                    </goals>
+                                </execution>
+                                <execution>
+                                    <id>testCompile</id>
+                                    <goals>
+                                        <goal>testCompile</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-surefire-plugin</artifactId>
+                            <version>2.12</version>
+                            <configuration>
+                                <argLine>-server -Xms4g -Xmx4g -Xss1m -Xgc:singleparpar -XXtlaSize:min=1m,preferred=4m</argLine>
                             </configuration>
                         </plugin>
                     </plugins>
