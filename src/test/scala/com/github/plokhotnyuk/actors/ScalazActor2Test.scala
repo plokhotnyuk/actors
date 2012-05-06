@@ -11,7 +11,7 @@ import scalaz.concurrent.Strategy
 
 @RunWith(classOf[JUnitRunner])
 class ScalazActor2Test extends Specification {
-  implicit val executor = new ForkJoinPool(availableProcessors)
+  implicit val executor = new ForkJoinPool()
   import Strategy.Executor
 
   "Single-producer sending" in {

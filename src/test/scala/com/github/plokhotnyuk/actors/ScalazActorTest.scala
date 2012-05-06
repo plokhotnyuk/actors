@@ -12,7 +12,7 @@ import akka.jsr166y.ForkJoinPool
 
 @RunWith(classOf[JUnitRunner])
 class ScalazActorTest extends Specification {
-  implicit val executor = new ForkJoinPool(2)
+  implicit val executor = new ForkJoinPool()
   import Strategy.Executor
 
   "Single-producer sending" in {
