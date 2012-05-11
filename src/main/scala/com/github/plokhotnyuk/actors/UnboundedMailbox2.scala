@@ -12,7 +12,7 @@ case class UnboundedMailbox2() extends MailboxType {
 }
 
 class MPSCQueue2 extends MessageQueue {
-  private[this] var tail = new EnvelopeNode(null)
+  @volatile private[this] var tail = new EnvelopeNode(null)
   private[this] val head = new AtomicReference[EnvelopeNode](tail)
 
   def enqueue(receiver: ActorRef, handle: Envelope) {

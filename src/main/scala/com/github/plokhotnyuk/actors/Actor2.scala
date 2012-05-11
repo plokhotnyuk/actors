@@ -12,7 +12,7 @@ import annotation.tailrec
  */
 final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_), batchSize: Int = 1024)(implicit val strategy: Strategy) {
   private[this] var anyMsg: A = _  // Don't know how to simplify this
-  private[this] var tail = new Node2[A](anyMsg)
+  @volatile private[this] var tail = new Node2[A](anyMsg)
   private[this] val head = new AtomicReference[Node2[A]](tail)
   private[this] val suspended = new AtomicBoolean(true)
 
