@@ -20,7 +20,7 @@ class MPSCQueue2 extends MessageQueue {
     head.getAndSet(node).set(node)
   }
 
-  def dequeue(): Envelope = {
+  def dequeue(): Envelope = synchronized {
     val next = tail.get
     if (next ne null) {
       tail = next
