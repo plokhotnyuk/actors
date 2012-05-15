@@ -5,6 +5,14 @@ import java.util.concurrent.atomic.AtomicReference
 import akka.dispatch._
 import akka.actor.{ActorRef, ActorContext, ActorSystem}
 
+/**
+ * CAUTION!!!
+ * Should not be used with dispatchers that use simultaneous call of dequeue() in different threads,
+ * like BalancingDispatcher
+ *
+ * Based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
+ * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
+ */
 case class UnboundedMailbox2() extends MailboxType {
   def this(settings: ActorSystem.Settings, config: Config) = this()
 
@@ -20,7 +28,7 @@ class MPSCQueue2 extends MessageQueue {
     head.getAndSet(node).set(node)
   }
 
-  def dequeue(): Envelope = synchronized {
+  def dequeue(): Envelope = {
     val next = tail.get
     if (next ne null) {
       tail = next
