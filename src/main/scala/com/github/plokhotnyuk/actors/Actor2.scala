@@ -37,21 +37,24 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
 
   private[this] val act: Effect[Unit] = effect {
     (u: Unit) =>
-      try {
-        batchWork(batchSize)
-      } catch { case ex => onError(ex) }
+      tail = batchWork(tail, batchSize)
       suspended.set(true)
       if (tail.get ne null) trySchedule()
   }
 
   @tailrec
-  private[this] def batchWork(i: Int) {
-    val next = tail.get
+  private[this] def batchWork(current: Node2[A], i: Int): Node2[A] = {
+    val next = current.get
     if (next ne null) {
-      tail = next
-      e(next.msg)
-      if (i > 0) batchWork(i - 1)
-    }
+      handleMessage(next.msg)
+      if (i > 0) batchWork(next, i - 1) else next
+    } else current
+  }
+
+  private[this] def handleMessage(msg: A) {
+    try {
+      e(msg)
+    } catch { case ex => onError(ex) }
   }
 }
 
