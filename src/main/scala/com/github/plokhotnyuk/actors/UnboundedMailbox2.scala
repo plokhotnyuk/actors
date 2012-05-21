@@ -20,8 +20,8 @@ case class UnboundedMailbox2() extends MailboxType {
 }
 
 class MPSCQueue2 extends MessageQueue {
-  @volatile private[this] var tail = new EnvelopeNode(null)
-  private[this] val head = new AtomicReference[EnvelopeNode](tail)
+  private[this] val tail = new AtomicReference[EnvelopeNode](new EnvelopeNode(null))
+  private[this] val head = new AtomicReference[EnvelopeNode](tail.get)
 
   def enqueue(receiver: ActorRef, handle: Envelope) {
     val node = new EnvelopeNode(handle)
@@ -29,16 +29,16 @@ class MPSCQueue2 extends MessageQueue {
   }
 
   def dequeue(): Envelope = {
-    val next = tail.get
+    val next = tail.get.get
     if (next ne null) {
-      tail = next
+      tail.lazySet(next)
       next.envelope
     } else null
   }
 
   def numberOfMessages: Int = {
     var n = 0
-    var next = tail.get
+    var next = tail.get.get
     while (next ne null) {
       next = next.get
       n += 1
@@ -46,7 +46,7 @@ class MPSCQueue2 extends MessageQueue {
     n
   }
 
-  def hasMessages: Boolean = tail.get ne null
+  def hasMessages: Boolean = tail.get.get ne null
 
   def cleanUp(owner: ActorContext, deadLetters: MessageQueue) {
     if (hasMessages) {
