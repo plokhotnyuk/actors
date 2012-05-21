@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
  */
 final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_), batchSize: Int = 1024)(implicit val strategy: Strategy) {
   private[this] var anyMsg: A = _  // Don't know how to simplify this
-  @volatile private[this] var tail = new Node2[A](anyMsg)
-  private[this] val head = new AtomicReference[Node2[A]](tail)
+  private[this] val tail = new AtomicReference[Node2[A]](new Node2[A](anyMsg))
+  private[this] val head = new AtomicReference[Node2[A]](tail.get)
   private[this] val working = new AtomicInteger()
 
   val toEffect: Effect[A] = effect[A](a => this ! a)
@@ -37,21 +37,22 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
 
   private[this] val act: Effect[Unit] = effect {
     (u: Unit) =>
-      tail = batchWork(tail, batchSize)
+      val tailNode = batch(tail.get, batchSize)
+      tail.lazySet(tailNode)
       working.set(0)
-      if (tail.get ne null) trySchedule()
+      if (tailNode ne null) trySchedule()
   }
 
   @tailrec
-  private[this] def batchWork(current: Node2[A], i: Int): Node2[A] = {
+  private[this] def batch(current: Node2[A], i: Int): Node2[A] = {
     val next = current.get
     if (next ne null) {
-      handleMessage(next.a)
-      if (i > 0) batchWork(next, i - 1) else next
+      handle(next.a)
+      if (i > 0) batch(next, i - 1) else next
     } else current
   }
 
-  private[this] def handleMessage(a: A) {
+  private[this] def handle(a: A) {
     try {
       e(a)
     } catch { case ex => onError(ex) }
