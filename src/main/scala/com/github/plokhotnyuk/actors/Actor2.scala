@@ -14,7 +14,7 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
   private[this] var anyMsg: A = _  // Don't know how to simplify this
   private[this] val tail = new AtomicReference[Node2[A]](new Node2[A](anyMsg))
   private[this] val head = new AtomicReference[Node2[A]](tail.get)
-  private[this] val working = new AtomicInteger()
+  private[this] val scheduled = new AtomicInteger()
 
   val toEffect: Effect[A] = effect[A](a => this ! a)
 
@@ -28,10 +28,10 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
     trySchedule()
   }
 
-  private[this] def trySchedule(): Any = if (working.compareAndSet(0, 1))
+  private[this] def trySchedule(): Any = if (scheduled.compareAndSet(0, 1))
     try { act(()) } catch {
       case ex =>
-        working.set(0)
+        scheduled.set(0)
         throw new RuntimeException(ex)
     }
 
@@ -39,7 +39,7 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
     (u: Unit) =>
       val tailNode = batch(tail.get, batchSize)
       tail.lazySet(tailNode)
-      working.set(0)
+      scheduled.set(0)
       if (tailNode ne null) trySchedule()
   }
 
