@@ -4,7 +4,7 @@ import scalaz.Scalaz
 import Scalaz._
 import scalaz.concurrent.{Strategy, Effect}
 import annotation.tailrec
-import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
+import java.util.concurrent.atomic.{AtomicLong, AtomicInteger, AtomicReference}
 
 /**
  * Based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
@@ -14,7 +14,7 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
   private[this] var anyMsg: A = _  // Don't know how to simplify this
   private[this] val tail = new AtomicReference[Node2[A]](new Node2[A](anyMsg))
   private[this] val head = new AtomicReference[Node2[A]](tail.get)
-  private[this] val scheduled = new AtomicInteger()
+  private[this] val scheduled = new AtomicLong()
 
   val toEffect: Effect[A] = effect[A](a => this ! a)
 
@@ -28,27 +28,41 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
     trySchedule()
   }
 
-  private[this] def trySchedule(): Any = if (scheduled.compareAndSet(0, 1))
+  // should be last operation of the work() method
+  private[this] def trySchedule() {
+    if (scheduled.compareAndSet(0, 1)) schedule()
+  }
+
+  // should be last operation of the work() method
+  private[this] def schedule(): Any =
     try { act(()) } catch {
       case ex =>
-        scheduled.set(0)
+        markSuspended()
         throw new RuntimeException(ex)
     }
 
   private[this] val act: Effect[Unit] = effect {
     (u: Unit) =>
-      val tailNode = batch(tail.get, batchSize)
+      val tailNode = batchHandle(tail.get, batchSize)
       tail.lazySet(tailNode)
-      scheduled.set(0)
-      if (tailNode ne null) trySchedule()
+      if (tailNode ne null) {
+        schedule()
+      } else {
+        markSuspended()
+        if (tail.get.get() ne null) trySchedule()
+      }
+  }
+
+  private[this] def markSuspended() {
+    scheduled.lazySet(0)
   }
 
   @tailrec
-  private[this] def batch(current: Node2[A], i: Int): Node2[A] = {
+  private[this] def batchHandle(current: Node2[A], i: Int): Node2[A] = {
     val next = current.get
     if (next ne null) {
       handle(next.a)
-      if (i > 0) batch(next, i - 1) else next
+      if (i > 0) batchHandle(next, i - 1) else next
     } else current
   }
 
