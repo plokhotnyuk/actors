@@ -11,12 +11,12 @@ class MPMCQueueTest extends Specification {
 
   "Same producer and consumer" in {
     timed("Same producer and consumer", n) {
-      val queue = new MPMCQueue[Data]()
-      val data = Data()
+      val q = dataQueue
+      val d = Data()
       var i = n
       while (i > 0) {
-        queue.enqueue(data)
-        queue.dequeue()
+        q.enqueue(d)
+        q.dequeue()
         i -= 1
       }
     }
@@ -24,66 +24,60 @@ class MPMCQueueTest extends Specification {
 
   "Single-producer sending" in {
     timed("Single-producer sending", n) {
-      val queue = new MPMCQueue[Data]()
+      val q = dataQueue
       fork {
-        val q = queue
-        val data = Data()
-        var i = n
-        while (i > 0) {
-          q.enqueue(data)
-          i -= 1
-        }
+        receiveData(q, n)
       }
-      var i = n
-      while (i > 0) {
-        queue.dequeue()
-        i -= 1
-      }
+      sendData(q, n)
     }
   }
 
   "Multi-producer sending" in {
     timed("Multi-producer sending", n) {
-      val queue = new MPMCQueue[Data]()
-      val p = availableProcessors
-      for (j <- 1 to p) {
-        fork {
-          val q = queue
-          val data = Data()
-          var i = n / p
-          while (i > 0) {
-            q.enqueue(data)
-            i -= 1
-          }
-        }
+      val q = dataQueue
+      for (j <- 1 to CPUs) fork {
+        receiveData(q, n / CPUs)
       }
-      var i = n
-      while (i > 0) {
-        queue.dequeue()
-        i -= 1
-      }
+      sendData(q, n)
     }
   }
 
   "Exchange between queues" in {
     timed("Exchange between queues", n) {
-      val queue1 = new MPMCQueue[Data]()
-      val queue2 = new MPMCQueue[Data]()
+      val q1 = dataQueue
+      val q2 = dataQueue
       fork {
-        val q1 = queue1
-        val q2 = queue2
-        var i = n
-        while (i > 0) {
-          q1.enqueue(q2.dequeue())
-          i -= 1
-        }
+        pumpData(q1, q2, n / 2)
       }
-      queue1.enqueue(Data())
-      var i = n
-      while (i > 0) {
-        queue2.enqueue(queue1.dequeue())
-        i -= 1
-      }
+      q1.enqueue(Data())
+      pumpData(q2, q1, n / 2)
+    }
+  }
+
+  def dataQueue: Queue[Data] = new MPMCQueue[Data]()
+
+  private[this] def sendData(q: Queue[Data], n: Int) {
+    var i = n
+    while (i > 0) {
+      q.dequeue()
+      i -= 1
+    }
+  }
+
+  private[this] def receiveData(q: Queue[Data], n: Int) {
+    val d = Data()
+    var i = n
+    while (i > 0) {
+      q.enqueue(d)
+      i -= 1
+    }
+  }
+
+  private[this] def pumpData(q1: Queue[Data], q2: Queue[Data], n: Int) {
+    var i = n
+    while (i > 0) {
+      q1.enqueue(q2.dequeue())
+      i -= 1
     }
   }
 }

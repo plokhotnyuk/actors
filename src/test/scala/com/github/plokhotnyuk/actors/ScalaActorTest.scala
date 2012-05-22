@@ -12,156 +12,140 @@ class ScalaActorTest extends Specification {
   "Single-producer sending" in {
     val n = 1000000
     timed("Single-producer sending", n) {
-      val bang = new CountDownLatch(1)
-      val countdown = new Actor {
-        private[this] var countdown = n
-
-        def act() {
-          loop {
-            react {
-              case _ =>
-                countdown -= 1
-                if (countdown == 0) {
-                  bang.countDown()
-                  exit()
-                }
-            }
-          }
-        }
-      }
-      countdown.start()
-      val tick = Tick()
-      var i = n
-      while (i > 0) {
-        countdown ! tick
-        i -= 1
-      }
-      bang.await()
+      val l = new CountDownLatch(1)
+      val a = tickActor(l, n)
+      sendTicks(a, n)
+      l.await()
     }
   }
 
   "Multi-producer sending" in {
     val n = 1000000
     timed("Multi-producer sending", n) {
-      val bang = new CountDownLatch(1)
-      val countdownActor = new Actor {
-        private[this] var countdown = n
-
-        def act() {
-          loop {
-            react {
-              case _ =>
-                countdown -= 1
-                if (countdown == 0) {
-                  bang.countDown()
-                  exit()
-                }
-            }
-          }
-        }
+      val l = new CountDownLatch(1)
+      val a = tickActor(l, n)
+      for (j <- 1 to CPUs) fork {
+        sendTicks(a, n / CPUs)
       }
-      countdownActor.start()
-      val p = availableProcessors
-      for (j <- 1 to p) {
-        fork {
-          val tick = Tick()
-          val countdown = countdownActor
-          var i = n / p
-          while (i > 0) {
-            countdown ! tick
-            i -= 1
-          }
-        }
-      }
-      bang.await()
+      l.await()
     }
   }
 
   "Ping between actors" in {
     val n = 1000000
     timed("Ping between actors", n) {
-      val gameOver = new CountDownLatch(1)
-      val ping = new Actor {
-        def act() {
-          loop {
-            react {
-              case Ball(0) => gameOver.countDown(); exit()
-              case Ball(1) => sender ! Ball(0); exit()
-              case Ball(i) => sender ! Ball(i - 1)
-            }
-          }
-        }
-      }
-      val pong = new Actor {
-        def act() {
-          loop {
-            react {
-              case Ball(0) => gameOver.countDown(); exit()
-              case Ball(1) => sender ! Ball(0); exit()
-              case Ball(i) => sender ! Ball(i - 1)
-            }
-          }
-        }
-      }
-      ping.start()
-      pong.start()
-      ping.send(Ball(n), pong)
-      gameOver.await()
+      val l = new CountDownLatch(1)
+      val p1 = playerActor(l)
+      val p2 = playerActor(l)
+      p1.send(Ball(n), p2)
+      l.await()
+      exit(p1)
+      exit(p2)
     }
   }
 
   "Single-producer asking" in {
     val n = 1000000
     timed("Single-producer asking", n) {
-      val echo = new Actor {
-        def act() {
-          loop {
-            react {
-              case _@msg => sender ! msg
-            }
-          }
-        }
-      }
-      echo.start()
-      val message = Message()
-      var i = n
-      while (i > 0) {
-        echo !? message
-        i -= 1
-      }
-      echo ! Exit(null, null)
+      val a = echoActor
+      requestEchos(a, n)
     }
   }
 
   "Multi-producer asking" in {
     val n = 1000000
     timed("Multi-producer asking", n) {
-      val p = availableProcessors
-      val done = new CountDownLatch(p)
-      val echoActor = new Actor {
-        def act() {
-          loop {
-            react {
-              case _@msg => sender ! msg
-            }
-          }
-        }
+      val l = new CountDownLatch(CPUs)
+      val a = echoActor
+      for (j <- 1 to CPUs) fork {
+        requestEchos(a, n / CPUs)
+        l.countDown()
       }
-      echoActor.start()
-      for (j <- 1 to p) {
-        fork {
-          val message = Message()
-          val echo = echoActor
-          var i = n / p
-          while (i > 0) {
-            echo !? message
-            i -= 1
-          }
-          done.countDown()
-        }
-      }
-      done.await()
-      echoActor ! Exit(null, null)
+      l.await()
     }
+  }
+
+  "Max throughput" in {
+    val n = 1000000
+    timed("Max throughput", n) {
+      val l = new CountDownLatch(halfOfCPUs)
+      for (j <- 1 to halfOfCPUs) fork {
+        val a = tickActor(l, n / halfOfCPUs)
+        sendTicks(a, n / halfOfCPUs)
+      }
+      l.await()
+    }
+  }
+
+  private[this] def tickActor(l: CountDownLatch, n: Int): Actor = {
+    val a = new Actor {
+      private[this] var i = n
+
+      def act() {
+        loop {
+          react {
+            case _ =>
+              i -= 1
+              if (i == 0) {
+                l.countDown()
+                exit()
+              }
+          }
+        }
+      }
+    }
+    a.start()
+    a
+  }
+
+  private[this] def sendTicks(a: Actor, n: Int) {
+    val t = Tick()
+    var i = n
+    while (i > 0) {
+      a ! t
+      i -= 1
+    }
+  }
+
+  private[this] def playerActor(l: CountDownLatch): Actor = {
+    val a = new Actor {
+      def act() {
+        loop {
+          react {
+            case Ball(0) => l.countDown()
+            case Ball(i) => sender ! Ball(i - 1)
+          }
+        }
+      }
+    }
+    a.start()
+  }
+
+  private[this] def echoActor: Actor = {
+    val a = new Actor {
+      def act() {
+        loop {
+          react {
+            case _@m => sender ! m
+          }
+        }
+      }
+    }
+    a.start()
+    a
+  }
+
+  private[this] def requestEchos(a: Actor, n: Int) {
+    val m = Message()
+    var i = n
+    while (i > 0) {
+      a !? m
+      i -= 1
+    }
+    exit(a)
+  }
+
+  private[this] def exit(a: Actor) {
+    a ! Exit(null, null)
   }
 }

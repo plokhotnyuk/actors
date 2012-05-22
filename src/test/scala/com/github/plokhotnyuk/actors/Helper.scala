@@ -1,26 +1,27 @@
 package com.github.plokhotnyuk.actors
 
 object Helper {
-  val availableProcessors = Runtime.getRuntime.availableProcessors()
+  val CPUs = Runtime.getRuntime.availableProcessors()
+  val halfOfCPUs = CPUs / 2
 
-  def timed(name: String, n: Int)(benchmark: => Unit) {
-    printf("\n%s:\n", name)
-    val start = System.nanoTime
+  def timed(title: String, n: Int)(benchmark: => Unit) {
+    printf("\n%s:\n", title)
+    val t = System.nanoTime
     benchmark
-    val duration = System.nanoTime - start
-    printf("%,d ns\n", duration)
+    val d = System.nanoTime - t
+    printf("%,d ns\n", d)
     printf("%,d ops\n", n)
-    printf("%,d ns/op\n", duration / n)
-    printf("%,d ops/s\n", (n * 1000000000L) / duration)
+    printf("%,d ns/op\n", d / n)
+    printf("%,d ops/s\n", (n * 1000000000L) / d)
   }
 
   def fork(code: => Unit): Thread = {
-    val thread = new Thread {
+    val t = new Thread {
       override def run() {
         code
       }
     }
-    thread.start()
-    thread
+    t.start()
+    t
   }
 }

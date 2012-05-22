@@ -12,121 +12,114 @@ class LiftActorTest extends Specification {
   "Single-producer sending" in {
     val n = 20000000
     timed("Single-producer sending", n) {
-      val bang = new CountDownLatch(1)
-      val countdown = new LiftActor {
-        private[this] var countdown = n
-
-        def messageHandler = {
-          case _ =>
-            countdown -= 1
-            if (countdown == 0) {
-              bang.countDown()
-            }
-        }
-      }
-      val tick = Tick()
-      var i = n
-      while (i > 0) {
-        countdown ! tick
-        i -= 1
-      }
-      bang.await()
+      val l = new CountDownLatch(1)
+      val a = tickActor(l, n)
+      sendTicks(a, n)
+      l.await()
     }
   }
 
   "Multi-producer sending" in {
     val n = 20000000
     timed("Multi-producer sending", n) {
-      val bang = new CountDownLatch(1)
-      val countdownActor = new LiftActor {
-        private[this] var countdown = n
-
-        def messageHandler = {
-          case _ =>
-            countdown -= 1
-            if (countdown == 0) {
-              bang.countDown()
-            }
-        }
+      val l = new CountDownLatch(1)
+      val a = tickActor(l, n)
+      for (j <- 1 to CPUs) fork {
+        sendTicks(a, n / CPUs)
       }
-      val p = availableProcessors
-      for (j <- 1 to p) {
-        fork {
-          val tick = Tick()
-          val countdown = countdownActor
-          var i = n / p
-          while (i > 0) {
-            countdown ! tick
-            i -= 1
-          }
-        }
-      }
-      bang.await()
+      l.await()
     }
   }
 
   "Ping between actors" in {
     val n = 2000000
     timed("Ping between actors", n) {
-      val gameOver = new CountDownLatch(1)
-      var pong: LiftActor = null
-      val ping = new LiftActor {
+      val l = new CountDownLatch(1)
+      var p1: LiftActor = null
+      val p2 = new LiftActor {
         def messageHandler = {
-          case Ball(0) => gameOver.countDown()
-          case Ball(i) => pong.send(Ball(i - 1))
+          case Ball(0) => l.countDown()
+          case Ball(i) => p1 ! Ball(i - 1)
         }
       }
-      pong = new LiftActor {
+      p1 = new LiftActor {
         def messageHandler = {
-          case Ball(0) => gameOver.countDown()
-          case Ball(i) => ping.send(Ball(i - 1))
+          case Ball(0) => l.countDown()
+          case Ball(i) => p2 ! Ball(i - 1)
         }
       }
-      ping.send(Ball(n))
-      gameOver.await()
+      p2 ! Ball(n)
+      l.await()
     }
   }
 
   "Single-producer asking" in {
     val n = 1000000
     timed("Single-producer asking", n) {
-      val echo = new LiftActor {
-        def messageHandler = {
-          case _@msg => reply(msg)
-        }
-      }
-      val message = Message()
-      var i = n
-      while (i > 0) {
-        echo !? message
-        i -= 1
-      }
+      val a = echoActor
+      requestEchos(a, n)
     }
   }
 
   "Multi-producer asking" in {
     val n = 2000000
     timed("Multi-producer asking", n) {
-      val p = availableProcessors
-      val done = new CountDownLatch(p)
-      val echoActor = new LiftActor {
-        def messageHandler = {
-          case _@msg => reply(msg)
-        }
+      val l = new CountDownLatch(CPUs)
+      val a = echoActor
+      for (j <- 1 to CPUs) fork {
+          requestEchos(a, n / CPUs)
+          l.countDown()
       }
-      for (j <- 1 to p) {
-        fork {
-          val message = Message()
-          val echo = echoActor
-          var i = n / p
-          while (i > 0) {
-            echo !? message
-            i -= 1
+      l.await()
+    }
+  }
+
+  "Max throughput" in {
+    val n = 20000000
+    timed("Max throughput", n) {
+      val l = new CountDownLatch(halfOfCPUs)
+      for (j <- 1 to halfOfCPUs) fork {
+        val a = tickActor(l, n / halfOfCPUs)
+        sendTicks(a, n / halfOfCPUs)
+      }
+      l.await()
+    }
+  }
+
+  private[this] def tickActor(l: CountDownLatch, n: Int): LiftActor =
+    new LiftActor {
+      private[this] var i = n
+
+      def messageHandler = {
+        case _ =>
+          i -= 1
+          if (i == 0) {
+            l.countDown()
           }
-          done.countDown()
-        }
       }
-      done.await()
+    }
+
+  private[this] def sendTicks(a: LiftActor, n: Int) {
+    val t = Tick()
+    var i = n
+    while (i > 0) {
+      a ! t
+      i -= 1
+    }
+  }
+
+  private[this] def echoActor: LiftActor = new LiftActor {
+    def messageHandler = {
+      case _@m => reply(m)
+    }
+  }
+
+  private[this] def requestEchos(a: LiftActor, n: Int) {
+    val m = Message()
+    var i = n
+    while (i > 0) {
+      a !? m
+      i -= 1
     }
   }
 }
