@@ -14,7 +14,7 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
   private[this] var anyMsg: A = _  // Don't know how to simplify this
   private[this] val tail = new AtomicReference[Node2[A]](new Node2[A](anyMsg))
   private[this] val head = new AtomicReference[Node2[A]](tail.get)
-  private[this] val scheduled = new AtomicLong()
+  private[this] val suspended = new AtomicLong(1L)
 
   val toEffect: Effect[A] = effect[A](a => this ! a)
 
@@ -28,16 +28,16 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
     trySchedule()
   }
 
-  // should be last operation of the work() method
   private[this] def trySchedule() {
-    if (scheduled.compareAndSet(0, 1)) schedule()
+    if (suspended.compareAndSet(1L, 0L)) {
+      schedule()
+    }
   }
 
-  // should be last operation of the work() method
   private[this] def schedule(): Any =
     try { act(()) } catch {
       case ex =>
-        markSuspended()
+        suspended.set(1L)
         throw new RuntimeException(ex)
     }
 
@@ -45,25 +45,25 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
     (u: Unit) =>
       val tailNode = batchHandle(tail.get, batchSize)
       tail.lazySet(tailNode)
-      if (tailNode ne null) {
+      if (tailNode.get ne null) {
         schedule()
       } else {
-        markSuspended()
-        if (tail.get.get() ne null) trySchedule()
+        suspended.set(1L)
+        if (tail.get.get ne null) {
+          trySchedule()
+        }
       }
   }
 
-  private[this] def markSuspended() {
-    scheduled.lazySet(0)
-  }
-
   @tailrec
-  private[this] def batchHandle(current: Node2[A], i: Int): Node2[A] = {
-    val next = current.get
+  private[this] def batchHandle(curr: Node2[A], i: Int): Node2[A] = {
+    val next = curr.get
     if (next ne null) {
       handle(next.a)
-      if (i > 0) batchHandle(next, i - 1) else next
-    } else current
+      if (i > 0) {
+        batchHandle(next, i - 1)
+      } else next
+    } else curr
   }
 
   private[this] def handle(a: A) {
