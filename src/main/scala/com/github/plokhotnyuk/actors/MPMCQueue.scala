@@ -3,7 +3,7 @@ package com.github.plokhotnyuk.actors
 import java.util.concurrent.ConcurrentLinkedQueue
 import annotation.tailrec
 
-class MPMCQueue[T] extends ConcurrentLinkedQueue[T] {
+class MPMCQueue[T] extends ConcurrentLinkedQueue[T] with Queue[T] {
   def enqueue(data: T) {
     offer(data)
   }
