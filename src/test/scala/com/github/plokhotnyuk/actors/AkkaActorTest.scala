@@ -95,14 +95,13 @@ class AkkaActorTest extends Specification {
           mailbox-type = %s
           executor = "fork-join-executor"
           fork-join-executor {
-            parallelism-min = 1
-            parallelism-factor = 1.0
+            parallelism-min = %d
             parallelism-max = %d
           }
           throughput = 1024
         }
       }
-      """ format(mailboxClassName, CPUs)))
+      """ format(mailboxClassName, CPUs, CPUs)))
 
   private[this] def tickActor(l: CountDownLatch, n: Int): ActorRef =
     actorSystem.actorOf(Props(new Actor() {
