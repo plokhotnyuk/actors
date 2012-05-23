@@ -67,8 +67,8 @@ class LiftActorTest extends Specification {
       val l = new CountDownLatch(CPUs)
       val a = echoActor
       for (j <- 1 to CPUs) fork {
-          requestEchos(a, n / CPUs)
-          l.countDown()
+        requestEchos(a, n / CPUs)
+        l.countDown()
       }
       l.await()
     }
@@ -110,7 +110,7 @@ class LiftActorTest extends Specification {
 
   private[this] def echoActor: LiftActor = new LiftActor {
     def messageHandler = {
-      case _@m => reply(m)
+      case m => reply(m)
     }
   }
 

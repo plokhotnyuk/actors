@@ -137,7 +137,7 @@ class AkkaActorTest extends Specification {
   private[this] def echoActor: ActorRef =
     actorSystem.actorOf(Props(new Actor {
       def receive = {
-        case _@m => sender ! m
+        case m => sender ! m
       }
     }))
 

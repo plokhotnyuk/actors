@@ -11,7 +11,7 @@ import annotation.tailrec
  * @tparam T type of data to queue/dequeue
  */
 class MPSCQueue[T] extends Queue[T] {
-  private[this] var anyData: T = _  // Don't know how to simplify this
+  private[this] var anyData: T = _ // Don't know how to simplify this
   private[this] var tail = new Node[T](anyData)
   private[this] val head = new AtomicReference[Node[T]](tail)
 

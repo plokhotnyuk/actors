@@ -4,14 +4,14 @@ import scalaz.Scalaz
 import Scalaz._
 import scalaz.concurrent.{Strategy, Effect}
 import annotation.tailrec
-import java.util.concurrent.atomic.{AtomicLong, AtomicInteger, AtomicReference}
+import java.util.concurrent.atomic.{AtomicLong, AtomicReference}
 
 /**
  * Based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  */
 final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_), batchSize: Int = 1024)(implicit val strategy: Strategy) {
-  private[this] var anyMsg: A = _  // Don't know how to simplify this
+  private[this] var anyMsg: A = _ // Don't know how to simplify this
   private[this] val tail = new AtomicReference[Node2[A]](new Node2[A](anyMsg))
   private[this] val head = new AtomicReference[Node2[A]](tail.get)
   private[this] val suspended = new AtomicLong(1L)
@@ -35,7 +35,9 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
   }
 
   private[this] def schedule(): Any =
-    try { act(()) } catch {
+    try {
+      act(())
+    } catch {
       case ex =>
         suspended.set(1L)
         throw new RuntimeException(ex)
@@ -69,7 +71,9 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
   private[this] def handle(a: A) {
     try {
       e(a)
-    } catch { case ex => onError(ex) }
+    } catch {
+      case ex => onError(ex)
+    }
   }
 }
 

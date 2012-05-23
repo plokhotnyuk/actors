@@ -126,7 +126,7 @@ class ScalaActorTest extends Specification {
       def act() {
         loop {
           react {
-            case _@m => sender ! m
+            case m => sender ! m
           }
         }
       }
