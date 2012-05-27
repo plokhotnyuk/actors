@@ -8,15 +8,15 @@ import annotation.tailrec
  * based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  *
- * @tparam T type of data to queue/dequeue
+ * @tparam A type of data to queue/dequeue
  */
-class MPSCQueue[T] extends Queue[T] {
-  private[this] var anyData: T = _ // Don't know how to simplify this
-  private[this] var tail = new Node[T](anyData)
-  private[this] val head = new AtomicReference[Node[T]](tail)
+class MPSCQueue[A] extends Queue[A] {
+  private[this] var anyData: A = _ // Don't know how to simplify this
+  private[this] var tail = new Node[A](anyData)
+  private[this] val head = new AtomicReference[Node[A]](tail)
 
-  def enqueue(data: T) {
-    val node = new Node[T](data)
+  def enqueue(a: A) {
+    val node = new Node[A](a)
     head.getAndSet(node).lazySet(node)
   }
 
@@ -27,15 +27,13 @@ class MPSCQueue[T] extends Queue[T] {
    * because it eagerly eats CPU cycles and can prevent execution other threads on same core/processor.
    */
   @tailrec
-  final def dequeue(): T = {
+  final def dequeue(): A = {
     val next = tail.get
     if (next ne null) {
       tail = next
-      next.data
+      next.a
     } else {
       dequeue()
     }
   }
 }
-
-private[actors] class Node[T](val data: T) extends AtomicReference[Node[T]]
