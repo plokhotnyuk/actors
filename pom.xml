@@ -96,6 +96,8 @@
                             <jvmArg>-Xms1g</jvmArg>
                             <jvmArg>-Xmx1g</jvmArg>
                             <jvmArg>-Xss1m</jvmArg>
+                            <jvmArg>-XX:PermSize=128m</jvmArg>
+                            <jvmArg>-XX:MaxPermSize=128m</jvmArg>
                             <jvmArg>-XX:+TieredCompilation</jvmArg>
                         </jvmArgs>
                     </configuration>
@@ -122,7 +124,7 @@
                         <runOrder>alphabetical</runOrder>
                         <forkMode>always</forkMode>
                         <!-- -XX:+PrintGCDetails -->
-                        <argLine>-server -Xms4g -Xmx4g -Xss1m -XX:NewSize=3g -XX:+TieredCompilation -XX:+UseParNewGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking</argLine>
+                        <argLine>-server -Xms4g -Xmx4g -Xss1m -XX:NewSize=3g -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseParNewGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking</argLine>
                     </configuration>
                 </plugin>
             </plugins>
@@ -145,7 +147,7 @@
                             <artifactId>maven-surefire-plugin</artifactId>
                             <version>2.12</version>
                             <configuration>
-                                <argLine>-server -Xms1280m -Xmx1280m -Xss1m -XX:NewSize=960m -XX:+TieredCompilation -XX:+UseParNewGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking</argLine>
+                                <argLine>-server -Xms1280m -Xmx1280m -Xss1m -XX:NewSize=960m -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseParNewGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking</argLine>
                             </configuration>
                         </plugin>
                     </plugins>
