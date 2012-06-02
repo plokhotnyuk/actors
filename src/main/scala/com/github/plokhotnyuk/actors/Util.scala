@@ -4,43 +4,90 @@ import sun.misc.Unsafe
 import annotation.tailrec
 
 object Util {
-  val unsafe: Unsafe = {
+  val unsafe = {
     val theUnsafe = classOf[Unsafe].getDeclaredField("theUnsafe")
     theUnsafe.setAccessible(true)
     theUnsafe.get(null).asInstanceOf[Unsafe]
   }
+
+  val paddingSize = 128
+
+  def getArraySize(arrayClass: Class[_]): Int =
+    (paddingSize - unsafe.arrayBaseOffset(arrayClass)) / unsafe.arrayIndexScale(arrayClass)
+
+  def getValueOffset(arrayClass: Class[_]): Int = (paddingSize >> 1) - unsafe.arrayIndexScale(arrayClass)
 }
 
 import Util._
+import Util.unsafe._
+
+object PaddedAtomicInt {
+  val valueOffset = getValueOffset(classOf[Array[Int]])
+  val arraySize = getArraySize(classOf[Array[Int]])
+}
+
+class PaddedAtomicInt {
+  import PaddedAtomicInt._
+
+  private[this] val paddedValue = new Array[Int](arraySize)
+
+  def this(initialValue: Int) {
+    this()
+    set(initialValue)
+  }
+
+  def get = getIntVolatile(paddedValue, valueOffset)
+
+  def lazySet(value: Int) {
+    putOrderedInt(paddedValue, valueOffset, value)
+  }
+
+  def set(value: Int) {
+    putIntVolatile(paddedValue, valueOffset, value)
+  }
+
+  def compareAndSet(expectedValue: Int, newValue: Int): Boolean =
+    compareAndSwapLong(paddedValue, valueOffset, expectedValue, newValue)
+
+  def incrementAndGet: Int = addAndGet(1)
+
+  @tailrec
+  final def addAndGet(increment: Int): Int = {
+    val currValue = get
+    val newValue = currValue + increment
+    if (compareAndSet(currValue, newValue)) newValue else addAndGet(increment)
+  }
+
+  override def toString: String = get.toString
+}
 
 object PaddedAtomicLong {
-  val valueOffset = unsafe.arrayIndexScale(classOf[Array[Long]]) * 7 + unsafe.arrayBaseOffset(classOf[Array[Long]])
+  val valueOffset = getValueOffset(classOf[Array[Long]])
+  val arraySize = getArraySize(classOf[Array[Long]])
 }
 
 class PaddedAtomicLong {
   import PaddedAtomicLong._
 
-  private[this] val paddedValue = new Array[Long](15)
+  private[this] val paddedValue = new Array[Long](arraySize)
 
   def this(initialValue: Long) {
     this()
     set(initialValue)
   }
 
-  def get = unsafe.getLongVolatile(paddedValue, valueOffset)
+  def get = getLongVolatile(paddedValue, valueOffset)
 
   def lazySet(value: Long) {
-    unsafe.putOrderedLong(paddedValue, valueOffset, value)
+    putOrderedLong(paddedValue, valueOffset, value)
   }
 
   def set(value: Long) {
-    unsafe.putLongVolatile(paddedValue, valueOffset, value)
+    putLongVolatile(paddedValue, valueOffset, value)
   }
 
   def compareAndSet(expectedValue: Long, newValue: Long): Boolean =
-    unsafe.compareAndSwapLong(paddedValue, valueOffset, expectedValue, newValue)
-
-  override def toString: String = get.toString
+    compareAndSwapLong(paddedValue, valueOffset, expectedValue, newValue)
 
   def incrementAndGet: Long = addAndGet(1L)
 
@@ -50,41 +97,43 @@ class PaddedAtomicLong {
     val newValue = currValue + increment
     if (compareAndSet(currValue, newValue)) newValue else addAndGet(increment)
   }
+
+  override def toString: String = get.toString
 }
 
 object PaddedAtomicReference {
-  val valueOffset = unsafe.arrayIndexScale(classOf[Array[AnyRef]]) * 7 + unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
+  val valueOffset = getValueOffset(classOf[Array[AnyRef]])
+  val arraySize = getArraySize(classOf[Array[AnyRef]])
 }
 
 class PaddedAtomicReference[A <: AnyRef : Manifest] {
   import PaddedAtomicReference._
 
-  private[this] val paddedValue = new Array[A](15)
+  private[this] val paddedValue = new Array[A](arraySize)
 
   def this(initialValue: A) {
     this()
     set(initialValue)
   }
 
-  def get: A = unsafe.getObjectVolatile(paddedValue, valueOffset).asInstanceOf[A]
+  def get: A = getObjectVolatile(paddedValue, valueOffset).asInstanceOf[A]
 
   def lazySet(value: A) {
-    unsafe.putOrderedObject(paddedValue, valueOffset, value)
+    putOrderedObject(paddedValue, valueOffset, value)
   }
 
   def set(value: A) {
-    unsafe.putObjectVolatile(paddedValue, valueOffset, value)
+    putObjectVolatile(paddedValue, valueOffset, value)
   }
 
   def compareAndSet(expectedValue: A, newValue: A): Boolean =
-    unsafe.compareAndSwapObject(paddedValue, valueOffset, expectedValue, newValue)
-
-  override def toString: String = get.toString
+    compareAndSwapObject(paddedValue, valueOffset, expectedValue, newValue)
 
   @tailrec
   final def getAndSet(newValue: A): A = {
     val currValue = get
     if (compareAndSet(currValue, newValue)) currValue else getAndSet(newValue)
   }
-}
 
+  override def toString: String = get.toString
+}

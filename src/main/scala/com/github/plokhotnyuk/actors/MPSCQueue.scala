@@ -11,13 +11,13 @@ import annotation.tailrec
  * @tparam A type of data to queue/dequeue
  */
 class MPSCQueue[A] extends Queue[A] {
-  private[this] var anyData: A = _ // Don't know how to simplify this
-  private[this] var tail = new Node[A](anyData)
+  private[this] var anyA: A = _ // Don't know how to simplify this
+  private[this] var tail = new Node[A](anyA)
   private[this] val head = new AtomicReference[Node[A]](tail)
 
   def enqueue(a: A) {
-    val node = new Node[A](a)
-    head.getAndSet(node).lazySet(node)
+    val n = new Node[A](a)
+    head.getAndSet(n).lazySet(n)
   }
 
   /**
