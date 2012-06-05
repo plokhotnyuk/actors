@@ -46,12 +46,12 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
   private[this] val act: Effect[Unit] = effect {
     (u: Unit) =>
       val n = batchHandle(tail.get, batchSize)
-      tail.lazySet(n)
+      tail.set(n) // synchronized action to see changes of non-volatile fields in any execution thread
       if (n.get ne null) {
         schedule()
       } else {
         suspended.set(1)
-        if (tail.get.get ne null) {
+        if (n.get ne null) {
           trySchedule()
         }
       }
