@@ -1,18 +1,17 @@
 package com.github.plokhotnyuk.actors
 
 import annotation.tailrec
-import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  */
-final class ThreadBasedActor[A](e: A => Unit, onError: Throwable => Unit = throw (_)) {
+final class ThreadBasedActor[A : Manifest](e: A => Unit, onError: Throwable => Unit = throw (_)) {
   private[this] val doRun = new AtomicInteger(1)
-  private[this] var spin = 0
   private[this] var anyA: A = _ // Don't know how to simplify this
   private[this] var tail = new Node[A](anyA)
-  private[this] val head = new AtomicReference[Node[A]](tail)
+  private[this] val head = new PaddedAtomicReference[Node[A]](tail)
 
   start()
 
@@ -50,13 +49,9 @@ final class ThreadBasedActor[A](e: A => Unit, onError: Throwable => Unit = throw
         next
       }
     } else {
-      backOff()
-      n
+      if ((i & 13) == 0) Thread.`yield`() //TODO try to fix this magic
+      batchHandle(n, i - 1)
     }
-  }
-
-  private[this] def backOff() {
-    spin = if (spin == 1024) spin + 1 else { Thread.`yield`(); 0 }
   }
 
   private[this] def handle(a: A) {
