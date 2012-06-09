@@ -10,13 +10,13 @@ import java.util.concurrent.atomic.AtomicInteger
 final class ThreadBasedActor[A : Manifest](e: A => Unit, onError: Throwable => Unit = throw (_)) {
   private[this] val doRun = new AtomicInteger(1)
   private[this] var anyA: A = _ // Don't know how to simplify this
-  private[this] var tail = new Node[A](anyA)
+  private[this] var tail = new Node(anyA)
   private[this] val head = new PaddedAtomicReference[Node[A]](tail)
 
   start()
 
   def !(a: A) {
-    val n = new Node[A](a)
+    val n = new Node(a)
     head.getAndSet(n).lazySet(n)
   }
 

@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
  */
 final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_), batchSize: Int = 1024)(implicit s: Strategy)  {
   private[this] var anyA: A = _ // Don't know how to simplify this
-  private[this] val tail = new AtomicReference[Node[A]](new Node[A](anyA))
+  private[this] val tail = new AtomicReference[Node[A]](new Node(anyA))
   private[this] val head = new AtomicReference[Node[A]](tail.get)
   private[this] val suspended = new AtomicInteger(1)
 
@@ -23,7 +23,7 @@ final case class Actor2[A](e: A => Unit, onError: Throwable => Unit = throw (_),
   }
 
   def !(a: A) {
-    val n = new Node[A](a)
+    val n = new Node(a)
     head.getAndSet(n).lazySet(n)
     trySchedule()
   }
