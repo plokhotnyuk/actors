@@ -34,22 +34,26 @@ class ThreadBasedActorTest extends Specification {
   "Ping between actors" in {
     val n = 50000000
     timed("Ping between actors", n) {
-      val l = new CountDownLatch(1)
-      var p1: ThreadBasedActor[Ball] = null
-      val p2 = new ThreadBasedActor[Ball]({
-        (b: Ball) => b match {
-          case Ball(0) => l.countDown()
-          case Ball(i) => p1 ! Ball(i - 1)
-        }
+      val l = new CountDownLatch(2)
+      var p1: ThreadBasedActor[Message] = null
+      val p2 = new ThreadBasedActor[Message]({
+        var i = n / 2
+        (m: Message) =>
+          p1 ! m
+          i -= 1
+          if (i == 0) l.countDown()
       })
-      p1 = new ThreadBasedActor[Ball]({
-        (b: Ball) => b match {
-          case Ball(0) => l.countDown()
-          case Ball(i) => p2 ! Ball(i - 1)
-        }
+      p1 = new ThreadBasedActor[Message]({
+        var i = n / 2
+        (m: Message) =>
+          p2 ! m
+          i -= 1
+          if (i == 0) l.countDown()
       })
-      p2 ! Ball(n)
+      p2 ! Message()
       l.await()
+      p1.exit()
+      p2.exit()
     }
   }
 
@@ -65,20 +69,25 @@ class ThreadBasedActorTest extends Specification {
     }
   }
 
-  private[this] def tickActor(l: CountDownLatch, n: Int): ThreadBasedActor[Tick] = new ThreadBasedActor[Tick]({
-    var i = n
-    (t: Tick) =>
-      i -= 1
-      if (i == 0) {
-        l.countDown()
-      }
-  })
+  private[this] def tickActor(l: CountDownLatch, n: Int): ThreadBasedActor[Message] = {
+    var a: ThreadBasedActor[Message] = null
+    a = new ThreadBasedActor[Message]({
+      var i = n
+      (m: Message) =>
+        i -= 1
+        if (i == 0) {
+          l.countDown()
+          a.exit()
+        }
+    })
+    a
+  }
 
-  private[this] def sendTicks(a: ThreadBasedActor[Tick], n: Int) {
-    val t = Tick()
+  private[this] def sendTicks(a: ThreadBasedActor[Message], n: Int) {
+    val m = Message()
     var i = n
     while (i > 0) {
-      a ! t
+      a ! m
       i -= 1
     }
   }

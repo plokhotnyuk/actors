@@ -40,21 +40,23 @@ class ScalazActor2Test extends Specification {
   "Ping between actors" in {
     val n = 20000000
     timed("Ping between actors", n) {
-      val l = new CountDownLatch(1)
-      var p1: Actor2[Ball] = null
-      val p2 = actor2[Ball] {
-        (b: Ball) => b match {
-          case Ball(0) => l.countDown()
-          case Ball(i) => p1 ! Ball(i - 1)
-        }
+      val l = new CountDownLatch(2)
+      var p1: Actor2[Message] = null
+      val p2 = actor2[Message] {
+        var i = n / 2
+        (m: Message) =>
+          p1 ! m
+          i -= 1
+          if (i == 0) l.countDown()
       }
-      p1 = actor2[Ball] {
-        (b: Ball) => b match {
-          case Ball(0) => l.countDown()
-          case Ball(i) => p2 ! Ball(i - 1)
-        }
+      p1 = actor2[Message] {
+        var i = n / 2
+        (m: Message) =>
+          p2 ! m
+          i -= 1
+          if (i == 0) l.countDown()
       }
-      p2 ! Ball(n)
+      p2 ! Message()
       l.await()
     }
   }
@@ -71,20 +73,18 @@ class ScalazActor2Test extends Specification {
     }
   }
 
-  private[this] def tickActor(l: CountDownLatch, n: Int): Actor2[Tick] = actor2[Tick] {
+  private[this] def tickActor(l: CountDownLatch, n: Int): Actor2[Message] = actor2[Message] {
     var i = n
-    (t: Tick) =>
+    (m: Message) =>
       i -= 1
-      if (i == 0) {
-        l.countDown()
-      }
+      if (i == 0) l.countDown()
   }
 
-  private[this] def sendTicks(a: Actor2[Tick], n: Int) {
-    val t = Tick()
+  private[this] def sendTicks(a: Actor2[Message], n: Int) {
+    val m = Message()
     var i = n
     while (i > 0) {
-      a ! t
+      a ! m
       i -= 1
     }
   }

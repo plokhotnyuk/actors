@@ -34,10 +34,10 @@ class ScalaActorTest extends Specification {
   "Ping between actors" in {
     val n = 1000000
     timed("Ping between actors", n) {
-      val l = new CountDownLatch(1)
-      val p1 = playerActor(l)
-      val p2 = playerActor(l)
-      p1.send(Ball(n), p2)
+      val l = new CountDownLatch(2)
+      val p1 = playerActor(l, n / 2)
+      val p2 = playerActor(l, n / 2)
+      p1.send(Message(), p2)
       l.await()
       exit(p1)
       exit(p2)
@@ -99,21 +99,25 @@ class ScalaActorTest extends Specification {
   }
 
   private[this] def sendTicks(a: Actor, n: Int) {
-    val t = Tick()
+    val m = Message()
     var i = n
     while (i > 0) {
-      a ! t
+      a ! m
       i -= 1
     }
   }
 
-  private[this] def playerActor(l: CountDownLatch): Actor = {
+  private[this] def playerActor(l: CountDownLatch, n: Int): Actor = {
     val a = new Actor {
+      private[this] var i = n
+
       def act() {
         loop {
           react {
-            case Ball(0) => l.countDown()
-            case Ball(i) => sender ! Ball(i - 1)
+            case m =>
+              sender ! m
+              i -= 1
+              if (i == 0) l.countDown()
           }
         }
       }

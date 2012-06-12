@@ -12,10 +12,10 @@ class MPMCQueueTest extends Specification {
   "Same producer and consumer" in {
     timed("Same producer and consumer", n) {
       val q = dataQueue
-      val d = Data()
+      val m = Message()
       var i = n
       while (i > 0) {
-        q.enqueue(d)
+        q.enqueue(m)
         q.dequeue()
         i -= 1
       }
@@ -49,14 +49,14 @@ class MPMCQueueTest extends Specification {
       fork {
         pumpData(q1, q2, n / 2)
       }
-      q1.enqueue(Data())
+      q1.enqueue(Message())
       pumpData(q2, q1, n / 2)
     }
   }
 
-  def dataQueue: Queue[Data] = new MPMCQueue[Data]()
+  def dataQueue: Queue[Message] = new MPMCQueue[Message]()
 
-  private[this] def sendData(q: Queue[Data], n: Int) {
+  private[this] def sendData(q: Queue[Message], n: Int) {
     var i = n
     while (i > 0) {
       q.dequeue()
@@ -64,16 +64,16 @@ class MPMCQueueTest extends Specification {
     }
   }
 
-  private[this] def receiveData(q: Queue[Data], n: Int) {
-    val d = Data()
+  private[this] def receiveData(q: Queue[Message], n: Int) {
+    val m = Message()
     var i = n
     while (i > 0) {
-      q.enqueue(d)
+      q.enqueue(m)
       i -= 1
     }
   }
 
-  private[this] def pumpData(q1: Queue[Data], q2: Queue[Data], n: Int) {
+  private[this] def pumpData(q1: Queue[Message], q2: Queue[Message], n: Int) {
     var i = n
     while (i > 0) {
       q1.enqueue(q2.dequeue())

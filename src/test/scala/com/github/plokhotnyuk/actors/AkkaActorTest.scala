@@ -45,10 +45,10 @@ class AkkaActorTest extends Specification {
   "Ping between actors" in {
     val n = 20000000
     timed("Ping between actors", n) {
-      val l = new CountDownLatch(1)
-      val p1 = playerActor(l)
-      val p2 = playerActor(l)
-      p1.tell(Ball(n), p2)
+      val l = new CountDownLatch(2)
+      val p1 = playerActor(l, n / 2)
+      val p2 = playerActor(l, n / 2)
+      p1.tell(Message(), p2)
       l.await()
     }
   }
@@ -118,19 +118,26 @@ class AkkaActorTest extends Specification {
     }))
 
   private[this] def sendTicks(a: ActorRef, n: Int) {
-    val tick = Tick()
+    val m = Message()
     var i = n
     while (i > 0) {
-      a ! tick
+      a ! m
       i -= 1
     }
   }
 
-  private[this] def playerActor(l: CountDownLatch): ActorRef =
+  private[this] def playerActor(l: CountDownLatch, n: Int): ActorRef =
     actorSystem.actorOf(Props(new Actor {
+      private[this] var i = n
+
       def receive = {
-        case Ball(0) => l.countDown()
-        case Ball(i) => sender ! Ball(i - 1)
+        case m =>
+          sender ! m
+          i -= 1
+          if (i == 0) {
+            l.countDown()
+            context.stop(self)
+          }
       }
     }))
 

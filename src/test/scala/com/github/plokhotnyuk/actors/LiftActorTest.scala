@@ -34,21 +34,29 @@ class LiftActorTest extends Specification {
   "Ping between actors" in {
     val n = 2000000
     timed("Ping between actors", n) {
-      val l = new CountDownLatch(1)
+      val l = new CountDownLatch(2)
       var p1: LiftActor = null
       val p2 = new LiftActor {
+        private[this] var i = n / 2
+
         def messageHandler = {
-          case Ball(0) => l.countDown()
-          case Ball(i) => p1 ! Ball(i - 1)
+          case b =>
+            p1 ! b
+            i -= 1
+            if (i == 0) l.countDown()
         }
       }
       p1 = new LiftActor {
+        private[this] var i = n / 2
+
         def messageHandler = {
-          case Ball(0) => l.countDown()
-          case Ball(i) => p2 ! Ball(i - 1)
+          case b =>
+            p2 ! b
+            i -= 1
+            if (i == 0) l.countDown()
         }
       }
-      p2 ! Ball(n)
+      p2 ! Message()
       l.await()
     }
   }
@@ -100,10 +108,10 @@ class LiftActorTest extends Specification {
     }
 
   private[this] def sendTicks(a: LiftActor, n: Int) {
-    val t = Tick()
+    val m = Message()
     var i = n
     while (i > 0) {
-      a ! t
+      a ! m
       i -= 1
     }
   }
