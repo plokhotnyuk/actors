@@ -62,9 +62,9 @@ class ThreadBasedActorTest extends Specification {
   "Max throughput" in {
     val n = 100000000
     val l = new CountDownLatch(halfOfCPUs)
+    val as = for (j <- 1 to halfOfCPUs) yield tickActor(l, n / halfOfCPUs)
     timed("Max throughput", n) {
-      for (j <- 1 to halfOfCPUs) fork {
-        val a = tickActor(l, n / halfOfCPUs)
+      for (a <- as) fork {
         sendTicks(a, n / halfOfCPUs)
       }
       l.await()
