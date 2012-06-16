@@ -11,9 +11,9 @@ import com.github.plokhotnyuk.actors.Helper._
 class LiftActorTest extends Specification {
   "Single-producer sending" in {
     val n = 20000000
+    val l = new CountDownLatch(1)
+    val a = tickActor(l, n)
     timed("Single-producer sending", n) {
-      val l = new CountDownLatch(1)
-      val a = tickActor(l, n)
       sendTicks(a, n)
       l.await()
     }
@@ -21,9 +21,9 @@ class LiftActorTest extends Specification {
 
   "Multi-producer sending" in {
     val n = 20000000
+    val l = new CountDownLatch(1)
+    val a = tickActor(l, n)
     timed("Multi-producer sending", n) {
-      val l = new CountDownLatch(1)
-      val a = tickActor(l, n)
       for (j <- 1 to CPUs) fork {
         sendTicks(a, n / CPUs)
       }
@@ -33,29 +33,29 @@ class LiftActorTest extends Specification {
 
   "Ping between actors" in {
     val n = 2000000
+    val l = new CountDownLatch(2)
+    var p1: LiftActor = null
+    val p2 = new LiftActor {
+      private[this] var i = n / 2
+
+      def messageHandler = {
+        case b =>
+          p1 ! b
+          i -= 1
+          if (i == 0) l.countDown()
+      }
+    }
+    p1 = new LiftActor {
+      private[this] var i = n / 2
+
+      def messageHandler = {
+        case b =>
+          p2 ! b
+          i -= 1
+          if (i == 0) l.countDown()
+      }
+    }
     timed("Ping between actors", n) {
-      val l = new CountDownLatch(2)
-      var p1: LiftActor = null
-      val p2 = new LiftActor {
-        private[this] var i = n / 2
-
-        def messageHandler = {
-          case b =>
-            p1 ! b
-            i -= 1
-            if (i == 0) l.countDown()
-        }
-      }
-      p1 = new LiftActor {
-        private[this] var i = n / 2
-
-        def messageHandler = {
-          case b =>
-            p2 ! b
-            i -= 1
-            if (i == 0) l.countDown()
-        }
-      }
       p2 ! Message()
       l.await()
     }
@@ -63,17 +63,17 @@ class LiftActorTest extends Specification {
 
   "Single-producer asking" in {
     val n = 1000000
+    val a = echoActor
     timed("Single-producer asking", n) {
-      val a = echoActor
       requestEchos(a, n)
     }
   }
 
   "Multi-producer asking" in {
     val n = 2000000
+    val l = new CountDownLatch(CPUs)
+    val a = echoActor
     timed("Multi-producer asking", n) {
-      val l = new CountDownLatch(CPUs)
-      val a = echoActor
       for (j <- 1 to CPUs) fork {
         requestEchos(a, n / CPUs)
         l.countDown()
@@ -84,8 +84,8 @@ class LiftActorTest extends Specification {
 
   "Max throughput" in {
     val n = 20000000
+    val l = new CountDownLatch(halfOfCPUs)
     timed("Max throughput", n) {
-      val l = new CountDownLatch(halfOfCPUs)
       for (j <- 1 to halfOfCPUs) fork {
         val a = tickActor(l, n / halfOfCPUs)
         sendTicks(a, n / halfOfCPUs)

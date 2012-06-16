@@ -18,9 +18,9 @@ class ScalazActorTest extends Specification {
 
   "Single-producer sending" in {
     val n = 40000000
+    val l = new CountDownLatch(1)
+    val a = tickActor(l, n)
     timed("Single-producer sending", n) {
-      val l = new CountDownLatch(1)
-      val a = tickActor(l, n)
       sendTicks(a, n)
       l.await()
     }
@@ -28,9 +28,9 @@ class ScalazActorTest extends Specification {
 
   "Multi-producer sending" in {
     val n = 40000000
+    val l = new CountDownLatch(1)
+    val a = tickActor(l, n)
     timed("Multi-producer sending", n) {
-      val l = new CountDownLatch(1)
-      val a = tickActor(l, n)
       for (j <- 1 to CPUs) fork {
         sendTicks(a, n / CPUs)
       }
@@ -40,23 +40,25 @@ class ScalazActorTest extends Specification {
 
   "Ping between actors" in {
     val n = 20000000
+    val l = new CountDownLatch(1)
+    var p1: Actor[Message] = null
+    val p2 = actor[Message] {
+      var i = n / 2
+
+      (m: Message) =>
+        p1 ! m
+        i -= 1
+        if (i == 0) l.countDown()
+    }
+    p1 = actor[Message] {
+      var i = n / 2
+
+      (m: Message) =>
+        p2 ! m
+        i -= 1
+        if (i == 0) l.countDown()
+    }
     timed("Ping between actors", n) {
-      val l = new CountDownLatch(1)
-      var p1: Actor[Message] = null
-      val p2 = actor[Message] {
-        var i = n / 2
-        (m: Message) =>
-          p1 ! m
-          i -= 1
-          if (i == 0) l.countDown()
-      }
-      p1 = actor[Message] {
-        var i = n / 2
-        (m: Message) =>
-          p2 ! m
-          i -= 1
-          if (i == 0) l.countDown()
-      }
       p2 ! Message()
       l.await()
     }
@@ -64,8 +66,8 @@ class ScalazActorTest extends Specification {
 
   "Max throughput" in {
     val n = 40000000
+    val l = new CountDownLatch(halfOfCPUs)
     timed("Max throughput", n) {
-      val l = new CountDownLatch(halfOfCPUs)
       for (j <- 1 to halfOfCPUs) fork {
         val a = tickActor(l, n / halfOfCPUs)
         sendTicks(a, n / halfOfCPUs)
@@ -76,6 +78,7 @@ class ScalazActorTest extends Specification {
 
   private[this] def tickActor(l: CountDownLatch, n: Int): Actor[Message] = actor[Message] {
     var i = n
+
     (m: Message) =>
       i -= 1
       if (i == 0) {

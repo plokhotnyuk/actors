@@ -22,9 +22,9 @@ class AkkaActorTest extends Specification {
 
   "Single-producer sending" in {
     val n = 40000000
+    val l = new CountDownLatch(1)
+    val a = tickActor(l, n)
     timed("Single-producer sending", n) {
-      val l = new CountDownLatch(1)
-      val a = tickActor(l, n)
       sendTicks(a, n)
       l.await()
     }
@@ -32,9 +32,9 @@ class AkkaActorTest extends Specification {
 
   "Multi-producer sending" in {
     val n = 40000000
+    val l = new CountDownLatch(1)
+    val a = tickActor(l, n)
     timed("Multi-producer sending", n) {
-      val l = new CountDownLatch(1)
-      val a = tickActor(l, n)
       for (j <- 1 to CPUs) fork {
         sendTicks(a, n / CPUs)
       }
@@ -44,10 +44,10 @@ class AkkaActorTest extends Specification {
 
   "Ping between actors" in {
     val n = 20000000
+    val l = new CountDownLatch(2)
+    val p1 = playerActor(l, n / 2)
+    val p2 = playerActor(l, n / 2)
     timed("Ping between actors", n) {
-      val l = new CountDownLatch(2)
-      val p1 = playerActor(l, n / 2)
-      val p2 = playerActor(l, n / 2)
       p1.tell(Message(), p2)
       l.await()
     }
@@ -55,17 +55,17 @@ class AkkaActorTest extends Specification {
 
   "Single-producer asking" in {
     val n = 1000000
+    val a = echoActor
     timed("Single-producer asking", n) {
-      val a = echoActor
       requestEchos(a, n)
     }
   }
 
   "Multi-producer asking" in {
     val n = 1000000
+    val l = new CountDownLatch(CPUs)
+    val a = echoActor
     timed("Multi-producer asking", n) {
-      val l = new CountDownLatch(CPUs)
-      val a = echoActor
       for (j <- 1 to CPUs) fork {
         requestEchos(a, n / CPUs)
         l.countDown()
@@ -76,8 +76,8 @@ class AkkaActorTest extends Specification {
 
   "Max throughput" in {
     val n = 40000000
+    val l = new CountDownLatch(halfOfCPUs)
     timed("Max throughput", n) {
-      val l = new CountDownLatch(halfOfCPUs)
       for (j <- 1 to halfOfCPUs) fork {
         val a = tickActor(l, n / halfOfCPUs)
         sendTicks(a, n / halfOfCPUs)

@@ -11,9 +11,9 @@ import actors.{Exit, Actor}
 class ScalaActorTest extends Specification {
   "Single-producer sending" in {
     val n = 1000000
+    val l = new CountDownLatch(1)
+    val a = tickActor(l, n)
     timed("Single-producer sending", n) {
-      val l = new CountDownLatch(1)
-      val a = tickActor(l, n)
       sendTicks(a, n)
       l.await()
     }
@@ -21,9 +21,9 @@ class ScalaActorTest extends Specification {
 
   "Multi-producer sending" in {
     val n = 1000000
+    val l = new CountDownLatch(1)
+    val a = tickActor(l, n)
     timed("Multi-producer sending", n) {
-      val l = new CountDownLatch(1)
-      val a = tickActor(l, n)
       for (j <- 1 to CPUs) fork {
         sendTicks(a, n / CPUs)
       }
@@ -33,19 +33,19 @@ class ScalaActorTest extends Specification {
 
   "Ping between actors" in {
     val n = 1000000
+    val l = new CountDownLatch(2)
+    val p1 = playerActor(l, n / 2)
+    val p2 = playerActor(l, n / 2)
     timed("Ping between actors", n) {
-      val l = new CountDownLatch(2)
-      val p1 = playerActor(l, n / 2)
-      val p2 = playerActor(l, n / 2)
       p1.send(Message(), p2)
       l.await()
-      exit(p1)
-      exit(p2)
     }
+    p1 ! Exit(null, null)
+    p2 ! Exit(null, null)
   }
 
   "Single-producer asking" in {
-    val n = 1000000
+    val n = 200000
     timed("Single-producer asking", n) {
       val a = echoActor
       requestEchos(a, n)
@@ -53,10 +53,10 @@ class ScalaActorTest extends Specification {
   }
 
   "Multi-producer asking" in {
-    val n = 1000000
+    val n = 500000
+    val l = new CountDownLatch(CPUs)
+    val a = echoActor
     timed("Multi-producer asking", n) {
-      val l = new CountDownLatch(CPUs)
-      val a = echoActor
       for (j <- 1 to CPUs) fork {
         requestEchos(a, n / CPUs)
         l.countDown()
@@ -66,9 +66,9 @@ class ScalaActorTest extends Specification {
   }
 
   "Max throughput" in {
-    val n = 1000000
+    val n = 2000000
+    val l = new CountDownLatch(halfOfCPUs)
     timed("Max throughput", n) {
-      val l = new CountDownLatch(halfOfCPUs)
       for (j <- 1 to halfOfCPUs) fork {
         val a = tickActor(l, n / halfOfCPUs)
         sendTicks(a, n / halfOfCPUs)
@@ -146,10 +146,6 @@ class ScalaActorTest extends Specification {
       a !? m
       i -= 1
     }
-    exit(a)
-  }
-
-  private[this] def exit(a: Actor) {
     a ! Exit(null, null)
   }
 }
