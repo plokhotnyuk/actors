@@ -10,48 +10,47 @@ class MPMCQueueTest extends Specification {
   val n = 100000000
 
   "Same producer and consumer" in {
-    val q = dataQueue
+    val q = messageQueue
     timed("Same producer and consumer", n) {
-      sendReceiveData(q, n)
+      sendReceiveMessages(q, n)
     }
   }
 
-
   "Single-producer sending" in {
-    val q = dataQueue
+    val q = messageQueue
     timed("Single-producer sending", n) {
       fork {
-        receiveData(q, n)
+        receiveMessages(q, n)
       }
-      sendData(q, n)
+      sendMessages(q, n)
     }
   }
 
   "Multi-producer sending" in {
-    val q = dataQueue
+    val q = messageQueue
     timed("Multi-producer sending", n) {
       for (j <- 1 to CPUs) fork {
-        receiveData(q, n / CPUs)
+        receiveMessages(q, n / CPUs)
       }
-      sendData(q, n)
+      sendMessages(q, n)
     }
   }
 
   "Exchange between queues" in {
-    val q1 = dataQueue
-    val q2 = dataQueue
+    val q1 = messageQueue
+    val q2 = messageQueue
     timed("Exchange between queues", n) {
       fork {
-        pumpData(q1, q2, n / 2)
+        pumpMessages(q1, q2, n / 2)
       }
       q1.enqueue(Message())
-      pumpData(q2, q1, n / 2)
+      pumpMessages(q2, q1, n / 2)
     }
   }
 
-  def dataQueue: Queue[Message] = new MPMCQueue[Message]()
+  def messageQueue: Queue[Message] = new MPMCQueue[Message]()
 
-  private[this] def sendReceiveData(q: Queue[Message], n: Int) {
+  private[this] def sendReceiveMessages(q: Queue[Message], n: Int) {
     val m = Message()
     var i = n
     while (i > 0) {
@@ -61,7 +60,7 @@ class MPMCQueueTest extends Specification {
     }
   }
 
-  private[this] def sendData(q: Queue[Message], n: Int) {
+  private[this] def sendMessages(q: Queue[Message], n: Int) {
     var i = n
     while (i > 0) {
       q.dequeue()
@@ -69,7 +68,7 @@ class MPMCQueueTest extends Specification {
     }
   }
 
-  private[this] def receiveData(q: Queue[Message], n: Int) {
+  private[this] def receiveMessages(q: Queue[Message], n: Int) {
     val m = Message()
     var i = n
     while (i > 0) {
@@ -78,7 +77,7 @@ class MPMCQueueTest extends Specification {
     }
   }
 
-  private[this] def pumpData(q1: Queue[Message], q2: Queue[Message], n: Int) {
+  private[this] def pumpMessages(q1: Queue[Message], q2: Queue[Message], n: Int) {
     var i = n
     while (i > 0) {
       q1.enqueue(q2.dequeue())

@@ -5,5 +5,5 @@ import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class MPSCQueueTest extends MPMCQueueTest {
-  override def dataQueue: Queue[Message] = new MPSCQueue[Message]()
+  override def messageQueue: Queue[Message] = new MPSCQueue[Message]()
 }
