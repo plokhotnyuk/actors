@@ -13,7 +13,7 @@ C:\Users\Andrew\Projects\actors>set MAVEN_OPTS=-server -Xms256m -Xmx1024m -XX:Ma
 [INFO] Using 'UTF-8' encoding to copy filtered resources.
 [INFO] skip non existing resourceDirectory C:\Users\Andrew\Projects\actors\src\main\resources
 [INFO] 
-[INFO] --- maven-scala-plugin:2.15.2:compile (compile) @ actors ---
+[INFO] --- scala-maven-plugin:3.0.2:compile (compile) @ actors ---
 [INFO] Checking for multiple versions of scala
 [WARNING]  Expected all dependencies to require Scala version: 2.9.2
 [WARNING]  com.typesafe.akka:akka-actor:2.0.2 requires scala version: 2.9.2
@@ -22,15 +22,15 @@ C:\Users\Andrew\Projects\actors>set MAVEN_OPTS=-server -Xms256m -Xmx1024m -XX:Ma
 [INFO] includes = [**/*.scala,**/*.java,]
 [INFO] excludes = []
 [INFO] C:\Users\Andrew\Projects\actors\src\main\scala:-1: info: compiling
-[INFO] Compiling 7 source files to C:\Users\Andrew\Projects\actors\target\classes at 1341757346130
+[INFO] Compiling 7 source files to C:\Users\Andrew\Projects\actors\target\classes at 1341809076152
 [INFO] prepare-compile in 0 s
-[INFO] compile in 5 s
+[INFO] compile in 4 s
 [INFO] 
 [INFO] --- maven-resources-plugin:2.4.3:testResources (default-testResources) @ actors ---
 [INFO] Using 'UTF-8' encoding to copy filtered resources.
 [INFO] skip non existing resourceDirectory C:\Users\Andrew\Projects\actors\src\test\resources
 [INFO] 
-[INFO] --- maven-scala-plugin:2.15.2:testCompile (testCompile) @ actors ---
+[INFO] --- scala-maven-plugin:3.0.2:testCompile (testCompile) @ actors ---
 [INFO] Checking for multiple versions of scala
 [WARNING]  Expected all dependencies to require Scala version: 2.9.2
 [WARNING]  com.typesafe.akka:akka-actor:2.0.2 requires scala version: 2.9.2
@@ -39,22 +39,22 @@ C:\Users\Andrew\Projects\actors>set MAVEN_OPTS=-server -Xms256m -Xmx1024m -XX:Ma
 [INFO] includes = [**/*.scala,**/*.java,]
 [INFO] excludes = []
 [INFO] C:\Users\Andrew\Projects\actors\src\test\scala:-1: info: compiling
-[INFO] Compiling 11 source files to C:\Users\Andrew\Projects\actors\target\test-classes at 1341757351544
+[INFO] Compiling 11 source files to C:\Users\Andrew\Projects\actors\target\test-classes at 1341809080457
 [WARNING] C:\Users\Andrew\Projects\actors\src\test\scala\com\github\plokhotnyuk\actors\ScalazActor2Test.scala:14: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
-[INFO]   implicit val executor = new ForkJoinPool()
-[INFO]                ^
+[WARNING]   implicit val executor = new ForkJoinPool()
+[WARNING]                ^
 [WARNING] C:\Users\Andrew\Projects\actors\src\test\scala\com\github\plokhotnyuk\actors\ScalazActor2Test.scala:14: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
-[INFO]   implicit val executor = new ForkJoinPool()
-[INFO]                               ^
+[WARNING]   implicit val executor = new ForkJoinPool()
+[WARNING]                               ^
 [WARNING] C:\Users\Andrew\Projects\actors\src\test\scala\com\github\plokhotnyuk\actors\ScalazActorTest.scala:15: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
-[INFO]   implicit val executor = new ForkJoinPool()
-[INFO]                ^
+[WARNING]   implicit val executor = new ForkJoinPool()
+[WARNING]                ^
 [WARNING] C:\Users\Andrew\Projects\actors\src\test\scala\com\github\plokhotnyuk\actors\ScalazActorTest.scala:15: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
-[INFO]   implicit val executor = new ForkJoinPool()
-[INFO]                               ^
+[WARNING]   implicit val executor = new ForkJoinPool()
+[WARNING]                               ^
 [WARNING] four warnings found
 [INFO] prepare-compile in 0 s
-[INFO] compile in 11 s
+[INFO] compile in 10 s
 [INFO] 
 [INFO] --- maven-surefire-plugin:2.12:test (default-test) @ actors ---
 [INFO] Surefire report directory: C:\Users\Andrew\Projects\actors\target\surefire-reports
@@ -69,285 +69,285 @@ C:\Users\Andrew\Projects\actors>set MAVEN_OPTS=-server -Xms256m -Xmx1024m -XX:Ma
 Running com.github.plokhotnyuk.actors.AkkaActor2Test
 
 Single-producer sending:
-3,881,255,448 ns
+4,075,384,440 ns
 40,000,000 ops
-97 ns/op
-10,305,943 ops/s
+101 ns/op
+9,815,024 ops/s
 
 Multi-producer sending:
-16,737,811,318 ns
+21,281,446,051 ns
 40,000,000 ops
-418 ns/op
-2,389,798 ops/s
+532 ns/op
+1,879,571 ops/s
 
 Ping between actors:
-15,691,899,174 ns
+17,219,985,145 ns
 20,000,000 ops
-784 ns/op
-1,274,542 ops/s
+860 ns/op
+1,161,441 ops/s
 
 Single-producer asking:
-5,653,173,369 ns
+5,589,312,411 ns
 1,000,000 ops
-5,653 ns/op
-176,891 ops/s
+5,589 ns/op
+178,912 ops/s
 
 Multi-producer asking:
-3,674,016,614 ns
+5,316,688,716 ns
 1,000,000 ops
-3,674 ns/op
-272,181 ops/s
+5,316 ns/op
+188,086 ops/s
 
 Max throughput:
-4,648,157,883 ns
+5,097,655,199 ns
 40,000,000 ops
-116 ns/op
-8,605,559 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 51.514 sec
+127 ns/op
+7,846,744 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 59.796 sec
 Running com.github.plokhotnyuk.actors.AkkaActorTest
 
 Single-producer sending:
-7,743,636,436 ns
+6,645,235,920 ns
 40,000,000 ops
-193 ns/op
-5,165,531 ops/s
+166 ns/op
+6,019,349 ops/s
 
 Multi-producer sending:
-11,256,824,017 ns
+19,298,008,749 ns
 40,000,000 ops
-281 ns/op
-3,553,400 ops/s
+482 ns/op
+2,072,752 ops/s
 
 Ping between actors:
-13,608,264,049 ns
+13,427,958,888 ns
 20,000,000 ops
-680 ns/op
-1,469,695 ops/s
+671 ns/op
+1,489,429 ops/s
 
 Single-producer asking:
-6,348,623,386 ns
+6,123,055,272 ns
 1,000,000 ops
-6,348 ns/op
-157,514 ops/s
+6,123 ns/op
+163,317 ops/s
 
 Multi-producer asking:
-4,455,143,587 ns
+5,037,578,045 ns
 1,000,000 ops
-4,455 ns/op
-224,459 ops/s
+5,037 ns/op
+198,508 ops/s
 
 Max throughput:
-5,713,939,119 ns
+5,896,739,138 ns
 40,000,000 ops
-142 ns/op
-7,000,424 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 50.342 sec
+147 ns/op
+6,783,410 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 57.615 sec
 Running com.github.plokhotnyuk.actors.LiftActorTest
 
 Single-producer sending:
-5,129,211,401 ns
+5,166,335,236 ns
 20,000,000 ops
-256 ns/op
-3,899,234 ops/s
+258 ns/op
+3,871,216 ops/s
 
 Multi-producer sending:
-7,620,341,288 ns
+6,403,093,678 ns
 20,000,000 ops
-381 ns/op
-2,624,554 ops/s
+320 ns/op
+3,123,490 ops/s
 
 Ping between actors:
-4,479,409,679 ns
+4,346,772,861 ns
 2,000,000 ops
-2,239 ns/op
-446,487 ops/s
+2,173 ns/op
+460,111 ops/s
 
 Single-producer asking:
-13,640,409,034 ns
+10,428,031,591 ns
 1,000,000 ops
-13,640 ns/op
-73,311 ops/s
+10,428 ns/op
+95,895 ops/s
 
 Multi-producer asking:
-9,264,420,973 ns
+7,938,834,344 ns
 2,000,000 ops
-4,632 ns/op
-215,879 ops/s
+3,969 ns/op
+251,926 ops/s
 
 Max throughput:
-4,914,272,188 ns
+4,633,845,397 ns
 20,000,000 ops
-245 ns/op
-4,069,778 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 46.005 sec
+231 ns/op
+4,316,069 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 39.89 sec
 Running com.github.plokhotnyuk.actors.MPMCQueueTest
 
 Same producer and consumer:
-6,218,694,512 ns
+6,275,482,333 ns
 100,000,000 ops
 62 ns/op
-16,080,545 ops/s
+15,935,030 ops/s
 
 Single-producer sending:
-4,114,450,976 ns
+4,009,263,356 ns
 100,000,000 ops
-41 ns/op
-24,304,579 ops/s
+40 ns/op
+24,942,237 ops/s
 
 Multi-producer sending:
-7,963,341,282 ns
+8,753,568,947 ns
 100,000,000 ops
-79 ns/op
-12,557,542 ops/s
+87 ns/op
+11,423,911 ops/s
 
 Exchange between queues:
-11,562,706,888 ns
+13,404,310,521 ns
 100,000,000 ops
-115 ns/op
-8,648,493 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 30.764 sec
+134 ns/op
+7,460,286 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 33.353 sec
 Running com.github.plokhotnyuk.actors.MPSCQueueTest
 
 Same producer and consumer:
-2,310,896,992 ns
+2,396,062,963 ns
 100,000,000 ops
 23 ns/op
-43,273,239 ops/s
+41,735,130 ops/s
 
 Single-producer sending:
-3,638,537,870 ns
+3,671,735,759 ns
 100,000,000 ops
 36 ns/op
-27,483,567 ops/s
+27,235,075 ops/s
 
 Multi-producer sending:
-3,248,108,185 ns
+2,781,611,937 ns
 100,000,000 ops
-32 ns/op
-30,787,151 ops/s
+27 ns/op
+35,950,377 ops/s
 
 Exchange between queues:
-6,412,308,182 ns
+7,146,601,241 ns
 100,000,000 ops
-64 ns/op
-15,595,008 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.489 sec
+71 ns/op
+13,992,665 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.895 sec
 Running com.github.plokhotnyuk.actors.ScalaActorTest
 
 Single-producer sending:
-4,275,583,792 ns
+6,735,020,049 ns
 1,000,000 ops
-4,275 ns/op
-233,886 ops/s
+6,735 ns/op
+148,477 ops/s
 
 Multi-producer sending:
-3,586,741,900 ns
+5,479,423,262 ns
 1,000,000 ops
-3,586 ns/op
-278,804 ops/s
+5,479 ns/op
+182,500 ops/s
 
 Ping between actors:
-2,250,696,140 ns
+2,310,088,418 ns
 1,000,000 ops
-2,250 ns/op
-444,306 ops/s
+2,310 ns/op
+432,883 ops/s
 
 Single-producer asking:
-17,888,757,173 ns
+15,210,393,431 ns
 200,000 ops
-89,443 ns/op
-11,180 ops/s
+76,051 ns/op
+13,148 ops/s
 
 Multi-producer asking:
-22,628,604,177 ns
+13,960,809,512 ns
 500,000 ops
-45,257 ns/op
-22,095 ops/s
+27,921 ns/op
+35,814 ops/s
 
 Max throughput:
-6,729,964,509 ns
+4,606,330,102 ns
 2,000,000 ops
-3,364 ns/op
-297,178 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 61.121 sec
+2,303 ns/op
+434,185 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 51.668 sec
 Running com.github.plokhotnyuk.actors.ScalazActor2Test
 
 Single-producer sending:
-4,047,714,018 ns
+4,351,238,141 ns
 100,000,000 ops
-40 ns/op
-24,705,302 ops/s
+43 ns/op
+22,981,964 ops/s
 
 Multi-producer sending:
-5,339,478,504 ns
+5,033,532,602 ns
 100,000,000 ops
-53 ns/op
-18,728,420 ops/s
+50 ns/op
+19,866,763 ops/s
 
 Ping between actors:
-3,741,917,845 ns
+3,756,625,216 ns
 20,000,000 ops
 187 ns/op
-5,344,852 ops/s
+5,323,927 ops/s
 
 Max throughput:
-4,688,417,279 ns
+4,418,320,752 ns
 100,000,000 ops
-46 ns/op
-21,329,159 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.907 sec
+44 ns/op
+22,633,033 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.658 sec
 Running com.github.plokhotnyuk.actors.ScalazActorTest
 
 Single-producer sending:
-4,543,598,616 ns
+4,009,657,250 ns
 40,000,000 ops
-113 ns/op
-8,803,594 ops/s
+100 ns/op
+9,975,915 ops/s
 
 Multi-producer sending:
-5,523,299,107 ns
+4,041,619,733 ns
 40,000,000 ops
-138 ns/op
-7,242,048 ops/s
+101 ns/op
+9,897,022 ops/s
 
 Ping between actors:
-8,998,745,617 ns
+8,828,055,689 ns
 20,000,000 ops
-449 ns/op
-2,222,531 ops/s
+441 ns/op
+2,265,504 ops/s
 
 Max throughput:
-4,222,890,468 ns
+5,051,567,797 ns
 40,000,000 ops
-105 ns/op
-9,472,185 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 24.367 sec
+126 ns/op
+7,918,333 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.994 sec
 Running com.github.plokhotnyuk.actors.ThreadBasedActorTest
 
 Single-producer sending:
-2,649,290,753 ns
+2,627,143,382 ns
 100,000,000 ops
 26 ns/op
-37,745,951 ops/s
+38,064,157 ops/s
 
 Multi-producer sending:
-3,835,799,320 ns
+3,711,105,786 ns
 100,000,000 ops
-38 ns/op
-26,070,185 ops/s
+37 ns/op
+26,946,146 ops/s
 
 Ping between actors:
-25,193,618,106 ns
+25,342,392,232 ns
 50,000,000 ops
-503 ns/op
-1,984,629 ops/s
+506 ns/op
+1,972,978 ops/s
 
 Max throughput:
-3,048,189,831 ns
+2,649,825,785 ns
 100,000,000 ops
-30 ns/op
-32,806,355 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 35.708 sec
+26 ns/op
+37,738,330 ops/s
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 35.381 sec
 
 Results :
 
@@ -363,7 +363,7 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 6:01.868s
-[INFO] Finished at: Sun Jul 08 17:28:26 EEST 2012
+[INFO] Total time: 6:00.372s
+[INFO] Finished at: Mon Jul 09 07:50:34 EEST 2012
 [INFO] Final Memory: 12M/309M
 [INFO] ------------------------------------------------------------------------
