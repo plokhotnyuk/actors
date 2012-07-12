@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
  * Based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  */
-final case class Actor2[A](e: A => Unit, err: Throwable => Unit = throw (_), batch: Int = 1024)(implicit s: Strategy) {
+final case class Actor2[A](e: A => Unit, err: Throwable => Unit = throw (_))(implicit s: Strategy) {
   private[this] var anyA: A = _ // Don't know how to simplify this
   @volatile private[this] var tail = new Node(anyA)
   private[this] val head = new AtomicReference[Node[A]](tail)
@@ -43,7 +43,7 @@ final case class Actor2[A](e: A => Unit, err: Throwable => Unit = throw (_), bat
   }
 
   private[this] def act() {
-    val n = batchHandle(tail, batch)
+    val n = batchHandle(tail, 1024)
     if (n ne tail) {
       tail = n
       schedule()
@@ -68,8 +68,8 @@ final case class Actor2[A](e: A => Unit, err: Throwable => Unit = throw (_), bat
 }
 
 trait Actors2 {
-  def actor2[A](e: A => Unit, err: Throwable => Unit = throw (_), batch: Int = 1024)(implicit s: Strategy): Actor2[A] =
-    Actor2[A](e, err, batch)
+  def actor2[A](e: A => Unit, err: Throwable => Unit = throw (_))(implicit s: Strategy): Actor2[A] =
+    Actor2[A](e, err)
 
   implicit def ActorFrom2[A](a: Actor2[A]): A => Unit = a ! _
 }
