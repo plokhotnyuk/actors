@@ -14,8 +14,6 @@ import akka.dispatch.Await
 
 @RunWith(classOf[JUnitRunner])
 class AkkaActorTest extends Specification {
-  implicit val timeout = Timeout(Duration(10, TimeUnit.SECONDS))
-
   def config: Config = createConfig("akka.dispatch.UnboundedMailbox")
 
   val actorSystem = ActorSystem("system", config)
@@ -149,6 +147,7 @@ class AkkaActorTest extends Specification {
     }))
 
   private[this] def requestEchos(a: ActorRef, n: Int) {
+    implicit val timeout = Timeout(Duration(10, TimeUnit.SECONDS))
     val m = Message()
     val d = Duration(10, TimeUnit.SECONDS)
     var i = n
