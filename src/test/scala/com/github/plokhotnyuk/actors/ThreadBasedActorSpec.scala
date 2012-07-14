@@ -7,7 +7,8 @@ import com.github.plokhotnyuk.actors.Helper._
 import java.util.concurrent.CountDownLatch
 
 @RunWith(classOf[JUnitRunner])
-class ThreadBasedActorTest extends Specification {
+class ThreadBasedActorSpec extends Specification {
+  sequential
 
   "Single-producer sending" in {
     val n = 100000000
@@ -54,9 +55,9 @@ class ThreadBasedActorTest extends Specification {
     timed("Ping between actors", n) {
       p2 ! Message()
       l.await()
+      p1.exit()
+      p2.exit()
     }
-    p1.exit()
-    p2.exit()
   }
 
   "Max throughput" in {

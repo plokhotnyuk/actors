@@ -6,7 +6,9 @@ import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
 
 @RunWith(classOf[JUnitRunner])
-class MPMCQueueTest extends Specification {
+class MPMCQueueSpec extends Specification {
+  sequential
+
   val n = 100000000
 
   "Same producer and consumer" in {

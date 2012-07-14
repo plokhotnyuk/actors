@@ -4,19 +4,22 @@ import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import com.github.plokhotnyuk.actors.Helper._
+import scalaz._
+import concurrent.{Actor, Strategy}
+import Scalaz._
 import java.util.concurrent.CountDownLatch
 import akka.jsr166y.ForkJoinPool
-import Scalaz2._
-import scalaz.concurrent.Strategy
 
 @RunWith(classOf[JUnitRunner])
-class ScalazActor2Test extends Specification {
+class ScalazActorSpec extends Specification {
+  sequential
+
   implicit val executor = new ForkJoinPool()
 
   import Strategy.Executor
 
   "Single-producer sending" in {
-    val n = 100000000
+    val n = 40000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed("Single-producer sending", n) {
@@ -26,7 +29,7 @@ class ScalazActor2Test extends Specification {
   }
 
   "Multi-producer sending" in {
-    val n = 100000000
+    val n = 40000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed("Multi-producer sending", n) {
@@ -39,9 +42,9 @@ class ScalazActor2Test extends Specification {
 
   "Ping between actors" in {
     val n = 20000000
-    val l = new CountDownLatch(2)
-    var p1: Actor2[Message] = null
-    val p2 = actor2[Message] {
+    val l = new CountDownLatch(1)
+    var p1: Actor[Message] = null
+    val p2 = actor[Message] {
       var i = n / 2
 
       (m: Message) =>
@@ -49,7 +52,7 @@ class ScalazActor2Test extends Specification {
         i -= 1
         if (i == 0) l.countDown()
     }
-    p1 = actor2[Message] {
+    p1 = actor[Message] {
       var i = n / 2
 
       (m: Message) =>
@@ -64,7 +67,7 @@ class ScalazActor2Test extends Specification {
   }
 
   "Max throughput" in {
-    val n = 100000000
+    val n = 40000000
     val l = new CountDownLatch(halfOfCPUs)
     val as = for (j <- 1 to halfOfCPUs) yield tickActor(l, n / halfOfCPUs)
     timed("Max throughput", n) {
@@ -75,19 +78,21 @@ class ScalazActor2Test extends Specification {
     }
   }
 
-  private[this] def tickActor(l: CountDownLatch, n: Int): Actor2[Message] = actor2[Message] {
+  private[this] def tickActor(l: CountDownLatch, n: Int): Actor[Message] = actor[Message] {
     var i = n
 
     (m: Message) =>
       i -= 1
-      if (i == 0) l.countDown()
+      if (i == 0) {
+        l.countDown()
+      }
   }
 
-  private[this] def sendTicks(a: Actor2[Message], n: Int) {
-    val m = Message()
+  private[this] def sendTicks(a: Actor[Message], n: Int) {
+    val t = Message()
     var i = n
     while (i > 0) {
-      a ! m
+      a ! t
       i -= 1
     }
   }

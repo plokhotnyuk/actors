@@ -13,7 +13,9 @@ import com.typesafe.config.Config
 import akka.dispatch.Await
 
 @RunWith(classOf[JUnitRunner])
-class AkkaActorTest extends Specification {
+class AkkaActorSpec extends Specification {
+  sequential
+
   def config: Config = createConfig("akka.dispatch.UnboundedMailbox")
 
   val actorSystem = ActorSystem("system", config)
