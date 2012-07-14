@@ -1,19 +1,11 @@
 package com.github.plokhotnyuk.actors
 
-import org.junit.runner.RunWith
-import org.specs2.mutable.Specification
-import org.specs2.runner.JUnitRunner
-import com.github.plokhotnyuk.actors.Helper._
 import java.util.concurrent.CountDownLatch
-import akka.jsr166y.ForkJoinPool
 import Scalaz2._
 import scalaz.concurrent.Strategy
 
-@RunWith(classOf[JUnitRunner])
-class ScalazActor2Spec extends Specification {
-  sequential
-
-  implicit val executor = new ForkJoinPool()
+class ScalazActor2Spec extends BenchmarkSpec {
+  implicit val executor = fifoForkJoinPool(CPUs / 2)
 
   import Strategy.Executor
 
@@ -21,7 +13,7 @@ class ScalazActor2Spec extends Specification {
     val n = 100000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
-    timed("Single-producer sending", n) {
+    timed(n) {
       sendTicks(a, n)
       l.await()
     }
@@ -31,7 +23,7 @@ class ScalazActor2Spec extends Specification {
     val n = 100000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
-    timed("Multi-producer sending", n) {
+    timed(n) {
       for (j <- 1 to CPUs) fork {
         sendTicks(a, n / CPUs)
       }
@@ -59,7 +51,7 @@ class ScalazActor2Spec extends Specification {
         i -= 1
         if (i == 0) l.countDown()
     }
-    timed("Ping between actors", n) {
+    timed(n) {
       p2 ! Message()
       l.await()
     }
@@ -67,11 +59,11 @@ class ScalazActor2Spec extends Specification {
 
   "Max throughput" in {
     val n = 100000000
-    val l = new CountDownLatch(halfOfCPUs)
-    val as = for (j <- 1 to halfOfCPUs) yield tickActor(l, n / halfOfCPUs)
-    timed("Max throughput", n) {
+    val l = new CountDownLatch(CPUs)
+    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / halfOfCPUs)
+        sendTicks(a, n / CPUs)
       }
       l.await()
     }

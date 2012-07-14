@@ -1,20 +1,12 @@
 package com.github.plokhotnyuk.actors
 
-import org.junit.runner.RunWith
-import org.specs2.mutable.Specification
-import org.specs2.runner.JUnitRunner
-import com.github.plokhotnyuk.actors.Helper._
 import scalaz._
 import concurrent.{Actor, Strategy}
 import Scalaz._
 import java.util.concurrent.CountDownLatch
-import akka.jsr166y.ForkJoinPool
 
-@RunWith(classOf[JUnitRunner])
-class ScalazActorSpec extends Specification {
-  sequential
-
-  implicit val executor = new ForkJoinPool()
+class ScalazActorSpec extends BenchmarkSpec {
+  implicit val executor = fifoForkJoinPool(CPUs / 2)
 
   import Strategy.Executor
 
@@ -22,7 +14,7 @@ class ScalazActorSpec extends Specification {
     val n = 40000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
-    timed("Single-producer sending", n) {
+    timed(n) {
       sendTicks(a, n)
       l.await()
     }
@@ -32,7 +24,7 @@ class ScalazActorSpec extends Specification {
     val n = 40000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
-    timed("Multi-producer sending", n) {
+    timed(n) {
       for (j <- 1 to CPUs) fork {
         sendTicks(a, n / CPUs)
       }
@@ -41,7 +33,7 @@ class ScalazActorSpec extends Specification {
   }
 
   "Ping between actors" in {
-    val n = 20000000
+    val n = 10000000
     val l = new CountDownLatch(1)
     var p1: Actor[Message] = null
     val p2 = actor[Message] {
@@ -60,7 +52,7 @@ class ScalazActorSpec extends Specification {
         i -= 1
         if (i == 0) l.countDown()
     }
-    timed("Ping between actors", n) {
+    timed(n) {
       p2 ! Message()
       l.await()
     }
@@ -68,11 +60,11 @@ class ScalazActorSpec extends Specification {
 
   "Max throughput" in {
     val n = 40000000
-    val l = new CountDownLatch(halfOfCPUs)
-    val as = for (j <- 1 to halfOfCPUs) yield tickActor(l, n / halfOfCPUs)
-    timed("Max throughput", n) {
+    val l = new CountDownLatch(CPUs)
+    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / halfOfCPUs)
+        sendTicks(a, n / CPUs)
       }
       l.await()
     }

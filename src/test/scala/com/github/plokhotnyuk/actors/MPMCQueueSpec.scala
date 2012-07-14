@@ -1,26 +1,18 @@
 package com.github.plokhotnyuk.actors
 
-import org.junit.runner.RunWith
-import org.specs2.mutable.Specification
-import org.specs2.runner.JUnitRunner
-import com.github.plokhotnyuk.actors.Helper._
-
-@RunWith(classOf[JUnitRunner])
-class MPMCQueueSpec extends Specification {
-  sequential
-
+class MPMCQueueSpec extends BenchmarkSpec {
   val n = 100000000
 
   "Same producer and consumer" in {
     val q = messageQueue
-    timed("Same producer and consumer", n) {
+    timed(n) {
       sendReceiveMessages(q, n)
     }
   }
 
   "Single-producer sending" in {
     val q = messageQueue
-    timed("Single-producer sending", n) {
+    timed(n) {
       fork {
         receiveMessages(q, n)
       }
@@ -30,7 +22,7 @@ class MPMCQueueSpec extends Specification {
 
   "Multi-producer sending" in {
     val q = messageQueue
-    timed("Multi-producer sending", n) {
+    timed(n) {
       for (j <- 1 to CPUs) fork {
         receiveMessages(q, n / CPUs)
       }
@@ -41,7 +33,7 @@ class MPMCQueueSpec extends Specification {
   "Exchange between queues" in {
     val q1 = messageQueue
     val q2 = messageQueue
-    timed("Exchange between queues", n) {
+    timed(n) {
       fork {
         pumpMessages(q1, q2, n / 2)
       }

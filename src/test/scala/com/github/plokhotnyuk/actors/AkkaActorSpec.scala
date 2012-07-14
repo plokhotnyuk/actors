@@ -1,10 +1,6 @@
 package com.github.plokhotnyuk.actors
 
 import akka.actor._
-import org.junit.runner.RunWith
-import org.specs2.mutable.Specification
-import org.specs2.runner.JUnitRunner
-import com.github.plokhotnyuk.actors.Helper._
 import java.util.concurrent.{TimeUnit, CountDownLatch}
 import akka.util.{Timeout, Duration}
 import akka.pattern.ask
@@ -12,10 +8,7 @@ import com.typesafe.config.ConfigFactory._
 import com.typesafe.config.Config
 import akka.dispatch.Await
 
-@RunWith(classOf[JUnitRunner])
-class AkkaActorSpec extends Specification {
-  sequential
-
+class AkkaActorSpec extends BenchmarkSpec {
   def config: Config = createConfig("akka.dispatch.UnboundedMailbox")
 
   val actorSystem = ActorSystem("system", config)
@@ -24,17 +17,17 @@ class AkkaActorSpec extends Specification {
     val n = 40000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
-    timed("Single-producer sending", n) {
+    timed(n) {
       sendTicks(a, n)
       l.await()
     }
   }
 
   "Multi-producer sending" in {
-    val n = 40000000
+    val n = 20000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
-    timed("Multi-producer sending", n) {
+    timed(n) {
       for (j <- 1 to CPUs) fork {
         sendTicks(a, n / CPUs)
       }
@@ -43,20 +36,20 @@ class AkkaActorSpec extends Specification {
   }
 
   "Ping between actors" in {
-    val n = 20000000
+    val n = 10000000
     val l = new CountDownLatch(2)
     val p1 = playerActor(l, n / 2)
     val p2 = playerActor(l, n / 2)
-    timed("Ping between actors", n) {
+    timed(n) {
       p1.tell(Message(), p2)
       l.await()
     }
   }
 
   "Single-producer asking" in {
-    val n = 1000000
+    val n = 500000
     val a = echoActor
-    timed("Single-producer asking", n) {
+    timed(n) {
       requestEchos(a, n)
     }
   }
@@ -65,7 +58,7 @@ class AkkaActorSpec extends Specification {
     val n = 1000000
     val l = new CountDownLatch(CPUs)
     val a = echoActor
-    timed("Multi-producer asking", n) {
+    timed(n) {
       for (j <- 1 to CPUs) fork {
         requestEchos(a, n / CPUs)
         l.countDown()
@@ -76,11 +69,11 @@ class AkkaActorSpec extends Specification {
 
   "Max throughput" in {
     val n = 40000000
-    val l = new CountDownLatch(halfOfCPUs)
-    val as = for (j <- 1 to halfOfCPUs) yield tickActor(l, n / halfOfCPUs)
-    timed("Max throughput", n) {
+    val l = new CountDownLatch(CPUs)
+    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / halfOfCPUs)
+        sendTicks(a, n / CPUs)
       }
       l.await()
     }

@@ -2,20 +2,13 @@ package com.github.plokhotnyuk.actors
 
 import java.util.concurrent.CountDownLatch
 import net.liftweb.actor.LiftActor
-import org.junit.runner.RunWith
-import org.specs2.mutable.Specification
-import org.specs2.runner.JUnitRunner
-import com.github.plokhotnyuk.actors.Helper._
 
-@RunWith(classOf[JUnitRunner])
-class LiftActorSpec extends Specification {
-  sequential
-
+class LiftActorSpec extends BenchmarkSpec {
   "Single-producer sending" in {
     val n = 20000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
-    timed("Single-producer sending", n) {
+    timed(n) {
       sendTicks(a, n)
       l.await()
     }
@@ -25,7 +18,7 @@ class LiftActorSpec extends Specification {
     val n = 20000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
-    timed("Multi-producer sending", n) {
+    timed(n) {
       for (j <- 1 to CPUs) fork {
         sendTicks(a, n / CPUs)
       }
@@ -34,7 +27,7 @@ class LiftActorSpec extends Specification {
   }
 
   "Ping between actors" in {
-    val n = 2000000
+    val n = 1000000
     val l = new CountDownLatch(2)
     var p1: LiftActor = null
     val p2 = new LiftActor {
@@ -57,25 +50,25 @@ class LiftActorSpec extends Specification {
           if (i == 0) l.countDown()
       }
     }
-    timed("Ping between actors", n) {
+    timed(n) {
       p2 ! Message()
       l.await()
     }
   }
 
   "Single-producer asking" in {
-    val n = 1000000
+    val n = 200000
     val a = echoActor
-    timed("Single-producer asking", n) {
+    timed(n) {
       requestEchos(a, n)
     }
   }
 
   "Multi-producer asking" in {
-    val n = 2000000
+    val n = 1000000
     val l = new CountDownLatch(CPUs)
     val a = echoActor
-    timed("Multi-producer asking", n) {
+    timed(n) {
       for (j <- 1 to CPUs) fork {
         requestEchos(a, n / CPUs)
         l.countDown()
@@ -86,11 +79,11 @@ class LiftActorSpec extends Specification {
 
   "Max throughput" in {
     val n = 20000000
-    val l = new CountDownLatch(halfOfCPUs)
-    val as = for (j <- 1 to halfOfCPUs) yield tickActor(l, n / halfOfCPUs)
-    timed("Max throughput", n) {
+    val l = new CountDownLatch(CPUs)
+    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / halfOfCPUs)
+        sendTicks(a, n / CPUs)
       }
       l.await()
     }
