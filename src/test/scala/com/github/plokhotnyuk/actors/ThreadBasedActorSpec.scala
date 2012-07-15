@@ -55,11 +55,12 @@ class ThreadBasedActorSpec extends BenchmarkSpec {
 
   "Max throughput" in {
     val n = 100000000
-    val l = new CountDownLatch(CPUs)
-    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    val halfOfCPUs = CPUs / 2
+    val l = new CountDownLatch(halfOfCPUs)
+    val as = for (j <- 1 to halfOfCPUs) yield tickActor(l, n / halfOfCPUs)
     timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / CPUs)
+        sendTicks(a, n / halfOfCPUs)
       }
       l.await()
     }
