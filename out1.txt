@@ -21,7 +21,7 @@
 [INFO] includes = [**/*.scala,**/*.java,]
 [INFO] excludes = []
 [INFO] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\scala:-1: info: compiling
-[INFO] Compiling 7 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\classes at 1341749240527
+[INFO] Compiling 7 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\classes at 1342330045196
 [INFO] prepare-compile in 0 s
 [INFO] compile in 3 s
 [INFO] 
@@ -39,22 +39,28 @@
 [INFO] includes = [**/*.scala,**/*.java,]
 [INFO] excludes = []
 [INFO] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala:-1: info: compiling
-[INFO] Compiling 11 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\test-classes at 1341749244037
-[WARNING] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala\com\github\plokhotnyuk\actors\ScalazActor2Test.scala:14: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
-[WARNING]   implicit val executor = new ForkJoinPool()
+[INFO] Compiling 11 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\test-classes at 1342330048862
+[WARNING] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala\com\github\plokhotnyuk\actors\BenchmarkSpec.scala:22: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
+[WARNING]   def fifoForkJoinPool(parallelism: Int): ForkJoinPool =
+[WARNING]                                           ^
+[WARNING] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala\com\github\plokhotnyuk\actors\BenchmarkSpec.scala:23: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
+[WARNING]     new ForkJoinPool(parallelism, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
+[WARNING]         ^
+[WARNING] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala\com\github\plokhotnyuk\actors\BenchmarkSpec.scala:25: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
+[WARNING]   def lifoForkJoinPool(parallelism: Int): ForkJoinPool =
+[WARNING]                                           ^
+[WARNING] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala\com\github\plokhotnyuk\actors\BenchmarkSpec.scala:26: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
+[WARNING]     new ForkJoinPool(parallelism, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, false)
+[WARNING]         ^
+[WARNING] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala\com\github\plokhotnyuk\actors\ScalazActor2Spec.scala:8: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
+[WARNING]   implicit val executor = fifoForkJoinPool(CPUs / 2)
 [WARNING]                ^
-[WARNING] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala\com\github\plokhotnyuk\actors\ScalazActor2Test.scala:14: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
-[WARNING]   implicit val executor = new ForkJoinPool()
-[WARNING]                               ^
-[WARNING] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala\com\github\plokhotnyuk\actors\ScalazActorTest.scala:15: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
-[WARNING]   implicit val executor = new ForkJoinPool()
+[WARNING] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala\com\github\plokhotnyuk\actors\ScalazActorSpec.scala:9: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
+[WARNING]   implicit val executor = fifoForkJoinPool(CPUs / 2)
 [WARNING]                ^
-[WARNING] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala\com\github\plokhotnyuk\actors\ScalazActorTest.scala:15: warning: class ForkJoinPool in package jsr166y is deprecated: see corresponding Javadoc for more information.
-[WARNING]   implicit val executor = new ForkJoinPool()
-[WARNING]                               ^
-[WARNING] four warnings found
+[WARNING] 6 warnings found
 [INFO] prepare-compile in 0 s
-[INFO] compile in 9 s
+[INFO] compile in 8 s
 [INFO] 
 [INFO] --- maven-surefire-plugin:2.12:test (default-test) @ actors ---
 [INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
@@ -66,292 +72,292 @@
 -------------------------------------------------------
  T E S T S
 -------------------------------------------------------
-Running com.github.plokhotnyuk.actors.AkkaActor2Test
+Running com.github.plokhotnyuk.actors.AkkaActor2Spec
 
 Single-producer sending:
-3,267,286,991 ns
+3,254,835,022 ns
 40,000,000 ops
 81 ns/op
-12,242,573 ops/s
+12,289,409 ops/s
 
 Multi-producer sending:
-5,897,243,692 ns
-40,000,000 ops
-147 ns/op
-6,782,829 ops/s
+3,071,722,348 ns
+20,000,000 ops
+153 ns/op
+6,511,005 ops/s
 
 Ping between actors:
-8,073,454,752 ns
-20,000,000 ops
-403 ns/op
-2,477,254 ops/s
+2,832,773,577 ns
+10,000,000 ops
+283 ns/op
+3,530,109 ops/s
 
 Single-producer asking:
-4,992,038,490 ns
-1,000,000 ops
-4,992 ns/op
-200,318 ops/s
+2,589,344,680 ns
+500,000 ops
+5,178 ns/op
+193,099 ops/s
 
 Multi-producer asking:
-3,150,173,866 ns
+2,966,602,291 ns
 1,000,000 ops
-3,150 ns/op
-317,442 ops/s
+2,966 ns/op
+337,085 ops/s
 
 Max throughput:
-1,730,016,409 ns
+1,289,587,435 ns
 40,000,000 ops
-43 ns/op
-23,121,167 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 28.022 sec
-Running com.github.plokhotnyuk.actors.AkkaActorTest
+32 ns/op
+31,017,671 ops/s
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.034 sec
+Running com.github.plokhotnyuk.actors.AkkaActorSpec
 
 Single-producer sending:
-3,619,512,280 ns
+3,655,191,145 ns
 40,000,000 ops
-90 ns/op
-11,051,212 ops/s
+91 ns/op
+10,943,340 ops/s
 
 Multi-producer sending:
-5,025,533,575 ns
-40,000,000 ops
-125 ns/op
-7,959,353 ops/s
+3,194,912,822 ns
+20,000,000 ops
+159 ns/op
+6,259,951 ops/s
 
 Ping between actors:
-5,982,267,394 ns
-20,000,000 ops
-299 ns/op
-3,343,213 ops/s
+3,242,405,538 ns
+10,000,000 ops
+324 ns/op
+3,084,129 ops/s
 
 Single-producer asking:
-5,403,940,107 ns
-1,000,000 ops
-5,403 ns/op
-185,050 ops/s
+2,667,179,690 ns
+500,000 ops
+5,334 ns/op
+187,463 ops/s
 
 Multi-producer asking:
-3,030,398,230 ns
+3,096,693,840 ns
 1,000,000 ops
-3,030 ns/op
-329,989 ops/s
+3,096 ns/op
+322,925 ops/s
 
 Max throughput:
-2,270,275,719 ns
+1,390,810,884 ns
 40,000,000 ops
-56 ns/op
-17,619,005 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 26.271 sec
-Running com.github.plokhotnyuk.actors.LiftActorTest
+34 ns/op
+28,760,200 ops/s
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.166 sec
+Running com.github.plokhotnyuk.actors.LiftActorSpec
 
 Single-producer sending:
-1,939,303,238 ns
+1,894,998,701 ns
 20,000,000 ops
-96 ns/op
-10,312,982 ops/s
+94 ns/op
+10,554,096 ops/s
 
 Multi-producer sending:
-2,000,078,805 ns
+2,125,313,798 ns
 20,000,000 ops
-100 ns/op
-9,999,605 ops/s
+106 ns/op
+9,410,375 ops/s
 
 Ping between actors:
-4,040,472,449 ns
-2,000,000 ops
-2,020 ns/op
-494,991 ops/s
+2,185,036,603 ns
+1,000,000 ops
+2,185 ns/op
+457,658 ops/s
 
 Single-producer asking:
-12,104,605,478 ns
-1,000,000 ops
-12,104 ns/op
-82,613 ops/s
+2,304,683,809 ns
+200,000 ops
+11,523 ns/op
+86,779 ops/s
 
 Multi-producer asking:
-4,318,724,707 ns
-2,000,000 ops
-2,159 ns/op
-463,099 ops/s
+1,986,959,140 ns
+1,000,000 ops
+1,986 ns/op
+503,281 ops/s
 
 Max throughput:
-2,313,034,248 ns
+1,597,545,112 ns
 20,000,000 ops
-115 ns/op
-8,646,651 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 27.487 sec
-Running com.github.plokhotnyuk.actors.MPMCQueueTest
+79 ns/op
+12,519,208 ops/s
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.807 sec
+Running com.github.plokhotnyuk.actors.MPMCQueueSpec
 
 Same producer and consumer:
-3,374,110,374 ns
+3,412,902,897 ns
 100,000,000 ops
-33 ns/op
-29,637,441 ops/s
+34 ns/op
+29,300,569 ops/s
 
 Single-producer sending:
-3,924,091,662 ns
+4,313,614,740 ns
 100,000,000 ops
-39 ns/op
-25,483,604 ops/s
+43 ns/op
+23,182,413 ops/s
 
 Multi-producer sending:
-6,731,982,505 ns
+7,510,227,539 ns
 100,000,000 ops
-67 ns/op
-14,854,465 ops/s
+75 ns/op
+13,315,175 ops/s
 
 Exchange between queues:
-7,459,861,647 ns
+8,122,299,801 ns
 100,000,000 ops
-74 ns/op
-13,405,074 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.168 sec
-Running com.github.plokhotnyuk.actors.MPSCQueueTest
+81 ns/op
+12,311,783 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 24.071 sec
+Running com.github.plokhotnyuk.actors.MPSCQueueSpec
 
 Same producer and consumer:
-1,157,668,044 ns
+1,168,537,876 ns
 100,000,000 ops
 11 ns/op
-86,380,547 ops/s
+85,577,029 ops/s
 
 Single-producer sending:
-2,889,324,333 ns
+2,637,113,029 ns
 100,000,000 ops
-28 ns/op
-34,610,167 ops/s
+26 ns/op
+37,920,255 ops/s
 
 Multi-producer sending:
-5,879,179,005 ns
+6,253,441,832 ns
 100,000,000 ops
-58 ns/op
-17,009,177 ops/s
+62 ns/op
+15,991,193 ops/s
 
 Exchange between queues:
-5,011,800,234 ns
+5,332,487,499 ns
 100,000,000 ops
-50 ns/op
-19,952,910 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.647 sec
-Running com.github.plokhotnyuk.actors.ScalaActorTest
+53 ns/op
+18,752,974 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.115 sec
+Running com.github.plokhotnyuk.actors.ScalaActorSpec
 
 Single-producer sending:
-2,532,747,537 ns
+2,611,882,031 ns
 1,000,000 ops
-2,532 ns/op
-394,828 ops/s
+2,611 ns/op
+382,865 ops/s
 
 Multi-producer sending:
-2,297,541,905 ns
+3,020,810,983 ns
 1,000,000 ops
-2,297 ns/op
-435,247 ops/s
+3,020 ns/op
+331,036 ops/s
 
 Ping between actors:
-2,326,514,680 ns
+2,192,370,186 ns
 1,000,000 ops
-2,326 ns/op
-429,827 ops/s
+2,192 ns/op
+456,127 ops/s
 
 Single-producer asking:
-4,496,823,423 ns
-200,000 ops
-22,484 ns/op
-44,475 ops/s
+2,557,995,155 ns
+100,000 ops
+25,579 ns/op
+39,093 ops/s
 
 Multi-producer asking:
-4,653,777,824 ns
-500,000 ops
-9,307 ns/op
-107,439 ops/s
+1,771,524,530 ns
+200,000 ops
+8,857 ns/op
+112,897 ops/s
 
 Max throughput:
-1,910,543,422 ns
-2,000,000 ops
-955 ns/op
-1,046,822 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.687 sec
-Running com.github.plokhotnyuk.actors.ScalazActor2Test
+4,466,265,631 ns
+5,000,000 ops
+893 ns/op
+1,119,503 ops/s
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.394 sec
+Running com.github.plokhotnyuk.actors.ScalazActor2Spec
 
 Single-producer sending:
-2,199,524,897 ns
+3,054,121,823 ns
 100,000,000 ops
-21 ns/op
-45,464,363 ops/s
+30 ns/op
+32,742,636 ops/s
 
 Multi-producer sending:
-6,617,622,425 ns
+7,886,093,427 ns
 100,000,000 ops
-66 ns/op
-15,111,167 ops/s
+78 ns/op
+12,680,549 ops/s
 
 Ping between actors:
-4,221,263,733 ns
+3,127,378,475 ns
 20,000,000 ops
-211 ns/op
-4,737,917 ops/s
+156 ns/op
+6,395,132 ops/s
 
 Max throughput:
-1,692,026,870 ns
+1,388,980,054 ns
 100,000,000 ops
-16 ns/op
-59,100,716 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.741 sec
-Running com.github.plokhotnyuk.actors.ScalazActorTest
+13 ns/op
+71,995,274 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.271 sec
+Running com.github.plokhotnyuk.actors.ScalazActorSpec
 
 Single-producer sending:
-3,906,328,266 ns
+3,577,193,395 ns
 40,000,000 ops
-97 ns/op
-10,239,794 ops/s
+89 ns/op
+11,181,950 ops/s
 
 Multi-producer sending:
-3,924,156,172 ns
+4,018,361,079 ns
 40,000,000 ops
-98 ns/op
-10,193,274 ops/s
+100 ns/op
+9,954,307 ops/s
 
 Ping between actors:
-6,717,254,388 ns
-20,000,000 ops
-335 ns/op
-2,977,406 ops/s
+3,056,336,045 ns
+10,000,000 ops
+305 ns/op
+3,271,891 ops/s
 
 Max throughput:
-2,271,077,331 ns
+1,128,339,890 ns
 40,000,000 ops
-56 ns/op
-17,612,786 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.674 sec
-Running com.github.plokhotnyuk.actors.ThreadBasedActorTest
+28 ns/op
+35,450,310 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.543 sec
+Running com.github.plokhotnyuk.actors.ThreadBasedActorSpec
 
 Single-producer sending:
-2,178,015,146 ns
+2,717,753,478 ns
 100,000,000 ops
-21 ns/op
-45,913,362 ops/s
+27 ns/op
+36,795,095 ops/s
 
 Multi-producer sending:
-4,629,214,834 ns
+5,197,929,018 ns
 100,000,000 ops
-46 ns/op
-21,601,935 ops/s
+51 ns/op
+19,238,431 ops/s
 
 Ping between actors:
-3,340,174,346 ns
+3,423,849,757 ns
 50,000,000 ops
-66 ns/op
-14,969,278 ops/s
+68 ns/op
+14,603,444 ops/s
 
 Max throughput:
-931,424,198 ns
+814,754,840 ns
 100,000,000 ops
-9 ns/op
-107,362,467 ops/s
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.888 sec
+8 ns/op
+122,736,306 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.855 sec
 
 Results :
 
-Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 44, Failures: 0, Errors: 0, Skipped: 0
 
 [INFO] 
 [INFO] --- maven-jar-plugin:2.3.2:jar (default-jar) @ actors ---
@@ -363,7 +369,7 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 3:31.075s
-[INFO] Finished at: Sun Jul 08 15:10:50 EEST 2012
-[INFO] Final Memory: 12M/220M
+[INFO] Total time: 2:52.589s
+[INFO] Finished at: Sun Jul 15 08:30:16 EEST 2012
+[INFO] Final Memory: 14M/221M
 [INFO] ------------------------------------------------------------------------
