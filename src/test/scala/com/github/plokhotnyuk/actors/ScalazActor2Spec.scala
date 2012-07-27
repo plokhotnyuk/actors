@@ -1,7 +1,7 @@
 package com.github.plokhotnyuk.actors
 
+import com.github.plokhotnyuk.actors.Actor2._
 import java.util.concurrent.CountDownLatch
-import Scalaz2._
 import scalaz.concurrent.Strategy
 
 class ScalazActor2Spec extends BenchmarkSpec {
@@ -35,7 +35,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
     val n = 20000000
     val l = new CountDownLatch(2)
     var p1: Actor2[Message] = null
-    val p2 = actor2[Message] {
+    val p2 = actor[Message] {
       var i = n / 2
 
       (m: Message) =>
@@ -43,7 +43,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
         i -= 1
         if (i == 0) l.countDown()
     }
-    p1 = actor2[Message] {
+    p1 = actor[Message] {
       var i = n / 2
 
       (m: Message) =>
@@ -69,7 +69,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
     }
   }
 
-  private[this] def tickActor(l: CountDownLatch, n: Int): Actor2[Message] = actor2[Message] {
+  private[this] def tickActor(l: CountDownLatch, n: Int): Actor2[Message] = actor[Message] {
     var i = n
 
     (m: Message) =>

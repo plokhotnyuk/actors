@@ -58,7 +58,7 @@ final class ThreadBasedActor[A](e: A => Unit, onError: Throwable => Unit = throw
     try {
       e(a)
     } catch {
-      case ex => onError(ex)
+      case ex: Throwable => onError(ex)
     }
   }
 }

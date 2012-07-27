@@ -1,8 +1,7 @@
 package com.github.plokhotnyuk.actors
 
-import scalaz._
-import concurrent.{Actor, Strategy}
-import Scalaz._
+import scalaz.concurrent._
+import scalaz.concurrent.Actor._
 import java.util.concurrent.CountDownLatch
 
 class ScalazActorSpec extends BenchmarkSpec {

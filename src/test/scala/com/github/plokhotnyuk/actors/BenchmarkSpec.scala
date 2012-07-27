@@ -4,8 +4,8 @@ import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import org.specs2.mutable.Specification
 import org.specs2.execute.{Success, Result}
-import akka.jsr166y.ForkJoinPool
 import org.specs2.specification.{Fragments, Example}
+import concurrent.forkjoin.ForkJoinPool
 
 @RunWith(classOf[JUnitRunner])
 abstract class BenchmarkSpec extends Specification {
