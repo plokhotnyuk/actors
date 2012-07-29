@@ -11,17 +11,17 @@ RAM: min 6Gb (for JDK 64-bit) or min 3Gb (for JDK 32-bit)
 
 Software installed required
 ---------------------------
-JDK: 1.6.0 or newer (can require of removing of some unsupported JVM options from maven surefire configuration)
-Maven: 3.0 or newer
+JDK: 1.6.0_x or newer (can require of removing of some unsupported JVM options from test configuration)
+Maven: 3.0.x (or sbt: 0.11.3)
 
 Building & running benchmarks
 -----------------------------
 Use following command-line instructions for JDK 64-bit:
-mvn -B clean install > outX.txt
+mvn -B clean install >outX.txt (or sbt clean test >outX.txt)
 For JDK 32-bit use the jdk32 profile:
-mvn -B clean install -P jdk32 > outX.txt
+mvn -B clean install -P jdk32 >outX.txt
 For JRockit 64-bit use the jrockit64 profile:
-mvn -B clean install -P jrockit64 > outX.txt
+mvn -B clean install -P jrockit64 >outX.txt
 
 Test result descriptions
 ------------------------
