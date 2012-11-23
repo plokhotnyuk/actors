@@ -11,9 +11,8 @@ import annotation.tailrec
  * @tparam A type of data to queue/dequeue
  */
 class MPSCQueue[A] extends Queue[A] {
-  private[this] var anyA: A = _ // Don't know how to simplify this
-  private[this] var tail = new Node(anyA)
-  private[this] val head = new AtomicReference[Node[A]](tail)
+  private[this] val tail = new AtomicReference(new Node[A]())
+  private[this] val head = new AtomicReference(tail.get)
 
   def enqueue(a: A) {
     val n = new Node(a)
@@ -28,9 +27,9 @@ class MPSCQueue[A] extends Queue[A] {
    */
   @tailrec
   final def dequeue(): A = {
-    val next = tail.get
+    val next = tail.get.get
     if (next ne null) {
-      tail = next
+      tail.set(next)
       next.a
     } else {
       dequeue()

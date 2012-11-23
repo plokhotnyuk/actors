@@ -8,10 +8,9 @@ import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  */
 final class ThreadBasedActor[A](e: A => Unit, onError: Throwable => Unit = throw (_)) {
+  private[this] val tail = new AtomicReference(new Node[A]())
+  private[this] val head = new AtomicReference(tail.get)
   private[this] val doRun = new AtomicInteger(1)
-  private[this] var anyA: A = _ // Don't know how to simplify this
-  private[this] var tail = new Node(anyA)
-  private[this] val head = new AtomicReference[Node[A]](tail)
 
   start()
 
@@ -33,9 +32,7 @@ final class ThreadBasedActor[A](e: A => Unit, onError: Throwable => Unit = throw
   }
 
   private[this] def handleMessages() {
-    while (doRun.get != 0) {
-      tail = batchHandle(tail, 1024)
-    }
+    while (doRun.get != 0) tail.set(batchHandle(tail.get, 1024))
   }
 
   @tailrec
@@ -43,13 +40,9 @@ final class ThreadBasedActor[A](e: A => Unit, onError: Throwable => Unit = throw
     val next = n.get
     if (next ne null) {
       handle(next.a)
-      if (i > 0) {
-        batchHandle(next, i - 1)
-      } else {
-        next
-      }
+      if (i > 0) batchHandle(next, i - 1) else next
     } else {
-      if ((i & 63) == 0) Thread.`yield`() //TODO try to fix this magic
+      if ((i & 63) == 0) Thread.`yield`() //TODO try to fix this magic by more smart back off strategy
       batchHandle(n, i - 1)
     }
   }
