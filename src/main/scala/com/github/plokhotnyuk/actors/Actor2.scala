@@ -25,8 +25,8 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   self =>
 
   private[this] var anyA: A = _ // Don't know how to simplify this
-  @volatile private[this] var tail = new Node(anyA)
-  private[this] val head = new AtomicReference[Node[A]](tail)
+  private[this] val tail = new AtomicReference(new Node(anyA))
+  private[this] val head = new AtomicReference(tail.get)
   private[this] val suspended = new AtomicInteger(1)
 
   val toEffect: Run[A] = Run[A]((a) => this ! a)
@@ -61,9 +61,9 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   }
 
   private[this] def act() {
-    val n = batchHandle(tail, 1024)
-    if (n ne tail) {
-      tail = n
+    val n = batchHandle(tail.get, 1024)
+    if (n ne tail.get) {
+      tail.set(n)
       schedule()
     } else {
       suspended.set(1)
