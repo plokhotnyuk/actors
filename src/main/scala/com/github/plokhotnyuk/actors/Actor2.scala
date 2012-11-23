@@ -24,8 +24,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
                          (implicit val strategy: Strategy) {
   self =>
 
-  private[this] var anyA: A = _ // Don't know how to simplify this
-  private[this] val tail = new AtomicReference(new Node(anyA))
+  private[this] val tail = new AtomicReference(new Node(null.asInstanceOf[A]))
   private[this] val head = new AtomicReference(tail.get)
   private[this] val suspended = new AtomicInteger(1)
 
