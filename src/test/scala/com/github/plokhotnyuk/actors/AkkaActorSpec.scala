@@ -6,7 +6,7 @@ import akka.util.Timeout
 import akka.pattern.ask
 import com.typesafe.config.ConfigFactory._
 import concurrent.Await
-import concurrent.util.Duration
+import concurrent.duration.Duration
 
 class AkkaActorSpec extends BenchmarkSpec {
   val config = load(parseString(

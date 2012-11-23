@@ -2,7 +2,7 @@ name := "actors"
 
 version := "1.0-SNAPSHOT"
 
-scalaVersion := "2.10.0-M6"
+scalaVersion := "2.10.0-RC2"
 
 resolvers ++= Seq(
   "OSS Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases",
@@ -10,11 +10,11 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.scalaz" %% "scalaz-concurrent" % "7.0.0-M1" % "compile",
-  "com.typesafe.akka" % "akka-actor" % "2.1-M1" % "test",
-  "org.scala-lang" % "scala-actors" % "2.10.0-M6" % "test",
-  "org.specs2" %% "specs2" % "1.11" % "test",
-  "junit" % "junit-dep" % "4.10" % "test"
+  "org.scalaz" % "scalaz-concurrent_2.10.0-RC2" % "7.0.0-M4" % "compile",
+  "com.typesafe.akka" % "akka-actor_2.10.0-RC2" % "2.1.0-RC2" % "test",
+  "org.scala-lang" % "scala-actors" % "2.10.0-RC2" % "test",
+  "org.specs2" % "specs2_2.10.0-RC2" % "1.12.2" % "test",
+  "junit" % "junit-dep" % "4.11" % "test"
 )
 
 scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation", "-explaintypes") 
