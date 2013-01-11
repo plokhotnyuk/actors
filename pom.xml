@@ -30,34 +30,48 @@
                 <enabled>true</enabled>
             </releases>
         </repository>
+        <repository>
+            <id>oss-sonatype-snapshots</id>
+            <name>OSS Sonatype Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
     </repositories>
     <dependencies>
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
-            <version>2.10.0-RC2</version>
+            <version>2.10.0</version>
         </dependency>
         <dependency>
             <groupId>org.scalaz</groupId>
-            <artifactId>scalaz-concurrent_2.10.0-RC2</artifactId>
-            <version>7.0.0-M4</version>
+            <artifactId>scalaz-concurrent_2.10</artifactId>
+            <version>7.0.0-M7</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-actor_2.10.0-RC2</artifactId>
-            <version>2.1.0-RC2</version>
+            <artifactId>akka-actor_2.10</artifactId>
+            <version>2.1.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-actors</artifactId>
-            <version>2.10.0-RC2</version>
+            <version>2.10.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.liftweb</groupId>
+            <artifactId>lift-actor_2.10</artifactId>
+            <version>2.5-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.specs2</groupId>
-            <artifactId>specs2_2.10.0-RC2</artifactId>
-            <version>1.12.2</version>
+            <artifactId>specs2_2.10</artifactId>
+            <version>1.13</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -93,11 +107,6 @@
                     <version>3.1.0</version>
                     <configuration>
                         <charset>${project.build.sourceEncoding}</charset>
-                        <args>
-                            <arg>-unchecked</arg>
-                            <arg>-deprecation</arg>
-                            <arg>-explaintypes</arg>
-                        </args>
                         <jvmArgs>
                             <jvmArg>-server</jvmArg>
                             <jvmArg>-Xms512m</jvmArg>
@@ -133,8 +142,7 @@
                         <includes>
                             <include>**/*Spec.class</include>
                         </includes>
-                        <!-- -XX:+PrintGCDetails -->
-                        <argLine>-server -Xms4g -Xmx4g -Xss1m -XX:NewSize=3g -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseParNewGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
+                        <argLine>-server -Xms4g -Xmx4g -Xss1m -XX:NewSize=3g -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseParallelGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
                     </configuration>
                 </plugin>
             </plugins>
@@ -161,7 +169,7 @@
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-surefire-plugin</artifactId>
                             <configuration>
-                                <argLine>-server -Xms1280m -Xmx1280m -Xss1m -XX:NewSize=960m -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseParNewGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
+                                <argLine>-server -Xms1280m -Xmx1280m -Xss1m -XX:NewSize=960m -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseParallelGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
                             </configuration>
                         </plugin>
                     </plugins>
@@ -177,7 +185,7 @@
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-surefire-plugin</artifactId>
                             <configuration>
-                                <argLine>-server -Xms512m -Xmx512m -Xss1m -XX:NewSize=384m -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseParNewGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
+                                <argLine>-server -Xms512m -Xmx512m -Xss1m -XX:NewSize=384m -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseParallelGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
                                 <useFile>false</useFile>
                             </configuration>
                         </plugin>
@@ -196,11 +204,6 @@
                             <inherited>false</inherited>
                             <configuration>
                                 <charset>${project.build.sourceEncoding}</charset>
-                                <args>
-                                    <arg>-unchecked</arg>
-                                    <arg>-deprecation</arg>
-                                    <arg>-explaintypes</arg>
-                                </args>
                                 <jvmArgs>
                                     <jvmArg>-server</jvmArg>
                                     <jvmArg>-Xms512m</jvmArg>

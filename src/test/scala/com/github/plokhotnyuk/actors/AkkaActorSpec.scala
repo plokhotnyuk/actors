@@ -58,27 +58,6 @@ class AkkaActorSpec extends BenchmarkSpec {
     }
   }
 
-  "Single-producer asking" in {
-    val n = 500000
-    val a = echoActor
-    timed(n) {
-      requestEchos(a, n)
-    }
-  }
-
-  "Multi-producer asking" in {
-    val n = 1000000
-    val l = new CountDownLatch(CPUs)
-    val a = echoActor
-    timed(n) {
-      for (j <- 1 to CPUs) fork {
-        requestEchos(a, n / CPUs)
-        l.countDown()
-      }
-      l.await()
-    }
-  }
-
   "Max throughput" in {
     val n = 40000000
     val l = new CountDownLatch(CPUs)
@@ -128,22 +107,4 @@ class AkkaActorSpec extends BenchmarkSpec {
           }
       }
     }))
-
-  private[this] def echoActor: ActorRef =
-    actorSystem.actorOf(Props(new Actor {
-      def receive = {
-        case m => sender ! m
-      }
-    }))
-
-  private[this] def requestEchos(a: ActorRef, n: Int) {
-    implicit val timeout = Timeout(Duration(10, TimeUnit.SECONDS))
-    val m = Message()
-    val d = Duration(10, TimeUnit.SECONDS)
-    var i = n
-    while (i > 0) {
-      Await.result(a ? m, d)
-      i -= 1
-    }
-  }
 }

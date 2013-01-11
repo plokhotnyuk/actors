@@ -34,29 +34,6 @@ class ScalaActorSpec extends BenchmarkSpec {
     timed(n) {
       p1.send(Message(), p2)
       l.await()
-      p1 ! Exit(null, null)
-      p2 ! Exit(null, null)
-    }
-  }
-
-  "Single-producer asking" in {
-    val n = 100000
-    timed(n) {
-      val a = echoActor
-      requestEchos(a, n)
-    }
-  }
-
-  "Multi-producer asking" in {
-    val n = 200000
-    val l = new CountDownLatch(CPUs)
-    val a = echoActor
-    timed(n) {
-      for (j <- 1 to CPUs) fork {
-        requestEchos(a, n / CPUs)
-        l.countDown()
-      }
-      l.await()
     }
   }
 
@@ -112,35 +89,14 @@ class ScalaActorSpec extends BenchmarkSpec {
             case m =>
               sender ! m
               i -= 1
-              if (i == 0) l.countDown()
+              if (i == 0) {
+                l.countDown()
+                exit()
+              }
           }
         }
       }
     }
     a.start()
-  }
-
-  private[this] def echoActor: Actor = {
-    val a = new Actor {
-      def act() {
-        loop {
-          react {
-            case m => sender ! m
-          }
-        }
-      }
-    }
-    a.start()
-    a
-  }
-
-  private[this] def requestEchos(a: Actor, n: Int) {
-    val m = Message()
-    var i = n
-    while (i > 0) {
-      a !? m
-      i -= 1
-    }
-    a ! Exit(null, null)
   }
 }

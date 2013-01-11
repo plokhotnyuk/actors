@@ -34,25 +34,25 @@ class ScalazActor2Spec extends BenchmarkSpec {
   "Ping between actors" in {
     val n = 20000000
     val l = new CountDownLatch(2)
-    var p1: Actor2[Message] = null
-    val p2 = actor[Message] {
+    var a1: Actor2[Message] = null
+    val a2 = actor[Message] {
       var i = n / 2
 
       (m: Message) =>
-        p1 ! m
+        a1 ! m
         i -= 1
         if (i == 0) l.countDown()
     }
-    p1 = actor[Message] {
+    a1 = actor[Message] {
       var i = n / 2
 
       (m: Message) =>
-        p2 ! m
+        a2 ! m
         i -= 1
         if (i == 0) l.countDown()
     }
     timed(n) {
-      p2 ! Message()
+      a2 ! Message()
       l.await()
     }
   }
