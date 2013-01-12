@@ -2,12 +2,10 @@ package com.github.plokhotnyuk.actors
 
 import com.github.plokhotnyuk.actors.Actor2._
 import java.util.concurrent.CountDownLatch
-import scalaz.concurrent.Strategy
+import scalaz.concurrent.Strategy.Executor
 
 class ScalazActor2Spec extends BenchmarkSpec {
-  implicit val executor = fifoForkJoinPool(CPUs / 2)
-
-  import Strategy.Executor
+  implicit val executor = lifoForkJoinPool(CPUs)
 
   "Single-producer sending" in {
     val n = 100000000
