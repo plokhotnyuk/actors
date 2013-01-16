@@ -1,6 +1,6 @@
-#  ☆ノノハ
-#  从*’w’)
-#(つactorsと) [![Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
+  ☆ノノハ
+  从*’w’)
+(つactorsと) [![Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
 
 Evaluation of API and performance of different actor libraries
 
