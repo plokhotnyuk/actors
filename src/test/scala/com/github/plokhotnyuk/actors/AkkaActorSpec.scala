@@ -13,13 +13,16 @@ class AkkaActorSpec extends BenchmarkSpec {
     """
       akka {
         daemonic = on
-        actor.default-dispatcher {
-          executor = "fork-join-executor"
-          fork-join-executor {
-            parallelism-min = %d
-            parallelism-max = %d
+        actor {
+          unstarted-push-timeout = 100s
+          default-dispatcher {
+            executor = "fork-join-executor"
+            fork-join-executor {
+              parallelism-min = %d
+              parallelism-max = %d
+            }
+            throughput = 1024
           }
-          throughput = 1024
         }
       }
     """.format(CPUs, CPUs)))
