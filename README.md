@@ -46,3 +46,6 @@ Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1333, Ubunt
 
 #### out4.txt
 Intel(R) Core(TM) i7-3610QM CPU @ 2.30GHz (max 3.30GHz), RAM 8Gb DDR3-1333, Windows 8, JDK 1.7.0_11-b21 64-bit
+
+#### out5.txt
+Intel(R) Core(TM) i7-3615QM CPU @ 2.30GHz (max 3.30GHz), RAM 16Gb DDR3-1600, Mac OS X 10.8.2, JDK 1.7.0_07-b10 64-bit
