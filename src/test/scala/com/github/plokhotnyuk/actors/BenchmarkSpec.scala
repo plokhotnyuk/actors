@@ -33,13 +33,11 @@ abstract class BenchmarkSpec extends Specification {
     Success()
   }
 
-  def fork(code: => Unit): Thread = {
-    val t = new Thread {
+  def fork(code: => Unit) {
+    new Thread {
       override def run() {
         code
       }
-    }
-    t.start()
-    t
+    }.start()
   }
 }

@@ -1,12 +1,8 @@
 package com.github.plokhotnyuk.actors
 
 import akka.actor._
-import java.util.concurrent.{TimeUnit, CountDownLatch}
-import akka.util.Timeout
-import akka.pattern.ask
+import java.util.concurrent.CountDownLatch
 import com.typesafe.config.ConfigFactory._
-import concurrent.Await
-import concurrent.duration.Duration
 
 class AkkaActorSpec extends BenchmarkSpec {
   val config = load(parseString(
