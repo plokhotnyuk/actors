@@ -30,6 +30,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
   }
 
   "Ping between actors" in {
+    implicit val executor = lifoForkJoinPool(CPUs / 2)
     val n = 20000000
     val l = new CountDownLatch(2)
     var a1: Actor2[Message] = null
