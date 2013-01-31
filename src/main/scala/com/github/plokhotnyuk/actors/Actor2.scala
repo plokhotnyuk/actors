@@ -20,13 +20,13 @@ import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw(_))
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw(_), val batchSize: Int = 1024)
                          (implicit val strategy: Strategy) {
   self =>
 
-  private[this] val tail = new AtomicReference(new Node[A]())
-  private[this] val head = new AtomicReference(tail.get)
-  private[this] val suspended = new AtomicInteger(1)
+  private val tail = new AtomicReference(new Node[A]())
+  private val head = new AtomicReference(tail.get)
+  private val suspended = new AtomicInteger(1)
 
   val toEffect: Run[A] = Run[A]((a) => this ! a)
 
@@ -45,11 +45,11 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def contramap[B](f: B => A): Actor2[B] =
     Actor2[B]((b: B) => (this ! f(b)), onError)(strategy)
 
-  private[this] def trySchedule() {
+  private def trySchedule() {
     if (suspended.compareAndSet(1, 0)) schedule()
   }
 
-  private[this] def schedule() {
+  private def schedule() {
     try {
       strategy(act())
     } catch {
@@ -59,30 +59,32 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
     }
   }
 
-  private[this] def act() {
-    val n = batchHandle(tail.get, 1024)
-    if (n ne tail.get) {
-      tail.set(n)
-      schedule()
-    } else {
-      suspended.set(1)
-      if (n.get ne null) trySchedule()
-    }
+  private def act() {
+    batchHandle(tail.get, batchSize)
   }
 
   @tailrec
-  private[this] def batchHandle(n: Node[A], i: Int): Node[A] = {
-    val next = n.get
-    if (next ne null) {
+  private def batchHandle(t: Node[A], i: Int) {
+    val n = t.get
+    if (n ne null) {
       try {
-        handler(next.a)
+        handler(n.a)
       } catch {
         case ex: Throwable => onError(ex)
       }
-      if (i > 0) batchHandle(next, i - 1) else next
-    } else n
+      if (i > 0) batchHandle(n, i - 1)
+      else {
+        tail.set(n)
+        schedule()
+      }
+    } else {
+      suspended.set(1)
+      if (t.get ne null) trySchedule()
+    }
   }
 }
+
+private class Node[A](val a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
 
 object Actor2 extends ActorFunctions with ActorInstances
 
@@ -93,8 +95,8 @@ trait ActorInstances {
 }
 
 trait ActorFunctions {
-  def actor[A](e: A => Unit, err: Throwable => Unit = throw (_))(implicit s: Strategy): Actor2[A] =
-    Actor2[A](e, err)
+  def actor[A](e: A => Unit, err: Throwable => Unit = throw (_), batchSize: Int = 1024)(implicit s: Strategy): Actor2[A] =
+    Actor2[A](e, err, batchSize)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
