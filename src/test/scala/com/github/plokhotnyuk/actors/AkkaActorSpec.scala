@@ -35,11 +35,23 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = 20000000
+    val n = 40000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
       for (j <- 1 to CPUs) fork {
+        sendTicks(a, n / CPUs)
+      }
+      l.await()
+    }
+  }
+
+  "Max throughput" in {
+    val n = 40000000
+    val l = new CountDownLatch(CPUs)
+    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    timed(n) {
+      for (a <- as) fork {
         sendTicks(a, n / CPUs)
       }
       l.await()
@@ -57,21 +69,9 @@ class AkkaActorSpec extends BenchmarkSpec {
     }
   }
 
-  "Max throughput" in {
-    val n = 40000000
-    val l = new CountDownLatch(CPUs)
-    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
-    timed(n) {
-      for (a <- as) fork {
-        sendTicks(a, n / CPUs)
-      }
-      l.await()
-    }
-  }
-
-  private[this] def tickActor(l: CountDownLatch, n: Int): ActorRef =
+  private def tickActor(l: CountDownLatch, n: Int): ActorRef =
     actorSystem.actorOf(Props(new Actor() {
-      private[this] var i = n
+      private var i = n
 
       def receive = {
         case _ =>
@@ -83,7 +83,7 @@ class AkkaActorSpec extends BenchmarkSpec {
       }
     }))
 
-  private[this] def sendTicks(a: ActorRef, n: Int) {
+  private def sendTicks(a: ActorRef, n: Int) {
     val m = Message()
     var i = n
     while (i > 0) {
@@ -92,9 +92,9 @@ class AkkaActorSpec extends BenchmarkSpec {
     }
   }
 
-  private[this] def playerActor(l: CountDownLatch, n: Int): ActorRef =
+  private def playerActor(l: CountDownLatch, n: Int): ActorRef =
     actorSystem.actorOf(Props(new Actor {
-      private[this] var i = n
+      private var i = n
 
       def receive = {
         case m =>

@@ -8,7 +8,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
   implicit val executor = lifoForkJoinPool(CPUs)
 
   "Single-producer sending" in {
-    val n = 100000000
+    val n = 200000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -18,7 +18,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = 100000000
+    val n = 200000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -29,9 +29,20 @@ class ScalazActor2Spec extends BenchmarkSpec {
     }
   }
 
+  "Max throughput" in {
+    val n = 200000000
+    val l = new CountDownLatch(CPUs)
+    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    timed(n) {
+      for (a <- as) fork {
+        sendTicks(a, n / CPUs)
+      }
+      l.await()
+    }
+  }
+
   "Ping between actors" in {
-    implicit val executor = lifoForkJoinPool(CPUs / 2)
-    val n = 20000000
+    val n = 200000000
     val l = new CountDownLatch(2)
     var a1: Actor2[Message] = null
     val a2 = actor[Message] {
@@ -56,19 +67,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
     }
   }
 
-  "Max throughput" in {
-    val n = 100000000
-    val l = new CountDownLatch(CPUs)
-    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
-    timed(n) {
-      for (a <- as) fork {
-        sendTicks(a, n / CPUs)
-      }
-      l.await()
-    }
-  }
-
-  private[this] def tickActor(l: CountDownLatch, n: Int): Actor2[Message] = actor[Message] {
+  private def tickActor(l: CountDownLatch, n: Int): Actor2[Message] = actor[Message] {
     var i = n
 
     (m: Message) =>
@@ -76,7 +75,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
       if (i == 0) l.countDown()
   }
 
-  private[this] def sendTicks(a: Actor2[Message], n: Int) {
+  private def sendTicks(a: Actor2[Message], n: Int) {
     val m = Message()
     var i = n
     while (i > 0) {

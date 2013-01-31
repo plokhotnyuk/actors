@@ -28,12 +28,25 @@ class LiftActorSpec extends BenchmarkSpec {
     LAScheduler.shutdown()
   }
 
+  "Max throughput" in {
+    val n = 20000000
+    val l = new CountDownLatch(CPUs)
+    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    timed(n) {
+      for (a <- as) fork {
+        sendTicks(a, n / CPUs)
+      }
+      l.await()
+    }
+    LAScheduler.shutdown()
+  }
+
   "Ping between actors" in {
     val n = 2000000
     val l = new CountDownLatch(2)
     var a1: LiftActor = null
     val a2 = new LiftActor {
-      private[this] var i = n / 2
+      private var i = n / 2
 
       def messageHandler = {
         case b =>
@@ -43,7 +56,7 @@ class LiftActorSpec extends BenchmarkSpec {
       }
     }
     a1 = new LiftActor {
-      private[this] var i = n / 2
+      private var i = n / 2
 
       def messageHandler = {
         case b =>
@@ -60,22 +73,9 @@ class LiftActorSpec extends BenchmarkSpec {
     LAScheduler.shutdown()
   }
 
-  "Max throughput" in {
-    val n = 20000000
-    val l = new CountDownLatch(CPUs)
-    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
-    timed(n) {
-      for (a <- as) fork {
-        sendTicks(a, n / CPUs)
-      }
-      l.await()
-    }
-    LAScheduler.shutdown()
-  }
-
-  private[this] def tickActor(l: CountDownLatch, n: Int): LiftActor =
+  private def tickActor(l: CountDownLatch, n: Int): LiftActor =
     new LiftActor {
-      private[this] var i = n
+      private var i = n
 
       def messageHandler = {
         case _ =>
@@ -84,7 +84,7 @@ class LiftActorSpec extends BenchmarkSpec {
       }
     }
 
-  private[this] def sendTicks(a: LiftActor, n: Int) {
+  private def sendTicks(a: LiftActor, n: Int) {
     val m = Message()
     var i = n
     while (i > 0) {

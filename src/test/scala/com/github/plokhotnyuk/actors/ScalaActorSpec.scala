@@ -26,17 +26,6 @@ class ScalaActorSpec extends BenchmarkSpec {
     }
   }
 
-  "Ping between actors" in {
-    val n = 200000
-    val l = new CountDownLatch(2)
-    val p1 = playerActor(l, n / 2)
-    val p2 = playerActor(l, n / 2)
-    timed(n) {
-      p1.send(Message(), p2)
-      l.await()
-    }
-  }
-
   "Max throughput" in {
     val n = 5000000
     val l = new CountDownLatch(CPUs)
@@ -49,9 +38,20 @@ class ScalaActorSpec extends BenchmarkSpec {
     }
   }
 
-  private[this] def tickActor(l: CountDownLatch, n: Int): Actor = {
+  "Ping between actors" in {
+    val n = 200000
+    val l = new CountDownLatch(2)
+    val p1 = playerActor(l, n / 2)
+    val p2 = playerActor(l, n / 2)
+    timed(n) {
+      p1.send(Message(), p2)
+      l.await()
+    }
+  }
+
+  private def tickActor(l: CountDownLatch, n: Int): Actor = {
     val a = new Actor {
-      private[this] var i = n
+      private var i = n
 
       def act() {
         loop {
@@ -70,7 +70,7 @@ class ScalaActorSpec extends BenchmarkSpec {
     a
   }
 
-  private[this] def sendTicks(a: Actor, n: Int) {
+  private def sendTicks(a: Actor, n: Int) {
     val m = Message()
     var i = n
     while (i > 0) {
@@ -79,9 +79,9 @@ class ScalaActorSpec extends BenchmarkSpec {
     }
   }
 
-  private[this] def playerActor(l: CountDownLatch, n: Int): Actor = {
+  private def playerActor(l: CountDownLatch, n: Int): Actor = {
     val a = new Actor {
-      private[this] var i = n
+      private var i = n
 
       def act() {
         loop {

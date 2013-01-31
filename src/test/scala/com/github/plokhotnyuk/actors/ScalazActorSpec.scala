@@ -30,8 +30,19 @@ class ScalazActorSpec extends BenchmarkSpec {
     }
   }
 
+  "Max throughput" in {
+    val n = 40000000
+    val l = new CountDownLatch(CPUs)
+    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    timed(n) {
+      for (a <- as) fork {
+        sendTicks(a, n / CPUs)
+      }
+      l.await()
+    }
+  }
+
   "Ping between actors" in {
-    implicit val executor = lifoForkJoinPool(CPUs / 2)
     val n = 10000000
     val l = new CountDownLatch(1)
     var a1: Actor[Message] = null
@@ -57,19 +68,7 @@ class ScalazActorSpec extends BenchmarkSpec {
     }
   }
 
-  "Max throughput" in {
-    val n = 40000000
-    val l = new CountDownLatch(CPUs)
-    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
-    timed(n) {
-      for (a <- as) fork {
-        sendTicks(a, n / CPUs)
-      }
-      l.await()
-    }
-  }
-
-  private[this] def tickActor(l: CountDownLatch, n: Int): Actor[Message] = actor[Message] {
+  private def tickActor(l: CountDownLatch, n: Int): Actor[Message] = actor[Message] {
     var i = n
 
     (m: Message) =>
@@ -79,7 +78,7 @@ class ScalazActorSpec extends BenchmarkSpec {
       }
   }
 
-  private[this] def sendTicks(a: Actor[Message], n: Int) {
+  private def sendTicks(a: Actor[Message], n: Int) {
     val t = Message()
     var i = n
     while (i > 0) {
