@@ -23,5 +23,5 @@ parallelExecution in test := false
 fork in test := true
 
 javaOptions in test ++= Seq("-server", "-Xms4g", "-Xmx4g", "-Xss1m", "-XX:NewSize=3g", "-XX:PermSize=128m", "-XX:MaxPermSize=128m", "-XX:+TieredCompilation", 
-  "-XX:+UseParallelGC", "-XX:+UseNUMA", "-XX:+UseCondCardMark", "-XX:+AlwaysPreTouch")
+  "-XX:+UseParallelGC", "-XX:+UseNUMA", "-XX:+UseCondCardMark", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch")
 
