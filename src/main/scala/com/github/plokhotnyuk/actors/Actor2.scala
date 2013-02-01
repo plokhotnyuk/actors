@@ -55,16 +55,24 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
     } catch {
       case ex: Throwable =>
         suspended.set(1)
-        throw new RuntimeException(ex)
+        throw new RuntimeException("Cannot schedule actor for execution", ex)
     }
   }
 
   private def act() {
-    batchHandle(tail.get, batchSize)
+    val t = tail.get
+    val n = batchHandle(t, batchSize)
+    if (n ne t) {
+      tail.set(n)
+      schedule()
+    } else {
+      suspended.set(1)
+      if (n.get ne null) trySchedule()
+    }
   }
 
   @tailrec
-  private def batchHandle(t: Node[A], i: Int) {
+  private def batchHandle(t: Node[A], i: Int): Node[A] = {
     val n = t.get
     if (n ne null) {
       try {
@@ -72,15 +80,8 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
       } catch {
         case ex: Throwable => onError(ex)
       }
-      if (i > 0) batchHandle(n, i - 1)
-      else {
-        tail.set(n)
-        schedule()
-      }
-    } else {
-      suspended.set(1)
-      if (t.get ne null) trySchedule()
-    }
+      if (i > 0) batchHandle(n, i - 1) else n
+    } else t
   }
 }
 
