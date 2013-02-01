@@ -18,7 +18,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = 200000000
+    val n = 100000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -42,7 +42,8 @@ class ScalazActor2Spec extends BenchmarkSpec {
   }
 
   "Ping between actors" in {
-    val n = 200000000
+    implicit val executor = lifoForkJoinPool(CPUs / 2)
+    val n = 20000000
     val l = new CountDownLatch(2)
     var a1: Actor2[Message] = null
     val a2 = actor[Message] {
