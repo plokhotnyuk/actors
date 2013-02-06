@@ -20,8 +20,8 @@ import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw(_), val batchSize: Int = 1024)
-                         (implicit val strategy: Strategy) {
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw(_), batchSize: Int = 1024)
+                         (implicit strategy: Strategy) {
   self =>
 
   private val tail = new AtomicReference(new Node[A]())
