@@ -51,7 +51,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
 
   private def schedule() {
     try {
-      strategy(act)
+      strategy(act())
     } catch {
       case ex: Throwable =>
         suspended.set(1)
@@ -63,7 +63,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
     val t = tail.get
     val n = batchHandle(t, batchSize)
     if (n ne t) {
-      tail.set(n)
+      tail.lazySet(n)
       schedule()
     } else {
       suspended.set(1)
