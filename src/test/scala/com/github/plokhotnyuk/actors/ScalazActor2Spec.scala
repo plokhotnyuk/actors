@@ -66,6 +66,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
       a2 ! Message()
       l.await()
     }
+    executor.shutdown()
   }
 
   private def tickActor(l: CountDownLatch, n: Int): Actor2[Message] = actor[Message] {
