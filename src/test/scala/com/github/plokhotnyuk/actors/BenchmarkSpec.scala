@@ -6,6 +6,7 @@ import org.specs2.mutable.Specification
 import org.specs2.execute.{Success, Result}
 import org.specs2.specification.{Fragments, Example}
 import concurrent.forkjoin.ForkJoinPool
+import java.util.concurrent.{Executors, ExecutorService}
 
 @RunWith(classOf[JUnitRunner])
 abstract class BenchmarkSpec extends Specification {
@@ -19,11 +20,14 @@ abstract class BenchmarkSpec extends Specification {
     case other => other
   }
 
-  def fifoForkJoinPool(parallelism: Int): ForkJoinPool =
+  def fifoForkJoinPool(parallelism: Int): ExecutorService =
     new ForkJoinPool(parallelism, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
 
-  def lifoForkJoinPool(parallelism: Int): ForkJoinPool =
+  def lifoForkJoinPool(parallelism: Int): ExecutorService =
     new ForkJoinPool(parallelism, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, false)
+
+  def fixedThreadPool(parallelism: Int): ExecutorService =
+    Executors.newFixedThreadPool(parallelism)
 
   def timed(n: Int)(benchmark: => Unit): Result = {
     val t = System.nanoTime
