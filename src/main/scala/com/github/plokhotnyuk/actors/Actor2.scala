@@ -20,13 +20,13 @@ import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw(_), batchSize: Int = 1024)
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw(_))
                          (implicit strategy: Strategy) {
   self =>
 
   private val tail = new AtomicReference(new Node[A]())
-  private val head = new AtomicReference(tail.get)
   private val suspended = new AtomicInteger(1)
+  private val head = new AtomicReference(tail.get)
 
   val toEffect: Run[A] = Run[A]((a) => this ! a)
 
@@ -61,7 +61,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
 
   private def act() {
     val t = tail.get
-    val n = batchHandle(t, batchSize)
+    val n = batchHandle(t, 1024)
     if (n ne t) {
       tail.lazySet(n)
       schedule()
@@ -96,8 +96,8 @@ trait ActorInstances {
 }
 
 trait ActorFunctions {
-  def actor[A](e: A => Unit, err: Throwable => Unit = throw (_), batchSize: Int = 1024)(implicit s: Strategy): Actor2[A] =
-    Actor2[A](e, err, batchSize)
+  def actor[A](e: A => Unit, err: Throwable => Unit = throw (_))(implicit s: Strategy): Actor2[A] =
+    Actor2[A](e, err)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
