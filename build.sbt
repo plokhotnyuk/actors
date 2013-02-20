@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" % "akka-actor_2.10" % "2.2-M1" % "test",
   "net.liftweb" % "lift-actor_2.10" % "2.5-M4" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.1-RC1" % "test",
-  "org.specs2" % "specs2_2.10" % "1.13" % "test",
+  "org.specs2" % "specs2_2.10" % "1.14" % "test",
   "junit" % "junit-dep" % "4.11" % "test"
 )
 
