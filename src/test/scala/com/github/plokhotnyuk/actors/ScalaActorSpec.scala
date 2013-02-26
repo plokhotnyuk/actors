@@ -27,7 +27,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = 5000000
+    val n = 2000000
     val l = new CountDownLatch(CPUs)
     val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
     timed(n) {

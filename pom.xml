@@ -45,7 +45,7 @@
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-actor_2.10</artifactId>
-            <version>2.2-M1</version>
+            <version>2.1.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -57,7 +57,7 @@
         <dependency>
             <groupId>net.liftweb</groupId>
             <artifactId>lift-actor_2.10</artifactId>
-            <version>2.5-M4</version>
+            <version>2.5-RC1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -134,7 +134,7 @@
                         <includes>
                             <include>**/*Spec.class</include>
                         </includes>
-                        <argLine>-server -Xms4g -Xmx4g -Xss1m -XX:NewSize=3g -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseParallelGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
+                        <argLine>-server -Xms4g -Xmx4g -Xss1m -XX:NewSize=3g -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseG1GC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
                     </configuration>
                 </plugin>
             </plugins>
@@ -148,27 +148,6 @@
     </build>
     <profiles>
         <profile>
-            <id>jdk32</id>
-            <activation>
-                <os>
-                    <arch>x86</arch>
-                </os>
-            </activation>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-surefire-plugin</artifactId>
-                            <configuration>
-                                <argLine>-server -Xms1280m -Xmx1280m -Xss1m -XX:NewSize=960m -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseParallelGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-        <profile>
             <id>travis</id>
             <build>
                 <pluginManagement>
@@ -177,52 +156,8 @@
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-surefire-plugin</artifactId>
                             <configuration>
-                                <argLine>-server -Xms2048m -Xmx2048m -Xss1m -XX:NewSize=1536m -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseParallelGC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
+                                <argLine>-server -Xms2048m -Xmx2048m -Xss1m -XX:NewSize=1536m -XX:PermSize=128m -XX:MaxPermSize=128m -XX:+TieredCompilation -XX:+UseG1GC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
                                 <useFile>false</useFile>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-        <profile>
-            <id>jrockit64</id>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>net.alchim31.maven</groupId>
-                            <artifactId>scala-maven-plugin</artifactId>
-                            <inherited>false</inherited>
-                            <configuration>
-                                <charset>${project.build.sourceEncoding}</charset>
-                                <jvmArgs>
-                                    <jvmArg>-server</jvmArg>
-                                    <jvmArg>-Xms512m</jvmArg>
-                                    <jvmArg>-Xmx512m</jvmArg>
-                                    <jvmArg>-Xss1m</jvmArg>
-                                </jvmArgs>
-                            </configuration>
-                            <executions>
-                                <execution>
-                                    <id>compile</id>
-                                    <goals>
-                                        <goal>compile</goal>
-                                    </goals>
-                                </execution>
-                                <execution>
-                                    <id>testCompile</id>
-                                    <goals>
-                                        <goal>testCompile</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-surefire-plugin</artifactId>
-                            <configuration>
-                                <argLine>-server -Xms4g -Xmx4g -Xss1m -Xgc:singleparpar -XXtlaSize:min=1m,preferred=4m</argLine>
                             </configuration>
                         </plugin>
                     </plugins>

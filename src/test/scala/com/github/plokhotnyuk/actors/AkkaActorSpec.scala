@@ -35,7 +35,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = 40000000
+    val n = 20000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -67,6 +67,10 @@ class AkkaActorSpec extends BenchmarkSpec {
       p1.tell(Message(), p2)
       l.await()
     }
+  }
+
+  override def shutdown() {
+    actorSystem.shutdown()
   }
 
   private def tickActor(l: CountDownLatch, n: Int): ActorRef =

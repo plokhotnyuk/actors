@@ -4,7 +4,7 @@ import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import org.specs2.mutable.Specification
 import org.specs2.execute.{Success, Result}
-import org.specs2.specification.{Fragments, Example}
+import org.specs2.specification.{Step, Fragments, Example}
 import concurrent.forkjoin.ForkJoinPool
 import java.util.concurrent.{Executors, ExecutorService}
 
@@ -18,6 +18,10 @@ abstract class BenchmarkSpec extends Specification {
   override def map(fs: => Fragments) = fs.map {
     case Example(desc, body) => Example(desc.toString, { printf("\n%s:\n", desc); body() })
     case other => other
+  } ^ Step(shutdown())
+
+  def shutdown() {
+    // do nothing
   }
 
   def fifoForkJoinPool(parallelism: Int): ExecutorService =

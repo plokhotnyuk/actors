@@ -12,7 +12,6 @@ class LiftActorSpec extends BenchmarkSpec {
       sendTicks(a, n)
       l.await()
     }
-    LAScheduler.shutdown()
   }
 
   "Multi-producer sending" in {
@@ -25,7 +24,6 @@ class LiftActorSpec extends BenchmarkSpec {
       }
       l.await()
     }
-    LAScheduler.shutdown()
   }
 
   "Max throughput" in {
@@ -38,7 +36,6 @@ class LiftActorSpec extends BenchmarkSpec {
       }
       l.await()
     }
-    LAScheduler.shutdown()
   }
 
   "Ping between actors" in {
@@ -70,7 +67,6 @@ class LiftActorSpec extends BenchmarkSpec {
       l.await()
     }
     a1 = null
-    LAScheduler.shutdown()
   }
 
   private def tickActor(l: CountDownLatch, n: Int): LiftActor =
@@ -83,6 +79,10 @@ class LiftActorSpec extends BenchmarkSpec {
           if (i == 0) l.countDown()
       }
     }
+
+  override def shutdown() {
+    LAScheduler.shutdown()
+  }
 
   private def sendTicks(a: LiftActor, n: Int) {
     val m = Message()
