@@ -50,13 +50,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   }
 
   private def schedule() {
-    try {
-      strategy(act())
-    } catch {
-      case ex: Throwable =>
-        suspended.set(1)
-        throw new RuntimeException("Cannot schedule actor for execution", ex)
-    }
+    strategy(act())
   }
 
   private def act() {
