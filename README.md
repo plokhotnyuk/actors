@@ -6,7 +6,13 @@
 (つactorsと)
 ```
 
-Evaluation of API and performance of different actor libraries
+Evaluation of API and performance of different actor libraries written on Scala:
+[Akka](https://github.com/akka/akka/blob/master/akka-actor/src/main/scala/akka/actor/Actor.scala) vs.
+[Lift](https://github.com/lift/framework/blob/master/core/actor/src/main/scala/net/liftweb/actor/LiftActor.scala) vs.
+[ProxyActors](https://github.com/nu11ptr/ProxyActors/blob/master/src/main/scala/api/actor/package.scala) vs.
+[Scala](https://github.com/scala/scala/blob/master/src/actors/scala/actors/Actor.scala) vs.
+[Scalaz](https://github.com/scalaz/scalaz/blob/master/core/src/main/scala/scalaz/concurrent/Actor.scala) vs.
+[alternative implementation of Scalaz actor](https://github.com/plokhotnyuk/actors/blob/master/src/main/scala/com/github/plokhotnyuk/actors/Actor2.scala)
 
 ## Hardware required
 
