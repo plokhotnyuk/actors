@@ -12,10 +12,14 @@
 [INFO] Using 'UTF-8' encoding to copy filtered resources.
 [INFO] skip non existing resourceDirectory C:\Users\Andriy\Programs\com\github\plokhotnyuk\actors\src\main\resources
 [INFO] 
-[INFO] --- scala-maven-plugin:3.1.0:compile (compile) @ actors ---
+[INFO] --- scala-maven-plugin:3.1.3:compile (compile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.1-RC2
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.1-RC2
+[WARNING]  org.scalaz:scalaz-core_2.10:7.0.0-M8 requires scala version: 2.10.0
+[WARNING] Multiple versions of scala libraries detected!
 [INFO] C:\Users\Andriy\Programs\com\github\plokhotnyuk\actors\src\main\scala:-1: info: compiling
-[INFO] Compiling 2 source files to C:\Users\Andriy\Programs\com\github\plokhotnyuk\actors\target\classes at 1358088306179
-[WARNING] warning: there were 1 feature warnings; re-run with -feature for details
+[INFO] Compiling 1 source files to C:\Users\Andriy\Programs\com\github\plokhotnyuk\actors\target\classes at 1362212333493
+[WARNING] warning: there were 1 feature warning(s); re-run with -feature for details
 [WARNING] one warning found
 [INFO] prepare-compile in 0 s
 [INFO] compile in 4 s
@@ -25,13 +29,17 @@
 [INFO] Using 'UTF-8' encoding to copy filtered resources.
 [INFO] skip non existing resourceDirectory C:\Users\Andriy\Programs\com\github\plokhotnyuk\actors\src\test\resources
 [INFO] 
-[INFO] --- scala-maven-plugin:3.1.0:testCompile (testCompile) @ actors ---
+[INFO] --- scala-maven-plugin:3.1.3:testCompile (testCompile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.1-RC2
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.1-RC2
+[WARNING]  org.scalaz:scalaz-core_2.10:7.0.0-M8 requires scala version: 2.10.0
+[WARNING] Multiple versions of scala libraries detected!
 [INFO] C:\Users\Andriy\Programs\com\github\plokhotnyuk\actors\src\test\scala:-1: info: compiling
-[INFO] Compiling 7 source files to C:\Users\Andriy\Programs\com\github\plokhotnyuk\actors\target\test-classes at 1358088310469
+[INFO] Compiling 8 source files to C:\Users\Andriy\Programs\com\github\plokhotnyuk\actors\target\test-classes at 1362212337721
 [INFO] prepare-compile in 0 s
 [INFO] compile in 9 s
 [INFO] 
-[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ actors ---
+[INFO] --- maven-surefire-plugin:2.13:test (default-test) @ actors ---
 [INFO] Surefire report directory: C:\Users\Andriy\Programs\com\github\plokhotnyuk\actors\target\surefire-reports
 
 -------------------------------------------------------
@@ -44,137 +52,163 @@
 Running com.github.plokhotnyuk.actors.AkkaActorSpec
 
 Single-producer sending:
-7,159,203,486 ns
+7,125,041,856 ns
 40,000,000 ops
 178 ns/op
-5,587,213 ops/s
+5,614,002 ops/s
 
 Multi-producer sending:
-16,869,664,499 ns
+10,925,514,394 ns
 20,000,000 ops
-843 ns/op
-1,185,560 ops/s
-
-Ping between actors:
-5,398,317,789 ns
-10,000,000 ops
-539 ns/op
-1,852,428 ops/s
+546 ns/op
+1,830,577 ops/s
 
 Max throughput:
-17,528,834,194 ns
+17,547,253,019 ns
 40,000,000 ops
 438 ns/op
-2,281,954 ops/s
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 48.454 sec
+2,279,559 ops/s
+
+Ping between actors:
+5,456,217,294 ns
+10,000,000 ops
+545 ns/op
+1,832,771 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 42.729 sec
 Running com.github.plokhotnyuk.actors.LiftActorSpec
 
 Single-producer sending:
-6,193,782,947 ns
+8,067,737,831 ns
 20,000,000 ops
-309 ns/op
-3,229,044 ops/s
+403 ns/op
+2,479,009 ops/s
 
 Multi-producer sending:
-14,219,663,612 ns
+22,055,926,754 ns
 20,000,000 ops
-710 ns/op
-1,406,503 ops/s
-
-Ping between actors:
-4,413,692,659 ns
-2,000,000 ops
-2,206 ns/op
-453,135 ops/s
+1,102 ns/op
+906,785 ops/s
 
 Max throughput:
-3,146,967,829 ns
+17,793,974,278 ns
 20,000,000 ops
-157 ns/op
-6,355,323 ops/s
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 29.141 sec
+889 ns/op
+1,123,975 ops/s
+
+Ping between actors:
+9,086,068,334 ns
+2,000,000 ops
+4,543 ns/op
+220,117 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 58.766 sec
+Running com.github.plokhotnyuk.actors.ProxyActorsActorSpec
+
+Single-producer sending:
+2,901,547,834 ns
+10,000,000 ops
+290 ns/op
+3,446,436 ops/s
+
+Multi-producer sending:
+3,896,371,548 ns
+10,000,000 ops
+389 ns/op
+2,566,490 ops/s
+
+Max throughput:
+8,229,037,921 ns
+20,000,000 ops
+411 ns/op
+2,430,417 ops/s
+
+Ping between actors:
+3,424,569,761 ns
+1,000,000 ops
+3,424 ns/op
+292,007 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.874 sec
 Running com.github.plokhotnyuk.actors.ScalaActorSpec
 
 Single-producer sending:
-1,132,529,228 ns
+670,278,632 ns
 200,000 ops
-5,662 ns/op
-176,595 ops/s
+3,351 ns/op
+298,383 ops/s
 
 Multi-producer sending:
-592,746,874 ns
+6,501,096,867 ns
 200,000 ops
-2,963 ns/op
-337,412 ops/s
-
-Ping between actors:
-548,166,444 ns
-200,000 ops
-2,740 ns/op
-364,852 ops/s
+32,505 ns/op
+30,764 ops/s
 
 Max throughput:
-4,817,642,734 ns
-5,000,000 ops
-963 ns/op
-1,037,851 ops/s
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.299 sec
+1,904,888,782 ns
+2,000,000 ops
+952 ns/op
+1,049,930 ops/s
+
+Ping between actors:
+1,263,362,514 ns
+200,000 ops
+6,316 ns/op
+158,307 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.731 sec
 Running com.github.plokhotnyuk.actors.ScalazActor2Spec
 
 Single-producer sending:
-3,970,504,991 ns
-100,000,000 ops
-39 ns/op
-25,185,713 ops/s
+8,673,659,857 ns
+200,000,000 ops
+43 ns/op
+23,058,317 ops/s
 
 Multi-producer sending:
-5,425,937,189 ns
+5,173,383,550 ns
 100,000,000 ops
-54 ns/op
-18,429,995 ops/s
-
-Ping between actors:
-3,637,797,657 ns
-20,000,000 ops
-181 ns/op
-5,497,831 ops/s
+51 ns/op
+19,329,709 ops/s
 
 Max throughput:
-2,805,768,204 ns
-100,000,000 ops
-28 ns/op
-35,640,862 ops/s
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.113 sec
+4,594,125,965 ns
+200,000,000 ops
+22 ns/op
+43,533,852 ops/s
+
+Ping between actors:
+3,859,460,690 ns
+20,000,000 ops
+192 ns/op
+5,182,071 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.509 sec
 Running com.github.plokhotnyuk.actors.ScalazActorSpec
 
 Single-producer sending:
-4,196,438,153 ns
+3,722,967,860 ns
 40,000,000 ops
-104 ns/op
-9,531,893 ops/s
+93 ns/op
+10,744,116 ops/s
 
 Multi-producer sending:
-3,826,352,793 ns
+4,375,401,021 ns
 40,000,000 ops
-95 ns/op
-10,453,819 ops/s
-
-Ping between actors:
-4,273,290,312 ns
-10,000,000 ops
-427 ns/op
-2,340,117 ops/s
+109 ns/op
+9,142,019 ops/s
 
 Max throughput:
-2,400,284,874 ns
+1,838,031,926 ns
 40,000,000 ops
-60 ns/op
-16,664,688 ops/s
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.443 sec
+45 ns/op
+21,762,407 ops/s
+
+Ping between actors:
+4,429,168,514 ns
+10,000,000 ops
+442 ns/op
+2,257,760 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.569 sec
 
 Results :
 
-Tests run: 20, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 24, Failures: 0, Errors: 0, Skipped: 0
 
 [INFO] 
 [INFO] --- maven-jar-plugin:2.3.2:jar (default-jar) @ actors ---
@@ -186,7 +220,7 @@ Tests run: 20, Failures: 0, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 2:22.163s
-[INFO] Finished at: Sun Jan 13 16:47:26 EET 2013
-[INFO] Final Memory: 11M/109M
+[INFO] Total time: 3:16.950s
+[INFO] Finished at: Sat Mar 02 10:22:08 EET 2013
+[INFO] Final Memory: 13M/178M
 [INFO] ------------------------------------------------------------------------
