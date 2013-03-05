@@ -5,17 +5,21 @@
 [INFO] ------------------------------------------------------------------------
 [INFO] 
 [INFO] --- maven-clean-plugin:2.4.1:clean (default-clean) @ actors ---
-[INFO] Deleting /Users/t3hnar/projects/github/actors/target
+[INFO] Deleting /Users/fedgehog/_/actors/target
 [INFO] 
 [INFO] --- maven-resources-plugin:2.5:resources (default-resources) @ actors ---
 [debug] execute contextualize
 [INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory /Users/t3hnar/projects/github/actors/src/main/resources
+[INFO] skip non existing resourceDirectory /Users/fedgehog/_/actors/src/main/resources
 [INFO] 
-[INFO] --- scala-maven-plugin:3.1.0:compile (compile) @ actors ---
-[INFO] /Users/t3hnar/projects/github/actors/src/main/scala:-1: info: compiling
-[INFO] Compiling 2 source files to /Users/t3hnar/projects/github/actors/target/classes at 1359126745735
-[WARNING] warning: there were 1 feature warnings; re-run with -feature for details
+[INFO] --- scala-maven-plugin:3.1.3:compile (compile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.1-RC2
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.1-RC2
+[WARNING]  org.scalaz:scalaz-core_2.10:7.0.0-M8 requires scala version: 2.10.0
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] /Users/fedgehog/_/actors/src/main/scala:-1: info: compiling
+[INFO] Compiling 1 source files to /Users/fedgehog/_/actors/target/classes at 1362486355717
+[WARNING] warning: there were 1 feature warning(s); re-run with -feature for details
 [WARNING] one warning found
 [INFO] prepare-compile in 0 s
 [INFO] compile in 3 s
@@ -23,16 +27,20 @@
 [INFO] --- maven-resources-plugin:2.5:testResources (default-testResources) @ actors ---
 [debug] execute contextualize
 [INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory /Users/t3hnar/projects/github/actors/src/test/resources
+[INFO] skip non existing resourceDirectory /Users/fedgehog/_/actors/src/test/resources
 [INFO] 
-[INFO] --- scala-maven-plugin:3.1.0:testCompile (testCompile) @ actors ---
-[INFO] /Users/t3hnar/projects/github/actors/src/test/scala:-1: info: compiling
-[INFO] Compiling 7 source files to /Users/t3hnar/projects/github/actors/target/test-classes at 1359126749072
+[INFO] --- scala-maven-plugin:3.1.3:testCompile (testCompile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.1-RC2
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.1-RC2
+[WARNING]  org.scalaz:scalaz-core_2.10:7.0.0-M8 requires scala version: 2.10.0
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] /Users/fedgehog/_/actors/src/test/scala:-1: info: compiling
+[INFO] Compiling 8 source files to /Users/fedgehog/_/actors/target/test-classes at 1362486358883
 [INFO] prepare-compile in 0 s
-[INFO] compile in 6 s
+[INFO] compile in 7 s
 [INFO] 
-[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ actors ---
-[INFO] Surefire report directory: /Users/t3hnar/projects/github/actors/target/surefire-reports
+[INFO] --- maven-surefire-plugin:2.13:test (default-test) @ actors ---
+[INFO] Surefire report directory: /Users/fedgehog/_/actors/target/surefire-reports
 
 -------------------------------------------------------
  T E S T S
@@ -44,149 +52,176 @@
 Running com.github.plokhotnyuk.actors.AkkaActorSpec
 
 Single-producer sending:
-5,084,924,000 ns
+4,072,930,000 ns
 40,000,000 ops
-127 ns/op
-7,866,390 ops/s
+101 ns/op
+9,820,939 ops/s
 
 Multi-producer sending:
-3,106,000,000 ns
+2,931,365,000 ns
 20,000,000 ops
-155 ns/op
-6,439,150 ops/s
-
-Ping between actors:
-9,395,356,000 ns
-10,000,000 ops
-939 ns/op
-1,064,355 ops/s
+146 ns/op
+6,822,760 ops/s
 
 Max throughput:
-5,950,109,000 ns
+1,183,280,000 ns
 40,000,000 ops
-148 ns/op
-6,722,565 ops/s
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 24.88 sec
+29 ns/op
+33,804,340 ops/s
+
+Ping between actors:
+9,531,510,000 ns
+10,000,000 ops
+953 ns/op
+1,049,151 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.808 sec
 Running com.github.plokhotnyuk.actors.LiftActorSpec
 
 Single-producer sending:
-3,865,235,000 ns
+2,640,604,000 ns
 20,000,000 ops
-193 ns/op
-5,174,329 ops/s
+132 ns/op
+7,574,024 ops/s
 
 Multi-producer sending:
-3,332,168,000 ns
+3,731,419,000 ns
 20,000,000 ops
-166 ns/op
-6,002,098 ops/s
-
-Ping between actors:
-4,934,375,000 ns
-2,000,000 ops
-2,467 ns/op
-405,319 ops/s
+186 ns/op
+5,359,891 ops/s
 
 Max throughput:
-3,494,167,000 ns
+683,551,000 ns
 20,000,000 ops
-174 ns/op
-5,723,824 ops/s
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.268 sec
+34 ns/op
+29,258,972 ops/s
+
+Ping between actors:
+7,232,147,000 ns
+2,000,000 ops
+3,616 ns/op
+276,543 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.184 sec
+Running com.github.plokhotnyuk.actors.ProxyActorsActorSpec
+
+Single-producer sending:
+3,466,204,000 ns
+10,000,000 ops
+346 ns/op
+2,885,000 ops/s
+
+Multi-producer sending:
+3,685,640,000 ns
+10,000,000 ops
+368 ns/op
+2,713,232 ops/s
+
+Max throughput:
+1,974,593,000 ns
+20,000,000 ops
+98 ns/op
+10,128,669 ops/s
+
+Ping between actors:
+5,448,536,000 ns
+1,000,000 ops
+5,448 ns/op
+183,535 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.541 sec
 Running com.github.plokhotnyuk.actors.ScalaActorSpec
 
 Single-producer sending:
-921,746,000 ns
+827,858,000 ns
 200,000 ops
-4,608 ns/op
-216,979 ops/s
+4,139 ns/op
+241,587 ops/s
 
 Multi-producer sending:
-689,288,000 ns
+699,182,000 ns
 200,000 ops
-3,446 ns/op
-290,154 ops/s
-
-Ping between actors:
-908,797,000 ns
-200,000 ops
-4,543 ns/op
-220,071 ops/s
+3,495 ns/op
+286,048 ops/s
 
 Max throughput:
-3,034,731,000 ns
-5,000,000 ops
-606 ns/op
-1,647,592 ops/s
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.536 sec
+1,094,886,000 ns
+2,000,000 ops
+547 ns/op
+1,826,674 ops/s
+
+Ping between actors:
+781,633,000 ns
+200,000 ops
+3,908 ns/op
+255,874 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.312 sec
 Running com.github.plokhotnyuk.actors.ScalazActor2Spec
 
 Single-producer sending:
-3,948,224,000 ns
-100,000,000 ops
-39 ns/op
-25,327,843 ops/s
+5,694,332,000 ns
+200,000,000 ops
+28 ns/op
+35,122,644 ops/s
 
 Multi-producer sending:
-10,579,411,000 ns
+9,906,246,000 ns
 100,000,000 ops
-105 ns/op
-9,452,322 ops/s
-
-Ping between actors:
-6,198,490,000 ns
-20,000,000 ops
-309 ns/op
-3,226,592 ops/s
+99 ns/op
+10,094,641 ops/s
 
 Max throughput:
-913,168,000 ns
-100,000,000 ops
-9 ns/op
-109,508,874 ops/s
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.701 sec
+1,590,050,000 ns
+200,000,000 ops
+7 ns/op
+125,782,208 ops/s
+
+Ping between actors:
+5,933,430,000 ns
+20,000,000 ops
+296 ns/op
+3,370,731 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 24.033 sec
 Running com.github.plokhotnyuk.actors.ScalazActorSpec
 
 Single-producer sending:
-4,689,132,000 ns
+4,159,143,000 ns
 40,000,000 ops
-117 ns/op
-8,530,363 ops/s
+103 ns/op
+9,617,365 ops/s
 
 Multi-producer sending:
-7,294,725,000 ns
+4,899,249,000 ns
 40,000,000 ops
-182 ns/op
-5,483,414 ops/s
-
-Ping between actors:
-11,355,930,000 ns
-10,000,000 ops
-1,135 ns/op
-880,597 ops/s
+122 ns/op
+8,164,516 ops/s
 
 Max throughput:
-797,301,000 ns
+813,059,000 ns
 40,000,000 ops
-19 ns/op
-50,169,258 ops/s
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 25.115 sec
+20 ns/op
+49,196,921 ops/s
+
+Ping between actors:
+8,925,622,000 ns
+10,000,000 ops
+892 ns/op
+1,120,370 ops/s
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.687 sec
 
 Results :
 
-Tests run: 20, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 24, Failures: 0, Errors: 0, Skipped: 0
 
 [INFO] 
 [INFO] --- maven-jar-plugin:2.3.2:jar (default-jar) @ actors ---
-[INFO] Building jar: /Users/t3hnar/projects/github/actors/target/actors-1.0-SNAPSHOT.jar
+[INFO] Building jar: /Users/fedgehog/_/actors/target/actors-1.0-SNAPSHOT.jar
 [INFO] 
 [INFO] --- maven-install-plugin:2.3.1:install (default-install) @ actors ---
-[INFO] Installing /Users/t3hnar/projects/github/actors/target/actors-1.0-SNAPSHOT.jar to /Users/t3hnar/.m2/repository/com/github/plokhotnyuk/actors/actors/1.0-SNAPSHOT/actors-1.0-SNAPSHOT.jar
-[INFO] Installing /Users/t3hnar/projects/github/actors/pom.xml to /Users/t3hnar/.m2/repository/com/github/plokhotnyuk/actors/actors/1.0-SNAPSHOT/actors-1.0-SNAPSHOT.pom
+[INFO] Installing /Users/fedgehog/_/actors/target/actors-1.0-SNAPSHOT.jar to /Users/fedgehog/.m2/repository/com/github/plokhotnyuk/actors/actors/1.0-SNAPSHOT/actors-1.0-SNAPSHOT.jar
+[INFO] Installing /Users/fedgehog/_/actors/pom.xml to /Users/fedgehog/.m2/repository/com/github/plokhotnyuk/actors/actors/1.0-SNAPSHOT/actors-1.0-SNAPSHOT.pom
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 1:56.495s
-[INFO] Finished at: Fri Jan 25 17:14:20 EET 2013
-[INFO] Final Memory: 14M/217M
+[INFO] Total time: 2:04.315s
+[INFO] Finished at: Tue Mar 05 14:27:58 EET 2013
+[INFO] Final Memory: 14M/220M
 [INFO] ------------------------------------------------------------------------
+[WARNING] The requested profile "dev" could not be activated because it does not exist.

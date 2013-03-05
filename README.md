@@ -51,5 +51,4 @@ Intel(R) Core(TM) i7-3610QM CPU @ 2.30GHz (max 3.30GHz), RAM 8Gb DDR3-1333, Wind
 (WARNING: Outdated test results)
 
 #### out5.txt
-Intel(R) Core(TM) i7-3615QM CPU @ 2.30GHz (max 3.30GHz), RAM 16Gb DDR3-1600, Mac OS X 10.8.2, JDK 1.7.0_07-b10 64-bit
-(WARNING: Outdated test results)
+Intel(R) Core(TM) i7-3720QM CPU @ 2.60GHz (max 3.60GHz), RAM 16Gb DDR3-1600, Mac OS X 10.8.2, JDK 1.7.0_13-b20 64-bit
