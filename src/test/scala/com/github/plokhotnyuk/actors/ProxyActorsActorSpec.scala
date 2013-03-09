@@ -51,7 +51,7 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
   }
 
   private def tickActor(l: CountDownLatch, n: Int): TickActor =
-    allCoresContext.proxyActor[TickActor](args = List((l, classOf[CountDownLatch]), (n, classOf[Int])))
+    allCoresContext.proxyActor[TickActor](args = List(l, n), types = List(classOf[CountDownLatch], classOf[Int]))
 
   private def sendTicks(a: TickActor, n: Int) {
     var i = n
@@ -62,7 +62,7 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
   }
 
   private def playerActor(l: CountDownLatch, n: Int): PlayerActor =
-    allCoresContext.proxyActor[PlayerActor](args = List((l, classOf[CountDownLatch]), (n, classOf[Int])))
+    allCoresContext.proxyActor[PlayerActor](args = List(l, n), types = List(classOf[CountDownLatch], classOf[Int]))
 }
 
 class TickActor(val l: CountDownLatch, val n: Int) {
