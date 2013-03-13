@@ -13,6 +13,7 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
       sendTicks(a, n)
       l.await()
     }
+    actorsFinished(a)
   }
 
   "Multi-producer sending" in {
@@ -25,6 +26,7 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
       }
       l.await()
     }
+    actorsFinished(a)
   }
 
   "Max throughput" in {
@@ -37,6 +39,7 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
       }
       l.await()
     }
+    actorsFinished(as: _*)
   }
 
   "Ping between actors" in {
@@ -48,6 +51,7 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
       p1.ping(p2)
       l.await()
     }
+    actorsFinished(p1, p2)
   }
 
   private def tickActor(l: CountDownLatch, n: Int): TickActor =
@@ -72,7 +76,6 @@ class TickActor(val l: CountDownLatch, val n: Int) {
     i -= 1
     if (i == 0) {
       l.countDown()
-      actorsFinished(this)
     }
   }
 }
@@ -85,7 +88,6 @@ class PlayerActor(val l: CountDownLatch, val n: Int) {
     i -= 1
     if (i == 0) {
       l.countDown()
-      actorsFinished(this)
     }
   }
 }
