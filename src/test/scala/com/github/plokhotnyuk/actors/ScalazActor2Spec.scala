@@ -5,7 +5,7 @@ import java.util.concurrent.CountDownLatch
 import scalaz.concurrent.Strategy.Executor
 
 class ScalazActor2Spec extends BenchmarkSpec {
-  implicit val executor = lifoForkJoinPool(CPUs)
+  implicit val executorService = lifoForkJoinPool(CPUs)
 
   "Single-producer sending" in {
     val n = 200000000
@@ -68,7 +68,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
   }
 
   override def shutdown() {
-    executor.shutdown()
+    executorService.shutdown()
   }
 
   private def tickActor(l: CountDownLatch, n: Int): Actor2[Message] = actor[Message] {
