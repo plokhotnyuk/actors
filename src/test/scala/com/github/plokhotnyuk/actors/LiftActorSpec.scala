@@ -1,9 +1,25 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent.CountDownLatch
-import net.liftweb.actor.{LAScheduler, LiftActor}
+import net.liftweb.actor.{ILAExecute, LAScheduler, LiftActor}
 
 class LiftActorSpec extends BenchmarkSpec {
+  LAScheduler.createExecutor = () => new ILAExecute {
+    val executorService = lifoForkJoinPool(CPUs)
+
+    def execute(f: () => Unit) {
+      executorService.execute(new Runnable {
+        def run() {
+          f()
+        }
+      })
+    }
+
+    def shutdown() {
+      executorService.shutdown()
+    }
+  }
+
   "Single-producer sending" in {
     val n = 20000000
     val l = new CountDownLatch(1)
