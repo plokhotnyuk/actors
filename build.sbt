@@ -6,15 +6,17 @@ scalaVersion := "2.10.1"
 
 resolvers ++= Seq(
   "OSS Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases",
-  "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases"
+  "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases",
+  "Java Affinity Binding Googlecode Snapshots" at "http://java-affinity-binding.googlecode.com/svn/repo"
 )
 
 libraryDependencies ++= Seq(
   "org.scalaz" % "scalaz-concurrent_2.10" % "7.0.0-M8" % "compile",
   "com.api-tech" % "proxyactors_2.10" % "0.2.1" % "test",
-  "com.typesafe.akka" % "akka-actor_2.10" % "2.2-M1" % "test",
-  "net.liftweb" % "lift-actor_2.10" % "2.5-RC1" % "test",
+  "com.typesafe.akka" % "akka-actor_2.10" % "2.2-M2" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.1" % "test",
+  "net.liftweb" % "lift-actor_2.10" % "2.5-RC2" % "test",
+  "org.affinity" % "affinity" % "0.1.1-SNAPSHOT" % "test",
   "org.specs2" % "specs2_2.10" % "1.14" % "test",
   "junit" % "junit-dep" % "4.11" % "test"
 )
