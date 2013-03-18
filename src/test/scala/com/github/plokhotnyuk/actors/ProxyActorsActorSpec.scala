@@ -1,14 +1,17 @@
 package com.github.plokhotnyuk.actors
 
 import api.actor._
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent._
+import concurrent.ExecutionContext
 
 class ProxyActorsActorSpec extends BenchmarkSpec {
+  val executor = lifoForkJoinPool(CPUs)
 
   "Single-producer sending" in {
+    val c = context()
     val n = 10000000
     val l = new CountDownLatch(1)
-    val a = tickActor(l, n)
+    val a = tickActor(c, l, n)
     timed(n) {
       sendTicks(a, n)
       l.await()
@@ -17,9 +20,10 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
+    val c = context()
     val n = 10000000
     val l = new CountDownLatch(1)
-    val a = tickActor(l, n)
+    val a = tickActor(c, l, n)
     timed(n) {
       for (j <- 1 to CPUs) fork {
         sendTicks(a, n / CPUs)
@@ -30,9 +34,10 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = 20000000
+    val c = context()
+    val n = 10000000
     val l = new CountDownLatch(CPUs)
-    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    val as = for (j <- 1 to CPUs) yield tickActor(c, l, n / CPUs)
     timed(n) {
       for (a <- as) fork {
         sendTicks(a, n / CPUs)
@@ -43,10 +48,11 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
   }
 
   "Ping between actors" in {
-    val n = 1000000
+    val c = context()
+    val n = 10000000
     val l = new CountDownLatch(2)
-    val p1 = playerActor(l, n / 2)
-    val p2 = playerActor(l, n / 2)
+    val p1 = playerActor(c, l, n / 2)
+    val p2 = playerActor(c, l, n / 2)
     timed(n) {
       p1.ping(p2)
       l.await()
@@ -54,8 +60,8 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
     actorsFinished(p1, p2)
   }
 
-  private def tickActor(l: CountDownLatch, n: Int): TickActor =
-    allCoresContext.proxyActor[TickActor](args = List(l, n), types = List(classOf[CountDownLatch], classOf[Int]))
+  private def tickActor(c: ActorContext, l: CountDownLatch, n: Int): TickActor =
+    c.proxyActor[TickActor](args = List(l, n), types = List(classOf[CountDownLatch], classOf[Int]))
 
   private def sendTicks(a: TickActor, n: Int) {
     var i = n
@@ -65,8 +71,10 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
     }
   }
 
-  private def playerActor(l: CountDownLatch, n: Int): PlayerActor =
-    allCoresContext.proxyActor[PlayerActor](args = List(l, n), types = List(classOf[CountDownLatch], classOf[Int]))
+  private def playerActor(c: ActorContext, l: CountDownLatch, n: Int): PlayerActor =
+    c.proxyActor[PlayerActor](args = List(l, n), types = List(classOf[CountDownLatch], classOf[Int]))
+
+  private def context() = actorContext(ExecutionContext.fromExecutor(executor))
 }
 
 class TickActor(val l: CountDownLatch, val n: Int) {
