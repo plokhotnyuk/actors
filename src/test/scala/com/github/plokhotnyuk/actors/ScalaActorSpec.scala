@@ -1,11 +1,15 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent.CountDownLatch
-import actors.{Exit, Actor}
+import actors.Actor
 
 class ScalaActorSpec extends BenchmarkSpec {
+  System.setProperty("actors.corePoolSize", CPUs.toString)
+  System.setProperty("actors.maxPoolSize", CPUs.toString)
+  System.setProperty("actors.enableForkJoin", "true")
+
   "Single-producer sending" in {
-    val n = 200000
+    val n = 500000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -15,7 +19,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = 200000
+    val n = 500000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -27,7 +31,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = 2000000
+    val n = 5000000
     val l = new CountDownLatch(CPUs)
     val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
     timed(n) {
@@ -39,7 +43,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Ping between actors" in {
-    val n = 200000
+    val n = 500000
     val l = new CountDownLatch(2)
     val p1 = playerActor(l, n / 2)
     val p2 = playerActor(l, n / 2)
