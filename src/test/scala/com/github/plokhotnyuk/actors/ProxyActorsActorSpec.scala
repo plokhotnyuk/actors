@@ -61,6 +61,10 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
     actorsFinished(p1, p2)
   }
 
+  override def shutdown() {
+    executor.shutdown()
+  }
+
   private def tickActor(c: ActorContext, l: CountDownLatch, n: Int): TickActor =
     c.proxyActor[TickActor](args = List(l, n), types = List(classOf[CountDownLatch], classOf[Int]))
 
