@@ -1,8 +1,11 @@
 package com.github.plokhotnyuk.actors
 
 import akka.actor._
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent.{ExecutorService, ThreadFactory, CountDownLatch}
 import com.typesafe.config.ConfigFactory._
+import akka.dispatch.{ExecutorServiceFactory, DispatcherPrerequisites, ExecutorServiceConfigurator}
+import com.typesafe.config.Config
+import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class AkkaActorSpec extends BenchmarkSpec {
   val config = load(parseString(
@@ -12,16 +15,12 @@ class AkkaActorSpec extends BenchmarkSpec {
         actor {
           unstarted-push-timeout = 100s
           default-dispatcher {
-            executor = "fork-join-executor"
-            fork-join-executor {
-              parallelism-min = %d
-              parallelism-max = %d
-            }
+            executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
           }
         }
       }
-    """.format(CPUs, CPUs)))
+    """))
   val actorSystem = ActorSystem("system", config)
 
   "Single-producer sending" in {
@@ -110,4 +109,10 @@ class AkkaActorSpec extends BenchmarkSpec {
           }
       }
     }))
+}
+
+class CustomExecutorServiceConfigurator(config: Config, prerequisites: DispatcherPrerequisites) extends ExecutorServiceConfigurator(config, prerequisites) {
+  def createExecutorServiceFactory(id: String, threadFactory: ThreadFactory): ExecutorServiceFactory = new ExecutorServiceFactory {
+    def createExecutorService: ExecutorService = lifoForkJoinPool(CPUs)
+  }
 }

@@ -4,6 +4,7 @@ import scalaz.concurrent._
 import scalaz.concurrent.Actor._
 import scalaz.concurrent.Strategy.Executor
 import java.util.concurrent.CountDownLatch
+import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ScalazActorSpec extends BenchmarkSpec {
   implicit val executorService = lifoForkJoinPool(CPUs)

@@ -3,6 +3,7 @@ package com.github.plokhotnyuk.actors
 import com.github.plokhotnyuk.actors.Actor2._
 import java.util.concurrent.CountDownLatch
 import scalaz.concurrent.Strategy.Executor
+import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ScalazActor2Spec extends BenchmarkSpec {
   implicit val executorService = lifoForkJoinPool(CPUs)

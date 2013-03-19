@@ -13,8 +13,6 @@ import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 @RunWith(classOf[JUnitRunner])
 abstract class BenchmarkSpec extends Specification {
-  val CPUs = Runtime.getRuntime.availableProcessors
-
   sequential
   xonly
 
@@ -29,6 +27,32 @@ abstract class BenchmarkSpec extends Specification {
 
   def shutdown() {
     // do nothing
+  }
+}
+
+object BenchmarkSpec {
+  val isAffinityOn = false
+  val CPUs = Runtime.getRuntime.availableProcessors
+  val affinityService = ThreadAffinityUtils.defaultAffinityService
+  if (!affinityService.isActuallyAvailable) throw new IllegalStateException("Affinity binding is not supported")
+  val layout = ThreadAffinityUtils.defaultLayoutService
+  var lastCpuNum = new AtomicInteger()
+
+  val forkJoinWorkerThreadFactory = new ForkJoinPool.ForkJoinWorkerThreadFactory {
+    def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
+      override def onStart() {
+        tryRestrictCurrentThreadToNextCPU()
+      }
+    }
+  }
+
+  val threadFactory = new ThreadFactory {
+    override def newThread(r: Runnable): Thread = new Thread {
+      override def run() {
+        tryRestrictCurrentThreadToNextCPU()
+        r.run()
+      }
+    }
   }
 
   def fifoForkJoinPool(parallelism: Int): ExecutorService =
@@ -56,32 +80,6 @@ abstract class BenchmarkSpec extends Specification {
         code
       }
     }.start()
-  }
-}
-
-object BenchmarkSpec {
-  val isAffinityOn = false
-  val CPUs = Runtime.getRuntime.availableProcessors
-  val affinityService = ThreadAffinityUtils.defaultAffinityService
-  if (!affinityService.isActuallyAvailable) throw new IllegalStateException("Affinity binding is not supported")
-  val layout = ThreadAffinityUtils.defaultLayoutService
-  var lastCpuNum = new AtomicInteger()
-
-  val forkJoinWorkerThreadFactory = new ForkJoinPool.ForkJoinWorkerThreadFactory {
-    def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
-      override def onStart() {
-        tryRestrictCurrentThreadToNextCPU()
-      }
-    }
-  }
-
-  val threadFactory = new ThreadFactory {
-    override def newThread(r: Runnable): Thread = new Thread {
-      override def run() {
-        tryRestrictCurrentThreadToNextCPU()
-        r.run()
-      }
-    }
   }
 
   def tryRestrictCurrentThreadToNextCPU() {

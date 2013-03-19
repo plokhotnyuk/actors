@@ -2,6 +2,7 @@ package com.github.plokhotnyuk.actors
 
 import java.util.concurrent.CountDownLatch
 import net.liftweb.actor.{ILAExecute, LAScheduler, LiftActor}
+import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class LiftActorSpec extends BenchmarkSpec {
   LAScheduler.createExecutor = () => new ILAExecute {

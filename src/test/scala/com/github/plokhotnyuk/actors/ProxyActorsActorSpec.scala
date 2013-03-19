@@ -3,6 +3,7 @@ package com.github.plokhotnyuk.actors
 import api.actor._
 import java.util.concurrent._
 import concurrent.ExecutionContext
+import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ProxyActorsActorSpec extends BenchmarkSpec {
   val executor = lifoForkJoinPool(CPUs)

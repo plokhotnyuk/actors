@@ -2,6 +2,7 @@ package com.github.plokhotnyuk.actors
 
 import java.util.concurrent.CountDownLatch
 import actors.Actor
+import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ScalaActorSpec extends BenchmarkSpec {
   System.setProperty("actors.corePoolSize", CPUs.toString)
