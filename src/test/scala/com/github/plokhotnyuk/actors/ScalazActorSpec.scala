@@ -10,7 +10,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   implicit val executorService = lifoForkJoinPool(CPUs)
 
   "Single-producer sending" in {
-    val n = 40000000
+    val n = 100000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -20,7 +20,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = 40000000
+    val n = 50000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -32,7 +32,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = 40000000
+    val n = 200000000
     val l = new CountDownLatch(CPUs)
     val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
     timed(n) {
