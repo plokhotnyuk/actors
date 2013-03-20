@@ -34,7 +34,6 @@ object BenchmarkSpec {
   val isAffinityOn = false
   val CPUs = Runtime.getRuntime.availableProcessors
   val affinityService = ThreadAffinityUtils.defaultAffinityService
-  if (!affinityService.isActuallyAvailable) throw new IllegalStateException("Affinity binding is not supported")
   val layout = ThreadAffinityUtils.defaultLayoutService
   var lastCpuNum = new AtomicInteger()
 
