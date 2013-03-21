@@ -38,15 +38,14 @@ Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Wind
 #### out1.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, JDK 1.7.0_17-b02 64-bit
 
-#### Outdated !!! out2.txt (with 2Gb of max heap size)
+#### out2.txt (with -Ptravis option)
 Intel(R) Core(TM)2 Duo CPU E6850 @ 3.00GHz, RAM 4Gb DDR2-800, Windows 7 sp1, JDK 1.7.0_10-b18 64-bit
 
-#### Outdated !!! out3.txt
+#### out3.txt
 Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1333, Ubuntu 12.04, JDK 1.7.0_04-b20 64-bit
 
 #### Outdated !!! out4.txt
 Intel(R) Core(TM) i7-3610QM CPU @ 2.30GHz (max 3.30GHz), RAM 8Gb DDR3-1333, Windows 8, JDK 1.7.0_11-b21 64-bit
-(WARNING: Outdated test results)
 
 #### Outdated !!! out5.txt
 Intel(R) Core(TM) i7-3720QM CPU @ 2.60GHz (max 3.60GHz), RAM 16Gb DDR3-1600, Mac OS X 10.8.2, JDK 1.7.0_13-b20 64-bit
