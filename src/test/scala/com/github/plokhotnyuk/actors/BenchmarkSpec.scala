@@ -112,7 +112,6 @@ object BenchmarkSpec {
       synchronized {
         val n = affinityService.currentThreadCPU().id
         cpuBindings(n) = cpuBindings(n) - 1
-        affinityService.isActuallyAvailable
       }
     }
   }
