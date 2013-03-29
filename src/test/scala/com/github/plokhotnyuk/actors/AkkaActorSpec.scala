@@ -38,8 +38,8 @@ class AkkaActorSpec extends BenchmarkSpec {
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
-      for (j <- 1 to CPUs) fork {
-        sendTicks(a, n / CPUs)
+      for (j <- 1 to parallelism) fork {
+        sendTicks(a, n / parallelism)
       }
       l.await()
     }
@@ -47,11 +47,11 @@ class AkkaActorSpec extends BenchmarkSpec {
 
   "Max throughput" in {
     val n = 40000000
-    val l = new CountDownLatch(CPUs)
-    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    val l = new CountDownLatch(parallelism)
+    val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
     timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / CPUs)
+        sendTicks(a, n / parallelism)
       }
       l.await()
     }
@@ -113,6 +113,6 @@ class AkkaActorSpec extends BenchmarkSpec {
 
 class CustomExecutorServiceConfigurator(config: Config, prerequisites: DispatcherPrerequisites) extends ExecutorServiceConfigurator(config, prerequisites) {
   def createExecutorServiceFactory(id: String, threadFactory: ThreadFactory): ExecutorServiceFactory = new ExecutorServiceFactory {
-    def createExecutorService: ExecutorService = lifoForkJoinPool(CPUs)
+    def createExecutorService: ExecutorService = BenchmarkSpec.createExecutorService()
   }
 }

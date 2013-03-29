@@ -7,7 +7,7 @@ import java.util.concurrent.CountDownLatch
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ScalazActorSpec extends BenchmarkSpec {
-  implicit val executorService = lifoForkJoinPool(CPUs)
+  implicit val executorService = createExecutorService()
 
   "Single-producer sending" in {
     val n = 100000000
@@ -24,8 +24,8 @@ class ScalazActorSpec extends BenchmarkSpec {
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
-      for (j <- 1 to CPUs) fork {
-        sendTicks(a, n / CPUs)
+      for (j <- 1 to parallelism) fork {
+        sendTicks(a, n / parallelism)
       }
       l.await()
     }
@@ -33,11 +33,11 @@ class ScalazActorSpec extends BenchmarkSpec {
 
   "Max throughput" in {
     val n = 200000000
-    val l = new CountDownLatch(CPUs)
-    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    val l = new CountDownLatch(parallelism)
+    val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
     timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / CPUs)
+        sendTicks(a, n / parallelism)
       }
       l.await()
     }

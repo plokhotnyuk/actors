@@ -6,7 +6,7 @@ import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class LiftActorSpec extends BenchmarkSpec {
   LAScheduler.createExecutor = () => new ILAExecute {
-    val executorService = lifoForkJoinPool(CPUs)
+    val executorService = createExecutorService()
 
     def execute(f: () => Unit) {
       executorService.execute(new Runnable {
@@ -36,8 +36,8 @@ class LiftActorSpec extends BenchmarkSpec {
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
-      for (j <- 1 to CPUs) fork {
-        sendTicks(a, n / CPUs)
+      for (j <- 1 to parallelism) fork {
+        sendTicks(a, n / parallelism)
       }
       l.await()
     }
@@ -45,11 +45,11 @@ class LiftActorSpec extends BenchmarkSpec {
 
   "Max throughput" in {
     val n = 20000000
-    val l = new CountDownLatch(CPUs)
-    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    val l = new CountDownLatch(parallelism)
+    val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
     timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / CPUs)
+        sendTicks(a, n / parallelism)
       }
       l.await()
     }
@@ -86,6 +86,10 @@ class LiftActorSpec extends BenchmarkSpec {
     a1 = null
   }
 
+  override def shutdown() {
+    LAScheduler.shutdown()
+  }
+
   private def tickActor(l: CountDownLatch, n: Int): LiftActor =
     new LiftActor {
       private var i = n
@@ -96,10 +100,6 @@ class LiftActorSpec extends BenchmarkSpec {
           if (i == 0) l.countDown()
       }
     }
-
-  override def shutdown() {
-    LAScheduler.shutdown()
-  }
 
   private def sendTicks(a: LiftActor, n: Int) {
     val m = Message()

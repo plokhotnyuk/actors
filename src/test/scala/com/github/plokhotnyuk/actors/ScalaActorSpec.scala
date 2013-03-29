@@ -5,8 +5,8 @@ import actors.Actor
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ScalaActorSpec extends BenchmarkSpec {
-  System.setProperty("actors.corePoolSize", CPUs.toString)
-  System.setProperty("actors.maxPoolSize", CPUs.toString)
+  System.setProperty("actors.corePoolSize", parallelism.toString)
+  System.setProperty("actors.maxPoolSize", parallelism.toString)
   System.setProperty("actors.enableForkJoin", "true")
 
   "Single-producer sending" in {
@@ -24,8 +24,8 @@ class ScalaActorSpec extends BenchmarkSpec {
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
-      for (j <- 1 to CPUs) fork {
-        sendTicks(a, n / CPUs)
+      for (j <- 1 to parallelism) fork {
+        sendTicks(a, n / parallelism)
       }
       l.await()
     }
@@ -33,11 +33,11 @@ class ScalaActorSpec extends BenchmarkSpec {
 
   "Max throughput" in {
     val n = 5000000
-    val l = new CountDownLatch(CPUs)
-    val as = for (j <- 1 to CPUs) yield tickActor(l, n / CPUs)
+    val l = new CountDownLatch(parallelism)
+    val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
     timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / CPUs)
+        sendTicks(a, n / parallelism)
       }
       l.await()
     }

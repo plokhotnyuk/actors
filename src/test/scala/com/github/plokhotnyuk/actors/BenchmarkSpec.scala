@@ -7,7 +7,6 @@ import org.specs2.execute.{Success, Result}
 import org.specs2.specification.{Step, Fragments, Example}
 import concurrent.forkjoin.{ForkJoinWorkerThread, ForkJoinPool}
 import java.util.concurrent._
-import atomic.AtomicInteger
 import com.affinity.ThreadAffinityUtils
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
@@ -22,47 +21,57 @@ abstract class BenchmarkSpec extends Specification {
   } ^ Step(shutdown())
 
   def setup() {
-    tryRestrictCurrentThreadToNextCPU()
+    onStart()
   }
 
   def shutdown() {
-    // do nothing
+    onStop()
   }
 }
 
 object BenchmarkSpec {
-  val isAffinityOn = false
-  val CPUs = Runtime.getRuntime.availableProcessors
+  val isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
+  val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
+  val parallelism = System.getProperty("benchmark.parallelism", Runtime.getRuntime.availableProcessors.toString).toInt
   val affinityService = ThreadAffinityUtils.defaultAffinityService
   val layout = ThreadAffinityUtils.defaultLayoutService
-  var lastCpuNum = new AtomicInteger()
+  val cpuBindings = Array.ofDim[Int](Runtime.getRuntime.availableProcessors)
 
-  val forkJoinWorkerThreadFactory = new ForkJoinPool.ForkJoinWorkerThreadFactory {
-    def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
-      override def onStart() {
-        tryRestrictCurrentThreadToNextCPU()
+  def createExecutorService(): ExecutorService = {
+    def createForkJoinWorkerThreadFactory() = new ForkJoinPool.ForkJoinWorkerThreadFactory {
+      def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
+        override def run() {
+          onStart()
+          try {
+            super.run()
+          } finally {
+            onStop()
+          }
+        }
       }
     }
-  }
 
-  val threadFactory = new ThreadFactory {
-    override def newThread(r: Runnable): Thread = new Thread {
-      override def run() {
-        tryRestrictCurrentThreadToNextCPU()
-        r.run()
+    def createThreadFactory() = new ThreadFactory {
+      override def newThread(r: Runnable): Thread = new Thread {
+        override def run() {
+          onStart()
+          try {
+            r.run()
+          } finally {
+            onStop()
+          }
+        }
       }
     }
+
+    System.getProperty("benchmark.executorService", "lifo-forkjoin-pool") match {
+      case "fifo-forkjoin-pool" => new ForkJoinPool(parallelism, createForkJoinWorkerThreadFactory(), null, true)
+      case "lifo-forkjoin-pool" => new ForkJoinPool(parallelism, createForkJoinWorkerThreadFactory(), null, false)
+      case "fixed-thread-pool" => new ThreadPoolExecutor(parallelism, parallelism, 60, TimeUnit.SECONDS,
+        new LinkedBlockingQueue[Runnable](), createThreadFactory(), new ThreadPoolExecutor.AbortPolicy())
+      case _ => throw new IllegalArgumentException("Unsupported executorService")
+    }
   }
-
-  def fifoForkJoinPool(parallelism: Int): ExecutorService =
-    new ForkJoinPool(parallelism, forkJoinWorkerThreadFactory, null, true)
-
-  def lifoForkJoinPool(parallelism: Int): ExecutorService =
-    new ForkJoinPool(parallelism, forkJoinWorkerThreadFactory, null, false)
-
-  def fixedThreadPool(parallelism: Int): ExecutorService =
-    new ThreadPoolExecutor(parallelism, parallelism, 60, TimeUnit.SECONDS, new LinkedBlockingQueue[Runnable](),
-      threadFactory, new ThreadPoolExecutor.AbortPolicy())
 
   def timed(n: Int)(benchmark: => Unit): Result = {
     val t = System.nanoTime
@@ -75,20 +84,36 @@ object BenchmarkSpec {
   def fork(code: => Unit) {
     new Thread {
       override def run() {
-        tryRestrictCurrentThreadToNextCPU()
-        code
+        onStart()
+        try {
+          code
+        } finally {
+          onStop()
+        }
       }
     }.start()
   }
 
-  def tryRestrictCurrentThreadToNextCPU() {
+  def onStart() {
     val cpuName = if (isAffinityOn) {
-      val cpuNum = lastCpuNum.getAndIncrement() % CPUs
+      val cpuNum = synchronized {
+        val n = cpuBindings.indexOf(cpuBindings.min)
+        cpuBindings(n) = cpuBindings(n) + 1
+        n
+      }
       affinityService.restrictCurrentThreadTo(layout.cpu(cpuNum))
       cpuNum.toString
-    } else {
-      "?"
+    } else "*"
+    if (printBinding) println("CPU[" + cpuName + "]: " + Thread.currentThread().getName)
+  }
+
+  def onStop() {
+    if (isAffinityOn) {
+      synchronized {
+        val n = affinityService.currentThreadCPU().id
+        cpuBindings(n) = cpuBindings(n) - 1
+        affinityService.isActuallyAvailable
+      }
     }
-    //println("CPU[" + cpuName + "]: " + Thread.currentThread().getName)
   }
 }
