@@ -33,6 +33,7 @@ object BenchmarkSpec {
   val isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
   val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
   val parallelism = System.getProperty("benchmark.parallelism", Runtime.getRuntime.availableProcessors.toString).toInt
+  val threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
   val affinityService = ThreadAffinityUtils.defaultAffinityService
   val layout = ThreadAffinityUtils.defaultLayoutService
   val cpuBindings = Array.ofDim[Int](Runtime.getRuntime.availableProcessors)
@@ -95,6 +96,16 @@ object BenchmarkSpec {
   }
 
   def onStart() {
+    def setCurrentThreadPriority(priority: Int) {
+      def ancestors(thread: ThreadGroup, acc: List[ThreadGroup] = Nil): List[ThreadGroup] =
+        if (thread.getParent != null) ancestors(thread.getParent, thread :: acc) else acc
+
+      val thread = Thread.currentThread()
+      ancestors(thread.getThreadGroup).foreach(_.setMaxPriority(priority))
+      thread.setPriority(priority)
+    }
+
+    setCurrentThreadPriority(threadPriority)
     val cpuName = if (isAffinityOn) {
       val cpuNum = synchronized {
         val n = cpuBindings.indexOf(cpuBindings.min)
@@ -104,7 +115,10 @@ object BenchmarkSpec {
       affinityService.restrictCurrentThreadTo(layout.cpu(cpuNum))
       cpuNum.toString
     } else "*"
-    if (printBinding) println("CPU[" + cpuName + "]: " + Thread.currentThread().getName)
+    if (printBinding) {
+      val thread = Thread.currentThread()
+      println("CPU[" + cpuName + "]: '" + thread.getName + "' with priority: " + thread.getPriority)
+    }
   }
 
   def onStop() {
