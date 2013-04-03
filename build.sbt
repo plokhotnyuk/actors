@@ -11,7 +11,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.scalaz" % "scalaz-concurrent_2.10" % "7.0.0-M8" % "compile",
+  "org.scalaz" % "scalaz-concurrent_2.10" % "7.0.0-RC1" % "compile",
   "com.api-tech" % "proxyactors_2.10" % "0.2.1" % "test",
   "com.typesafe.akka" % "akka-actor_2.10" % "2.2-M2" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.1" % "test",
