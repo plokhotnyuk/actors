@@ -30,6 +30,7 @@ abstract class BenchmarkSpec extends Specification {
 }
 
 object BenchmarkSpec {
+  val executorServiceType = System.getProperty("benchmark.executorServiceType", "lifo-forkjoin-pool")
   val isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
   val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
   val parallelism = System.getProperty("benchmark.parallelism", Runtime.getRuntime.availableProcessors.toString).toInt
@@ -65,7 +66,7 @@ object BenchmarkSpec {
       }
     }
 
-    System.getProperty("benchmark.executorService", "lifo-forkjoin-pool") match {
+    executorServiceType match {
       case "fifo-forkjoin-pool" => new ForkJoinPool(parallelism, createForkJoinWorkerThreadFactory(), null, true)
       case "lifo-forkjoin-pool" => new ForkJoinPool(parallelism, createForkJoinWorkerThreadFactory(), null, false)
       case "fixed-thread-pool" => new ThreadPoolExecutor(parallelism, parallelism, 60, TimeUnit.SECONDS,
