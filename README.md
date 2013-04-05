@@ -29,6 +29,10 @@ Use following command-line instructions:
 ```sh
 mvn -B clean install >outX.txt
 ```
+or
+```sh
+sbt test >outX.txt
+```
 
 ## Test result descriptions
 
