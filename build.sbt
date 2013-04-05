@@ -23,8 +23,6 @@ libraryDependencies ++= Seq(
 
 parallelExecution in test := false
 
-fork in test := true
-
 testGrouping <<= definedTests in Test map { tests =>
   tests.map { test =>
     import Tests._
