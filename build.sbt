@@ -11,13 +11,13 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.scalaz" % "scalaz-concurrent_2.10" % "7.0.0-RC1" % "compile",
-  "com.api-tech" % "proxyactors_2.10" % "0.2.1" % "test",
-  "com.typesafe.akka" % "akka-actor_2.10" % "2.2-M2" % "test",
+  "org.scalaz" %% "scalaz-concurrent" % "7.0.0-RC2" % "test",
+  "com.typesafe.akka" %% "akka-actor" % "2.2-M2" % "test",
+  "net.liftweb" %% "lift-actor" % "2.5-RC4" % "test",
+  "com.api-tech" %% "proxyactors" % "0.2.1" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.1" % "test",
-  "net.liftweb" % "lift-actor_2.10" % "2.5-RC3" % "test",
   "org.affinity" % "affinity" % "0.1.1-SNAPSHOT" % "test",
-  "org.specs2" % "specs2_2.10" % "1.14" % "test",
+  "org.specs2" %% "specs2" % "1.14" % "test",
   "junit" % "junit-dep" % "4.11" % "test"
 )
 
@@ -33,4 +33,3 @@ testGrouping <<= definedTests in Test map { tests =>
         "-XX:+TieredCompilation", "-XX:+UseG1GC", "-XX:+UseNUMA", "-XX:+UseCondCardMark", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch")))
   }.sortWith(_.name < _.name)
 }
-
