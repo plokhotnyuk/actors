@@ -7,8 +7,10 @@ import org.specs2.execute.{Success, Result}
 import org.specs2.specification.{Step, Fragments, Example}
 import concurrent.forkjoin.{ForkJoinWorkerThread, ForkJoinPool}
 import java.util.concurrent._
-import com.affinity.ThreadAffinityUtils
+import java.util.concurrent.atomic.AtomicInteger
+import com.higherfrequencytrading.affinity.AffinitySupport
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
+import com.higherfrequencytrading.affinity.impl.{PosixJNAAffinity, WindowsJNAAffinity, NativeAffinity}
 
 @RunWith(classOf[JUnitRunner])
 abstract class BenchmarkSpec extends Specification {
@@ -21,34 +23,38 @@ abstract class BenchmarkSpec extends Specification {
   } ^ Step(shutdown())
 
   def setup() {
-    onStart()
+    threadSetup()
   }
 
   def shutdown() {
-    onStop()
   }
 }
 
 object BenchmarkSpec {
   val executorServiceType = System.getProperty("benchmark.executorServiceType", "lifo-forkjoin-pool")
-  val isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
-  val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
   val parallelism = System.getProperty("benchmark.parallelism", Runtime.getRuntime.availableProcessors.toString).toInt
   val threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
-  val affinityService = ThreadAffinityUtils.defaultAffinityService
-  val layout = ThreadAffinityUtils.defaultLayoutService
-  val cpuBindings = Array.ofDim[Int](Runtime.getRuntime.availableProcessors)
+  val isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
+  if (isAffinityOn) {
+    if (NativeAffinity.LOADED) {
+      println("Using JNI-based affinity control implementation")
+    } else if (NativeAffinity.isWindows && AffinitySupport.isJNAAvailable && WindowsJNAAffinity.LOADED) {
+      println("Using Windows JNA-based affinity control implementation")
+    } else if (AffinitySupport.isJNAAvailable && PosixJNAAffinity.LOADED) {
+      println("Using Posix JNA-based affinity control implementation")
+    } else {
+      println("Using dummy affinity control implementation");
+    }
+  }
+  val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
+  val nextCpuId = new AtomicInteger()
 
   def createExecutorService(): ExecutorService = {
     def createForkJoinWorkerThreadFactory() = new ForkJoinPool.ForkJoinWorkerThreadFactory {
       def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
         override def run() {
-          onStart()
-          try {
-            super.run()
-          } finally {
-            onStop()
-          }
+          threadSetup()
+          super.run()
         }
       }
     }
@@ -56,12 +62,8 @@ object BenchmarkSpec {
     def createThreadFactory() = new ThreadFactory {
       override def newThread(r: Runnable): Thread = new Thread {
         override def run() {
-          onStart()
-          try {
-            r.run()
-          } finally {
-            onStop()
-          }
+          threadSetup()
+          r.run()
         }
       }
     }
@@ -86,17 +88,13 @@ object BenchmarkSpec {
   def fork(code: => Unit) {
     new Thread {
       override def run() {
-        onStart()
-        try {
-          code
-        } finally {
-          onStop()
-        }
+        threadSetup()
+        code
       }
     }.start()
   }
 
-  def onStart() {
+  def threadSetup() {
     def setCurrentThreadPriority(priority: Int) {
       def ancestors(thread: ThreadGroup, acc: List[ThreadGroup] = Nil): List[ThreadGroup] =
         if (thread.getParent != null) ancestors(thread.getParent, thread :: acc) else acc
@@ -107,26 +105,12 @@ object BenchmarkSpec {
     }
 
     setCurrentThreadPriority(threadPriority)
-    val cpuName = if (isAffinityOn) {
-      val cpuNum = synchronized {
-        val n = cpuBindings.indexOf(cpuBindings.min)
-        cpuBindings(n) = cpuBindings(n) + 1
-        n
-      }
-      affinityService.restrictCurrentThreadTo(layout.cpu(cpuNum))
-      cpuNum.toString
-    } else "*"
-    if (printBinding) {
-      val thread = Thread.currentThread()
-      println("CPU[" + cpuName + "]: '" + thread.getName + "' with priority: " + thread.getPriority)
-    }
-  }
-
-  def onStop() {
     if (isAffinityOn) {
-      synchronized {
-        val n = affinityService.currentThreadCPU().id
-        cpuBindings(n) = cpuBindings(n) - 1
+      val cpuId = nextCpuId.getAndIncrement % Runtime.getRuntime.availableProcessors
+      AffinitySupport.setAffinity(1L << cpuId)
+      if (printBinding) {
+        val thread = Thread.currentThread()
+        println("CPU[" + cpuId + "]: '" + thread.getName + "' with priority: " + thread.getPriority)
       }
     }
   }
