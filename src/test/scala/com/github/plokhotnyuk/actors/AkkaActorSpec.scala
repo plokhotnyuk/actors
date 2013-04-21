@@ -73,18 +73,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   private def tickActor(l: CountDownLatch, n: Int): ActorRef =
-    actorSystem.actorOf(Props(new Actor() {
-      private var i = n
-
-      def receive = {
-        case _ =>
-          i -= 1
-          if (i == 0) {
-            l.countDown()
-            context.stop(self)
-          }
-      }
-    }))
+    actorSystem.actorOf(Props(classOf[TickAkkaActor], l, n))
 
   private def sendTicks(a: ActorRef, n: Int) {
     val m = Message()
@@ -96,19 +85,34 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   private def playerActor(l: CountDownLatch, n: Int): ActorRef =
-    actorSystem.actorOf(Props(new Actor {
-      private var i = n
+    actorSystem.actorOf(Props(classOf[PlayerAkkaActor], l, n))
+}
 
-      def receive = {
-        case m =>
-          sender ! m
-          i -= 1
-          if (i == 0) {
-            l.countDown()
-            context.stop(self)
-          }
+class TickAkkaActor(l: CountDownLatch, n: Int) extends Actor {
+  private var i = n
+
+  def receive = {
+    case _ =>
+      i -= 1
+      if (i == 0) {
+        l.countDown()
+        context.stop(self)
       }
-    }))
+  }
+}
+
+class PlayerAkkaActor(l: CountDownLatch, n: Int) extends Actor {
+  private var i = n
+
+  def receive = {
+    case m =>
+      sender ! m
+      i -= 1
+      if (i == 0) {
+        l.countDown()
+        context.stop(self)
+      }
+  }
 }
 
 class CustomExecutorServiceConfigurator(config: Config, prerequisites: DispatcherPrerequisites) extends ExecutorServiceConfigurator(config, prerequisites) {
