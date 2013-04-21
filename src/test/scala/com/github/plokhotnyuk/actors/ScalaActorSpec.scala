@@ -54,8 +54,8 @@ class ScalaActorSpec extends BenchmarkSpec {
     }
   }
 
-  private def tickActor(l: CountDownLatch, n: Int): Actor = {
-    val a = new Actor {
+  private def tickActor(l: CountDownLatch, n: Int): Actor =
+    new Actor {
       private var i = n
 
       def act() {
@@ -70,10 +70,7 @@ class ScalaActorSpec extends BenchmarkSpec {
           }
         }
       }
-    }
-    a.start()
-    a
-  }
+    }.start()
 
   private def sendTicks(a: Actor, n: Int) {
     val m = Message()
@@ -84,8 +81,8 @@ class ScalaActorSpec extends BenchmarkSpec {
     }
   }
 
-  private def playerActor(l: CountDownLatch, n: Int): Actor = {
-    val a = new Actor {
+  private def playerActor(l: CountDownLatch, n: Int): Actor =
+    new Actor {
       private var i = n
 
       def act() {
@@ -101,7 +98,5 @@ class ScalaActorSpec extends BenchmarkSpec {
           }
         }
       }
-    }
-    a.start()
-  }
+    }.start()
 }
