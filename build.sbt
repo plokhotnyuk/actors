@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   "net.liftweb" %% "lift-actor" % "2.5-RC5" % "test",
   "com.api-tech" %% "proxyactors" % "0.2.1" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.1" % "test",
-  "org.scalaz" %% "scalaz-concurrent" % "7.0.0-RC2" % "test",
+  "org.scalaz" %% "scalaz-concurrent" % "7.0.0" % "test",
   "com.higherfrequencytrading" % "affinity" % "1.7" % "test",
   "org.specs2" %% "specs2" % "1.14" % "test",
   "junit" % "junit-dep" % "4.11" % "test"
