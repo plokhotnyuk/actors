@@ -21,7 +21,7 @@ Evaluation of API and performance of different actor libraries written on Scala:
 ## Software installed required
 
 - JDK: 1.7.0_x or newer (can require of removing of some unsupported JVM options from test configuration)
-- Maven: 3.0.4 (or sbt: 0.12.1)
+- Maven: 3.0.4 or sbt: 0.12.3
 
 ## Building & running benchmarks
 

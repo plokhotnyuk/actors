@@ -12,14 +12,16 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-concurrent" % "7.0.0-RC2" % "test",
-  "com.typesafe.akka" %% "akka-actor" % "2.2-M2" % "test",
-  "net.liftweb" %% "lift-actor" % "2.5-RC4" % "test",
+  "com.typesafe.akka" %% "akka-actor" % "2.2-M3" % "test",
+  "net.liftweb" %% "lift-actor" % "2.5-RC5" % "test",
   "com.api-tech" %% "proxyactors" % "0.2.1" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.1" % "test",
-  "org.affinity" % "affinity" % "0.1.1-SNAPSHOT" % "test",
+  "org.affinity" % "affinity" % "0.1.2-SNAPSHOT" % "test",
   "org.specs2" %% "specs2" % "1.14" % "test",
   "junit" % "junit-dep" % "4.11" % "test"
 )
+
+scalacOptions ++= Seq("-deprecation", "-unchecked")
 
 parallelExecution in test := false
 
