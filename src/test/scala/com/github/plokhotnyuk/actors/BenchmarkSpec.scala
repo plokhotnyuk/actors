@@ -43,7 +43,7 @@ object BenchmarkSpec {
     } else if (AffinitySupport.isJNAAvailable && PosixJNAAffinity.LOADED) {
       println("Using Posix JNA-based affinity control implementation")
     } else {
-      println("Using dummy affinity control implementation");
+      println("Using dummy affinity control implementation")
     }
   }
   val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
@@ -105,7 +105,7 @@ object BenchmarkSpec {
     }
 
     setCurrentThreadPriority(threadPriority)
-    if (isAffinityOn) {
+    if (isAffinityOn) synchronized {
       val cpuId = nextCpuId.getAndIncrement % Runtime.getRuntime.availableProcessors
       AffinitySupport.setAffinity(1L << cpuId)
       if (printBinding) {
