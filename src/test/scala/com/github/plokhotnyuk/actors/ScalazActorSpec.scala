@@ -78,9 +78,7 @@ class ScalazActorSpec extends BenchmarkSpec {
 
     (m: Message) =>
       i -= 1
-      if (i == 0) {
-        l.countDown()
-      }
+      if (i == 0) l.countDown()
   }
 
   private def sendTicks(a: Actor[Message], n: Int) {

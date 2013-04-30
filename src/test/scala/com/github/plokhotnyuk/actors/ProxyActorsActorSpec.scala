@@ -7,7 +7,7 @@ import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ProxyActorsActorSpec extends BenchmarkSpec {
   val executorService = createExecutorService()
-  val context = actorContext(ExecutionContext.fromExecutor(executorService))
+  val context = actorContext(ExecutionContext.fromExecutorService(executorService))
 
   "Single-producer sending" in {
     val n = 10000000
@@ -17,7 +17,6 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
       sendTicks(a, n)
       l.await()
     }
-    actorsFinished(a)
   }
 
   "Multi-producer sending" in {
@@ -30,7 +29,6 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
       }
       l.await()
     }
-    actorsFinished(a)
   }
 
   "Max throughput" in {
@@ -43,7 +41,6 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
       }
       l.await()
     }
-    actorsFinished(as: _*)
   }
 
   "Ping between actors" in {
@@ -55,7 +52,6 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
       p1.ping(p2)
       l.await()
     }
-    actorsFinished(p1, p2)
   }
 
   override def shutdown() {
@@ -82,9 +78,7 @@ class TickActor(val l: CountDownLatch, val n: Int) {
 
   def countdown() {
     i -= 1
-    if (i == 0) {
-      l.countDown()
-    }
+    if (i == 0) l.countDown()
   }
 }
 
@@ -94,8 +88,6 @@ class PlayerActor(val l: CountDownLatch, val n: Int) {
   def ping(p: PlayerActor) {
     p.ping(this)
     i -= 1
-    if (i == 0) {
-      l.countDown()
-    }
+    if (i == 0) l.countDown()
   }
 }

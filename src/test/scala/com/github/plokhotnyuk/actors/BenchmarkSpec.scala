@@ -18,7 +18,11 @@ abstract class BenchmarkSpec extends Specification {
   xonly
 
   override def map(fs: => Fragments) = Step(setup()) ^ fs.map {
-    case Example(desc, body) => Example(desc.toString, { printf("\n%s:\n", desc); body() })
+    case Example(desc, body) => Example(desc.toString, {
+      println()
+      println(f"$desc%s:")
+      body()
+    })
     case other => other
   } ^ Step(shutdown())
 
@@ -31,7 +35,7 @@ abstract class BenchmarkSpec extends Specification {
 }
 
 object BenchmarkSpec {
-  val executorServiceType = System.getProperty("benchmark.executorServiceType", "lifo-forkjoin-pool")
+  val executorServiceType = System.getProperty("benchmark.executorServiceType", "fifo-forkjoin-pool")
   val parallelism = System.getProperty("benchmark.parallelism", Runtime.getRuntime.availableProcessors.toString).toInt
   val threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
   val isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
@@ -78,10 +82,15 @@ object BenchmarkSpec {
   }
 
   def timed(n: Int)(benchmark: => Unit): Result = {
+    println(f"$n%,d ops")
     val t = System.nanoTime
     benchmark
     val d = System.nanoTime - t
-    printf("%,d ns\n%,d ops\n%,d ns/op\n%,d ops/s\n", d, n, d / n, (n * 1000000000L) / d)
+    println(f"$d%,d ns")
+    val l = d / n
+    println(f"$l%,d ns/op")
+    val r = (n * 1000000000L) / d
+    println(f"$r%,d ops/s")
     Success()
   }
 
@@ -110,7 +119,9 @@ object BenchmarkSpec {
       AffinitySupport.setAffinity(1L << cpuId)
       if (printBinding) {
         val thread = Thread.currentThread()
-        println("CPU[" + cpuId + "]: '" + thread.getName + "' with priority: " + thread.getPriority)
+        val name = thread.getName
+        val priority = thread.getPriority
+        println(s"CPU[$cpuId]: '$name' with priority: $priority")
       }
     }
   }
