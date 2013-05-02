@@ -68,7 +68,7 @@ class AkkaActorSpec extends BenchmarkSpec {
     }
   }
 
-  override def shutdown() {
+  def shutdown() {
     actorSystem.shutdown()
   }
 

@@ -20,7 +20,7 @@ abstract class BenchmarkSpec extends Specification {
   override def map(fs: => Fragments) = Step(setup()) ^ fs.map {
     case Example(desc, body) => Example(desc.toString, {
       println()
-      println(f"$desc%s:")
+      println(s"$desc:")
       body()
     })
     case other => other
@@ -30,8 +30,7 @@ abstract class BenchmarkSpec extends Specification {
     threadSetup()
   }
 
-  def shutdown() {
-  }
+  def shutdown()
 }
 
 object BenchmarkSpec {
@@ -39,19 +38,15 @@ object BenchmarkSpec {
   val parallelism = System.getProperty("benchmark.parallelism", Runtime.getRuntime.availableProcessors.toString).toInt
   val threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
   val isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
-  if (isAffinityOn) {
-    if (NativeAffinity.LOADED) {
-      println("Using JNI-based affinity control implementation")
-    } else if (NativeAffinity.isWindows && AffinitySupport.isJNAAvailable && WindowsJNAAffinity.LOADED) {
-      println("Using Windows JNA-based affinity control implementation")
-    } else if (AffinitySupport.isJNAAvailable && PosixJNAAffinity.LOADED) {
-      println("Using Posix JNA-based affinity control implementation")
-    } else {
-      println("Using dummy affinity control implementation")
-    }
-  }
+  if (isAffinityOn) println(s"Using $affinityType affinity control implementation")
   val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
   val nextCpuId = new AtomicInteger()
+
+  def affinityType: String =
+    if (NativeAffinity.LOADED) "JNI-based"
+    else if (NativeAffinity.isWindows && AffinitySupport.isJNAAvailable && WindowsJNAAffinity.LOADED) "Windows JNA-based"
+    else if (AffinitySupport.isJNAAvailable && PosixJNAAffinity.LOADED) "Posix JNA-based"
+    else "dummy"
 
   def createExecutorService(): ExecutorService = {
     def createForkJoinWorkerThreadFactory() = new ForkJoinPool.ForkJoinWorkerThreadFactory {
@@ -81,16 +76,14 @@ object BenchmarkSpec {
     }
   }
 
-  def timed(n: Int)(benchmark: => Unit): Result = {
-    println(f"$n%,d ops")
+  def timed(n: => Int)(benchmark: => Unit): Result = {
     val t = System.nanoTime
     benchmark
     val d = System.nanoTime - t
+    println(f"$n%,d ops")
     println(f"$d%,d ns")
-    val l = d / n
-    println(f"$l%,d ns/op")
-    val r = (n * 1000000000L) / d
-    println(f"$r%,d ops/s")
+    println(f"${d / n}%,d ns/op")
+    println(f"${(n * 1000000000L) / d}%,d ops/s")
     Success()
   }
 
@@ -104,7 +97,7 @@ object BenchmarkSpec {
   }
 
   def threadSetup() {
-    def setCurrentThreadPriority(priority: Int) {
+    def setThreadPriority(priority: Int) {
       def ancestors(thread: ThreadGroup, acc: List[ThreadGroup] = Nil): List[ThreadGroup] =
         if (thread.getParent != null) ancestors(thread.getParent, thread :: acc) else acc
 
@@ -113,16 +106,18 @@ object BenchmarkSpec {
       thread.setPriority(priority)
     }
 
-    setCurrentThreadPriority(threadPriority)
-    if (isAffinityOn) synchronized {
-      val cpuId = nextCpuId.getAndIncrement % Runtime.getRuntime.availableProcessors
-      AffinitySupport.setAffinity(1L << cpuId)
-      if (printBinding) {
-        val thread = Thread.currentThread()
-        val name = thread.getName
-        val priority = thread.getPriority
-        println(s"CPU[$cpuId]: '$name' with priority: $priority")
+    def setThreadAffinity() {
+      synchronized {
+        val cpuId = nextCpuId.getAndIncrement % Runtime.getRuntime.availableProcessors
+        AffinitySupport.setAffinity(1L << cpuId)
+        if (printBinding) {
+          val thread = Thread.currentThread()
+          println(s"CPU[$cpuId]: '${thread.getName}' with priority: ${thread.getPriority}")
+        }
       }
     }
+
+    setThreadPriority(threadPriority)
+    if (isAffinityOn) setThreadAffinity()
   }
 }

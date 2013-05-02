@@ -1,7 +1,7 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent.CountDownLatch
-import actors.Actor
+import scala.actors.{Scheduler, Actor}
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ScalaActorSpec extends BenchmarkSpec {
@@ -52,6 +52,10 @@ class ScalaActorSpec extends BenchmarkSpec {
       p1.send(Message(), p2)
       l.await()
     }
+  }
+
+  def shutdown() {
+    Scheduler.shutdown()
   }
 
   private def tickActor(l: CountDownLatch, n: Int): Actor =

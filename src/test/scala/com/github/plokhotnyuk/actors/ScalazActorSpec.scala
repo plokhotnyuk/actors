@@ -69,7 +69,7 @@ class ScalazActorSpec extends BenchmarkSpec {
     }
   }
 
-  override def shutdown() {
+  def shutdown() {
     executorService.shutdown()
   }
 

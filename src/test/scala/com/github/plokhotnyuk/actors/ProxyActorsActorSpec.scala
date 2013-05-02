@@ -54,7 +54,7 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
     }
   }
 
-  override def shutdown() {
+  def shutdown() {
     executorService.shutdown()
   }
 

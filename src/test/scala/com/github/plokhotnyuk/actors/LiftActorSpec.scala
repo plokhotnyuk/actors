@@ -86,7 +86,7 @@ class LiftActorSpec extends BenchmarkSpec {
     a1 = null
   }
 
-  override def shutdown() {
+  def shutdown() {
     LAScheduler.shutdown()
   }
 
