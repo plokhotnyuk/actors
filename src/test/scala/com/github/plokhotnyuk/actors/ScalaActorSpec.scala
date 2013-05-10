@@ -32,7 +32,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Single-producer sending" in {
-    val n = 500000
+    val n = 1000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -42,7 +42,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = 500000
+    val n = 1000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -66,7 +66,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Ping between actors" in {
-    val n = 500000
+    val n = 1000000
     val l = new CountDownLatch(2)
     val p1 = playerActor(l, n / 2)
     val p2 = playerActor(l, n / 2)

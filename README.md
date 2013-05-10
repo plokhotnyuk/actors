@@ -37,7 +37,7 @@ sbt test >outX.txt
 ## Test result descriptions
 
 #### out0.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, JDK 1.8.0-ea-b87 64-bit
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, JDK 1.8.0-ea-b86 64-bit
 
 #### out1.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, JDK 1.7.0_21-b11 64-bit
