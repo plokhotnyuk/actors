@@ -7,7 +7,6 @@ import org.specs2.execute.{Success, Result}
 import org.specs2.specification.{Step, Fragments, Example}
 import concurrent.forkjoin.{ForkJoinWorkerThread, ForkJoinPool}
 import java.util.concurrent._
-import java.util.concurrent.atomic.AtomicInteger
 import com.higherfrequencytrading.affinity.AffinitySupport
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import com.higherfrequencytrading.affinity.impl.{PosixJNAAffinity, WindowsJNAAffinity, NativeAffinity}

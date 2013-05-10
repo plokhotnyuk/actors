@@ -1,13 +1,35 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent.CountDownLatch
-import scala.actors.{Scheduler, Actor}
+import scala.actors.{SchedulerAdapter, Actor}
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ScalaActorSpec extends BenchmarkSpec {
-  System.setProperty("actors.corePoolSize", parallelism.toString)
-  System.setProperty("actors.maxPoolSize", parallelism.toString)
-  System.setProperty("actors.enableForkJoin", "true")
+  val customScheduler = new SchedulerAdapter {
+    val executorService = createExecutorService()
+
+    def execute(fun: => Unit) {
+      executorService.execute(new Runnable {
+        def run() {
+          fun
+        }
+      })
+    }
+
+    override def executeFromActor(task: Runnable) {
+      executorService.execute(task)
+    }
+
+    override def execute(task: Runnable) {
+      executorService.execute(task)
+    }
+
+    override def shutdown() {
+      executorService.shutdown()
+    }
+
+    override def isActive: Boolean = !executorService.isShutdown
+  }
 
   "Single-producer sending" in {
     val n = 500000
@@ -55,7 +77,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   def shutdown() {
-    Scheduler.shutdown()
+    customScheduler.shutdown()
   }
 
   private def tickActor(l: CountDownLatch, n: Int): Actor =
@@ -74,6 +96,8 @@ class ScalaActorSpec extends BenchmarkSpec {
           }
         }
       }
+
+      override def scheduler = customScheduler
     }.start()
 
   private def sendTicks(a: Actor, n: Int) {
@@ -102,5 +126,7 @@ class ScalaActorSpec extends BenchmarkSpec {
           }
         }
       }
+
+      override def scheduler = customScheduler
     }.start()
 }
