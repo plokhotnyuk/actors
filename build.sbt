@@ -2,7 +2,7 @@ name := "actors"
 
 version := "1.0-SNAPSHOT"
 
-scalaVersion := "2.10.1"
+scalaVersion := "2.10.2-RC1"
 
 resolvers ++= Seq(
   "OSS Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases",
@@ -11,7 +11,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.2-M3" % "test",
-  "net.liftweb" %% "lift-actor" % "2.5-RC5" % "test",
+  "net.liftweb" %% "lift-actor" % "2.5-RC6" % "test",
   "com.api-tech" %% "proxyactors" % "0.2.1" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.1" % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.0.0" % "test",
