@@ -40,22 +40,6 @@ object BenchmarkSpec {
   if (isAffinityOn) println(s"Using $affinityType affinity control implementation")
   val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
   var cpuId: Int = 0
-  lazy val forkJoinWorkerThreadFactory = new ForkJoinPool.ForkJoinWorkerThreadFactory {
-    def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
-      override def run() {
-        threadSetup()
-        super.run()
-      }
-    }
-  }
-  lazy val threadFactory = new ThreadFactory {
-    override def newThread(r: Runnable): Thread = new Thread {
-      override def run() {
-        threadSetup()
-        r.run()
-      }
-    }
-  }
 
   def affinityType: String =
     if (NativeAffinity.LOADED) "JNI-based"
@@ -64,12 +48,30 @@ object BenchmarkSpec {
     else "dummy"
 
   def createExecutorService(): ExecutorService = {
+    def createForkJoinWorkerThreadFactory() = new ForkJoinPool.ForkJoinWorkerThreadFactory {
+      def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
+        override def run() {
+          threadSetup()
+          super.run()
+        }
+      }
+    }
+
+    def createThreadFactory() = new ThreadFactory {
+      override def newThread(r: Runnable): Thread = new Thread {
+        override def run() {
+          threadSetup()
+          r.run()
+        }
+      }
+    }
+
     executorServiceType match {
-      case "fifo-forkjoin-pool" => new ForkJoinPool(parallelism, forkJoinWorkerThreadFactory, null, true)
-      case "lifo-forkjoin-pool" => new ForkJoinPool(parallelism, forkJoinWorkerThreadFactory, null, false)
+      case "fifo-forkjoin-pool" => new ForkJoinPool(parallelism, createForkJoinWorkerThreadFactory(), null, true)
+      case "lifo-forkjoin-pool" => new ForkJoinPool(parallelism, createForkJoinWorkerThreadFactory(), null, false)
       case "fixed-thread-pool" => new ThreadPoolExecutor(parallelism, parallelism, 60, TimeUnit.SECONDS,
-        new LinkedBlockingQueue[Runnable](), threadFactory, new ThreadPoolExecutor.AbortPolicy())
-      case _ => throw new IllegalArgumentException("Unsupported executorService")
+        new LinkedBlockingQueue[Runnable](), createThreadFactory(), new ThreadPoolExecutor.AbortPolicy())
+      case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
     }
   }
 
