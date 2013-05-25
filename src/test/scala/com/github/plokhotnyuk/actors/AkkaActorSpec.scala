@@ -8,6 +8,7 @@ import com.typesafe.config.Config
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class AkkaActorSpec extends BenchmarkSpec {
+  parallelism = 1
   val config = load(parseString(
     """
       akka {

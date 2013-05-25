@@ -33,12 +33,12 @@ abstract class BenchmarkSpec extends Specification {
 }
 
 object BenchmarkSpec {
-  val executorServiceType = System.getProperty("benchmark.executorServiceType", "fifo-forkjoin-pool")
-  val parallelism = System.getProperty("benchmark.parallelism", Runtime.getRuntime.availableProcessors.toString).toInt
-  val threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
-  val isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
+  var executorServiceType = System.getProperty("benchmark.executorServiceType", "fifo-forkjoin-pool")
+  var parallelism = System.getProperty("benchmark.parallelism", Runtime.getRuntime.availableProcessors.toString).toInt
+  var threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
+  var isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
   if (isAffinityOn) println(s"Using $affinityType affinity control implementation")
-  val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
+  var printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
   var cpuId: Int = 0
 
   def affinityType: String =
@@ -67,9 +67,9 @@ object BenchmarkSpec {
     }
 
     executorServiceType match {
-      case "fifo-forkjoin-pool" => new ForkJoinPool(1, createForkJoinWorkerThreadFactory(), null, true)
-      case "lifo-forkjoin-pool" => new ForkJoinPool(1, createForkJoinWorkerThreadFactory(), null, false)
-      case "fixed-thread-pool" => new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS,
+      case "fifo-forkjoin-pool" => new ForkJoinPool(parallelism, createForkJoinWorkerThreadFactory(), null, true)
+      case "lifo-forkjoin-pool" => new ForkJoinPool(parallelism, createForkJoinWorkerThreadFactory(), null, false)
+      case "fixed-thread-pool" => new ThreadPoolExecutor(parallelism, parallelism, 60, TimeUnit.SECONDS,
         new LinkedBlockingQueue[Runnable](), createThreadFactory(), new ThreadPoolExecutor.AbortPolicy())
       case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
     }
