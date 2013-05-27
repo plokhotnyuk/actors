@@ -12,9 +12,5 @@ import com.typesafe.config.Config
 case class PatchedSingleConsumerOnlyUnboundedMailbox() extends MailboxType {
   def this(settings: ActorSystem.Settings, config: Config) = this()
 
-  final override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = try {
-    new PatchedNodeMessageQueue()
-  } catch {
-    case t: Throwable => t.printStackTrace(); null
-  }
+  final override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new PatchedNodeMessageQueue()
 }
