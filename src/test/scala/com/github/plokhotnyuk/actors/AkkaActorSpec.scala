@@ -3,12 +3,12 @@ package com.github.plokhotnyuk.actors
 import akka.actor._
 import java.util.concurrent.{ExecutorService, ThreadFactory, CountDownLatch}
 import com.typesafe.config.ConfigFactory._
-import akka.dispatch.{ExecutorServiceFactory, DispatcherPrerequisites, ExecutorServiceConfigurator}
+import akka.dispatch._
 import com.typesafe.config.Config
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
+import scala.annotation.tailrec
 
 class AkkaActorSpec extends BenchmarkSpec {
-  //parallelism = 100
   val config = load(parseString(
     """
       akka {
@@ -18,7 +18,7 @@ class AkkaActorSpec extends BenchmarkSpec {
           default-dispatcher {
             executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
-            mailbox-type = "akka.dispatch.SingleConsumerOnlyUnboundedMailbox"
+            mailbox-type = "com.github.plokhotnyuk.actors.SingleConsumerOnlyUnboundedMailbox"
           }
         }
       }
@@ -120,5 +120,36 @@ class PlayerAkkaActor(l: CountDownLatch, n: Int) extends Actor {
 class CustomExecutorServiceConfigurator(config: Config, prerequisites: DispatcherPrerequisites) extends ExecutorServiceConfigurator(config, prerequisites) {
   def createExecutorServiceFactory(id: String, threadFactory: ThreadFactory): ExecutorServiceFactory = new ExecutorServiceFactory {
     def createExecutorService: ExecutorService = BenchmarkSpec.createExecutorService()
+  }
+}
+
+/**
+ * SingleConsumerOnlyUnboundedMailbox is a high-performance, multiple producer—single consumer, unbounded MailboxType,
+ * the only drawback is that you can't have multiple consumers,
+ * which rules out using it with BalancingDispatcher for instance.
+ */
+case class SingleConsumerOnlyUnboundedMailbox() extends MailboxType {
+  def this(settings: ActorSystem.Settings, config: Config) = this()
+
+  final override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new NodeMessageQueue()
+}
+
+class NodeMessageQueue extends AbstractNodeQueue[Envelope] with MessageQueue {
+  final def enqueue(receiver: ActorRef, handle: Envelope) {
+    add(handle)
+  }
+
+  final def dequeue(): Envelope = poll()
+
+  final def numberOfMessages: Int = count()
+
+  final def hasMessages: Boolean = !isEmpty
+
+  @tailrec final def cleanUp(owner: ActorRef, deadLetters: MessageQueue) {
+    val envelope = dequeue()
+    if (envelope ne null) {
+      deadLetters.enqueue(owner, envelope)
+      cleanUp(owner, deadLetters)
+    }
   }
 }
