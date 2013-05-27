@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class PatchedAbstractNodeQueue<T> extends AtomicReference<PatchedAbstractNodeQueue.Node<T>> {
     // Extends AtomicReference for the "head" slot (which is the one that is appended to) since Unsafe does not expose XCHG operation intrinsically
     private volatile Node<T> _tailDoNotCallMeDirectly;
-    private AtomicLong count = new AtomicLong();
+    private volatile long dummy;
 
     protected PatchedAbstractNodeQueue() {
         final Node<T> n = new Node<T>();
@@ -25,18 +25,31 @@ public abstract class PatchedAbstractNodeQueue<T> extends AtomicReference<Patche
         return ((Node<T>)Unsafe.instance.getObjectVolatile(this, tailOffset)).next();
     }
 
+    public final T peek() {
+        final Node<T> n = peekNode();
+        return (n != null) ? n.value : null;
+    }
+
     public final void add(final T value) {
         final Node<T> n = new Node<T>(value);
         getAndSet(n).setNext(n);
-        count.incrementAndGet();
     }
 
     public final boolean isEmpty() {
-        return count() == 0;
+        boolean empty = peekNode() == null;
+        if (empty) {
+            dummy = 1;
+            return peekNode() == null;
+        } else {
+            return false;
+        }
     }
 
     public final int count() {
-        return count.intValue();
+        int count = 0;
+        for(Node<T> n = peekNode();n != null; n = n.next())
+            ++count;
+        return count;
     }
 
     @SuppressWarnings("unchecked")
@@ -45,9 +58,8 @@ public abstract class PatchedAbstractNodeQueue<T> extends AtomicReference<Patche
         if (next == null) return null;
         else {
             final T ret = next.value;
-            next.value = null; // to avoid memory leak by holding reference to message when actor is not active (no new messages)
+            next.value = null; // Null out the value so that we can GC it early
             Unsafe.instance.putOrderedObject(this, tailOffset, next);
-            count.decrementAndGet();
             return ret;
         }
     }
