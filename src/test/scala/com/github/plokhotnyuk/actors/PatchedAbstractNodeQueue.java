@@ -28,8 +28,7 @@ public abstract class PatchedAbstractNodeQueue<T> extends AtomicReference<Patche
     }
 
     public final boolean isEmpty() {
-//        System.out.println("isEmpty");
-        return peekNode() == null;
+        return peekNode() == null && peekNode() == null;
     }
 
     public final int count() {
