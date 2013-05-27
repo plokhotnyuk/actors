@@ -1,6 +1,8 @@
 package com.github.plokhotnyuk.actors;
 
 import akka.util.Unsafe;
+
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -10,6 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class PatchedAbstractNodeQueue<T> extends AtomicReference<PatchedAbstractNodeQueue.Node<T>> {
     // Extends AtomicReference for the "head" slot (which is the one that is appended to) since Unsafe does not expose XCHG operation intrinsically
     private volatile Node<T> _tailDoNotCallMeDirectly;
+    private AtomicLong count = new AtomicLong();
 
     protected PatchedAbstractNodeQueue() {
         final Node<T> n = new Node<T>();
@@ -25,17 +28,15 @@ public abstract class PatchedAbstractNodeQueue<T> extends AtomicReference<Patche
     public final void add(final T value) {
         final Node<T> n = new Node<T>(value);
         getAndSet(n).setNext(n);
+        count.incrementAndGet();
     }
 
     public final boolean isEmpty() {
-        return peekNode() == null && peekNode() == null;
+        return count() == 0;
     }
 
     public final int count() {
-        int count = 0;
-        for(Node<T> n = peekNode();n != null; n = n.next())
-            ++count;
-        return count;
+        return count.intValue();
     }
 
     @SuppressWarnings("unchecked")
@@ -46,6 +47,7 @@ public abstract class PatchedAbstractNodeQueue<T> extends AtomicReference<Patche
             final T ret = next.value;
             next.value = null; // to avoid memory leak by holding reference to message when actor is not active (no new messages)
             Unsafe.instance.putOrderedObject(this, tailOffset, next);
+            count.decrementAndGet();
             return ret;
         }
     }
