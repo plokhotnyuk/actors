@@ -7,11 +7,11 @@ import java.util.concurrent.atomic.AtomicReference;
  * Lock-free MPSC linked queue implementation based on Dmitriy Vyukov's non-intrusive MPSC queue:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  */
-public abstract class AbstractNodeQueue<T> extends AtomicReference<AbstractNodeQueue.Node<T>> {
+public abstract class PatchedAbstractNodeQueue<T> extends AtomicReference<PatchedAbstractNodeQueue.Node<T>> {
     // Extends AtomicReference for the "head" slot (which is the one that is appended to) since Unsafe does not expose XCHG operation intrinsically
     private volatile Node<T> _tailDoNotCallMeDirectly;
 
-    protected AbstractNodeQueue() {
+    protected PatchedAbstractNodeQueue() {
         final Node<T> n = new Node<T>();
         _tailDoNotCallMeDirectly = n;
         set(n);
@@ -55,7 +55,7 @@ public abstract class AbstractNodeQueue<T> extends AtomicReference<AbstractNodeQ
 
     static {
         try {
-            tailOffset = Unsafe.instance.objectFieldOffset(AbstractNodeQueue.class.getDeclaredField("_tailDoNotCallMeDirectly"));
+            tailOffset = Unsafe.instance.objectFieldOffset(PatchedAbstractNodeQueue.class.getDeclaredField("_tailDoNotCallMeDirectly"));
         } catch(Throwable t){
             throw new ExceptionInInitializerError(t);
         }
