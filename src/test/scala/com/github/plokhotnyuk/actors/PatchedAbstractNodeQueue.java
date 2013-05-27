@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class PatchedAbstractNodeQueue<T> extends AtomicReference<PatchedAbstractNodeQueue.Node<T>> {
     // Extends AtomicReference for the "head" slot (which is the one that is appended to) since Unsafe does not expose XCHG operation intrinsically
     private volatile Node<T> _tailDoNotCallMeDirectly;
-    private volatile long dummy;
 
     protected PatchedAbstractNodeQueue() {
         final Node<T> n = new Node<T>();
@@ -30,19 +29,13 @@ public abstract class PatchedAbstractNodeQueue<T> extends AtomicReference<Patche
         return (n != null) ? n.value : null;
     }
 
-    public final void add(final T value) {
+    public final synchronized void add(final T value) {
         final Node<T> n = new Node<T>(value);
         getAndSet(n).setNext(n);
     }
 
-    public final boolean isEmpty() {
-        boolean empty = peekNode() == null;
-        if (empty) {
-            dummy = 1;
-            return peekNode() == null;
-        } else {
-            return false;
-        }
+    public final synchronized boolean isEmpty() {
+        return peek() == null;
     }
 
     public final int count() {
