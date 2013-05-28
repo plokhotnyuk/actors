@@ -20,7 +20,17 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
   private val taskRequests = new Semaphore(0)
   private val closing = new AtomicInteger(0)
   private val terminated = new AtomicInteger(threadCount)
-  private val threads = (1 to threadCount).map(workerThread(_))
+  private val threads = (1 to threadCount).map {
+    i =>
+      val t = threadFactory.newThread(new Runnable() {
+        def run() {
+          doIgnoringInterrupt(doWork())
+          terminated.decrementAndGet()
+        }
+      })
+      t.start()
+      t
+  }
 
   def shutdown() {
     shutdownNow()
@@ -52,17 +62,6 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
   def execute(command: Runnable) {
     tasks.offer(command)
     taskRequests.release()
-  }
-
-  private def workerThread(i: Int): Thread = {
-    val thread = threadFactory.newThread(new Runnable() {
-      def run() {
-        doIgnoringInterrupt(doWork())
-        terminated.decrementAndGet()
-      }
-    })
-    thread.start()
-    thread
   }
 
   @tailrec
