@@ -44,7 +44,7 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
     new util.ArrayList(tasks)
   }
 
-  def isShutdown: Boolean = closing.intValue() != 0
+  def isShutdown: Boolean = !isRunning
 
   def isTerminated: Boolean = terminated.intValue() == 0
 
@@ -66,13 +66,15 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
 
   @tailrec
   private def doWork() {
-    if (closing.intValue() == 0) {
+    if (isRunning) {
       taskRequests.acquire()
       val task = tasks.poll()
       if (task ne null) task.run()
       doWork()
     }
   }
+
+  private def isRunning: Boolean = closing.intValue() == 0
 
   private def doIgnoringInterrupt(code: => Unit) {
     try {
