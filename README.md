@@ -31,7 +31,7 @@ mvn -B clean install >outX.txt
 ```
 or
 ```sh
-sbt test >outX.txt
+sbt clean test >outX.txt
 ```
 
 ## Test result descriptions
