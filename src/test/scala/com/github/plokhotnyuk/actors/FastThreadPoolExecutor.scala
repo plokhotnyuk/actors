@@ -6,11 +6,20 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.lang.InterruptedException
 import scala.annotation.tailrec
 
-class FastThreadPoolExecutor(parallelism: Int, threadFactory: ThreadFactory) extends AbstractExecutorService {
+/**
+ * A high performance implementation of thread pool with fixed number of threads.
+ *
+ * Based on implementation of ThreadManager from JActor2:
+ * https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java
+ *
+ * @param threadCount a number of worker threads in pool
+ * @param threadFactory a factory to be used to build worker threads
+ */
+class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) extends AbstractExecutorService {
   private val tasks = new ConcurrentLinkedQueue[Runnable]()
   private val taskRequests = new Semaphore(0)
-  private val toClose = new AtomicInteger(0)
-  private val threads = (1 to parallelism).map(workerThread(_))
+  private val closing = new AtomicInteger(0)
+  private val threads = (1 to threadCount).map(workerThread(_))
 
   def shutdown() {
     shutdownNow()
@@ -18,18 +27,18 @@ class FastThreadPoolExecutor(parallelism: Int, threadFactory: ThreadFactory) ext
   }
 
   def shutdownNow(): util.List[Runnable] = {
-    toClose.set(0)
-    taskRequests.release(parallelism)
+    closing.set(1)
+    taskRequests.release(threadCount)
     threads.foreach(_.interrupt())
     new util.ArrayList(tasks)
   }
 
-  def isShutdown: Boolean = toClose.intValue() == 0
+  def isShutdown: Boolean = closing.intValue() != 0
 
   def isTerminated: Boolean = threads.forall(_.isAlive)
 
   def awaitTermination(timeout: Long, unit: TimeUnit): Boolean = {
-    val terminated = new AtomicInteger(parallelism)
+    val terminated = new AtomicInteger(threadCount)
     val terminator = new Thread() {
       override def run() {
         threads.foreach {
@@ -61,7 +70,7 @@ class FastThreadPoolExecutor(parallelism: Int, threadFactory: ThreadFactory) ext
 
   @tailrec
   private def doWork() {
-    if (toClose.intValue() == 0) {
+    if (closing.intValue() == 0) {
       taskRequests.acquire()
       val task = tasks.poll()
       if (task ne null) task.run()
