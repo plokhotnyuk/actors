@@ -33,7 +33,7 @@ abstract class BenchmarkSpec extends Specification {
 }
 
 object BenchmarkSpec {
-  var executorServiceType = System.getProperty("benchmark.executorServiceType", "fifo-forkjoin-pool")
+  var executorServiceType = System.getProperty("benchmark.executorServiceType", "fast-thread-pool")
   var parallelism = System.getProperty("benchmark.parallelism", Runtime.getRuntime.availableProcessors.toString).toInt
   var threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
   var isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
