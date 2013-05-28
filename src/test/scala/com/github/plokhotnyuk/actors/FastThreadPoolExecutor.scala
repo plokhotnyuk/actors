@@ -18,8 +18,8 @@ import scala.annotation.tailrec
 class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) extends AbstractExecutorService {
   private val tasks = new ConcurrentLinkedQueue[Runnable]()
   private val taskRequests = new Semaphore(0)
-  private val closing = new AtomicInteger(0)
   private val terminated = new AtomicInteger(threadCount)
+  private val closing = new AtomicInteger(0)
   private val threads = (1 to threadCount).map {
     i =>
       val t = threadFactory.newThread(new Runnable() {
@@ -39,7 +39,7 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
 
   def shutdownNow(): util.List[Runnable] = {
     closing.set(1)
-    taskRequests.release(threadCount)
+    taskRequests.release(threads.size)
     threads.foreach(_.interrupt())
     new util.ArrayList(tasks)
   }
