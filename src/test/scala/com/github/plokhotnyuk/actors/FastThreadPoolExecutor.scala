@@ -19,6 +19,7 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
   private val tasks = new ConcurrentLinkedQueue[Runnable]()
   private val taskRequests = new Semaphore(0)
   private val closing = new AtomicInteger(0)
+  private val terminated = new AtomicInteger(threadCount)
   private val threads = (1 to threadCount).map(workerThread(_))
 
   def shutdown() {
@@ -35,22 +36,17 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
 
   def isShutdown: Boolean = closing.intValue() != 0
 
-  def isTerminated: Boolean = threads.forall(_.isAlive)
+  def isTerminated: Boolean = terminated.intValue() == 0
 
   def awaitTermination(timeout: Long, unit: TimeUnit): Boolean = {
-    val terminated = new AtomicInteger(threadCount)
     val terminator = new Thread() {
       override def run() {
-        threads.foreach {
-          t =>
-            doIgnoringInterrupt(t.join())
-            terminated.decrementAndGet()
-        }
+        threads.foreach(t => doIgnoringInterrupt(t.join()))
       }
     }
     terminator.start()
     doIgnoringInterrupt(terminator.join(unit.toMillis(timeout)))
-    terminated.intValue() == 0
+    isTerminated
   }
 
   def execute(command: Runnable) {
@@ -62,6 +58,7 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
     val thread = threadFactory.newThread(new Runnable() {
       def run() {
         doIgnoringInterrupt(doWork())
+        terminated.decrementAndGet()
       }
     })
     thread.start()
