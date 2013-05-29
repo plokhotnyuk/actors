@@ -11,7 +11,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.2-20130528-001504" % "test",
+  "com.typesafe.akka" %% "akka-actor" % "2.2-20130529-001504" % "test",
   "net.liftweb" %% "lift-actor" % "2.5-RC6" % "test",
   "com.api-tech" %% "proxyactors" % "0.2.1" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.1" % "test",
