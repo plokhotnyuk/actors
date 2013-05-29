@@ -14,7 +14,7 @@ class AkkaActorSpec extends BenchmarkSpec {
         daemonic = on
         actor {
           unstarted-push-timeout = 100s
-          default-dispatcher {
+          benchmark-dispatcher {
             executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
             mailbox-type = "akka.dispatch.SingleConsumerOnlyUnboundedMailbox"
@@ -23,6 +23,8 @@ class AkkaActorSpec extends BenchmarkSpec {
       }
     """))
   val actorSystem = ActorSystem("system", config)
+
+  //println(actorSystem.settings)
 
   "Single-producer sending" in {
     val n = 40000000
@@ -74,7 +76,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   private def tickActor(l: CountDownLatch, n: Int): ActorRef =
-    actorSystem.actorOf(Props(classOf[TickAkkaActor], l, n))
+    actorSystem.actorOf(Props(classOf[TickAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
 
   private def sendTicks(a: ActorRef, n: Int) {
     val m = Message()
@@ -86,7 +88,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   private def playerActor(l: CountDownLatch, n: Int): ActorRef =
-    actorSystem.actorOf(Props(classOf[PlayerAkkaActor], l, n))
+    actorSystem.actorOf(Props(classOf[PlayerAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
 }
 
 class TickAkkaActor(l: CountDownLatch, n: Int) extends Actor {
