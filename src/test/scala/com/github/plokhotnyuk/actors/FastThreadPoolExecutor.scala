@@ -16,16 +16,21 @@ import scala.annotation.tailrec
  * @param threadFactory a factory to be used to build worker threads
  */
 class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) extends AbstractExecutorService {
-  private val tasks = new ConcurrentLinkedQueue[Runnable]()
-  private val taskRequests = new Semaphore(0)
-  private val terminated = new CountDownLatch(threadCount)
   private val closing = new AtomicInteger(0)
+  private val taskRequests = new Semaphore(0)
+  private val tasks = new ConcurrentLinkedQueue[Runnable]()
+  private val terminated = new CountDownLatch(threadCount)
   private val threads = (1 to threadCount).map {
     i =>
       val t = threadFactory.newThread(new Runnable() {
         def run() {
-          doIgnoringInterrupt(doWork())
-          terminated.countDown()
+          try {
+            doWork()
+          } catch {
+            case ex: InterruptedException => // ignore
+          } finally {
+            terminated.countDown()
+          }
         }
       })
       t.start()
@@ -66,12 +71,4 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
   }
 
   private def isRunning: Boolean = closing.intValue() == 0
-
-  private def doIgnoringInterrupt(code: => Unit) {
-    try {
-      code
-    } catch {
-      case ex: InterruptedException => // ignore
-    }
-  }
 }
