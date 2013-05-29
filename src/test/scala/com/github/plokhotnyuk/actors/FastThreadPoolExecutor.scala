@@ -18,14 +18,14 @@ import scala.annotation.tailrec
 class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) extends AbstractExecutorService {
   private val tasks = new ConcurrentLinkedQueue[Runnable]()
   private val taskRequests = new Semaphore(0)
-  private val terminated = new AtomicInteger(threadCount)
+  private val terminated = new CountDownLatch(threadCount)
   private val closing = new AtomicInteger(0)
   private val threads = (1 to threadCount).map {
     i =>
       val t = threadFactory.newThread(new Runnable() {
         def run() {
           doIgnoringInterrupt(doWork())
-          terminated.decrementAndGet()
+          terminated.countDown()
         }
       })
       t.start()
@@ -46,18 +46,9 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
 
   def isShutdown: Boolean = !isRunning
 
-  def isTerminated: Boolean = terminated.intValue() == 0
+  def isTerminated: Boolean = terminated.getCount == 0
 
-  def awaitTermination(timeout: Long, unit: TimeUnit): Boolean = {
-    val terminator = new Thread() {
-      override def run() {
-        threads.foreach(t => doIgnoringInterrupt(t.join()))
-      }
-    }
-    terminator.start()
-    doIgnoringInterrupt(terminator.join(unit.toMillis(timeout)))
-    isTerminated
-  }
+  def awaitTermination(timeout: Long, unit: TimeUnit): Boolean = terminated.await(timeout, unit)
 
   def execute(command: Runnable) {
     tasks.offer(command)
