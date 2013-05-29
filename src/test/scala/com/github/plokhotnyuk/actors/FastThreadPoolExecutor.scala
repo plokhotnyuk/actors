@@ -46,7 +46,7 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
     closing.set(1)
     taskRequests.release(threads.size)
     threads.foreach(_.interrupt())
-    new util.ArrayList(tasks)
+    drainRemainingTasks(new util.LinkedList[Runnable]())
   }
 
   def isShutdown: Boolean = !isRunning
@@ -64,11 +64,21 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
   private def doWork() {
     if (isRunning) {
       taskRequests.acquire()
-      val task = tasks.poll()
-      if (task ne null) task.run()
+      val t = tasks.poll()
+      if (t ne null) t.run()
       doWork()
     }
   }
 
   private def isRunning: Boolean = closing.intValue() == 0
+
+  @tailrec
+  private def drainRemainingTasks(ts: util.List[Runnable]): util.List[Runnable] = {
+    val t = tasks.poll()
+    if (t eq null) ts
+    else {
+      ts.add(t)
+      drainRemainingTasks(ts)
+    }
+  }
 }
