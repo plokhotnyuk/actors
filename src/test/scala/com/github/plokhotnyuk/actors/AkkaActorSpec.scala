@@ -11,7 +11,6 @@ class AkkaActorSpec extends BenchmarkSpec {
   val config = load(parseString(
     """
       akka {
-        daemonic = on
         actor {
           unstarted-push-timeout = 100s
           benchmark-dispatcher {
