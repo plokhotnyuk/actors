@@ -22,7 +22,7 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
   private val terminated = new CountDownLatch(threadCount)
   private val threads = (1 to threadCount).map {
     i =>
-      val t = threadFactory.newThread(new Runnable() {
+      threadFactory.newThread(new Runnable() {
         def run() {
           try {
             doWork()
@@ -33,9 +33,9 @@ class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) ext
           }
         }
       })
-      t.start()
-      t
   }
+
+  threads.foreach(_.start())
 
   def shutdown() {
     shutdownNow()
