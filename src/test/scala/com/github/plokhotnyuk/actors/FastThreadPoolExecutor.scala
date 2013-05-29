@@ -15,7 +15,10 @@ import scala.annotation.tailrec
  * @param threadCount a number of worker threads in pool
  * @param threadFactory a factory to be used to build worker threads
  */
-class FastThreadPoolExecutor(threadCount: Int, threadFactory: ThreadFactory) extends AbstractExecutorService {
+class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
+                             threadFactory: ThreadFactory = new ThreadFactory() {
+                               def newThread(r: Runnable) = new Thread()
+                             }) extends AbstractExecutorService {
   private val closing = new AtomicInteger(0)
   private val taskRequests = new Semaphore(0)
   private val tasks = new ConcurrentLinkedQueue[Runnable]()
