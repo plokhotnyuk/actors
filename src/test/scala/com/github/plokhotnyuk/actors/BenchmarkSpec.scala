@@ -71,7 +71,7 @@ object BenchmarkSpec {
       case "lifo-forkjoin-pool" => new ForkJoinPool(parallelism, createForkJoinWorkerThreadFactory(), null, false)
       case "fast-thread-pool" => new FastThreadPoolExecutor(parallelism, createThreadFactory())
       case "thread-pool" => new ThreadPoolExecutor(parallelism, parallelism, 60, TimeUnit.SECONDS,
-        new LinkedBlockingQueue[Runnable](), createThreadFactory(), new ThreadPoolExecutor.AbortPolicy())
+        new LinkedBlockingQueue[Runnable](), createThreadFactory())
       case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
     }
   }
