@@ -29,25 +29,25 @@ class FastThreadPoolExecutor(threadCount: Int = CPUs,
   private val tasks = new ConcurrentLinkedQueue[Runnable]()
   private val threadTerminations = new CountDownLatch(threadCount)
   private val threads = {
-    val threads = new ListBuffer[Thread]
-    var i = 0 // sorry... imperative code to avoid field creation for threadFactory & handler constructor params
-    while (i < threadCount) {
-      val t = threadFactory.newThread(new Runnable() {
-        def run() {
-          try {
-            doWork()
-          } catch {
-            case ex: InterruptedException => // ignore
-          } finally {
-            threadTerminations.countDown()
+    val tt = threadTerminations
+    val tf = threadFactory
+    val h = handler
+    (1 to threadCount).map {
+      _ =>
+        val t = tf.newThread(new Runnable() {
+          def run() {
+            try {
+              doWork()
+            } catch {
+              case ex: InterruptedException => // ignore
+            } finally {
+              tt.countDown()
+            }
           }
-        }
-      })
-      if (handler != null) t.setUncaughtExceptionHandler(handler)
-      threads.append(t)
-      i += 1
+        })
+        if (h != null) t.setUncaughtExceptionHandler(h)
+        t
     }
-    threads.toList
   }
 
   threads.foreach(_.start())
