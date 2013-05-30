@@ -19,10 +19,11 @@ import com.github.plokhotnyuk.actors.FastThreadPoolExecutor._
  * @param handler the handler for internal worker threads that will be called
  *                in case of unrecoverable errors encountered while executing tasks.
  */
-class FastThreadPoolExecutor(threadCount: Int = CPUs,
-                             threadFactory: ThreadFactory = DaemonThreadFactory,
-                             handler: Thread.UncaughtExceptionHandler = null)
-  extends AbstractExecutorService {
+class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
+                             threadFactory: ThreadFactory = new ThreadFactory() {
+                               def newThread(r: Runnable): Thread = new Thread(r)
+                             },
+                             handler: Thread.UncaughtExceptionHandler = null) extends AbstractExecutorService {
 
   private val closing = new AtomicInteger(0)
   private val taskRequests = new Semaphore(0)
@@ -94,17 +95,6 @@ class FastThreadPoolExecutor(threadCount: Int = CPUs,
     else {
       ts.add(t)
       drainRemainingTasks(ts)
-    }
-  }
-}
-
-object FastThreadPoolExecutor {
-  val CPUs = Runtime.getRuntime.availableProcessors()
-  val DaemonThreadFactory = new ThreadFactory() {
-    def newThread(r: Runnable): Thread = {
-      val t = new Thread(r)
-      t.setDaemon(true)
-      t
     }
   }
 }

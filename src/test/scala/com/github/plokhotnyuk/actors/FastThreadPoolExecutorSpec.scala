@@ -3,7 +3,6 @@ package com.github.plokhotnyuk.actors
 import org.specs2.mutable.Specification
 import java.util.concurrent._
 import org.specs2.execute.{Failure, Success, Result}
-import com.github.plokhotnyuk.actors.FastThreadPoolExecutor._
 import java.lang.Thread.UncaughtExceptionHandler
 
 class FastThreadPoolExecutorSpec extends Specification {
@@ -22,7 +21,7 @@ class FastThreadPoolExecutorSpec extends Specification {
 
   "code errors are not catched, worker thread terminates and propagates to handler" in {
     val latch = new CountDownLatch(2)
-    val executor = new FastThreadPoolExecutor(2, DaemonThreadFactory, new UncaughtExceptionHandler {
+    val executor = new FastThreadPoolExecutor(threadCount = 2, handler = new UncaughtExceptionHandler {
       def uncaughtException(t: Thread, e: Throwable) {
         latch.countDown()
       }
