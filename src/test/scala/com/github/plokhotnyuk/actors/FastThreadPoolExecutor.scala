@@ -5,8 +5,6 @@ import java.util
 import java.util.concurrent.atomic.AtomicInteger
 import java.lang.InterruptedException
 import scala.annotation.tailrec
-import scala.collection.mutable.ListBuffer
-import com.github.plokhotnyuk.actors.FastThreadPoolExecutor._
 
 /**
  * A high performance implementation of thread pool with fixed number of threads.
@@ -31,21 +29,11 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   private val threadTerminations = new CountDownLatch(threadCount)
   private val threads = {
     val tt = threadTerminations
-    val tf = threadFactory
+    val tf = threadFactory // using intermediate vals to avoid adding fields for constructor params
     val h = handler
     (1 to threadCount).map {
       _ =>
-        val t = tf.newThread(new Runnable() {
-          def run() {
-            try {
-              doWork()
-            } catch {
-              case ex: InterruptedException => // ignore
-            } finally {
-              tt.countDown()
-            }
-          }
-        })
+        val t = tf.newThread(new Worker(this, tt))
         if (h != null) t.setUncaughtExceptionHandler(h)
         t
     }
@@ -65,7 +53,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
     drainRemainingTasks(new util.LinkedList[Runnable]())
   }
 
-  def isShutdown: Boolean = !isRunning
+  def isShutdown: Boolean = closing.intValue != 0
 
   def isTerminated: Boolean = threadTerminations.getCount == 0
 
@@ -76,17 +64,13 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
     taskRequests.release()
   }
 
-  @tailrec
-  private def doWork() {
-    if (isRunning) {
+  final private[actors] def doWork() {
+    do {
       taskRequests.acquire()
       val t = tasks.poll()
       if (t ne null) t.run()
-      doWork()
-    }
+    } while (closing.intValue == 0)
   }
-
-  private def isRunning: Boolean = closing.intValue() == 0
 
   @tailrec
   private def drainRemainingTasks(ts: util.List[Runnable]): util.List[Runnable] = {
@@ -95,6 +79,18 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
     else {
       ts.add(t)
       drainRemainingTasks(ts)
+    }
+  }
+}
+
+private class Worker(executor: FastThreadPoolExecutor, threadTerminations: CountDownLatch) extends Runnable {
+  def run() {
+    try {
+      executor.doWork()
+    } catch {
+      case ex: InterruptedException => // ignore
+    } finally {
+      threadTerminations.countDown()
     }
   }
 }
