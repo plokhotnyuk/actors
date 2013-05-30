@@ -19,26 +19,26 @@ import scala.annotation.tailrec
  */
 class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                              threadFactory: ThreadFactory = new ThreadFactory() {
-                               def newThread(r: Runnable): Thread = new Thread(r)
+                               def newThread(r: Runnable): Thread = new Thread(r) {
+                                 setDaemon(true) // to avoid stalls on app end in case of missed shutdown call
+                               }
                              },
                              handler: Thread.UncaughtExceptionHandler = null) extends AbstractExecutorService {
-
   private val closing = new AtomicInteger(0)
   private val taskRequests = new Semaphore(0)
   private val tasks = new ConcurrentLinkedQueue[Runnable]()
   private val threadTerminations = new CountDownLatch(threadCount)
   private val threads = {
-    val tt = threadTerminations
-    val tf = threadFactory // using intermediate vals to avoid adding fields for constructor params
-    val h = handler
+    val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
     (1 to threadCount).map {
       _ =>
-        val t = tf.newThread(new Worker(this, tt))
-        if (h != null) t.setUncaughtExceptionHandler(h)
-        t
+        tf.newThread(new Runnable() {
+          def run() {
+            doWork()
+          }
+        })
     }
   }
-
   threads.foreach(_.start())
 
   def shutdown() {
@@ -49,7 +49,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   def shutdownNow(): util.List[Runnable] = {
     closing.set(1)
     taskRequests.release(threads.size)
-    threads.foreach(_.interrupt())
+    threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     drainRemainingTasks(new util.LinkedList[Runnable]())
   }
 
@@ -57,20 +57,36 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
 
   def isTerminated: Boolean = threadTerminations.getCount == 0
 
-  def awaitTermination(timeout: Long, unit: TimeUnit): Boolean = threadTerminations.await(timeout, unit)
+  def awaitTermination(timeout: Long, unit: TimeUnit): Boolean = {
+    if (threads.exists(_ eq Thread.currentThread())) threadTerminations.countDown() // don't hang up due call in task
+    threadTerminations.await(timeout, unit)
+  }
 
   def execute(command: Runnable) {
-    tasks.offer(command)
+    tasks.offer(command) // is it need to check the closing flag?
     taskRequests.release()
   }
 
-  final private[actors] def doWork() {
-    do {
+  @tailrec
+  private def doWork() {
+    if (workAndWorkStillNeeded()) doWork()
+  }
+
+  private def workAndWorkStillNeeded(): Boolean =
+    try {
       taskRequests.acquire()
       val t = tasks.poll()
       if (t ne null) t.run()
-    } while (closing.intValue == 0)
-  }
+      closing.intValue == 0
+    } catch {
+      case ex: InterruptedException =>
+        threadTerminations.countDown()
+        false
+      case ex: Throwable =>
+        if (handler != null) handler.uncaughtException(Thread.currentThread(), ex)
+        else ex.printStackTrace()
+        true
+    }
 
   @tailrec
   private def drainRemainingTasks(ts: util.List[Runnable]): util.List[Runnable] = {
@@ -79,18 +95,6 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
     else {
       ts.add(t)
       drainRemainingTasks(ts)
-    }
-  }
-}
-
-private class Worker(executor: FastThreadPoolExecutor, threadTerminations: CountDownLatch) extends Runnable {
-  def run() {
-    try {
-      executor.doWork()
-    } catch {
-      case ex: InterruptedException => // ignore
-    } finally {
-      threadTerminations.countDown()
     }
   }
 }

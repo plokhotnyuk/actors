@@ -5,7 +5,7 @@ import org.specs2.runner.JUnitRunner
 import org.specs2.mutable.Specification
 import org.specs2.execute.{Success, Result}
 import org.specs2.specification.{Step, Fragments, Example}
-import concurrent.forkjoin.{ForkJoinWorkerThread, ForkJoinPool}
+import concurrent.forkjoin.{ForkJoinWorkerThread => ScalaForkJoinWorkerThread, ForkJoinPool => ScalaForkJoinPool}
 import java.util.concurrent._
 import com.higherfrequencytrading.affinity.AffinitySupport
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
@@ -34,7 +34,7 @@ abstract class BenchmarkSpec extends Specification {
 }
 
 object BenchmarkSpec {
-  var executorServiceType = System.getProperty("benchmark.executorServiceType", "fifo-forkjoin-pool")
+  var executorServiceType = System.getProperty("benchmark.executorServiceType", "scala-forkjoin-pool")
   var parallelism = System.getProperty("benchmark.parallelism", Runtime.getRuntime.availableProcessors.toString).toInt
   var threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
   var isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
@@ -49,8 +49,17 @@ object BenchmarkSpec {
     else "dummy"
 
   def createExecutorService(): ExecutorService = {
-    def createForkJoinWorkerThreadFactory() = new ForkJoinPool.ForkJoinWorkerThreadFactory {
-      def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
+    def createScalaForkJoinWorkerThreadFactory() = new ScalaForkJoinPool.ForkJoinWorkerThreadFactory {
+      def newThread(pool: ScalaForkJoinPool) = new ScalaForkJoinWorkerThread(pool) {
+        override def run() {
+          threadSetup()
+          super.run()
+        }
+      }
+    }
+
+    def createJavaForkJoinWorkerThreadFactory() = new ForkJoinPool.ForkJoinWorkerThreadFactory {
+      def newThread(pool: ForkJoinPool) = new ForkJoinWorkerThread(pool) {
         override def run() {
           threadSetup()
           super.run()
@@ -68,8 +77,8 @@ object BenchmarkSpec {
     }
 
     executorServiceType match {
-      case "fifo-forkjoin-pool" => new ForkJoinPool(parallelism, createForkJoinWorkerThreadFactory(), null, true)
-      case "lifo-forkjoin-pool" => new ForkJoinPool(parallelism, createForkJoinWorkerThreadFactory(), null, false)
+      case "scala-forkjoin-pool" => new ScalaForkJoinPool(parallelism, createScalaForkJoinWorkerThreadFactory(), null, true)
+      case "java-forkjoin-pool" => new ForkJoinPool(parallelism, createJavaForkJoinWorkerThreadFactory(), null, true)
       case "fast-thread-pool" => new FastThreadPoolExecutor(parallelism, createThreadFactory())
       case "thread-pool" => new ThreadPoolExecutor(parallelism, parallelism, 60, TimeUnit.SECONDS,
         new LinkedBlockingQueue[Runnable](), createThreadFactory())

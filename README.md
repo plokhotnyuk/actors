@@ -25,7 +25,7 @@ Evaluation of API and performance of different actor libraries written on Scala:
 
 ## Building & running benchmarks
 
-Use following command-line instructions to build from sources and run benchmarks with ForkJoinPool in FIFO mode:
+Use following command-line instructions to build from sources and run benchmarks with Scala's ForkJoinPool in FIFO mode:
 ```sh
 mvn -B clean test >outX.txt
 ```
@@ -43,18 +43,3 @@ Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Wind
 
 #### out1.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, JDK 1.7.0_40-ea-b26 64-bit
-
-#### Outdated !!! out2.txt (with -Ptravis option)
-Intel(R) Core(TM)2 Duo CPU E6850 @ 3.00GHz, RAM 4Gb DDR2-800, Windows 7 sp1, JDK 1.7.0_10-b18 64-bit
-
-#### Outdated !!! out3.txt
-Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1333, Ubuntu 12.04, JDK 1.7.0_04-b20 64-bit
-
-#### Outdated !!! out4.txt
-Intel(R) Core(TM) i7-3610QM CPU @ 2.30GHz (max 3.30GHz), RAM 8Gb DDR3-1333, Windows 8, JDK 1.7.0_11-b21 64-bit
-
-#### Outdated !!! out5.txt
-Intel(R) Core(TM) i7-3720QM CPU @ 2.60GHz (max 3.60GHz), RAM 16Gb DDR3-1600, Mac OS X 10.8.2, JDK 1.7.0_13-b20 64-bit
-
-#### Outdated !!! out6.txt
-Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz (max 3.90GHz) overclocked to 4.30GHz, RAM 16Gb DDR3-1666, Linux Mint 14, JDK 1.7.0_12-ea-b08 64-bit

@@ -17,11 +17,12 @@ class FastThreadPoolExecutorSpec extends Specification {
       }
     })
     assertCountDown(latch, "Should execute a task")
+    executor.shutdown()
   }
 
   "code errors are not catched, worker thread terminates and propagates to handler" in {
-    val latch = new CountDownLatch(2)
-    val executor = new FastThreadPoolExecutor(threadCount = 2, handler = new UncaughtExceptionHandler {
+    val latch = new CountDownLatch(1)
+    val executor = new FastThreadPoolExecutor(threadCount = 1, handler = new UncaughtExceptionHandler {
       def uncaughtException(t: Thread, e: Throwable) {
         latch.countDown()
       }
@@ -31,14 +32,9 @@ class FastThreadPoolExecutorSpec extends Specification {
         throw new RuntimeException()
       }
     })
-    executor.isTerminated must_== false // executor works until last worker threads teminates
-    executor.execute(new Runnable() {
-      def run() {
-        throw new RuntimeException()
-      }
-    })
+    executor.isTerminated must_== false
     assertCountDown(latch, "Should propagate an exception")
-    executor.isTerminated must_== true // executor terminated
+    executor.shutdown()
   }
 
   "shutdownNow interrupts threads and returns non-completed tasks" in {
