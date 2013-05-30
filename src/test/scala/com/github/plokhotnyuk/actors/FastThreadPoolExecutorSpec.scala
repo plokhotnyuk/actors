@@ -4,6 +4,7 @@ import org.specs2.mutable.Specification
 import java.util.concurrent._
 import org.specs2.execute.{Failure, Success, Result}
 import java.lang.Thread.UncaughtExceptionHandler
+import scala.annotation.tailrec
 
 class FastThreadPoolExecutorSpec extends Specification {
   val Timeout = 1000 // in millis
@@ -55,12 +56,14 @@ class FastThreadPoolExecutorSpec extends Specification {
   "awaitTermination blocks until all tasks terminates after a shutdown request" in {
     val executor = new FastThreadPoolExecutor
     executor.execute(new Runnable() {
-      def run() {
-        run() // infinite loop
+      @tailrec
+      final def run() {
+        run() // hard to interrupt loop
       }
     })
+    Thread.sleep(100)
     executor.shutdownNow()
-    executor.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must_== true
+    executor.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must_== false // cannot be successfully shutdown
   }
 
   def assertCountDown(latch: CountDownLatch, hint: String): Result = {
