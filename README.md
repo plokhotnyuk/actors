@@ -25,14 +25,16 @@ Evaluation of API and performance of different actor libraries written on Scala:
 
 ## Building & running benchmarks
 
-Use following command-line instructions:
+Use following command-line instructions to build from sources and run benchmarks with ForkJoinPool in FIFO mode:
 ```sh
-mvn -B clean install >outX.txt
+mvn -B clean test >outX.txt
 ```
 or
 ```sh
 sbt clean test >outX.txt
 ```
+
+To run benchmarks for all available types of executor service use mvnAll.bat or mvnAll.sh scripts.
 
 ## Test result descriptions
 

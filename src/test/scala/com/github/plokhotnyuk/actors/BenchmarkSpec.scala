@@ -26,6 +26,7 @@ abstract class BenchmarkSpec extends Specification {
   } ^ Step(shutdown())
 
   def setup() {
+    println(s"Executor service type: $executorServiceType")
     threadSetup()
   }
 
