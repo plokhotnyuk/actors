@@ -5,6 +5,8 @@ import java.util
 import java.util.concurrent.atomic.AtomicInteger
 import java.lang.InterruptedException
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
+import com.github.plokhotnyuk.actors.FastThreadPoolExecutor._
 
 /**
  * A high performance implementation of thread pool with fixed number of threads.
@@ -14,28 +16,38 @@ import scala.annotation.tailrec
  *
  * @param threadCount a number of worker threads in pool
  * @param threadFactory a factory to be used to build worker threads
+ * @param handler the handler for internal worker threads that will be called
+ *                in case of unrecoverable errors encountered while executing tasks.
  */
-class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
-                             threadFactory: ThreadFactory = new ThreadFactory() {
-                               def newThread(r: Runnable) = new Thread()
-                             }) extends AbstractExecutorService {
+class FastThreadPoolExecutor(threadCount: Int = CPUs,
+                             threadFactory: ThreadFactory = DaemonThreadFactory,
+                             handler: Thread.UncaughtExceptionHandler = null)
+  extends AbstractExecutorService {
+
   private val closing = new AtomicInteger(0)
   private val taskRequests = new Semaphore(0)
   private val tasks = new ConcurrentLinkedQueue[Runnable]()
-  private val terminated = new CountDownLatch(threadCount)
-  private val threads = (1 to threadCount).map {
-    i =>
-      threadFactory.newThread(new Runnable() {
+  private val threadTerminations = new CountDownLatch(threadCount)
+  private val threads = {
+    val threads = new ListBuffer[Thread]
+    var i = 0 // sorry... imperative code to avoid field creation for threadFactory & handler constructor params
+    while (i < threadCount) {
+      val t = threadFactory.newThread(new Runnable() {
         def run() {
           try {
             doWork()
           } catch {
             case ex: InterruptedException => // ignore
           } finally {
-            terminated.countDown()
+            threadTerminations.countDown()
           }
         }
       })
+      if (handler != null) t.setUncaughtExceptionHandler(handler)
+      threads.append(t)
+      i += 1
+    }
+    threads.toList
   }
 
   threads.foreach(_.start())
@@ -54,9 +66,9 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
 
   def isShutdown: Boolean = !isRunning
 
-  def isTerminated: Boolean = terminated.getCount == 0
+  def isTerminated: Boolean = threadTerminations.getCount == 0
 
-  def awaitTermination(timeout: Long, unit: TimeUnit): Boolean = terminated.await(timeout, unit)
+  def awaitTermination(timeout: Long, unit: TimeUnit): Boolean = threadTerminations.await(timeout, unit)
 
   def execute(command: Runnable) {
     tasks.offer(command)
@@ -82,6 +94,17 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
     else {
       ts.add(t)
       drainRemainingTasks(ts)
+    }
+  }
+}
+
+object FastThreadPoolExecutor {
+  val CPUs = Runtime.getRuntime.availableProcessors()
+  val DaemonThreadFactory = new ThreadFactory() {
+    def newThread(r: Runnable): Thread = {
+      val t = new Thread(r)
+      t.setDaemon(true)
+      t
     }
   }
 }
