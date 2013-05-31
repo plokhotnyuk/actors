@@ -25,9 +25,9 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
                              },
                              handler: Thread.UncaughtExceptionHandler = null) extends AbstractExecutorService {
 
-  private val closing = new AtomicInteger(0)
   private val taskRequests = new Semaphore(0)
   private val tasks = new ConcurrentLinkedQueue[Runnable]()
+  private val terminating = new AtomicInteger(0)
   private val threadTerminations = new CountDownLatch(threadCount)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
@@ -40,7 +40,6 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
         })
     }
   }
-
   threads.foreach(_.start())
 
   def shutdown() {
@@ -49,13 +48,13 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   }
 
   def shutdownNow(): util.List[Runnable] = {
-    closing.set(1)
+    terminating.set(1)
     taskRequests.release(threads.size)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     drainRemainingTasks(new util.LinkedList[Runnable]())
   }
 
-  def isShutdown: Boolean = closing.intValue != 0
+  def isShutdown: Boolean = terminating.get != 0
 
   def isTerminated: Boolean = threadTerminations.getCount == 0
 
@@ -65,25 +64,28 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   }
 
   def execute(command: Runnable) {
-    tasks.offer(command) // is it need to check the closing flag?
+    tasks.offer(command) // is it need to check the terminating flag?
     taskRequests.release()
   }
 
   @tailrec
   private def doWork() {
-    try {
-      taskRequests.acquire()
-      val t = tasks.poll()
-      if (t ne null) t.run()
-    } catch {
-      case ex: InterruptedException =>
-        threadTerminations.countDown()
-        return
-      case ex: Throwable =>
-        if (handler != null) handler.uncaughtException(Thread.currentThread(), ex) // is it safe error handling
-        else ex.printStackTrace()
-    }
-    doWork()
+    if (workingHardAndStillHappy()) doWork()
+  }
+
+  private def workingHardAndStillHappy(): Boolean = try {
+    taskRequests.acquire()
+    val t = tasks.poll()
+    if (t ne null) t.run()
+    terminating.get == 0
+  } catch {
+    case ex: InterruptedException =>
+      threadTerminations.countDown()
+      false
+    case ex: Throwable =>
+      if (handler != null) handler.uncaughtException(Thread.currentThread(), ex) // is it safe error handling?
+      else ex.printStackTrace()
+      true
   }
 
   @tailrec
