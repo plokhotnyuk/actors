@@ -20,10 +20,11 @@ import scala.annotation.tailrec
 class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                              threadFactory: ThreadFactory = new ThreadFactory() {
                                def newThread(r: Runnable): Thread = new Thread(r) {
-                                 setDaemon(true) // to avoid stalls on app end in case of missed shutdown call
+                                 setDaemon(true) // is it good reason: to avoid stalls on app end in case of missed shutdown call?
                                }
                              },
                              handler: Thread.UncaughtExceptionHandler = null) extends AbstractExecutorService {
+
   private val closing = new AtomicInteger(0)
   private val taskRequests = new Semaphore(0)
   private val tasks = new ConcurrentLinkedQueue[Runnable]()
@@ -39,6 +40,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
         })
     }
   }
+
   threads.foreach(_.start())
 
   def shutdown() {
@@ -69,24 +71,20 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
 
   @tailrec
   private def doWork() {
-    if (workAndWorkStillNeeded()) doWork()
-  }
-
-  private def workAndWorkStillNeeded(): Boolean =
     try {
       taskRequests.acquire()
       val t = tasks.poll()
       if (t ne null) t.run()
-      closing.intValue == 0
     } catch {
       case ex: InterruptedException =>
         threadTerminations.countDown()
-        false
+        return
       case ex: Throwable =>
-        if (handler != null) handler.uncaughtException(Thread.currentThread(), ex)
+        if (handler != null) handler.uncaughtException(Thread.currentThread(), ex) // is it safe error handling
         else ex.printStackTrace()
-        true
     }
+    doWork()
+  }
 
   @tailrec
   private def drainRemainingTasks(ts: util.List[Runnable]): util.List[Runnable] = {
