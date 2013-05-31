@@ -38,8 +38,10 @@ To run benchmarks for all available types of executor service use mvnAll.bat or 
 
 ## Test result descriptions
 
+Results of running mvnAll.bat or mvnAll.sh scripts on different enviromnents:
+
 #### out0.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, JDK 1.8.0-ea-b91 64-bit
 
 #### out1.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, JDK 1.7.0_40-ea-b26 64-bit
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, JDK 1.7.0_40-ea-b27 64-bit
