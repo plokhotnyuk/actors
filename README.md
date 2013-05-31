@@ -34,7 +34,7 @@ or
 sbt clean test >outX.txt
 ```
 
-To run benchmarks for all available types of executor service use mvnAll.bat or mvnAll.sh scripts.
+To run benchmarks for all available types of executor service use mvnAll.sh or sbtAll.sh scripts (for Windows: mvnAll.bat or sbtAll.bat).
 
 Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS system variables:
 

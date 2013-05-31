@@ -28,10 +28,12 @@ parallelExecution in test := false
 testGrouping <<= definedTests in Test map { tests =>
   tests.map { test =>
     import Tests._
+    import scala.collection.JavaConversions._
     new Group(
       name = test.name,
       tests = Seq(test),
       runPolicy = SubProcess(javaOptions = Seq("-server", "-Xms4g", "-Xmx4g", "-Xss1m", "-XX:NewSize=3g", "-XX:PermSize=128m", "-XX:MaxPermSize=128m",
-        "-XX:+TieredCompilation", "-XX:+UseG1GC", "-XX:+UseNUMA", "-XX:+UseCondCardMark", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch")))
+        "-XX:+TieredCompilation", "-XX:+UseG1GC", "-XX:+UseNUMA", "-XX:+UseCondCardMark", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
+        System.getProperties.propertyNames.toSeq.map(key => "-D" + key.toString + "=" + System.getProperty(key.toString))))
   }.sortWith(_.name < _.name)
 }
