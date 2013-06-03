@@ -25,7 +25,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
                              },
                              handler: Thread.UncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
                                def uncaughtException(t: Thread, e: Throwable) {
-                                 e.printStackTrace() // is it safe default implementation
+                                 e.printStackTrace() // is it safe default implementation?
                                }
                              }) extends AbstractExecutorService {
   private val taskRequests = new Semaphore(0)
@@ -80,12 +80,14 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
         taskRequests.acquire()
         tasks.poll().run()
       } catch {
-        case ex: InterruptedException =>
-          return
-        case ex: Throwable =>
-          handler.uncaughtException(Thread.currentThread(), ex) // is it safe error handling?
+        case ex: InterruptedException => return
+        case ex: Throwable => onError(ex)
       }
     }
+  }
+
+  private def onError(ex: Throwable) {
+    handler.uncaughtException(Thread.currentThread(), ex)
   }
 
   @tailrec
