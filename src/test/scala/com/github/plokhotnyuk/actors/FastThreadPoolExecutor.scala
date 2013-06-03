@@ -79,6 +79,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
         tasks.poll().run()
       } catch {
         case ex: InterruptedException =>
+          threadTerminations.countDown()
           return
         case ex: Throwable =>
           handler.uncaughtException(Thread.currentThread(), ex) // is it safe error handling?
