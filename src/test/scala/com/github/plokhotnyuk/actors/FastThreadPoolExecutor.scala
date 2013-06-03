@@ -28,7 +28,6 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
                                  e.printStackTrace() // is it safe default implementation
                                }
                              }) extends AbstractExecutorService {
-
   private val taskRequests = new Semaphore(0)
   private val tasks = new ConcurrentLinkedQueue[Runnable]()
   private val terminating = new AtomicInteger(0)
@@ -39,7 +38,11 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
       _ =>
         tf.newThread(new Runnable() {
           def run() {
-            doWork()
+            try {
+              doWork()
+            } finally {
+              threadTerminations.countDown()
+            }
           }
         })
     }
@@ -53,7 +56,6 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
 
   def shutdownNow(): util.List[Runnable] = {
     terminating.set(1)
-    taskRequests.release(threads.size)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     drainRemainingTasks(new util.LinkedList[Runnable]())
   }
@@ -79,13 +81,11 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
         tasks.poll().run()
       } catch {
         case ex: InterruptedException =>
-          threadTerminations.countDown()
           return
         case ex: Throwable =>
           handler.uncaughtException(Thread.currentThread(), ex) // is it safe error handling?
       }
     }
-    threadTerminations.countDown()
   }
 
   @tailrec
