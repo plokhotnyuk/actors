@@ -23,7 +23,11 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
                                  setDaemon(true) // is it good reason: to avoid stalls on app end in case of missed shutdown call?
                                }
                              },
-                             handler: Thread.UncaughtExceptionHandler = null) extends AbstractExecutorService {
+                             handler: Thread.UncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
+                               def uncaughtException(t: Thread, e: Throwable) {
+                                 e.printStackTrace() // is it safe default implementation
+                               }
+                             }) extends AbstractExecutorService {
 
   private val taskRequests = new Semaphore(0)
   private val tasks = new ConcurrentLinkedQueue[Runnable]()
@@ -68,24 +72,19 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
     taskRequests.release()
   }
 
-  @tailrec
   private def doWork() {
-    if (workingHardAndStillHappy()) doWork()
-  }
-
-  private def workingHardAndStillHappy(): Boolean = try {
-    taskRequests.acquire()
-    val t = tasks.poll()
-    if (t ne null) t.run()
-    terminating.get == 0
-  } catch {
-    case ex: InterruptedException =>
-      threadTerminations.countDown()
-      false
-    case ex: Throwable =>
-      if (handler != null) handler.uncaughtException(Thread.currentThread(), ex) // is it safe error handling?
-      else ex.printStackTrace()
-      true
+    while (terminating.get == 0) {
+      try {
+        taskRequests.acquire()
+        tasks.poll().run()
+      } catch {
+        case ex: InterruptedException =>
+          return
+        case ex: Throwable =>
+          handler.uncaughtException(Thread.currentThread(), ex) // is it safe error handling?
+      }
+    }
+    threadTerminations.countDown()
   }
 
   @tailrec
