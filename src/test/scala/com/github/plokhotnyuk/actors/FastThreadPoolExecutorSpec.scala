@@ -38,18 +38,25 @@ class FastThreadPoolExecutorSpec extends Specification {
     executor.shutdown()
   }
 
-  "shutdownNow interrupts threads and returns non-completed tasks" in {
+  "shutdownNow interrupts threads and returns non-completed tasks in order of submitting" in {
     val executor = new FastThreadPoolExecutor
-    val task = new Runnable() {
+    val task1 = new Runnable() {
       def run() {
         executor.execute(this)
         Thread.sleep(10000)
       }
     }
-    executor.execute(task)
+    executor.execute(task1)
+    val task2 = new Runnable() {
+      def run() {
+        // do nothing
+      }
+    }
+    executor.execute(task2)
     val remainingTasks = executor.shutdownNow()
-    remainingTasks.size() must_== 1
-    remainingTasks.get(0) must_== task
+    remainingTasks.size() must_== 2
+    remainingTasks.get(0) must_== task1
+    remainingTasks.get(1) must_== task2
     executor.isShutdown must_== true
   }
 
