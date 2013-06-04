@@ -23,8 +23,6 @@ class AkkaActorSpec extends BenchmarkSpec {
     """))
   val actorSystem = ActorSystem("system", config)
 
-  //println(actorSystem.settings)
-
   "Single-producer sending" in {
     val n = 40000000
     val l = new CountDownLatch(1)

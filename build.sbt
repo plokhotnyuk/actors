@@ -6,12 +6,11 @@ scalaVersion := "2.10.2-RC2"
 
 resolvers ++= Seq(
   "OSS Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases",
-  "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases",
-  "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots"
+  "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases"
 )
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.2-20130529-001504" % "test",
+  "com.typesafe.akka" %% "akka-actor" % "2.2.0-RC1" % "test",
   "net.liftweb" %% "lift-actor" % "2.5" % "test",
   "com.api-tech" %% "proxyactors" % "0.2.1" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.2-RC2" % "test",
