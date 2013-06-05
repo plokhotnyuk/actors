@@ -68,13 +68,12 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
 
   def execute(task: Runnable) {
     if (isShutdown) throw new IllegalStateException("Cannot execute in terminating/shutdown state")
-    enqueue(task)
+    if (task eq null) throw new NullPointerException
+    enqueue(new Node(task))
     taskRequests.release()
   }
 
-  private def enqueue(task: Runnable) {
-    if (task eq null) throw new NullPointerException
-    val n = new Node(task)
+  private def enqueue(n: Node) {
     taskHead.getAndSet(n).lazySet(n)
   }
 
@@ -103,7 +102,9 @@ private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: 
     while (closing.get == 0) {
       try {
         taskRequests.acquire()
-        dequeue().run()
+        val n = dequeue()
+        n.task.run()
+        n.task = null // to avoid holding of task reference when queue is empty
       } catch {
         case ex: InterruptedException => return
         case ex: Throwable => onError(ex)
@@ -112,11 +113,10 @@ private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: 
   }
 
   @tailrec
-  private def dequeue(): Runnable = {
+  private def dequeue(): Node = {
     val tn = taskTail.get
     val n = tn.get
-    if ((n ne null) && taskTail.compareAndSet(tn, n)) n.task
-    else dequeue()
+    if ((n ne null) && taskTail.compareAndSet(tn, n)) n else dequeue()
   }
 
   private def onError(ex: Throwable) {
@@ -124,4 +124,4 @@ private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: 
   }
 }
 
-private class Node(val task: Runnable = null) extends AtomicReference[Node]
+private class Node(var task: Runnable = null) extends AtomicReference[Node]
