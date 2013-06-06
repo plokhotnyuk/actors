@@ -118,11 +118,13 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[TaskNode]
 
   private def backOff() {
     backOffs += 1
-    if (backOffs < 2) Thread.`yield`()
-    else if (backOffs < 4) LockSupport.parkNanos(1L)
+    if (backOffs < 10) () // spinning
+    else if (backOffs < 11) Thread.`yield`()
+    else if (backOffs < 12) LockSupport.parkNanos(1L)
     else {
       waitingThreads.offer(Thread.currentThread())
       LockSupport.park(this)
+      backOffs = 0
     }
   }
 
