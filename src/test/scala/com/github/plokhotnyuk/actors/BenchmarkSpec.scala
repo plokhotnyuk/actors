@@ -34,8 +34,9 @@ abstract class BenchmarkSpec extends Specification {
 }
 
 object BenchmarkSpec {
-  var executorServiceType = System.getProperty("benchmark.executorServiceType", "scala-forkjoin-pool")
+  var executorServiceType = System.getProperty("benchmark.executorServiceType", "fast-thread-pool")
   var parallelism = System.getProperty("benchmark.parallelism", Runtime.getRuntime.availableProcessors.toString).toInt
+  var threadFactor = System.getProperty("benchmark.threadFactor", "1.0").toDouble
   var threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
   var isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
   if (isAffinityOn) println(s"Using $affinityType affinity control implementation")
@@ -76,12 +77,12 @@ object BenchmarkSpec {
       }
     }
 
+    val tn = (parallelism * threadFactor).toInt
     executorServiceType match {
-      case "scala-forkjoin-pool" => new ScalaForkJoinPool(parallelism, createScalaForkJoinWorkerThreadFactory(), null, true)
-      case "java-forkjoin-pool" => new ForkJoinPool(parallelism, createJavaForkJoinWorkerThreadFactory(), null, true)
-      case "fast-thread-pool" => new FastThreadPoolExecutor(parallelism, createThreadFactory())
-      case "thread-pool" => new ThreadPoolExecutor(parallelism, parallelism, 60, TimeUnit.SECONDS,
-        new LinkedBlockingQueue[Runnable](), createThreadFactory())
+      case "scala-forkjoin-pool" => new ScalaForkJoinPool(tn, createScalaForkJoinWorkerThreadFactory(), null, true)
+      case "java-forkjoin-pool" => new ForkJoinPool(tn, createJavaForkJoinWorkerThreadFactory(), null, true)
+      case "fast-thread-pool" => new FastThreadPoolExecutor(tn, createThreadFactory())
+      case "thread-pool" => new ThreadPoolExecutor(tn, tn, 60, TimeUnit.SECONDS, new LinkedBlockingQueue[Runnable](), createThreadFactory())
       case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
     }
   }
