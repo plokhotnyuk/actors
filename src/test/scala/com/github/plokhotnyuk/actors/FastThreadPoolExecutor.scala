@@ -1,7 +1,7 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
+import java.util.concurrent.atomic.{AtomicLong, AtomicReference, AtomicInteger}
 import java.lang.InterruptedException
 import scala.annotation.tailrec
 import java.util.concurrent.locks.LockSupport
@@ -31,14 +31,16 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   private val closing = new AtomicInteger(0)
   private val taskHead = new AtomicReference[TaskNode](new TaskNode())
   private val taskTail = new AtomicReference[TaskNode](taskHead.get)
+  private val waitingThreads = new ConcurrentLinkedQueue[Thread]()
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
     val c = closing  // to avoid long field names
     val tt = taskTail
     val h = handler
+    val wt = waitingThreads
     val t = terminations
-    (1 to threadCount).map(_ => tf.newThread(new Worker(c, tt, h, t)))
+    (1 to threadCount).map(_ => tf.newThread(new Worker(c, tt, h, wt, t)))
   }
   threads.foreach(_.start())
 
@@ -67,6 +69,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
     if (task eq null) throw new NullPointerException
     val n = new TaskNode(task)
     taskHead.getAndSet(n).lazySet(n)
+    LockSupport.unpark(waitingThreads.poll())
   }
 
   @tailrec
@@ -81,7 +84,10 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
 }
 
 private class Worker(closing: AtomicInteger, taskTail: AtomicReference[TaskNode],
-                     handler: Thread.UncaughtExceptionHandler, terminations: CountDownLatch) extends Runnable {
+                     handler: Thread.UncaughtExceptionHandler, waitingThreads: ConcurrentLinkedQueue[Thread],
+                     terminations: CountDownLatch) extends Runnable {
+  private var backOffs = 0
+
   def run() {
     try {
       doWork()
@@ -96,7 +102,7 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[TaskNode]
         val tn = taskTail.get
         val n = tn.get
         if (n eq null) backOff()
-        else if (taskTail.compareAndSet(tn, n)) n.run()
+        else if (taskTail.compareAndSet(tn, n)) execute(n)
       } catch {
         case ex: InterruptedException => return
         case ex: Throwable => onError(ex)
@@ -104,8 +110,20 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[TaskNode]
     }
   }
 
+  private def execute(n: TaskNode) {
+    n.task.run()
+    n.task = null // to avoid holding of task reference when queue is empty
+    backOffs = 0
+  }
+
   private def backOff() {
-    LockSupport.parkNanos(100)
+    backOffs += 1
+    if (backOffs < 2) Thread.`yield`()
+    else if (backOffs < 4) LockSupport.parkNanos(1L)
+    else {
+      waitingThreads.offer(Thread.currentThread())
+      LockSupport.park(this)
+    }
   }
 
   private def onError(ex: Throwable) {
@@ -113,9 +131,4 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[TaskNode]
   }
 }
 
-private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode] {
-  def run() {
-    task.run()
-    task = null // to avoid holding of task reference when queue is empty
-  }
-}
+private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
