@@ -4,15 +4,13 @@ import java.util.concurrent._
 import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
 import java.lang.InterruptedException
 import scala.annotation.tailrec
+import java.util.concurrent.locks.LockSupport
 
 /**
  * A high performance implementation of thread pool with fixed number of threads.
  *
  * Implementation of task queue based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
- *
- * Idea of using of semaphores for control of queue access borrowed from implementation of ThreadManager from JActor2:
- * https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java
  *
  * @param threadCount a number of worker threads in pool
  * @param threadFactory a factory to be used to build worker threads
@@ -31,18 +29,16 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
                                }
                              }) extends AbstractExecutorService {
   private val closing = new AtomicInteger(0)
-  private val taskHead = new AtomicReference[Node](new Node())
-  private val taskRequests = new Semaphore(0)
-  private val taskTail = new AtomicReference[Node](taskHead.get)
+  private val taskHead = new AtomicReference[TaskNode](new TaskNode())
+  private val taskTail = new AtomicReference[TaskNode](taskHead.get)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
     val c = closing  // to avoid long field names
-    val tr = taskRequests
     val tt = taskTail
     val h = handler
     val t = terminations
-    (1 to threadCount).map(_ => tf.newThread(new Worker(c, tr, tt, h, t)))
+    (1 to threadCount).map(_ => tf.newThread(new Worker(c, tt, h, t)))
   }
   threads.foreach(_.start())
 
@@ -69,11 +65,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   def execute(task: Runnable) {
     if (isShutdown) throw new IllegalStateException("Cannot execute in terminating/shutdown state")
     if (task eq null) throw new NullPointerException
-    enqueue(new Node(task))
-    taskRequests.release()
-  }
-
-  private def enqueue(n: Node) {
+    val n = new TaskNode(task)
     taskHead.getAndSet(n).lazySet(n)
   }
 
@@ -88,7 +80,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   }
 }
 
-private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: AtomicReference[Node],
+private class Worker(closing: AtomicInteger, taskTail: AtomicReference[TaskNode],
                      handler: Thread.UncaughtExceptionHandler, terminations: CountDownLatch) extends Runnable {
   def run() {
     try {
@@ -101,10 +93,10 @@ private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: 
   private def doWork() {
     while (closing.get == 0) {
       try {
-        taskRequests.acquire()
-        val n = dequeue()
-        n.task.run()
-        n.task = null // to avoid holding of task reference when queue is empty
+        val tn = taskTail.get
+        val n = tn.get
+        if (n eq null) backOff()
+        else if (taskTail.compareAndSet(tn, n)) n.run()
       } catch {
         case ex: InterruptedException => return
         case ex: Throwable => onError(ex)
@@ -112,11 +104,8 @@ private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: 
     }
   }
 
-  @tailrec
-  private def dequeue(): Node = {
-    val tn = taskTail.get
-    val n = tn.get
-    if ((n ne null) && taskTail.compareAndSet(tn, n)) n else dequeue()
+  private def backOff() {
+    LockSupport.parkNanos(100)
   }
 
   private def onError(ex: Throwable) {
@@ -124,4 +113,9 @@ private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: 
   }
 }
 
-private class Node(var task: Runnable = null) extends AtomicReference[Node]
+private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode] {
+  def run() {
+    task.run()
+    task = null // to avoid holding of task reference when queue is empty
+  }
+}
