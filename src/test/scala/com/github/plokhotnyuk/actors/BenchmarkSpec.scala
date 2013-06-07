@@ -77,12 +77,13 @@ object BenchmarkSpec {
       }
     }
 
-    val tn = (parallelism * threadFactor).toInt
+    val poolSize = Math.round(parallelism * threadFactor).toInt
     executorServiceType match {
-      case "scala-forkjoin-pool" => new ScalaForkJoinPool(tn, createScalaForkJoinWorkerThreadFactory(), null, true)
-      case "java-forkjoin-pool" => new ForkJoinPool(tn, createJavaForkJoinWorkerThreadFactory(), null, true)
-      case "fast-thread-pool" => new FastThreadPoolExecutor(tn, createThreadFactory())
-      case "thread-pool" => new ThreadPoolExecutor(tn, tn, 60, TimeUnit.SECONDS, new LinkedBlockingQueue[Runnable](), createThreadFactory())
+      case "scala-forkjoin-pool" => new ScalaForkJoinPool(poolSize, createScalaForkJoinWorkerThreadFactory(), null, true)
+      case "java-forkjoin-pool" => new ForkJoinPool(poolSize, createJavaForkJoinWorkerThreadFactory(), null, true)
+      case "fast-thread-pool" => new FastThreadPoolExecutor(poolSize, createThreadFactory())
+      case "thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 60, TimeUnit.SECONDS,
+        new LinkedBlockingQueue[Runnable](), createThreadFactory())
       case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
     }
   }
