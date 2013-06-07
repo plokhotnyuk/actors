@@ -9,9 +9,6 @@ import java.util.concurrent.locks.LockSupport
 /**
  * A high performance implementation of thread pool with fixed number of threads.
  *
- * Implementation of task queue based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
- * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
- *
  * @param threadCount a number of worker threads in pool
  * @param threadFactory a factory to be used to build worker threads
  * @param handler the handler for internal worker threads that will be called
@@ -31,16 +28,16 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   private val closing = new AtomicInteger(0)
   private val taskHead = new AtomicReference[TaskNode](new TaskNode())
   private val taskTail = new AtomicReference[TaskNode](taskHead.get)
-  private val waitingThreads = new ConcurrentLinkedQueue[Thread]()
+  private val waitingThreads = new AtomicReference[ThreadNode]()
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
     val c = closing  // to avoid long field names
     val tt = taskTail
-    val h = handler
     val wt = waitingThreads
+    val h = handler
     val t = terminations
-    (1 to threadCount).map(_ => tf.newThread(new Worker(c, tt, h, wt, t)))
+    (1 to threadCount).map(_ => tf.newThread(new Worker(c, tt, wt, h, t)))
   }
   threads.foreach(_.start())
 
@@ -67,9 +64,20 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   def execute(task: Runnable) {
     if (isShutdown) throw new IllegalStateException("Cannot execute in terminating/shutdown state")
     if (task eq null) throw new NullPointerException
+    enqueue(task)
+    unparkThread()
+  }
+
+  private def enqueue(task: Runnable) {
     val n = new TaskNode(task)
     taskHead.getAndSet(n).lazySet(n)
-    LockSupport.unpark(waitingThreads.poll())
+  }
+
+  @tailrec
+  private def unparkThread() {
+    val wn = waitingThreads.get
+    if (wn eq null) return
+    else if (waitingThreads.compareAndSet(wn, wn.get)) LockSupport.unpark(wn.thread) else unparkThread()
   }
 
   @tailrec
@@ -83,9 +91,8 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   }
 }
 
-private class Worker(closing: AtomicInteger, taskTail: AtomicReference[TaskNode],
-                     handler: Thread.UncaughtExceptionHandler, waitingThreads: ConcurrentLinkedQueue[Thread],
-                     terminations: CountDownLatch) extends Runnable {
+private class Worker(closing: AtomicInteger, taskTail: AtomicReference[TaskNode], waitingThreads: AtomicReference[ThreadNode],
+                     handler: Thread.UncaughtExceptionHandler, terminations: CountDownLatch) extends Runnable {
   private var backOffs = 0
 
   def run() {
@@ -99,10 +106,7 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[TaskNode]
   private def doWork() {
     while (closing.get == 0) {
       try {
-        val tn = taskTail.get
-        val n = tn.get
-        if (n eq null) backOff()
-        else if (taskTail.compareAndSet(tn, n)) execute(n)
+        dequeue().run()
       } catch {
         case ex: InterruptedException => return
         case ex: Throwable => onError(ex)
@@ -110,27 +114,43 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[TaskNode]
     }
   }
 
-  private def execute(n: TaskNode) {
-    n.task.run()
-    n.task = null // to avoid holding of task reference when queue is empty
-    backOffs = 0
+  @tailrec
+  private def dequeue(): Runnable = {
+    val tn = taskTail.get
+    val n = tn.get
+    if (n eq null) {
+      backOff()
+      dequeue()
+    } else if (taskTail.compareAndSet(tn, n)) {
+      val t = n.task
+      n.task = null // to avoid holding of task reference when queue is empty
+      backOffs = 0
+      t
+    } else dequeue()
   }
 
   private def backOff() {
     backOffs += 1
-    if (backOffs < 10) () // spinning
-    else if (backOffs < 11) Thread.`yield`()
-    else if (backOffs < 12) LockSupport.parkNanos(1L)
-    else {
-      waitingThreads.offer(Thread.currentThread())
-      LockSupport.park(this)
-      backOffs = 0
-    }
+    if (backOffs < 11) return // spinning
+    else if (backOffs < 12) Thread.`yield`()
+    else if (backOffs < 13) LockSupport.parkNanos(1L)
+    else parkThread()
+  }
+
+  private def parkThread() {
+    val wn = new ThreadNode(Thread.currentThread())
+    do {
+      wn.lazySet(waitingThreads.get)
+    } while (!waitingThreads.compareAndSet(wn.get, wn))
+    LockSupport.park(this)
+    backOffs = 0
   }
 
   private def onError(ex: Throwable) {
     handler.uncaughtException(Thread.currentThread(), ex)
   }
 }
+
+private class ThreadNode(var thread: Thread = null) extends AtomicReference[ThreadNode]
 
 private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
