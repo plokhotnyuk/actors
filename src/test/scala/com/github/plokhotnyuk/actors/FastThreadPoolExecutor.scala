@@ -130,7 +130,7 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[Node], wa
     backOffs += 1
     if (backOffs < 11) return // spinning
     else if (backOffs < 12) Thread.`yield`()
-    else if (backOffs < 13) LockSupport.parkNanos(1L)
+    else if (backOffs < 13 && isWindows) LockSupport.parkNanos(1L)
     else parkThread()
   }
 
@@ -145,6 +145,8 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[Node], wa
   private def onError(ex: Throwable) {
     handler.uncaughtException(Thread.currentThread(), ex)
   }
+
+  private def isWindows: Boolean = System.getProperty("os.name", "").toLowerCase.contains("windows")
 }
 
 private class Node(var task: Runnable = null) extends AtomicReference[Node]
