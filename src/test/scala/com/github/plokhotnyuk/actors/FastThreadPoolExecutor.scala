@@ -73,8 +73,13 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
     taskHead.getAndSet(n).lazySet(n)
   }
 
+  @tailrec
   private def unparkThread() {
-    LockSupport.unpark(waitingThreads.peekLast())
+    val t = waitingThreads.peekLast()
+    if (t ne null) {
+      if (t.getState eq Thread.State.WAITING) LockSupport.unpark(t)
+      else unparkThread()
+    }
   }
 
   @tailrec
@@ -137,7 +142,7 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[Node], wa
   private def parkThread() {
     val ct = Thread.currentThread()
     waitingThreads.addLast(ct)
-    LockSupport.park()
+    if (taskTail.get.get eq null) LockSupport.park()
     waitingThreads.remove(ct)
     backOffs = 0
   }
