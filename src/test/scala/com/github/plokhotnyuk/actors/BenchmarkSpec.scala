@@ -34,9 +34,10 @@ abstract class BenchmarkSpec extends Specification {
 }
 
 object BenchmarkSpec {
+  val processors = Runtime.getRuntime.availableProcessors
   var executorServiceType = System.getProperty("benchmark.executorServiceType", "fast-thread-pool")
-  var parallelism = System.getProperty("benchmark.parallelism", Runtime.getRuntime.availableProcessors.toString).toInt
-  var threadFactor = System.getProperty("benchmark.threadFactor", "1.0").toDouble
+  var parallelism = System.getProperty("benchmark.parallelism", processors.toString).toInt
+  var poolSize = System.getProperty("benchmark.poolSize", processors.toString).toInt
   var threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
   var isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
   if (isAffinityOn) println(s"Using $affinityType affinity control implementation")
@@ -77,7 +78,6 @@ object BenchmarkSpec {
       }
     }
 
-    val poolSize = Math.round(parallelism * threadFactor).toInt
     executorServiceType match {
       case "scala-forkjoin-pool" => new ScalaForkJoinPool(poolSize, createScalaForkJoinWorkerThreadFactory(), null, true)
       case "java-forkjoin-pool" => new ForkJoinPool(poolSize, createJavaForkJoinWorkerThreadFactory(), null, true)
