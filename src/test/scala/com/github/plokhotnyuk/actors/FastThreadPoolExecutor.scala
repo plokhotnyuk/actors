@@ -27,14 +27,14 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
                              }) extends AbstractExecutorService {
   private val closing = new AtomicInteger(0)
   private val taskHead = new AtomicReference[Node](new Node())
-  private val waitingThreads = new ConcurrentLinkedDeque[Thread]()
+  private val waitingThread = new AtomicReference[Thread]()
   private val taskTail = new AtomicReference[Node](taskHead.get)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
     val c = closing  // to avoid long field names
     val tt = taskTail
-    val wt = waitingThreads
+    val wt = waitingThread
     val h = handler
     val t = terminations
     (1 to threadCount).map(_ => tf.newThread(new Worker(c, tt, wt, h, t)))
@@ -75,9 +75,11 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
 
   @tailrec
   private def unparkThread() {
-    val t = waitingThreads.peekLast()
+    val t = waitingThread.get
     if (t ne null) {
-      if (t.getState eq Thread.State.WAITING) LockSupport.unpark(t)
+      if (t.getState eq Thread.State.WAITING) {
+        LockSupport.unpark(t)
+      }
       else unparkThread()
     }
   }
@@ -93,7 +95,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   }
 }
 
-private class Worker(closing: AtomicInteger, taskTail: AtomicReference[Node], waitingThreads: ConcurrentLinkedDeque[Thread],
+private class Worker(closing: AtomicInteger, taskTail: AtomicReference[Node], waitingThreads: AtomicReference[Thread],
                      handler: Thread.UncaughtExceptionHandler, terminations: CountDownLatch) extends Runnable {
   private var backOffs = 0
 
@@ -133,17 +135,16 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[Node], wa
 
   private def backOff() {
     backOffs += 1
-    if (backOffs < 11) return // spinning
-    else if (backOffs < 12) Thread.`yield`()
-    else if (backOffs < 13) LockSupport.parkNanos(1L)
+    if (backOffs < 1) return // spinning
+    else if (backOffs < 2) Thread.`yield`()
+    else if (backOffs < 1000) LockSupport.parkNanos(1)
     else parkThread()
   }
 
   private def parkThread() {
-    val ct = Thread.currentThread()
-    waitingThreads.addLast(ct)
+    val t = waitingThreads.getAndSet(Thread.currentThread())
     if (taskTail.get.get eq null) LockSupport.park()
-    waitingThreads.remove(ct)
+    waitingThreads.set(t)
     backOffs = 0
   }
 
