@@ -35,7 +35,7 @@ abstract class BenchmarkSpec extends Specification {
 
 object BenchmarkSpec {
   val processors = Runtime.getRuntime.availableProcessors
-  var executorServiceType = System.getProperty("benchmark.executorServiceType", "fast-thread-pool")
+  var executorServiceType = System.getProperty("benchmark.executorServiceType", "scala-forkjoin-pool")
   var parallelism = System.getProperty("benchmark.parallelism", processors.toString).toInt
   var poolSize = System.getProperty("benchmark.poolSize", processors.toString).toInt
   var threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
