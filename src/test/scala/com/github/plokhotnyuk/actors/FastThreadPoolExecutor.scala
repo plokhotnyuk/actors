@@ -70,10 +70,8 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   private def unparkThread() {
     val t = waitingThread.get
     if (t ne null) {
-      if (t.getState eq Thread.State.WAITING) {
-        LockSupport.unpark(t)
-      }
-      else unparkThread()
+      if (t.getState eq Thread.State.RUNNABLE) unparkThread()
+      else LockSupport.unpark(t)
     }
   }
 
@@ -117,9 +115,7 @@ private class Worker(closing: AtomicInteger, commands: ConcurrentLinkedQueue[Run
 
   private def backOff() {
     backOffs += 1
-    if (backOffs < 1) return // spinning
-    else if (backOffs < 2) Thread.`yield`()
-    else if (backOffs < 1000) LockSupport.parkNanos(1)
+    if (backOffs < 1000) LockSupport.parkNanos(1)
     else parkThread()
   }
 
