@@ -17,7 +17,7 @@ class FastThreadPoolExecutorSpec extends Specification {
         latch.countDown()
       }
     })
-    assertCountDown(latch, "Should execute a task")
+    assertCountDown(latch, "Should execute a command")
     executor.shutdown()
   }
 

@@ -26,18 +26,17 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
                                }
                              }) extends AbstractExecutorService {
   private val closing = new AtomicInteger(0)
-  private val taskHead = new AtomicReference[Node](new Node())
+  private val commands = new ConcurrentLinkedQueue[Runnable]()
   private val waitingThread = new AtomicReference[Thread]()
-  private val taskTail = new AtomicReference[Node](taskHead.get)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
     val c = closing  // to avoid long field names
-    val tt = taskTail
+    val r = commands
     val wt = waitingThread
     val h = handler
     val t = terminations
-    (1 to threadCount).map(_ => tf.newThread(new Worker(c, tt, wt, h, t)))
+    (1 to threadCount).map(_ => tf.newThread(new Worker(c, r, wt, h, t)))
   }
   threads.foreach(_.start())
 
@@ -48,7 +47,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
 
   def shutdownNow(): java.util.List[Runnable] = {
     closing.set(1)
-    threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
+    threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in command
     drainRemainingTasks(new java.util.LinkedList[Runnable]())
   }
 
@@ -57,20 +56,14 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   def isTerminated: Boolean = terminations.getCount == 0
 
   def awaitTermination(timeout: Long, unit: TimeUnit): Boolean = {
-    if (threads.exists(_ eq Thread.currentThread())) terminations.countDown() // don't hang up due call in task
+    if (threads.exists(_ eq Thread.currentThread())) terminations.countDown() // don't hang up due call in command
     terminations.await(timeout, unit)
   }
 
-  def execute(task: Runnable) {
+  def execute(command: Runnable) {
     if (isShutdown) throw new IllegalStateException("Cannot execute in terminating/shutdown state")
-    if (task eq null) throw new NullPointerException
-    enqueue(task)
+    commands.offer(command)
     unparkThread()
-  }
-
-  private def enqueue(task: Runnable) {
-    val n = new Node(task)
-    taskHead.getAndSet(n).lazySet(n)
   }
 
   @tailrec
@@ -86,16 +79,15 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
 
   @tailrec
   private def drainRemainingTasks(ts: java.util.List[Runnable]): java.util.List[Runnable] = {
-    val tn = taskTail.get
-    val n = tn.get
-    if ((n ne null) && taskTail.compareAndSet(tn, n)) {
-      ts.add(n.task)
+    val c = commands.poll()
+    if (c ne null) {
+      ts.add(c)
       drainRemainingTasks(ts)
     } else ts
   }
 }
 
-private class Worker(closing: AtomicInteger, taskTail: AtomicReference[Node], waitingThreads: AtomicReference[Thread],
+private class Worker(closing: AtomicInteger, commands: ConcurrentLinkedQueue[Runnable], waitingThread: AtomicReference[Thread],
                      handler: Thread.UncaughtExceptionHandler, terminations: CountDownLatch) extends Runnable {
   private var backOffs = 0
 
@@ -110,27 +102,17 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[Node], wa
   private def doWork() {
     while (closing.get == 0) {
       try {
-        dequeue().run()
+        val c = commands.poll()
+        if (c eq null) backOff()
+        else {
+          c.run()
+          backOffs = 0
+        }
       } catch {
         case ex: InterruptedException => return
         case ex: Throwable => onError(ex)
       }
     }
-  }
-
-  @tailrec
-  private def dequeue(): Runnable = {
-    val tn = taskTail.get
-    val n = tn.get
-    if (n eq null) {
-      backOff()
-      dequeue()
-    } else if (taskTail.compareAndSet(tn, n)) {
-      backOffs = 0
-      val t = n.task
-      n.task = null // to avoid holding of task reference when queue is empty
-      t
-    } else dequeue()
   }
 
   private def backOff() {
@@ -142,9 +124,9 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[Node], wa
   }
 
   private def parkThread() {
-    val t = waitingThreads.getAndSet(Thread.currentThread())
-    if (taskTail.get.get eq null) LockSupport.park()
-    waitingThreads.set(t)
+    val t = waitingThread.getAndSet(Thread.currentThread())
+    if (!commands.isEmpty) LockSupport.park()
+    waitingThread.set(t)
     backOffs = 0
   }
 
@@ -152,5 +134,3 @@ private class Worker(closing: AtomicInteger, taskTail: AtomicReference[Node], wa
     handler.uncaughtException(Thread.currentThread(), ex)
   }
 }
-
-private class Node(var task: Runnable = null) extends AtomicReference[Node]
