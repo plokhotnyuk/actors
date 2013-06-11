@@ -86,7 +86,7 @@ object BenchmarkSpec {
       case "java-forkjoin-pool" => new ForkJoinPool(poolSize, createJavaForkJoinWorkerThreadFactory(), null, true)
       case "fast-thread-pool" => new FastThreadPoolExecutor(poolSize, createThreadFactory())
       case "thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 60, TimeUnit.SECONDS,
-        new LinkedBlockingQueue[Runnable](), createThreadFactory())
+        new ConcurrentLinkedBlockingQueue[Runnable](), createThreadFactory())
       case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
     }
   }
@@ -101,7 +101,7 @@ object BenchmarkSpec {
     println(f"${d / 1000000L}%,d ms")
     println(f"${d / n}%,d ns/op")
     println(f"${(n * 1000000000L) / d}%,d ops/s")
-    println(f"${(cd * 100.0)/ d / processors}%2.1f %% of CPU usage")
+    println(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
     Success()
   }
 

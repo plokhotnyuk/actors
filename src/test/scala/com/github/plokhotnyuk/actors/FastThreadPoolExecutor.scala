@@ -31,9 +31,9 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
                                }
                              }) extends AbstractExecutorService {
   private val closing = new AtomicInteger(0)
-  private val taskHead = new AtomicReference[Node](new Node())
+  private val taskHead = new AtomicReference[TaskNode](new TaskNode())
   private val taskRequests = new Semaphore(0)
-  private val taskTail = new AtomicReference[Node](taskHead.get)
+  private val taskTail = new AtomicReference[TaskNode](taskHead.get)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
@@ -74,7 +74,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   }
 
   private def enqueue(task: Runnable) {
-    val n = new Node(task)
+    val n = new TaskNode(task)
     taskHead.getAndSet(n).lazySet(n)
   }
 
@@ -90,7 +90,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   }
 }
 
-private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: AtomicReference[Node],
+private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: AtomicReference[TaskNode],
                      handler: Thread.UncaughtExceptionHandler, terminations: CountDownLatch) extends Runnable {
   def run() {
     try {
@@ -129,4 +129,4 @@ private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: 
   }
 }
 
-private class Node(var task: Runnable = null) extends AtomicReference[Node]
+private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
