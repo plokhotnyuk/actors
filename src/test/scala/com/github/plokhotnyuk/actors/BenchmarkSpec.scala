@@ -10,6 +10,8 @@ import java.util.concurrent._
 import com.higherfrequencytrading.affinity.AffinitySupport
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import com.higherfrequencytrading.affinity.impl.{PosixJNAAffinity, WindowsJNAAffinity, NativeAffinity}
+import java.lang.management.ManagementFactory._
+import com.sun.management.OperatingSystemMXBean
 
 @RunWith(classOf[JUnitRunner])
 abstract class BenchmarkSpec extends Specification {
@@ -89,13 +91,17 @@ object BenchmarkSpec {
   }
 
   def timed(n: => Int)(benchmark: => Unit): Result = {
+    val osMBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
     val t = System.nanoTime
+    val ct = osMBean.getProcessCpuTime
     benchmark
+    val cd = osMBean.getProcessCpuTime - ct
     val d = System.nanoTime - t
     println(f"$n%,d ops")
     println(f"$d%,d ns")
     println(f"${d / n}%,d ns/op")
     println(f"${(n * 1000000000L) / d}%,d ops/s")
+    println(f"${(cd * 100.0)/ d / processors}%2.1f %% of CPU usage")
     Success()
   }
 
