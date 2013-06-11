@@ -37,13 +37,14 @@ abstract class BenchmarkSpec extends Specification {
 
 object BenchmarkSpec {
   val processors = Runtime.getRuntime.availableProcessors
-  var executorServiceType = System.getProperty("benchmark.executorServiceType", "scala-forkjoin-pool")
-  var parallelism = System.getProperty("benchmark.parallelism", processors.toString).toInt
-  var poolSize = System.getProperty("benchmark.poolSize", processors.toString).toInt
-  var threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
-  var isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
+  val executorServiceType = System.getProperty("benchmark.executorServiceType", "scala-forkjoin-pool")
+  val parallelism = System.getProperty("benchmark.parallelism", processors.toString).toInt
+  val poolSize = System.getProperty("benchmark.poolSize", processors.toString).toInt
+  val threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
+  val isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
   if (isAffinityOn) println(s"Using $affinityType affinity control implementation")
-  var printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
+  val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
+  val osMBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
   var cpuId: Int = 0
 
   def affinityType: String =
@@ -91,14 +92,13 @@ object BenchmarkSpec {
   }
 
   def timed(n: => Int)(benchmark: => Unit): Result = {
-    val osMBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
-    val t = System.nanoTime
+    val t = System.currentTimeMillis * 1000000L
     val ct = osMBean.getProcessCpuTime
     benchmark
     val cd = osMBean.getProcessCpuTime - ct
-    val d = System.nanoTime - t
+    val d = System.currentTimeMillis * 1000000L - t
     println(f"$n%,d ops")
-    println(f"$d%,d ns")
+    println(f"${d / 1000000L}%,d ms")
     println(f"${d / n}%,d ns/op")
     println(f"${(n * 1000000000L) / d}%,d ops/s")
     println(f"${(cd * 100.0)/ d / processors}%2.1f %% of CPU usage")
