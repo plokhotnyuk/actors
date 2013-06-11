@@ -2,17 +2,12 @@ package com.github.plokhotnyuk.actors
 
 import java.util.concurrent._
 import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
+import java.util.concurrent.locks.LockSupport
 import java.lang.InterruptedException
 import scala.annotation.tailrec
 
 /**
  * A high performance implementation of thread pool with fixed number of threads.
- *
- * Implementation of task queue based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
- * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
- *
- * Idea of using of semaphores for control of queue access borrowed from implementation of ThreadManager from JActor2:
- * https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java
  *
  * @param threadCount a number of worker threads in pool
  * @param threadFactory a factory to be used to build worker threads
@@ -32,17 +27,17 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
                              }) extends AbstractExecutorService {
   private val closing = new AtomicInteger(0)
   private val taskHead = new AtomicReference[Node](new Node())
-  private val taskRequests = new Semaphore(0)
+  private val mutex = new LIFOMutex()
   private val taskTail = new AtomicReference[Node](taskHead.get)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
     val c = closing  // to avoid long field names
-    val tr = taskRequests
     val tt = taskTail
+    val m = mutex
     val h = handler
     val t = terminations
-    (1 to threadCount).map(_ => tf.newThread(new Worker(c, tr, tt, h, t)))
+    (1 to threadCount).map(_ => tf.newThread(new Worker(c, tt, m, h, t)))
   }
   threads.foreach(_.start())
 
@@ -70,7 +65,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
     if (isShutdown) throw new IllegalStateException("Cannot execute in terminating/shutdown state")
     if (task eq null) throw new NullPointerException
     enqueue(task)
-    taskRequests.release()
+    mutex.unlock()
   }
 
   private def enqueue(task: Runnable) {
@@ -89,8 +84,10 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   }
 }
 
-private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: AtomicReference[Node],
+private class Worker(closing: AtomicInteger, taskTail: AtomicReference[Node], mutex: LIFOMutex,
                      handler: Thread.UncaughtExceptionHandler, terminations: CountDownLatch) extends Runnable {
+  private var backOffs = 0
+
   def run() {
     try {
       doWork()
@@ -102,7 +99,6 @@ private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: 
   private def doWork() {
     while (closing.get == 0) {
       try {
-        taskRequests.acquire()
         dequeue().run()
       } catch {
         case ex: InterruptedException => return
@@ -115,16 +111,49 @@ private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: 
   private def dequeue(): Runnable = {
     val tn = taskTail.get
     val n = tn.get
-    if ((n ne null) && taskTail.compareAndSet(tn, n)) {
+    if (n eq null) {
+      backOff()
+      dequeue()
+    } else if (taskTail.compareAndSet(tn, n)) {
+      backOffs = 0
       val t = n.task
-      n.task = null
+      n.task = null // to avoid holding of task reference when queue is empty
       t
-    }
-    else dequeue()
+    } else dequeue()
+  }
+
+  private def backOff() {
+    backOffs += 1
+    if (backOffs < 2) return // spinning
+    else if (backOffs < 3) Thread.`yield`()
+    else if (backOffs < 4) LockSupport.parkNanos(1L)
+    else mutex.lock()
   }
 
   private def onError(ex: Throwable) {
     handler.uncaughtException(Thread.currentThread(), ex)
+  }
+}
+
+private class LIFOMutex {
+  private val locked = new AtomicInteger()
+  private val waiters = new ConcurrentLinkedDeque[Thread]()
+
+  def lock() {
+    var interrupted = false
+    val ct = Thread.currentThread()
+    waiters.addLast(ct)
+    while ((waiters.peekLast() ne ct) || !locked.compareAndSet(0, 1)) {
+      LockSupport.park(this)
+      if (Thread.interrupted()) interrupted = true
+    }
+    waiters.remove(ct)
+    if (interrupted) ct.interrupt()
+  }
+
+  def unlock() {
+    locked.set(0)
+    LockSupport.unpark(waiters.peekLast())
   }
 }
 
