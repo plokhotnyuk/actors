@@ -35,12 +35,11 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
   private def dequeue(): A = {
     val tn = tail.get
     val n = tn.get
-    if ((n eq null) || !tail.compareAndSet(tn, n)) dequeue()
-    else {
+    if ((n ne null) && tail.compareAndSet(tn, n)) {
       val a = n.a
       n.a = none
       a
-    }
+    } else dequeue()
   }
 
   def poll(timeout: Long, unit: TimeUnit): A = {
@@ -56,11 +55,10 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
     else {
       val tn = tail.get
       val n = tn.get
-      if ((n eq null) || !tail.compareAndSet(tn, n)) drainTo(c, maxElements)
-      else {
+      if ((n ne null) && tail.compareAndSet(tn, n)) {
         c.add(n.a)
         drainTo(c, maxElements - 1)
-      }
+      } else drainTo(c, maxElements)
     }
 
   @tailrec
