@@ -47,7 +47,7 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
     if (requests.tryAcquire(timeout, unit)) poll() else none
   }
 
-  def remainingCapacity(): Int = size()
+  def remainingCapacity(): Int = Integer.MAX_VALUE - size()
 
   def drainTo(c: util.Collection[_ >: A]): Int = drainTo(c, Integer.MAX_VALUE)
 
