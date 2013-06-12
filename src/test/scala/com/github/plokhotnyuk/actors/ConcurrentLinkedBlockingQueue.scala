@@ -51,21 +51,23 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
 
   def drainTo(c: util.Collection[_ >: A]): Int = drainTo(c, Integer.MAX_VALUE)
 
-  def drainTo(c: util.Collection[_ >: A], maxElements: Int): Int = {
-    val tn = tail.get
-    val n = tn.get
-    if (maxElements <= 0 || (n eq null) || !tail.compareAndSet(tn, n)) c.size()
+  def drainTo(c: util.Collection[_ >: A], maxElements: Int): Int =
+    if (maxElements <= 0) c.size()
     else {
-      c.add(n.a)
-      drainTo(c, maxElements - 1)
+      val tn = tail.get
+      val n = tn.get
+      if ((n eq null) || !tail.compareAndSet(tn, n)) drainTo(c, maxElements)
+      else {
+        c.add(n.a)
+        drainTo(c, maxElements - 1)
+      }
     }
-  }
 
-  def peek(): A = {
+  @tailrec
+  final def peek(): A = {
     val tn = tail.get
     val n = tn.get
-    if (n ne null) n.a
-    else none
+    if ((n ne null) || (tn eq head.get)) n.a else peek()
   }
 
   def iterator(): util.Iterator[A] = new util.Iterator[A] {
@@ -87,15 +89,7 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
     }
   }
 
-  def size(): Int = size(0)
-
-  @tailrec
-  private def size(acc: Int): Int = {
-    val tn = tail.get
-    val n = tn.get
-    if (n eq null) acc
-    else size(acc + 1)
-  }
+  def size(): Int = requests.availablePermits()
 }
 
 private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
