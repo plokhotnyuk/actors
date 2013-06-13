@@ -11,7 +11,7 @@ import scala.annotation.tailrec
  * Implementation of task queue based on structure of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  *
- * Idea of using of semaphores for control of queue access borrowed from implementation of ThreadManager from JActor2:
+ * Idea of using of semaphores for control of queue access borrowed from implementation of ThreadManager of JActor2:
  * https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java
  *
  * @param threadCount a number of worker threads in pool
@@ -82,11 +82,10 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   private def drainRemainingTasks(ts: java.util.List[Runnable]): java.util.List[Runnable] = {
     val tn = taskTail.get
     val n = tn.get
-    if ((n eq null) || !taskTail.compareAndSet(tn, n)) ts
-    else {
+    if ((n ne null) && taskTail.compareAndSet(tn, n)) {
       ts.add(n.task)
       drainRemainingTasks(ts)
-    }
+    } else ts
   }
 }
 
@@ -116,12 +115,11 @@ private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: 
   private def dequeueAndRun() {
     val tn = taskTail.get
     val n = tn.get
-    if ((n eq null) || !taskTail.compareAndSet(tn, n)) dequeueAndRun()
-    else {
+    if ((n ne null) && taskTail.compareAndSet(tn, n)) {
       val t = n.task
       n.task = null
       t.run()
-    }
+    } else dequeueAndRun()
   }
 
   private def onError(ex: Throwable) {

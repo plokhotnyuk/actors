@@ -11,7 +11,7 @@ import scala.annotation.tailrec
  * Implementation of task queue based on structure of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  *
- * Idea of using of semaphores for control of queue access borrowed from implementation of ThreadManager from JActor2:
+ * Idea of using of semaphores for control of queue access borrowed from implementation of ThreadManager of JActor2:
  * https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java
  */
 class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with BlockingQueue[A] {
