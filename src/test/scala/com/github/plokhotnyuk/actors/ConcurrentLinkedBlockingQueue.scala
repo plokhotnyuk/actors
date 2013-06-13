@@ -7,14 +7,14 @@ import scala.annotation.tailrec
 
 class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with BlockingQueue[A] {
   private val head = new AtomicReference[Node[A]](new Node())
-  private val requests = new Semaphore(0)
+  private val counter = new ReducibleSemaphore
   private val tail = new AtomicReference[Node[A]](head.get)
   private val none: A = null.asInstanceOf[A]
 
   def offer(e: A): Boolean = {
     val n = new Node(e)
     head.getAndSet(n).lazySet(n)
-    requests.release()
+    counter.release()
     true
   }
 
@@ -27,7 +27,7 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
   def take(): A = poll()
 
   def poll(): A = {
-    requests.acquire()
+    counter.acquire()
     dequeue()
   }
 
@@ -43,7 +43,7 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
   }
 
   def poll(timeout: Long, unit: TimeUnit): A = {
-    if (requests.tryAcquire(timeout, unit)) poll() else none
+    if (counter.tryAcquire(timeout, unit)) poll() else none
   }
 
   def remainingCapacity(): Int = Integer.MAX_VALUE - size()
@@ -56,6 +56,7 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
       val tn = tail.get
       val n = tn.get
       if ((n ne null) && tail.compareAndSet(tn, n)) {
+        counter.reducePermit()
         c.add(n.a)
         drainTo(c, maxElements - 1)
       } else drainTo(c, maxElements)
@@ -83,11 +84,18 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
 
     @tailrec
     final def remove() {
-      if (!tn.compareAndSet(n, n.get)) remove()
+      if (tn.compareAndSet(n, n.get)) counter.reducePermit()
+      else remove()
     }
   }
 
-  def size(): Int = requests.availablePermits()
+  def size(): Int = counter.availablePermits()
 }
 
 private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
+
+private class ReducibleSemaphore extends Semaphore(0) {
+  def reducePermit() {
+    reducePermits(1)
+  }
+}
