@@ -5,6 +5,15 @@ import java.util.concurrent.{TimeUnit, Semaphore, BlockingQueue}
 import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
 
+/**
+ * A high performance implementation of concurrent blocking queue.
+ *
+ * Implementation of task queue based on structure of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
+ * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
+ *
+ * Idea of using of semaphores for control of queue access borrowed from implementation of ThreadManager from JActor2:
+ * https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java
+ */
 class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with BlockingQueue[A] {
   private val head = new AtomicReference[Node[A]](new Node())
   private val counter = new ReducibleSemaphore
@@ -66,7 +75,7 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
   final def peek(): A = {
     val tn = tail.get
     val n = tn.get
-    if ((n ne null) || (tn eq head.get)) n.a else peek()
+    if ((n ne null) || (tn eq head.get)) n.a else peek() // Thank you √iktor! https://github.com/akka/akka/pull/1493/files
   }
 
   def iterator(): util.Iterator[A] = new util.Iterator[A] {

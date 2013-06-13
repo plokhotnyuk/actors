@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 /**
  * A high performance implementation of thread pool with fixed number of threads.
  *
- * Implementation of task queue based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
+ * Implementation of task queue based on structure of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  *
  * Idea of using of semaphores for control of queue access borrowed from implementation of ThreadManager from JActor2:
@@ -68,12 +68,12 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
 
   def execute(task: Runnable) {
     if (isShutdown) throw new IllegalStateException("Cannot execute in terminating/shutdown state")
-    if (task eq null) throw new NullPointerException
     enqueue(task)
     taskRequests.release()
   }
 
   private def enqueue(task: Runnable) {
+    if (task eq null) throw new NullPointerException
     val n = new TaskNode(task)
     taskHead.getAndSet(n).lazySet(n)
   }
