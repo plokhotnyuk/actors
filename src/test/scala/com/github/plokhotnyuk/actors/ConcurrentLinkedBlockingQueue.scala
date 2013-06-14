@@ -8,7 +8,8 @@ import java.util.{ConcurrentModificationException, NoSuchElementException}
 
 /**
  * A partial implementation of concurrent blocking queue which is suitable for using in
- * ThreadPoolExecutor and ExecutorCompletionService as high performance replacement of LinkedBlockingQueue.
+ * ThreadPoolExecutor and ExecutorCompletionService replacement of LinkedBlockingQueue that
+ * decrease latency of submitting and running of tasks.
  *
  * Implementation of task queue based on structure of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
