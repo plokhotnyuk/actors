@@ -41,9 +41,7 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
     dequeue()
   }
 
-  def poll(): A = {
-    throw new UnsupportedOperationException("poll")
-  }
+  def poll(): A = throw new UnsupportedOperationException("poll")
 
   def poll(timeout: Long, unit: TimeUnit): A = if (count.tryAcquire(timeout, unit)) dequeue() else none
 
