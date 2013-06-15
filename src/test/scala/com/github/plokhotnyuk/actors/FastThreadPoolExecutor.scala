@@ -37,7 +37,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
-    val c = closing  // to avoid long field names
+    val c = closing // to avoid long field names
     val tr = taskRequests
     val tt = taskTail
     val h = handler
@@ -54,7 +54,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   def shutdownNow(): java.util.List[Runnable] = {
     closing.set(1)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    drainRemainingTasks(new java.util.LinkedList[Runnable]())
+    drainTo(new java.util.LinkedList[Runnable](), taskTail.get.getAndSet(null))
   }
 
   def isShutdown: Boolean = closing.get != 0
@@ -79,14 +79,12 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
   }
 
   @tailrec
-  private def drainRemainingTasks(ts: java.util.List[Runnable]): java.util.List[Runnable] = {
-    val tn = taskTail.get
-    val n = tn.get
-    if ((n ne null) && taskTail.compareAndSet(tn, n)) {
+  private def drainTo(ts: java.util.List[Runnable], n: TaskNode): java.util.List[Runnable] =
+    if (n eq null) ts
+    else {
       ts.add(n.task)
-      drainRemainingTasks(ts)
-    } else ts
-  }
+      drainTo(ts, n.get)
+    }
 }
 
 private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: AtomicReference[TaskNode],
