@@ -4,6 +4,7 @@ import java.util.concurrent._
 import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
 import java.lang.InterruptedException
 import scala.annotation.tailrec
+import java.util.concurrent.locks.AbstractQueuedSynchronizer
 
 /**
  * A high performance implementation of thread pool with fixed number of threads.
@@ -32,7 +33,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
                              }) extends AbstractExecutorService {
   private val closing = new AtomicInteger(0)
   private val taskHead = new AtomicReference[TaskNode](new TaskNode())
-  private val taskRequests = new Semaphore(0)
+  private val taskRequests = new FastSemaphore()
   private val taskTail = new AtomicReference[TaskNode](taskHead.get)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
@@ -87,7 +88,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
     }
 }
 
-private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: AtomicReference[TaskNode],
+private class Worker(closing: AtomicInteger, taskRequests: FastSemaphore, taskTail: AtomicReference[TaskNode],
                      handler: Thread.UncaughtExceptionHandler, terminations: CountDownLatch) extends Runnable {
   def run() {
     try {
@@ -126,3 +127,27 @@ private class Worker(closing: AtomicInteger, taskRequests: Semaphore, taskTail: 
 }
 
 private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
+
+private class FastSemaphore extends AbstractQueuedSynchronizer {
+  private val state = new AtomicInteger()
+
+  def acquire() {
+    acquireSharedInterruptibly(1)
+  }
+
+  def release() {
+    releaseShared(1)
+  }
+
+  final protected override def tryReleaseShared(releases: Int): Boolean = {
+    state.getAndAdd(1)
+    true
+  }
+
+  @tailrec
+  final protected override def tryAcquireShared(acquires: Int): Int = {
+    val available = state.get
+    val remaining = available - 1
+    if (remaining < 0 || state.compareAndSet(available, remaining)) remaining else tryAcquireShared(acquires)
+  }
+}
