@@ -1,10 +1,10 @@
 package com.github.plokhotnyuk.actors
 
 import java.util
-import java.util.concurrent.{TimeUnit, Semaphore, BlockingQueue}
+import java.util.concurrent.{TimeUnit, BlockingQueue}
 import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
-import java.util.{ConcurrentModificationException, NoSuchElementException}
+import java.util.NoSuchElementException
 
 /**
  * A partial implementation of concurrent blocking queue which is suitable for using in
@@ -19,7 +19,7 @@ import java.util.{ConcurrentModificationException, NoSuchElementException}
  */
 class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with BlockingQueue[A] {
   private val head = new AtomicReference[Node[A]](new Node())
-  private val count = new ReducibleSemaphore
+  private val count = new FastSemaphore
   private val tail = new AtomicReference[Node[A]](head.get)
   private val none: A = null.asInstanceOf[A]
 
@@ -44,7 +44,7 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
 
   def poll(): A = throw new UnsupportedOperationException("poll")
 
-  def poll(timeout: Long, unit: TimeUnit): A = if (count.tryAcquire(timeout, unit)) dequeue() else none
+  def poll(timeout: Long, unit: TimeUnit): A = throw new UnsupportedOperationException("poll")
 
   def remainingCapacity(): Int = Integer.MAX_VALUE - size()
 
@@ -110,9 +110,3 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
 }
 
 private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
-
-private class ReducibleSemaphore extends Semaphore(0) {
-  def reducePermit() {
-    reducePermits(1)
-  }
-}

@@ -127,29 +127,3 @@ private class Worker(closing: AtomicInteger, taskRequests: FastSemaphore, taskTa
 }
 
 private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
-
-private class FastSemaphore {
-  private val sync = new AbstractQueuedSynchronizer() {
-    private val state = new AtomicInteger()
-
-    final protected override def tryReleaseShared(releases: Int): Boolean = {
-      state.getAndAdd(1)
-      true
-    }
-
-    @tailrec
-    final protected override def tryAcquireShared(acquires: Int): Int = {
-      val available = state.get
-      val remaining = available - 1
-      if (remaining < 0 || state.compareAndSet(available, remaining)) remaining else tryAcquireShared(acquires)
-    }
-  }
-
-  def acquire() {
-    sync.acquireSharedInterruptibly(1)
-  }
-
-  def release() {
-    sync.releaseShared(1)
-  }
-}
