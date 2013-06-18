@@ -21,7 +21,6 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
   private val head = new AtomicReference[Node[A]](new Node())
   private val count = new FastSemaphore
   private val tail = new AtomicReference[Node[A]](head.get)
-  private val none: A = null.asInstanceOf[A]
 
   def offer(e: A): Boolean = {
     if (e == null) throw new NullPointerException
@@ -68,7 +67,7 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
 
   def peek(): A = {
     val n = peekNode()
-    if (n ne null) n.a else none
+    if (n ne null) n.a else null.asInstanceOf[A]
   }
 
   def iterator(): util.Iterator[A] = new util.Iterator[A] {
@@ -103,7 +102,7 @@ class ConcurrentLinkedBlockingQueue[A] extends util.AbstractQueue[A] with Blocki
     val n = tn.get
     if ((n ne null) && tail.compareAndSet(tn, n)) {
       val a = n.a
-      n.a = none
+      n.a = null.asInstanceOf[A]
       a
     } else dequeue()
   }
