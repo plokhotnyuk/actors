@@ -51,16 +51,18 @@ class FixedThreadPoolExecutorSpec extends Specification {
         // do nothing
       }
     }
+    val latch = new CountDownLatch(1)
     val task2 = new Runnable() {
       def run() {
         executor.execute(task1)
         executor.execute(this)
-        Thread.sleep(10000) // should be interrupted
+        latch.countDown()
+        Thread.sleep(Timeout) // should be interrupted
       }
     }
     try {
       executor.execute(task2)
-      Thread.sleep(100)
+      assertCountDown(latch, "Two new tasks should be submitted during completing a task")
     } finally {
       val remainingTasks = executor.shutdownNow()
       executor.isShutdown must_== true
@@ -107,12 +109,14 @@ class FixedThreadPoolExecutorSpec extends Specification {
 
   "terminates safely when shutdown called in executed tasks" in {
     val executor = new FixedThreadPoolExecutor
+    val latch = new CountDownLatch(1)
     executor.execute(new Runnable() {
       def run() {
         executor.shutdown()
+        latch.countDown()
       }
     })
-    Thread.sleep(100)
+    assertCountDown(latch, "Shutdown should be called")
     executor.isTerminated must_== true
   }
 

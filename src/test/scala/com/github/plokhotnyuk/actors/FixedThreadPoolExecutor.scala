@@ -50,7 +50,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   def shutdownNow(): java.util.List[Runnable] = {
-    closing.set(1)
+    closing.lazySet(1)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     drainTo(new java.util.LinkedList[Runnable](), taskTail.get.getAndSet(null))
   }
@@ -67,7 +67,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   def execute(task: Runnable) {
     if (isShutdown) throw new IllegalStateException("Cannot execute in terminating/shutdown state")
     enqueue(task)
-    taskRequests.release()
+    taskRequests.releaseShared(1)
   }
 
   private def enqueue(task: Runnable) {
@@ -98,7 +98,7 @@ private class Worker(closing: AtomicInteger, taskRequests: CountingSemaphore, ta
   private def doWork() {
     while (closing.get == 0) {
       try {
-        taskRequests.acquire()
+        taskRequests.acquireSharedInterruptibly(1)
         dequeueAndRun()
       } catch {
         case ex: InterruptedException => return
@@ -126,14 +126,6 @@ private class Worker(closing: AtomicInteger, taskRequests: CountingSemaphore, ta
 private class CountingSemaphore extends AbstractQueuedSynchronizer() {
   private val count = new AtomicInteger()
 
-  def acquire() {
-    acquireSharedInterruptibly(1)
-  }
-
-  def release() {
-    releaseShared(1)
-  }
-
   override protected final def tryReleaseShared(releases: Int): Boolean = {
     count.getAndAdd(releases)
     true
@@ -143,7 +135,8 @@ private class CountingSemaphore extends AbstractQueuedSynchronizer() {
   override protected final def tryAcquireShared(acquires: Int): Int = {
     val available = count.get
     val remaining = available - acquires
-    if (remaining < 0 || count.compareAndSet(available, remaining)) remaining else tryAcquireShared(acquires)
+    if (remaining < 0 || count.compareAndSet(available, remaining)) remaining
+    else tryAcquireShared(acquires)
   }
 }
 
