@@ -84,9 +84,9 @@ object BenchmarkSpec {
     executorServiceType match {
       case "scala-forkjoin-pool" => new ScalaForkJoinPool(poolSize, createScalaForkJoinWorkerThreadFactory(), null, true)
       case "java-forkjoin-pool" => new ForkJoinPool(poolSize, createJavaForkJoinWorkerThreadFactory(), null, true)
-      case "fast-thread-pool" => new FastThreadPoolExecutor(poolSize, createThreadFactory())
+      case "fixed-thread-pool" => new FixedThreadPoolExecutor(poolSize, createThreadFactory())
       case "thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 60, TimeUnit.SECONDS,
-        new ConcurrentLinkedBlockingQueue[Runnable](), createThreadFactory())
+        new LinkedBlockingQueue[Runnable](), createThreadFactory())
       case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
     }
   }

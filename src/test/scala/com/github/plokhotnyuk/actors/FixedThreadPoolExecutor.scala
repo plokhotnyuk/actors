@@ -12,7 +12,7 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
  * Implementation of task queue based on structure of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  *
- * Idea of using of semaphores for control of queue access borrowed from implementation of ThreadManager of JActor2:
+ * Idea of using of semaphores to control of queue access borrowed from implementation of ThreadManager of JActor2:
  * https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java
  *
  * @param threadCount a number of worker threads in pool
@@ -20,20 +20,16 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
  * @param handler the handler for internal worker threads that will be called
  *                in case of unrecoverable errors encountered while executing tasks.
  */
-class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
-                             threadFactory: ThreadFactory = new ThreadFactory() {
-                               def newThread(r: Runnable): Thread = new Thread(r) {
-                                 setDaemon(true) // is it good reason: "to avoid stalls on app end in case of missed shutdown call"?
-                               }
-                             },
-                             handler: Thread.UncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
-                               def uncaughtException(t: Thread, e: Throwable) {
-                                 e.printStackTrace() // is it safe default implementation?
-                               }
-                             }) extends AbstractExecutorService {
+class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
+                              threadFactory: ThreadFactory = new ThreadFactory() {
+                                def newThread(r: Runnable): Thread = new Thread(r)
+                              },
+                              handler: Thread.UncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
+                                def uncaughtException(t: Thread, e: Throwable): Unit = e.printStackTrace()
+                              }) extends AbstractExecutorService {
   private val closing = new AtomicInteger(0)
   private val taskHead = new AtomicReference[TaskNode](new TaskNode())
-  private val taskRequests = new FastSemaphore()
+  private val taskRequests = new CountingSemaphore()
   private val taskTail = new AtomicReference[TaskNode](taskHead.get)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
@@ -45,6 +41,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
     val t = terminations
     (1 to threadCount).map(_ => tf.newThread(new Worker(c, tr, tt, h, t)))
   }
+
   threads.foreach(_.start())
 
   def shutdown() {
@@ -88,7 +85,7 @@ class FastThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProc
     }
 }
 
-private class Worker(closing: AtomicInteger, taskRequests: FastSemaphore, taskTail: AtomicReference[TaskNode],
+private class Worker(closing: AtomicInteger, taskRequests: CountingSemaphore, taskTail: AtomicReference[TaskNode],
                      handler: Thread.UncaughtExceptionHandler, terminations: CountDownLatch) extends Runnable {
   def run() {
     try {
@@ -123,6 +120,30 @@ private class Worker(closing: AtomicInteger, taskRequests: FastSemaphore, taskTa
 
   private def onError(ex: Throwable) {
     handler.uncaughtException(Thread.currentThread(), ex)
+  }
+}
+
+private class CountingSemaphore extends AbstractQueuedSynchronizer() {
+  private val count = new AtomicInteger()
+
+  def acquire() {
+    acquireSharedInterruptibly(1)
+  }
+
+  def release() {
+    releaseShared(1)
+  }
+
+  override protected final def tryReleaseShared(releases: Int): Boolean = {
+    count.getAndAdd(releases)
+    true
+  }
+
+  @tailrec
+  override protected final def tryAcquireShared(acquires: Int): Int = {
+    val available = count.get
+    val remaining = available - acquires
+    if (remaining < 0 || count.compareAndSet(available, remaining)) remaining else tryAcquireShared(acquires)
   }
 }
 
