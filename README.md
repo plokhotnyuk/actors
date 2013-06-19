@@ -47,14 +47,7 @@ Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS s
 Results of running mvnAll.bat or mvnAll.sh scripts on different enviromnents:
 
 #### out0.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.8.0-ea-b93 64-bit
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.8.0-ea-b94 64-bit
 
-#### out1.txt and out1_poolSize100.txt <-- last with pool size set to 100
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_40-ea-b29 64-bit
-
-#### out2.txt
-Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1333, Ubuntu 12.04, JDK 1.7.0_40-ea-b28 64-bit
-
-#### out3_affinityOn.txt <-- 50M messages per second of throughput for Akka actors (with thread affinity on)
-Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz (max 3.90GHz) overclocked to 4.30GHz, RAM 32Gb DDR3-1666, Linux Mint 14, JDK 1.7.0_21-b11 64-bit
-
+#### out1.txt and out1_poolSize100.txt <-- the same environment, but last one with pool size property set to 100
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_25-ea-b16 64-bit
