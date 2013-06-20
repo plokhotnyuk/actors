@@ -27,19 +27,16 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               handler: Thread.UncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
                                 def uncaughtException(t: Thread, e: Throwable): Unit = e.printStackTrace()
                               }) extends AbstractExecutorService {
-  private val closing = new AtomicInteger(0)
-  private val taskHead = new AtomicReference[TaskNode](new TaskNode())
-  private val taskRequests = new CountingSemaphore()
-  private val taskTail = new AtomicReference[TaskNode](taskHead.get)
+  private val tail = new AtomicReference[TaskNode](new TaskNode())
   private val terminations = new CountDownLatch(threadCount)
+  private val requests = new CountingSemaphore()
+  private val closing = new AtomicInteger(0)
+  private val head = new AtomicReference[TaskNode](tail.get)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
-    val c = closing // to avoid long field names
-    val tr = taskRequests
-    val tt = taskTail
-    val h = handler
-    val t = terminations
-    (1 to threadCount).map(_ => tf.newThread(new Worker(c, tr, tt, h, t)))
+    (1 to threadCount).map(_ => tf.newThread(new Runnable() {
+      def run(): Unit = doWork()
+    }))
   }
 
   threads.foreach(_.start())
@@ -52,7 +49,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   def shutdownNow(): java.util.List[Runnable] = {
     closing.lazySet(1)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    drainTo(new java.util.LinkedList[Runnable](), taskTail.get.getAndSet(null))
+    drainTo(new java.util.LinkedList[Runnable](), tail.get.getAndSet(null))
   }
 
   def isShutdown: Boolean = closing.get != 0
@@ -67,13 +64,13 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   def execute(task: Runnable) {
     if (isShutdown) throw new IllegalStateException("Cannot execute in terminating/shutdown state")
     enqueue(task)
-    taskRequests.releaseShared(1)
+    requests.releaseShared(1)
   }
 
   private def enqueue(task: Runnable) {
     if (task eq null) throw new NullPointerException
     val n = new TaskNode(task)
-    taskHead.getAndSet(n).lazySet(n)
+    head.getAndSet(n).lazySet(n)
   }
 
   @tailrec
@@ -83,35 +80,28 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
       ts.add(n.task)
       drainTo(ts, n.get)
     }
-}
 
-private class Worker(closing: AtomicInteger, taskRequests: CountingSemaphore, taskTail: AtomicReference[TaskNode],
-                     handler: Thread.UncaughtExceptionHandler, terminations: CountDownLatch) extends Runnable {
-  def run() {
+  private def doWork() {
     try {
-      doWork()
+      while (closing.get == 0) {
+        try {
+          requests.acquireSharedInterruptibly(1)
+          dequeueAndRun()
+        } catch {
+          case ex: InterruptedException => return
+          case ex: Throwable => onError(ex)
+        }
+      }
     } finally {
       terminations.countDown()
     }
   }
 
-  private def doWork() {
-    while (closing.get == 0) {
-      try {
-        taskRequests.acquireSharedInterruptibly(1)
-        dequeueAndRun()
-      } catch {
-        case ex: InterruptedException => return
-        case ex: Throwable => onError(ex)
-      }
-    }
-  }
-
   @tailrec
   private def dequeueAndRun() {
-    val tn = taskTail.get
+    val tn = tail.get
     val n = tn.get
-    if ((n ne null) && taskTail.compareAndSet(tn, n)) {
+    if ((n ne null) && tail.compareAndSet(tn, n)) {
       val t = n.task
       n.task = null
       t.run()
@@ -126,13 +116,17 @@ private class Worker(closing: AtomicInteger, taskRequests: CountingSemaphore, ta
 private class CountingSemaphore extends AbstractQueuedSynchronizer() {
   private val count = new AtomicInteger()
 
-  override protected final def tryReleaseShared(releases: Int): Boolean = count.addAndGet(releases) > 0
+  override protected final def tryReleaseShared(releases: Int): Boolean = {
+    count.getAndAdd(releases)
+    true
+  }
 
   @tailrec
   override protected final def tryAcquireShared(acquires: Int): Int = {
     val available = count.get
     val remaining = available - acquires
-    if (remaining < 0 || count.compareAndSet(available, remaining)) remaining else tryAcquireShared(acquires)
+    if (remaining < 0 || count.compareAndSet(available, remaining)) remaining
+    else tryAcquireShared(acquires)
   }
 }
 
