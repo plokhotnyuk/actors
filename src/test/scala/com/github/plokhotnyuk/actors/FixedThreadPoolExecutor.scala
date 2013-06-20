@@ -126,17 +126,13 @@ private class Worker(closing: AtomicInteger, taskRequests: CountingSemaphore, ta
 private class CountingSemaphore extends AbstractQueuedSynchronizer() {
   private val count = new AtomicInteger()
 
-  override protected final def tryReleaseShared(releases: Int): Boolean = {
-    count.getAndAdd(releases)
-    true
-  }
+  override protected final def tryReleaseShared(releases: Int): Boolean = count.addAndGet(releases) > 0
 
   @tailrec
   override protected final def tryAcquireShared(acquires: Int): Int = {
     val available = count.get
     val remaining = available - acquires
-    if (remaining < 0 || count.compareAndSet(available, remaining)) remaining
-    else tryAcquireShared(acquires)
+    if (remaining < 0 || count.compareAndSet(available, remaining)) remaining else tryAcquireShared(acquires)
   }
 }
 
