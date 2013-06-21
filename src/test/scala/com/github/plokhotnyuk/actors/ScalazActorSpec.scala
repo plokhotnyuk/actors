@@ -60,17 +60,17 @@ class ScalazActorSpec extends BenchmarkSpec {
       var i = n / 2
 
       (m: Message) =>
+        a1 ! m
         i -= 1
-        if (i >= 0) a1 ! m
-        else l.countDown()
+        if (i == 0) l.countDown()
     }
     a1 = actor[Message] {
       var i = n / 2
 
       (m: Message) =>
+        a2 ! m
         i -= 1
-        if (i >= 0) a2 ! m
-        else l.countDown()
+        if (i == 0) l.countDown()
     }
     timed(n) {
       a2 ! Message()
