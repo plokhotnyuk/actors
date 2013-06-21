@@ -2,12 +2,24 @@ package com.github.plokhotnyuk.actors
 
 import scalaz.concurrent._
 import scalaz.concurrent.Actor._
-import scalaz.concurrent.Strategy.Executor
 import java.util.concurrent.CountDownLatch
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ScalazActorSpec extends BenchmarkSpec {
-  implicit val executorService = createExecutorService()
+
+  val executorService = createExecutorService()
+  implicit val strategy = new Strategy {
+    private val service = executorService
+
+    def apply[A](a: => A) = {
+      if (!service.isShutdown) {
+        service.execute(new Runnable() {
+          def run = a
+        })
+      }
+      () => null.asInstanceOf[A]
+    }
+  }
 
   "Single-producer sending" in {
     val n = 100000000
