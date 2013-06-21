@@ -6,17 +6,14 @@ import java.util.concurrent.CountDownLatch
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ScalazActorSpec extends BenchmarkSpec {
-
   val executorService = createExecutorService()
   implicit val strategy = new Strategy {
-    private val service = executorService
+    private val e = executorService
 
     def apply[A](a: => A) = {
-      if (!service.isShutdown) {
-        service.execute(new Runnable() {
-          def run = a
-        })
-      }
+      e.execute(new Runnable() {
+        def run(): Unit = a
+      })
       () => null.asInstanceOf[A]
     }
   }
@@ -63,17 +60,17 @@ class ScalazActorSpec extends BenchmarkSpec {
       var i = n / 2
 
       (m: Message) =>
-        a1 ! m
         i -= 1
-        if (i == 0) l.countDown()
+        if (i >= 0) a1 ! m
+        else l.countDown()
     }
     a1 = actor[Message] {
       var i = n / 2
 
       (m: Message) =>
-        a2 ! m
         i -= 1
-        if (i == 0) l.countDown()
+        if (i >= 0) a2 ! m
+        else l.countDown()
     }
     timed(n) {
       a2 ! Message()

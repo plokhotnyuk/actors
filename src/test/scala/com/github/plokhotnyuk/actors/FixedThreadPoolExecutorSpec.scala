@@ -21,6 +21,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
       assertCountDown(latch, "Should execute a command")
     } finally {
       executor.shutdown()
+      executor.shutdown() // duplicated shutdown is allowed
     }
   }
 
@@ -88,16 +89,6 @@ class FixedThreadPoolExecutorSpec extends Specification {
     }
   }
 
-  "tasks are not accepted after shoutdownNow call" in {
-    val executor = new FixedThreadPoolExecutor
-    executor.shutdown()
-    executor.execute(new Runnable() {
-      def run() {
-        // do nothing
-      }
-    }) must throwA[IllegalStateException]
-  }
-
   "null tasks are not accepted" in {
     val executor = new FixedThreadPoolExecutor
     try {
@@ -107,16 +98,17 @@ class FixedThreadPoolExecutorSpec extends Specification {
     }
   }
 
-  "terminates safely when shutdown called in executed tasks" in {
+  "terminates safely when shutdownNow called in executed tasks" in {
     val executor = new FixedThreadPoolExecutor
     val latch = new CountDownLatch(1)
     executor.execute(new Runnable() {
       def run() {
-        executor.shutdown()
+        executor.shutdownNow()
         latch.countDown()
       }
     })
     assertCountDown(latch, "Shutdown should be called")
+    executor.awaitTermination(Timeout, TimeUnit.MILLISECONDS)
     executor.isTerminated must_== true
   }
 

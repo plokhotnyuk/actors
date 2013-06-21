@@ -1,10 +1,9 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
-import java.lang.InterruptedException
-import scala.annotation.tailrec
+import java.util.concurrent.atomic._
 import java.util.concurrent.locks.AbstractQueuedSynchronizer
+import scala.annotation.tailrec
 
 /**
  * A high performance implementation of thread pool with fixed number of threads.
@@ -22,7 +21,9 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
-                                def newThread(r: Runnable): Thread = new Thread(r)
+                                def newThread(r: Runnable): Thread = new Thread(r) {
+                                  setDaemon(true)
+                                }
                               },
                               handler: Thread.UncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
                                 def uncaughtException(t: Thread, e: Throwable): Unit = e.printStackTrace()
@@ -30,7 +31,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   private val tail = new AtomicReference[TaskNode](new TaskNode())
   private val terminations = new CountDownLatch(threadCount)
   private val requests = new CountingSemaphore()
-  private val closing = new AtomicInteger(0)
+  private val running = new AtomicBoolean(true)
   private val head = new AtomicReference[TaskNode](tail.get)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
@@ -47,12 +48,12 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   def shutdownNow(): java.util.List[Runnable] = {
-    closing.lazySet(1)
+    running.lazySet(false)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    drainTo(new java.util.LinkedList[Runnable](), tail.get.getAndSet(null))
+    drainTo(new java.util.LinkedList[Runnable](), tail.getAndSet(head.get)) // drain to current head
   }
 
-  def isShutdown: Boolean = closing.get != 0
+  def isShutdown: Boolean = !running.get
 
   def isTerminated: Boolean = terminations.getCount == 0
 
@@ -62,7 +63,6 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   def execute(task: Runnable) {
-    if (isShutdown) throw new IllegalStateException("Cannot execute in terminating/shutdown state")
     enqueue(task)
     requests.releaseShared(1)
   }
@@ -74,22 +74,22 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   @tailrec
-  private def drainTo(ts: java.util.List[Runnable], n: TaskNode): java.util.List[Runnable] =
-    if (n eq null) ts
+  private def drainTo(ts: java.util.List[Runnable], tn: TaskNode): java.util.List[Runnable] =
+    if (tn eq tail.get) ts
     else {
+      val n = tn.get
       ts.add(n.task)
-      drainTo(ts, n.get)
+      drainTo(ts, n)
     }
 
   private def doWork() {
     try {
-      while (closing.get == 0) {
+      while (running.get) {
         try {
           requests.acquireSharedInterruptibly(1)
           dequeueAndRun()
         } catch {
-          case ex: InterruptedException => return
-          case ex: Throwable => onError(ex)
+          case ex: Throwable => if (running.get) handler.uncaughtException(Thread.currentThread(), ex)
         }
       }
     } finally {
@@ -106,10 +106,6 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
       n.task = null
       t.run()
     } else dequeueAndRun()
-  }
-
-  private def onError(ex: Throwable) {
-    handler.uncaughtException(Thread.currentThread(), ex)
   }
 }
 

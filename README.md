@@ -51,6 +51,3 @@ Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Wind
 
 #### out1_poolSize1.txt & out1_poolSize10.txt & out1_poolSize100.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_40-ea-b29 64-bit
-
-#### out2_poolSize1.txt & out2_poolSize10.txt & out2_poolSize100.txt
-Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1333, Ubuntu 12.04, JDK 1.7.0_40-ea-b28 64-bit
