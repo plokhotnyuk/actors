@@ -21,7 +21,6 @@ class FixedThreadPoolExecutorSpec extends Specification {
       assertCountDown(latch, "Should execute a command")
     } finally {
       executor.shutdown()
-      executor.shutdown() // duplicated shutdown is allowed
     }
   }
 
@@ -111,6 +110,37 @@ class FixedThreadPoolExecutorSpec extends Specification {
     executor.awaitTermination(Timeout, TimeUnit.MILLISECONDS)
     executor.isTerminated must_== true
   }
+
+  "duplicated shutdownNow/shutdown is allowed" in {
+    val executor = new FixedThreadPoolExecutor
+    executor.shutdownNow()
+    executor.shutdown()
+    executor.shutdownNow()
+    executor.shutdown()
+  }
+
+  "all tasks which are submitted after shutdownNow can be drained up by subsequent shutdownNow" in {
+    val executor = new FixedThreadPoolExecutor
+    executor.shutdownNow()
+    val task1 = new Runnable() {
+      def run() {
+        // do nothing
+      }
+    }
+    val task2 = new Runnable() {
+      def run() {
+        // do nothing
+      }
+    }
+    executor.execute(task1)
+    executor.execute(task2)
+    val remainingTasks = executor.shutdownNow()
+    executor.isShutdown must_== true
+    remainingTasks.size() must_== 2
+    remainingTasks.get(0) must_== task1
+    remainingTasks.get(1) must_== task2
+  }
+
 
   def assertCountDown(latch: CountDownLatch, hint: String): Result = {
     if (latch.await(Timeout, TimeUnit.MILLISECONDS)) Success()
