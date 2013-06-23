@@ -6,24 +6,25 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
 import scala.annotation.tailrec
 
 /**
- * A high performance implementation of an {@link ExecutorService} with fixed number of pooled threads.
- * It efficiently works with thousands of threads without overuse of CPU and
- * degradation of latency between task submit and starting of its execution.
+ * A high performance implementation of an {@link java.util.concurrent.ExecutorService ExecutorService}
+ * with fixed number of pooled threads. It efficiently works with thousands of threads without overuse of CPU
+ * and degradation of latency between task submit and starting of its execution.
  *
  * <p>For applications that require separate or custom pools, a {@code FixedThreadPoolExecutor}
  * may be constructed with a given pool size; by default, equal to the number of available processors.
  *
- * <p>All threads are created in constructor call using a {@link ThreadFactory}.
+ * <p>All threads are created in constructor call using a {@link java.util.concurrent.ThreadFactory ThreadFactory}.
  * If not otherwise specified, a default thread factory is used, that creates threads with daemon status.
  *
  * <p>When running of tasks an uncaught exception can occurs. All unhandled exception are redirected to
  * provided handler that by default just print stack trace without stopping of worker thread execution.
  *
- * <p>An implementation of task queue based on structure of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
- * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
+ * <p>An implementation of task queue based on structure of
+ * <a href="http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue">non-intrusive MPSC node-based queue</a>,
+ * described by Dmitriy Vyukov.
  *
- * <p>An idea of using of semaphore to control of queue access borrowed from implementation of ThreadManager of JActor2:
- * https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java
+ * <p>An idea of using of semaphore to control of queue access borrowed from
+ * <a href="https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java">implementation of ThreadManager of JActor2</a>.
  *
  * @param threadCount a number of worker threads in pool
  * @param threadFactory a factory to be used to build worker threads
@@ -56,10 +57,6 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   /**
    * Attempts to stop all actively executing tasks and discards of all previously submitted tasks,
    * then blocks until all running tasks will be stopped.
-   *
-   * <p>This method does not wait for previously submitted tasks to
-   * complete execution.  Use {@link #awaitTermination awaitTermination}
-   * to do that.
    */
   def shutdown() {
     shutdownNow()
@@ -70,7 +67,8 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
    * Attempts to stop all actively executing tasks by interrupting of worker threads,
    * and returns a list of the tasks that were submitted and awaiting for execution.
    *
-   * <p>This method does not wait for actively executing tasks to terminate. Use {@link #awaitTermination} to do that.
+   * <p>This method does not wait for actively executing tasks to terminate. Use
+   * {@link com.github.plokhotnyuk.actors.FixedThreadPoolExecutor#awaitTermination awaitTermination} to do that.
    *
    * <p>Any task that fails to respond to interrupt (tight loop, etc.) may never terminate.
    *
@@ -83,7 +81,9 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   /**
-   * Returns <tt>true</tt> if shutdown of pool was started by {@link #shutdownNow} or {@link #shutdown} call.
+   * Returns <tt>true</tt> if shutdown of pool was started by
+   * {@link com.github.plokhotnyuk.actors.FixedThreadPoolExecutor#shutdownNow shutdownNow} or
+   * {@link com.github.plokhotnyuk.actors.FixedThreadPoolExecutor#shutdown shutdown} call.
    *
    * @return <tt>true</tt> if shutdown of pool was started.
    */
@@ -104,8 +104,10 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   /**
    * Executes the given task at some time in the future.
    *
-   * <p>Never throws {@link RejectedExecutionException} and all tasks which are submitted after {@link #shutdownNow} call
-   * are silently collected in the internal task queue that can be drained up by subsequent {@link #shutdownNow} call.
+   * <p>Never throws {@link java.util.concurrent.RejectedExecutionException RejectedExecutionException} and
+   * all tasks which are submitted after {@link com.github.plokhotnyuk.actors.FixedThreadPoolExecutor#shutdownNow shutdownNow}
+   * call are silently collected in the internal task queue that can be drained up by subsequent
+   * {@link com.github.plokhotnyuk.actors.FixedThreadPoolExecutor#shutdownNow shutdownNow} call.
    *
    * @param task the runnable task
    * @throws NullPointerException if the task is null
