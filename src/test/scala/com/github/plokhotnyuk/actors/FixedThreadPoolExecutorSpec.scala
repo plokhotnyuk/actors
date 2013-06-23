@@ -4,8 +4,8 @@ import org.specs2.mutable.Specification
 import org.specs2.execute.{Failure, Success, Result}
 import java.util
 import java.util.concurrent._
+import java.util.concurrent.atomic.AtomicBoolean
 import java.lang.Thread.UncaughtExceptionHandler
-import scala.annotation.tailrec
 import scala.collection.JavaConversions._
 
 class FixedThreadPoolExecutorSpec extends Specification {
@@ -74,18 +74,24 @@ class FixedThreadPoolExecutorSpec extends Specification {
 
   "awaitTermination blocks until all tasks terminates after a shutdown request" in {
     val executor = new FixedThreadPoolExecutor
+    val running = new AtomicBoolean(true)
+    val semaphore = new Semaphore(0)
     try {
       executor.execute(new Runnable() {
-        @tailrec
         final def run() {
-          run() // hard to interrupt loop
+          semaphore.release()
+          while (running.get) {
+            // hard to interrupt loop
+          }
         }
       })
-      Thread.sleep(100)
+      semaphore.acquire()
     } finally {
       val remainingTasks = executor.shutdownNow()
       remainingTasks must beEmpty
-      executor.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must_== false // cannot be successfully shutdown
+      executor.awaitTermination(1, TimeUnit.MILLISECONDS) must_== false
+      running.lazySet(false)
+      executor.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must_== true
     }
   }
 
