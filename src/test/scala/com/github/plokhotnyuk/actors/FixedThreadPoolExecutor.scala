@@ -109,13 +109,10 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   /**
    * Executes the given task at some time in the future.
    *
-   * <p>Never throws {@link java.util.concurrent.RejectedExecutionException RejectedExecutionException} and
-   * all tasks which are submitted after {@link scalaz.concurrent.FixedThreadPoolExecutor#shutdownNow shutdownNow}
-   * call are silently collected in the internal task queue that can be drained up by subsequent
-   * {@link scalaz.concurrent.FixedThreadPoolExecutor#shutdownNow shutdownNow} call.
-   *
    * @param task the runnable task
    * @throws NullPointerException if the task is null
+   * @throws RejectedExecutionException if the task was submitted after shutdown of pool that was created with
+   *                                    the rejectAfterShutdown constructor param set to <tt>true</tt>
    */
   def execute(task: Runnable) {
     if (running.get) {
