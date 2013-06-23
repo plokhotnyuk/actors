@@ -11,7 +11,7 @@ import scala.collection.JavaConversions._
 class FixedThreadPoolExecutorSpec extends Specification {
   val Timeout = 1000 // in millis
 
-  "code executes async" in {
+  "task code executes async" in {
     val latch = new CountDownLatch(1)
     val executor = new FixedThreadPoolExecutor
     try {
@@ -26,7 +26,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
     }
   }
 
-  "code errors are not catched, worker thread terminates and propagates to handler" in {
+  "task code errors are caught and can be handled without interruption of worker thread" in {
     val latch = new CountDownLatch(1)
     val executor = new FixedThreadPoolExecutor(threadCount = 1, handler = new UncaughtExceptionHandler {
       def uncaughtException(t: Thread, e: Throwable) {
