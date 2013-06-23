@@ -28,11 +28,11 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               handler: Thread.UncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
                                 def uncaughtException(t: Thread, e: Throwable): Unit = e.printStackTrace()
                               }) extends AbstractExecutorService {
-  private val tail = new AtomicReference[TaskNode](new TaskNode())
-  private val terminations = new CountDownLatch(threadCount)
+  private val head = new AtomicReference[TaskNode](new TaskNode())
   private val requests = new CountingSemaphore()
   private val running = new AtomicBoolean(true)
-  private val head = new AtomicReference[TaskNode](tail.get)
+  private val tail = new AtomicReference[TaskNode](head.get)
+  private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
     (1 to threadCount).map(_ => tf.newThread(new Runnable() {
@@ -50,7 +50,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   def shutdownNow(): java.util.List[Runnable] = {
     running.lazySet(false)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    drainTo(new java.util.LinkedList[Runnable](), tail.getAndSet(head.get)) // drain to current head
+    drainTo(new java.util.LinkedList[Runnable](), tail.getAndSet(head.get)) // drain up to current head
   }
 
   def isShutdown: Boolean = !running.get
