@@ -31,6 +31,7 @@ import scala.annotation.tailrec
  * @param threadFactory a factory to be used to build worker threads
  * @param handler the handler for internal worker threads that will be called
  *                in case of unrecoverable errors encountered while executing tasks.
+ * @param rejectAfterShutdown switch to reject task submission after shutdown or just discard them
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -40,7 +41,8 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               },
                               handler: Thread.UncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
                                 def uncaughtException(t: Thread, e: Throwable): Unit = e.printStackTrace()
-                              }) extends AbstractExecutorService {
+                              },
+                              rejectAfterShutdown: Boolean = false) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val requests = new CountingSemaphore()
   private val running = new AtomicBoolean(true)
@@ -56,11 +58,13 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   threads.foreach(_.start())
 
   /**
-   * Attempts to stop all actively executing tasks and discards of all previously submitted tasks,
+   * Initiates an orderly shutdown in which previously submitted tasks are executed, but no new tasks will be accepted,
    * then blocks until all running tasks will be stopped.
+   *
+   * <p>Any task that doesn't completes (blocked or in tight infinite loop) lead to dead lock.
    */
   def shutdown() {
-    shutdownNow()
+    running.lazySet(false)
     awaitTermination(0, TimeUnit.MILLISECONDS)
   }
 
@@ -69,9 +73,9 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
    * and returns a list of the tasks that were submitted and awaiting for execution.
    *
    * <p>This method does not wait for actively executing tasks to terminate. Use
-   * {@link com.github.plokhotnyuk.actors.FixedThreadPoolExecutor#awaitTermination awaitTermination} to do that.
+   * {@link scalaz.concurrent.FixedThreadPoolExecutor#awaitTermination awaitTermination} to do that.
    *
-   * <p>Any task that fails to respond to interrupt (tight loop, etc.) may never terminate.
+   * <p>Any task that fails to respond to interrupt (in tight infinite loop, etc.) may never terminate.
    *
    * @return list of tasks that never commenced execution
    */
@@ -83,8 +87,8 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
 
   /**
    * Returns <tt>true</tt> if shutdown of pool was started by
-   * {@link com.github.plokhotnyuk.actors.FixedThreadPoolExecutor#shutdownNow shutdownNow} or
-   * {@link com.github.plokhotnyuk.actors.FixedThreadPoolExecutor#shutdown shutdown} call.
+   * {@link scalaz.concurrent.FixedThreadPoolExecutor#shutdownNow shutdownNow} or
+   * {@link scalaz.concurrent.FixedThreadPoolExecutor#shutdown shutdown} call.
    *
    * @return <tt>true</tt> if shutdown of pool was started.
    */
@@ -106,16 +110,18 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
    * Executes the given task at some time in the future.
    *
    * <p>Never throws {@link java.util.concurrent.RejectedExecutionException RejectedExecutionException} and
-   * all tasks which are submitted after {@link com.github.plokhotnyuk.actors.FixedThreadPoolExecutor#shutdownNow shutdownNow}
+   * all tasks which are submitted after {@link scalaz.concurrent.FixedThreadPoolExecutor#shutdownNow shutdownNow}
    * call are silently collected in the internal task queue that can be drained up by subsequent
-   * {@link com.github.plokhotnyuk.actors.FixedThreadPoolExecutor#shutdownNow shutdownNow} call.
+   * {@link scalaz.concurrent.FixedThreadPoolExecutor#shutdownNow shutdownNow} call.
    *
    * @param task the runnable task
    * @throws NullPointerException if the task is null
    */
   def execute(task: Runnable) {
-    enqueue(task)
-    requests.releaseShared(1)
+    if (running.get) {
+      enqueue(task)
+      requests.releaseShared(1)
+    } else if (rejectAfterShutdown) throw new RejectedExecutionException("Task " + task + " rejected from " + this)
   }
 
   private def enqueue(task: Runnable) {

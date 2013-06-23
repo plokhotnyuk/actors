@@ -126,27 +126,29 @@ class FixedThreadPoolExecutorSpec extends Specification {
     executor.shutdown()
   }
 
-  "all tasks which are submitted after shutdownNow can be drained up by subsequent shutdownNow" in {
+  "all tasks which are submitted after shutdownNow are discarded by default" in {
     val executor = new FixedThreadPoolExecutor
     executor.shutdownNow()
-    val task1 = new Runnable() {
+    executor.execute(new Runnable() {
       def run() {
-        // do nothing
+        throw new RuntimeException("Should not be executed")
       }
-    }
-    val task2 = new Runnable() {
-      def run() {
-        // do nothing
-      }
-    }
-    executor.execute(task1)
-    executor.execute(task2)
+    })
     val remainingTasks = executor.shutdownNow()
-    executor.isShutdown must_== true
-    remainingTasks must_== new util.LinkedList(Seq(task1, task2))
+    remainingTasks must beEmpty
   }
 
-  private def assertCountDown(latch: CountDownLatch, hint: String): Result = {
+  "all tasks which are submitted after shutdownNow are rejected if rejectAfterShutdown was set" in {
+    val executor = new FixedThreadPoolExecutor(rejectAfterShutdown = true)
+    executor.shutdownNow()
+    executor.execute(new Runnable() {
+      def run() {
+        throw new RuntimeException("Should not be executed")
+      }
+    }) must throwA[RejectedExecutionException]
+  }
+
+  def assertCountDown(latch: CountDownLatch, hint: String): Result = {
     if (latch.await(Timeout, TimeUnit.MILLISECONDS)) Success()
     else Failure("Failed to count down within " + Timeout + " millis: " + hint)
   }
