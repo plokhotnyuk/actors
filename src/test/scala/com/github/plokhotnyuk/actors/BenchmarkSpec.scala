@@ -86,7 +86,7 @@ object BenchmarkSpec {
       case "java-forkjoin-pool" => new ForkJoinPool(poolSize, createJavaForkJoinWorkerThreadFactory(), null, true)
       case "fixed-thread-pool" => new FixedThreadPoolExecutor(poolSize, createThreadFactory())
       case "thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 60, TimeUnit.SECONDS,
-        new LinkedBlockingQueue[Runnable](), createThreadFactory())
+        new LinkedBlockingQueue[Runnable](), createThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
       case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
     }
   }
