@@ -6,12 +6,24 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
 import scala.annotation.tailrec
 
 /**
- * A high performance implementation of thread pool with fixed number of threads.
+ * A high performance implementation of an {@link ExecutorService} with fixed number of pooled threads.
+ * It efficiently works with thousands of threads without overuse of CPU and
+ * degradation of latency between task submit and starting of its execution.
  *
- * Implementation of task queue based on structure of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
+ * <p>For applications that require separate or custom pools, a {@code FixedThreadPoolExecutor}
+ * may be constructed with a given pool size; by default, equal to the number of available processors.
+ *
+ * <p>All threads are created in constructor call using a {@link ThreadFactory}.
+ * If not otherwise specified, a default thread factory is used, that creates threads to all be
+ * in the same {@link ThreadGroup} and with the same {@code NORM_PRIORITY} priority and daemon status.
+ *
+ * <p>When running of tasks an uncaught exception can occurs. All unhandled exception are redirected to
+ * provided handler that by default just print stack trace without stopping of worker thread execution.
+ *
+ * <p>An implementation of task queue based on structure of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  *
- * An idea of using of semaphore to control of queue access borrowed from implementation of ThreadManager of JActor2:
+ * <p>An idea of using of semaphore to control of queue access borrowed from implementation of ThreadManager of JActor2:
  * https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java
  *
  * @param threadCount a number of worker threads in pool
@@ -62,6 +74,14 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     terminations.await(timeout, unit)
   }
 
+  /**
+   * Executes the given task at some time in the future.
+   * Never throws {@link RejectedExecutionException} and silently collect it in the internal task queue
+   * that can be drained up by subsequent {@link #shutdownNow} call.
+   *
+   * @param task the runnable task
+   * @throws NullPointerException if the task is null
+   */
   def execute(task: Runnable) {
     enqueue(task)
     requests.releaseShared(1)
