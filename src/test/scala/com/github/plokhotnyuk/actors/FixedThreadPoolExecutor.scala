@@ -24,7 +24,8 @@ import scala.annotation.tailrec
  * described by Dmitriy Vyukov.
  *
  * <p>An idea of using of semaphore to control of queue access borrowed from
- * <a href="https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java">implementation of ThreadManager of JActor2</a>.
+ * <a href="https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java">ThreadManager</a>,
+ * implemented by Bill La Forge.
  *
  * @param threadCount a number of worker threads in pool
  * @param threadFactory a factory to be used to build worker threads
