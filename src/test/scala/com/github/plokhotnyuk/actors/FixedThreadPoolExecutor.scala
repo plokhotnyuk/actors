@@ -76,8 +76,8 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
 
   /**
    * Executes the given task at some time in the future.
-   * Never throws {@link RejectedExecutionException} and silently collect it in the internal task queue
-   * that can be drained up by subsequent {@link #shutdownNow} call.
+   * Never throws {@link RejectedExecutionException} and all tasks which are submitted after {@link #shutdownNow} call
+   * are silently collected in the internal task queue that can be drained up by subsequent {@link #shutdownNow} call.
    *
    * @param task the runnable task
    * @throws NullPointerException if the task is null
