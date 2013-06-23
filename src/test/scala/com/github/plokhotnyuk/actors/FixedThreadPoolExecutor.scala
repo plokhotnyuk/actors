@@ -11,7 +11,7 @@ import scala.annotation.tailrec
  * Implementation of task queue based on structure of non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
  *
- * Idea of using of semaphores to control of queue access borrowed from implementation of ThreadManager of JActor2:
+ * An idea of using of semaphore to control of queue access borrowed from implementation of ThreadManager of JActor2:
  * https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java
  *
  * @param threadCount a number of worker threads in pool
