@@ -1,10 +1,12 @@
 package com.github.plokhotnyuk.actors
 
 import org.specs2.mutable.Specification
-import java.util.concurrent._
 import org.specs2.execute.{Failure, Success, Result}
+import java.util
+import java.util.concurrent._
 import java.lang.Thread.UncaughtExceptionHandler
 import scala.annotation.tailrec
+import scala.collection.JavaConversions._
 
 class FixedThreadPoolExecutorSpec extends Specification {
   val Timeout = 1000 // in millis
@@ -66,9 +68,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
     } finally {
       val remainingTasks = executor.shutdownNow()
       executor.isShutdown must_== true
-      remainingTasks.size() must_== 2
-      remainingTasks.get(0) must_== task1
-      remainingTasks.get(1) must_== task2
+      remainingTasks must_== new util.LinkedList(Seq(task1, task2))
     }
   }
 
@@ -83,7 +83,8 @@ class FixedThreadPoolExecutorSpec extends Specification {
       })
       Thread.sleep(100)
     } finally {
-      executor.shutdownNow()
+      val remainingTasks = executor.shutdownNow()
+      remainingTasks must beEmpty
       executor.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must_== false // cannot be successfully shutdown
     }
   }
@@ -97,7 +98,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
     }
   }
 
-  "terminates safely when shutdownNow called in executed tasks" in {
+  "terminates safely when shutdownNow called during task execution" in {
     val executor = new FixedThreadPoolExecutor
     val latch = new CountDownLatch(1)
     executor.execute(new Runnable() {
@@ -136,13 +137,10 @@ class FixedThreadPoolExecutorSpec extends Specification {
     executor.execute(task2)
     val remainingTasks = executor.shutdownNow()
     executor.isShutdown must_== true
-    remainingTasks.size() must_== 2
-    remainingTasks.get(0) must_== task1
-    remainingTasks.get(1) must_== task2
+    remainingTasks must_== new util.LinkedList(Seq(task1, task2))
   }
 
-
-  def assertCountDown(latch: CountDownLatch, hint: String): Result = {
+  private def assertCountDown(latch: CountDownLatch, hint: String): Result = {
     if (latch.await(Timeout, TimeUnit.MILLISECONDS)) Success()
     else Failure("Failed to count down within " + Timeout + " millis: " + hint)
   }
