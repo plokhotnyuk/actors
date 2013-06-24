@@ -11,6 +11,8 @@ class AkkaActorSpec extends BenchmarkSpec {
   val config = load(parseString(
     """
       akka {
+        log-dead-letters = 0
+        log-dead-letters-during-shutdown = off
         actor {
           unstarted-push-timeout = 100s
           benchmark-dispatcher {
