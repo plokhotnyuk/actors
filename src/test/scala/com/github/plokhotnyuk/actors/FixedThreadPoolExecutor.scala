@@ -61,7 +61,11 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     }))
   }
 
-  threads.foreach(_.start())
+  threads.foreach(t => t.getState match {
+    case Thread.State.NEW => t.start()
+    case Thread.State.TERMINATED => throw new IllegalThreadStateException("Thread" + t + " is terminated.")
+    case _ => // do nothing, but warning would be helpful
+  })
 
   def shutdown() {
     checkShutdownAccess()
