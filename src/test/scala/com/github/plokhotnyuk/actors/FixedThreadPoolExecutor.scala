@@ -19,9 +19,9 @@ import scala.annotation.tailrec
  * <p>When running of tasks an uncaught exception can occurs. All unhandled exception are redirected to
  * provided handler that (by default) just print stack trace without stopping of worker thread execution.
  *
- * <p>{@link java.util.concurrent.RejectedExecutionException RejectedExecutionException} can occurs
- * if number of submitted but not started to execute tasks exceed {@code Int.MAX_VALUE} or after shutdown when pool
- * was initialized with rejectAfterShutdown set to true (by default).
+ * <p>Number of submitted but not yet started tasks practically is unlimited.
+ * {@link java.util.concurrent.RejectedExecutionException RejectedExecutionException} can occurs
+ * only after shutdown when pool was initialized with default implementation of onReject.
  *
  * <p>An implementation of task queue based on structure of
  * <a href="http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue">non-intrusive MPSC node-based queue</a>,
@@ -37,16 +37,18 @@ import scala.annotation.tailrec
  * @param threadFactory a factory to be used to build worker threads
  * @param onError the handler for internal worker threads that will be called
  *                in case of unrecoverable errors encountered while executing tasks.
- * @param rejectAfterShutdown switch to reject task submission after shutdown or just discard them
+ * @param onReject the handler for rejection of task submission after shutdown
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
-                                def newThread(r: Runnable): Thread = new Thread(r) {
+                                def newThread(worker: Runnable): Thread = new Thread(worker) {
                                   setDaemon(true)
                                 }
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
-                              rejectAfterShutdown: Boolean = true) extends AbstractExecutorService {
+                              onReject: Runnable => Unit = {
+                                t => throw new RejectedExecutionException("Task " + t + " rejected.")
+                              }) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val requests = new CountingSemaphore()
   private val running = new AtomicBoolean(true)
@@ -85,7 +87,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     if (running.get) {
       enqueue(task)
       requests.releaseShared(1)
-    } else if (rejectAfterShutdown) throw new RejectedExecutionException("Task " + task + " rejected from " + this)
+    } else handleReject(task)
   }
 
   private def enqueue(task: Runnable) {
@@ -133,6 +135,10 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     if (running.get || !ex.isInstanceOf[InterruptedException]) onError(ex)
   }
 
+  private def handleReject(task: Runnable) {
+    onReject(task)
+  }
+
   private def checkShutdownAccess() {
     val security = System.getSecurityManager
     if (security != null) {
@@ -147,22 +153,18 @@ private object FixedThreadPoolExecutor {
 }
 
 private class CountingSemaphore extends AbstractQueuedSynchronizer() {
-  private val count = new AtomicInteger()
+  private val count = new AtomicLong()
 
-  @tailrec
   override protected final def tryReleaseShared(releases: Int): Boolean = {
-    val current = count.get
-    val next = current + releases
-    if (next < 0) throw new RejectedExecutionException("Maximum of queue capacity is reached")
-    if (count.compareAndSet(current, next)) true
-    else tryReleaseShared(releases)
+    count.getAndAdd(releases)
+    true
   }
 
   @tailrec
   override protected final def tryAcquireShared(acquires: Int): Int = {
     val current = count.get
     val next = current - acquires
-    if (next < 0 || count.compareAndSet(current, next)) next
+    if (next < 0 || count.compareAndSet(current, next)) next.toInt // only sign of value used
     else tryAcquireShared(acquires)
   }
 }

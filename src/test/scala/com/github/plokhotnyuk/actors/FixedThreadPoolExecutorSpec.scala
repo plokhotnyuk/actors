@@ -132,8 +132,9 @@ class FixedThreadPoolExecutorSpec extends Specification {
     }
   }
 
-  "all tasks which are submitted after shutdown are discarded if rejectAfterShutdown was set to false" in {
-    testWith(new FixedThreadPoolExecutor(rejectAfterShutdown = false)) {
+  "all tasks which are submitted after shutdown can be handled by onReject" in {
+    val latch = new CountDownLatch(1)
+    testWith(new FixedThreadPoolExecutor(onReject = _ => latch.countDown())) {
       e =>
         e.shutdown()
         val executed = new AtomicBoolean(false)
@@ -144,6 +145,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
         })
         e.shutdownNow() must beEmpty
         executed.get must_== false
+        assertCountDown(latch, "OnReject should be called")
     }
   }
 
