@@ -17,7 +17,11 @@ import scala.annotation.tailrec
  * If not otherwise specified, a default thread factory is used, that creates threads with daemon status.
  *
  * <p>When running of tasks an uncaught exception can occurs. All unhandled exception are redirected to
- * provided handler that by default just print stack trace without stopping of worker thread execution.
+ * provided handler that (by default) just print stack trace without stopping of worker thread execution.
+ *
+ * <p>{@link java.util.concurrent.RejectedExecutionException RejectedExecutionException} can occurs
+ * if number of submitted but not started to execute tasks exceed {@code Int.MAX_VALUE} or after shutdown when pool
+ * was initialized with rejectAfterShutdown set to true (by default).
  *
  * <p>An implementation of task queue based on structure of
  * <a href="http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue">non-intrusive MPSC node-based queue</a>,
@@ -27,9 +31,11 @@ import scala.annotation.tailrec
  * <a href="https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java">ThreadManager</a>,
  * implemented by Bill La Forge.
  *
+ * <p>Cooked at <a href="https://github.com/plokhotnyuk/actors">actor benchmark kitchen</a>.
+ *
  * @param threadCount a number of worker threads in pool
  * @param threadFactory a factory to be used to build worker threads
- * @param handler the handler for internal worker threads that will be called
+ * @param onError the handler for internal worker threads that will be called
  *                in case of unrecoverable errors encountered while executing tasks.
  * @param rejectAfterShutdown switch to reject task submission after shutdown or just discard them
  */
@@ -39,10 +45,8 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                                   setDaemon(true)
                                 }
                               },
-                              handler: Thread.UncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
-                                def uncaughtException(t: Thread, e: Throwable): Unit = e.printStackTrace()
-                              },
-                              rejectAfterShutdown: Boolean = false) extends AbstractExecutorService {
+                              onError: Throwable => Unit = _.printStackTrace(),
+                              rejectAfterShutdown: Boolean = true) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val requests = new CountingSemaphore()
   private val running = new AtomicBoolean(true)
@@ -57,48 +61,19 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
 
   threads.foreach(_.start())
 
-  /**
-   * Initiates an orderly shutdown in which previously submitted tasks are executed, but no new tasks will be accepted,
-   * then blocks until all running tasks will be stopped.
-   *
-   * <p>Any task that doesn't completes (blocked or in tight infinite loop) lead to dead lock.
-   */
   def shutdown() {
+    checkShutdownAccess()
     running.lazySet(false)
-    awaitTermination(0, TimeUnit.MILLISECONDS)
   }
 
-  /**
-   * Attempts to stop all actively executing tasks by interrupting of worker threads,
-   * and returns a list of the tasks that were submitted and awaiting for execution.
-   *
-   * <p>This method does not wait for actively executing tasks to terminate. Use
-   * {@link scalaz.concurrent.FixedThreadPoolExecutor#awaitTermination awaitTermination} to do that.
-   *
-   * <p>Any task that fails to respond to interrupt (in tight infinite loop, etc.) may never terminate.
-   *
-   * @return list of tasks that never commenced execution
-   */
   def shutdownNow(): java.util.List[Runnable] = {
-    running.lazySet(false)
+    shutdown()
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     drainTo(new java.util.LinkedList[Runnable](), tail.getAndSet(head.get)) // drain up to current head
   }
 
-  /**
-   * Returns <tt>true</tt> if shutdown of pool was started by
-   * {@link scalaz.concurrent.FixedThreadPoolExecutor#shutdownNow shutdownNow} or
-   * {@link scalaz.concurrent.FixedThreadPoolExecutor#shutdown shutdown} call.
-   *
-   * @return <tt>true</tt> if shutdown of pool was started.
-   */
   def isShutdown: Boolean = !running.get
 
-  /**
-   * Returns <tt>true</tt> if shutdown completed and all worker threads of pool are stopped.
-   *
-   * @return <tt>true</tt> if shutdown completed.
-   */
   def isTerminated: Boolean = terminations.getCount == 0
 
   def awaitTermination(timeout: Long, unit: TimeUnit): Boolean = {
@@ -106,14 +81,6 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     terminations.await(timeout, unit)
   }
 
-  /**
-   * Executes the given task at some time in the future.
-   *
-   * @param task the runnable task
-   * @throws NullPointerException if the task is null
-   * @throws RejectedExecutionException if the task was submitted after shutdown of pool that was created with
-   *                                    the rejectAfterShutdown constructor param set to <tt>true</tt>
-   */
   def execute(task: Runnable) {
     if (running.get) {
       enqueue(task)
@@ -143,7 +110,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
           requests.acquireSharedInterruptibly(1)
           dequeueAndRun()
         } catch {
-          case ex: Throwable => if (running.get) handler.uncaughtException(Thread.currentThread(), ex)
+          case ex: Throwable => handleError(ex)
         }
       }
     } finally {
@@ -161,21 +128,41 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
       t.run()
     } else dequeueAndRun()
   }
+
+  private def handleError(ex: Throwable) {
+    if (running.get || !ex.isInstanceOf[InterruptedException]) onError(ex)
+  }
+
+  private def checkShutdownAccess() {
+    val security = System.getSecurityManager
+    if (security != null) {
+      security.checkPermission(FixedThreadPoolExecutor.shutdownPerm)
+      threads.foreach(security.checkAccess(_))
+    }
+  }
+}
+
+private object FixedThreadPoolExecutor {
+  private val shutdownPerm = new RuntimePermission("modifyThread")
 }
 
 private class CountingSemaphore extends AbstractQueuedSynchronizer() {
   private val count = new AtomicInteger()
 
+  @tailrec
   override protected final def tryReleaseShared(releases: Int): Boolean = {
-    count.getAndAdd(releases)
-    true
+    val current = count.get
+    val next = current + releases
+    if (next < 0) throw new RejectedExecutionException("Maximum of queue capacity is reached")
+    if (count.compareAndSet(current, next)) true
+    else tryReleaseShared(releases)
   }
 
   @tailrec
   override protected final def tryAcquireShared(acquires: Int): Int = {
-    val available = count.get
-    val remaining = available - acquires
-    if (remaining < 0 || count.compareAndSet(available, remaining)) remaining
+    val current = count.get
+    val next = current - acquires
+    if (next < 0 || count.compareAndSet(current, next)) next
     else tryAcquireShared(acquires)
   }
 }
