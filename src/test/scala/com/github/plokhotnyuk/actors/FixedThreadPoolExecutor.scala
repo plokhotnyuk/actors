@@ -1,43 +1,41 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent._
-import java.util.concurrent.atomic._
+import java.util.concurrent.atomic.{AtomicLong, AtomicBoolean, AtomicReference}
 import java.util.concurrent.locks.AbstractQueuedSynchronizer
-import scala.annotation.tailrec
 
 /**
- * A high performance implementation of an {@link java.util.concurrent.ExecutorService ExecutorService}
+ * A high performance implementation of an `java.util.concurrent.ExecutorService ExecutorService`
  * with fixed number of pooled threads. It efficiently works with thousands of threads without overuse of CPU
- * and degradation of latency between task submit and starting of its execution.
+ * and degradation of latency between submission of task and starting of it execution.
  *
- * <p>For applications that require separate or custom pools, a {@code FixedThreadPoolExecutor}
+ * For applications that require separate or custom pools, a `FixedThreadPoolExecutor`
  * may be constructed with a given pool size; by default, equal to the number of available processors.
  *
- * <p>All threads are created in constructor call using a {@link java.util.concurrent.ThreadFactory ThreadFactory}.
+ * All threads are created in constructor call using a `java.util.concurrent.ThreadFactory`.
  * If not otherwise specified, a default thread factory is used, that creates threads with daemon status.
  *
- * <p>When running of tasks an uncaught exception can occurs. All unhandled exception are redirected to
- * provided handler that (by default) just print stack trace without stopping of worker thread execution.
+ * When running of tasks an uncaught exception can occurs. All unhandled exception are redirected to handler
+ * that if not adjusted, by default, just print stack trace without stopping of execution of worker thread.
  *
- * <p>Number of submitted but not yet started tasks practically is unlimited.
- * {@link java.util.concurrent.RejectedExecutionException RejectedExecutionException} can occurs
- * only after shutdown when pool was initialized with default implementation of onReject.
+ * Number of submitted but not yet started tasks is practically unlimited.
+ * `java.util.concurrent.RejectedExecutionException` can occurs only after shutdown
+ * when pool was initialized with default implementation of `onReject: Runnable => Unit`.
  *
- * <p>An implementation of task queue based on structure of
+ * An implementation of task queue based on structure of
  * <a href="http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue">non-intrusive MPSC node-based queue</a>,
  * described by Dmitriy Vyukov.
  *
- * <p>An idea of using of semaphore to control of queue access borrowed from
+ * An idea of using of semaphore to control of queue access borrowed from
  * <a href="https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java">ThreadManager</a>,
  * implemented by Bill La Forge.
  *
- * <p>Cooked at <a href="https://github.com/plokhotnyuk/actors">actor benchmark kitchen</a>.
+ * Cooked at kitchen of <a href="https://github.com/plokhotnyuk/actors">actor benchmarks</a>.
  *
- * @param threadCount a number of worker threads in pool
- * @param threadFactory a factory to be used to build worker threads
- * @param onError the handler for internal worker threads that will be called
- *                in case of unrecoverable errors encountered while executing tasks.
- * @param onReject the handler for rejection of task submission after shutdown
+ * @param threadCount   A number of worker threads in pool
+ * @param threadFactory A factory to be used to build worker threads
+ * @param onError       The exception handler for unhandled errors during executing of tasks.
+ * @param onReject      The handler for rejection of task submission after shutdown
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -64,7 +62,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   threads.foreach(t => t.getState match {
     case Thread.State.NEW => t.start()
     case Thread.State.TERMINATED => throw new IllegalThreadStateException("Thread" + t + " is terminated.")
-    case _ => // do nothing, but warning would be helpful
+    case _ => // to be able to reuse already started threads
   })
 
   def shutdown() {
@@ -100,7 +98,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     head.getAndSet(n).lazySet(n)
   }
 
-  @tailrec
+  @annotation.tailrec
   private def drainTo(ts: java.util.List[Runnable], tn: TaskNode): java.util.List[Runnable] =
     if (tn eq tail.get) ts
     else {
@@ -111,7 +109,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
 
   private def doWork() {
     try {
-      while (running.get) {
+      while (running.get || isNotEmpty) {
         try {
           requests.acquireSharedInterruptibly(1)
           dequeueAndRun()
@@ -124,7 +122,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     }
   }
 
-  @tailrec
+  @annotation.tailrec
   private def dequeueAndRun() {
     val tn = tail.get
     val n = tn.get
@@ -134,6 +132,8 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
       t.run()
     } else dequeueAndRun()
   }
+
+  private def isNotEmpty: Boolean = requests.canBeAcquired && (head.get ne tail.get)
 
   private def handleError(ex: Throwable) {
     if (running.get || !ex.isInstanceOf[InterruptedException]) onError(ex)
@@ -159,16 +159,18 @@ private object FixedThreadPoolExecutor {
 private class CountingSemaphore extends AbstractQueuedSynchronizer() {
   private val count = new AtomicLong()
 
+  def canBeAcquired: Boolean = count.get > 0
+
   override protected final def tryReleaseShared(releases: Int): Boolean = {
     count.getAndAdd(releases)
     true
   }
 
-  @tailrec
+  @annotation.tailrec
   override protected final def tryAcquireShared(acquires: Int): Int = {
     val current = count.get
     val next = current - acquires
-    if (next < 0 || count.compareAndSet(current, next)) next.toInt // only sign of value used
+    if (next < 0 || count.compareAndSet(current, next)) next.toInt // don't worry, only sign of result value is used
     else tryAcquireShared(acquires)
   }
 }

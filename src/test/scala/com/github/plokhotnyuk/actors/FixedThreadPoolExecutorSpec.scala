@@ -2,39 +2,44 @@ package com.github.plokhotnyuk.actors
 
 import org.specs2.mutable.Specification
 import org.specs2.execute.{Failure, Success, Result}
-import java.util
+import collection.JavaConversions._
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicBoolean
-import java.lang.Thread.UncaughtExceptionHandler
-import scala.collection.JavaConversions._
+import java.util.concurrent.locks.LockSupport
 
 class FixedThreadPoolExecutorSpec extends Specification {
+  val NumOfTasks = 1000
   val Timeout = 1000 // in millis
 
-  "task code executes async" in {
+  "all submitted before shutdown tasks executes async" in {
     testWith(new FixedThreadPoolExecutor) {
       e =>
-        val latch = new CountDownLatch(1)
-        e.execute(new Runnable() {
-          def run() {
-            latch.countDown()
-          }
-        })
+        val latch = new CountDownLatch(NumOfTasks)
+        for (i <- 1 to NumOfTasks) {
+          e.execute(new Runnable() {
+            def run() {
+              LockSupport.parkNanos(10000) // wait for 10 micros to don't complete all tasks before shutdown call
+              latch.countDown()
+            }
+          })
+        }
+        e.shutdown()
         assertCountDown(latch, "Should execute a command")
     }
   }
 
-  "task code errors are caught and can be handled without interruption of worker threads" in {
-    val latch = new CountDownLatch(1)
-    testWith(new FixedThreadPoolExecutor(threadCount = 1, onError = {
-      _ => latch.countDown()
-    })) {
+  "errors of tasks are caught and can be handled without interruption of worker threads" in {
+    val latch = new CountDownLatch(NumOfTasks)
+    testWith(new FixedThreadPoolExecutor(threadCount = 1, // single thread to check if it wasn't terminated later
+      onError = _ => latch.countDown())) {
       e =>
-        e.execute(new Runnable() {
-          def run() {
-            throw new RuntimeException()
-          }
-        })
+        for (i <- 1 to NumOfTasks) {
+          e.execute(new Runnable() {
+            def run() {
+              throw new RuntimeException()
+            }
+          })
+        }
         e.isTerminated must_== false
         assertCountDown(latch, "Should propagate an exception")
     }
@@ -59,7 +64,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
         }
         e.execute(task2)
         assertCountDown(latch, "Two new tasks should be submitted during completing a task")
-        e.shutdownNow() must_== new util.LinkedList(Seq(task1, task2))
+        e.shutdownNow() must_== new java.util.LinkedList(Seq(task1, task2))
         e.isShutdown must_== true
     }
   }
