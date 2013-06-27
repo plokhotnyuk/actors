@@ -55,7 +55,7 @@ class FixedThreadPoolExecutor(threadCount: Int = FixedThreadPoolExecutor.process
     val oe = onError
     val ts = terminations
     val lw = lastWaiter
-    val st = FixedThreadPoolExecutor.processors * 100 / threadCount.toString.length
+    val st = FixedThreadPoolExecutor.processors * 125 / threadCount.toString.length
     (1 to threadCount).map(_ => tf.newThread(new Worker(t, r, oe, ts, lw, st)))
   }
 
