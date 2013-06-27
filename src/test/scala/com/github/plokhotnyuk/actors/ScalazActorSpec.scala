@@ -52,8 +52,8 @@ class ScalazActorSpec extends BenchmarkSpec {
     }
   }
 
-  "Ping between actors" in {
-    val n = 10000000
+  "Ping latency" in {
+    val n = 20000000
     val l = new CountDownLatch(1)
     var a1: Actor[Message] = null
     val a2 = actor[Message] {
@@ -78,8 +78,38 @@ class ScalazActorSpec extends BenchmarkSpec {
     }
   }
 
+  "Ping throughput" in {
+    val p = 1000
+    val n = 20000000
+    val l = new CountDownLatch(p * 2)
+    val as = for (i <- 1 to p) yield {
+      var a1: Actor[Message] = null
+      val a2 = actor[Message] {
+        var i = n / p / 2
+
+        (m: Message) =>
+          a1 ! m
+          i -= 1
+          if (i == 0) l.countDown()
+      }
+      a1 = actor[Message] {
+        var i = n / p / 2
+
+        (m: Message) =>
+          a2 ! m
+          i -= 1
+          if (i == 0) l.countDown()
+      }
+      a2
+    }
+    timed(n) {
+      as.foreach(_ ! Message())
+      l.await()
+    }
+  }
+
   def shutdown() {
-    executorService.shutdown()
+    fullShutdown(executorService)
   }
 
   private def tickActor(l: CountDownLatch, n: Int): Actor[Message] = actor[Message] {

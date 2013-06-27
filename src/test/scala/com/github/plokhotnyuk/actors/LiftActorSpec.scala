@@ -1,6 +1,6 @@
 package com.github.plokhotnyuk.actors
 
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent.{ExecutorService, TimeUnit, CountDownLatch}
 import net.liftweb.actor.{ILAExecute, LAScheduler, LiftActor}
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
@@ -17,7 +17,7 @@ class LiftActorSpec extends BenchmarkSpec {
     }
 
     def shutdown() {
-      executorService.shutdown()
+      fullShutdown(executorService)
     }
   }
 
@@ -55,7 +55,7 @@ class LiftActorSpec extends BenchmarkSpec {
     }
   }
 
-  "Ping between actors" in {
+  "Ping latency" in {
     val n = 2000000
     val l = new CountDownLatch(2)
     var a1: LiftActor = null
@@ -84,6 +84,40 @@ class LiftActorSpec extends BenchmarkSpec {
       l.await()
     }
     a1 = null
+  }
+
+  "Ping throughput" in {
+    val p = 1000
+    val n = 5000000
+    val l = new CountDownLatch(p * 2)
+    val as = for (i <- 1 to p) yield {
+      var a1: LiftActor = null
+      val a2 = new LiftActor {
+        private var i = n / p / 2
+
+        def messageHandler = {
+          case b =>
+            a1 ! b
+            i -= 1
+            if (i == 0) l.countDown()
+        }
+      }
+      a1 = new LiftActor {
+        private var i = n / p / 2
+
+        def messageHandler = {
+          case b =>
+            a2 ! b
+            i -= 1
+            if (i == 0) l.countDown()
+        }
+      }
+      a2
+    }
+    timed(n) {
+      as.foreach(_ ! Message())
+      l.await()
+    }
   }
 
   def shutdown() {

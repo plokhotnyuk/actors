@@ -138,4 +138,9 @@ object BenchmarkSpec {
     setThreadPriority(threadPriority)
     if (isAffinityOn) setThreadAffinity()
   }
+
+  def fullShutdown(e: ExecutorService) {
+    e.shutdownNow()
+    e.awaitTermination(0, TimeUnit.SECONDS)
+  }
 }

@@ -32,7 +32,7 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = 10000000
+    val n = 5000000
     val l = new CountDownLatch(parallelism)
     val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
     timed(n) {
@@ -43,19 +43,32 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
     }
   }
 
-  "Ping between actors" in {
+  "Ping latency" in {
     val n = 10000000
     val l = new CountDownLatch(2)
-    val p1 = playerActor(l, n / 2)
-    val p2 = playerActor(l, n / 2)
+    val a1 = playerActor(l, n / 2)
+    val a2 = playerActor(l, n / 2)
     timed(n) {
-      p1.ping(p2)
+      a1.ping(a2)
+      l.await()
+    }
+  }
+
+  "Ping throughput" in {
+    val p = 1000
+    val n = 100000
+    val l = new CountDownLatch(p * 2)
+    val as = for (i <- 1 to p) yield (playerActor(l, n / p / 2), playerActor(l, n / p / 2))
+    timed(n) {
+      as.foreach {
+        case (a1, a2) => a1.ping(a2)
+      }
       l.await()
     }
   }
 
   def shutdown() {
-    executorService.shutdown()
+    fullShutdown(executorService)
   }
 
   private def tickActor(l: CountDownLatch, n: Int): TickActor =

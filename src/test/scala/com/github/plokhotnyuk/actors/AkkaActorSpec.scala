@@ -59,13 +59,26 @@ class AkkaActorSpec extends BenchmarkSpec {
     }
   }
 
-  "Ping between actors" in {
+  "Ping latency" in {
     val n = 10000000
     val l = new CountDownLatch(2)
-    val p1 = playerActor(l, n / 2)
-    val p2 = playerActor(l, n / 2)
+    val a1 = playerActor(l, n / 2)
+    val a2 = playerActor(l, n / 2)
     timed(n) {
-      p1.tell(Message(), p2)
+      a1.tell(Message(), a2)
+      l.await()
+    }
+  }
+
+  "Ping throughput" in {
+    val p = 1000
+    val n = 10000000
+    val l = new CountDownLatch(p * 2)
+    val as = for (i <- 1 to p) yield (playerActor(l, n / p / 2), playerActor(l, n / p / 2))
+    timed(n) {
+      as.foreach {
+        case (a1, a2) => a1.tell(Message(), a2)
+      }
       l.await()
     }
   }
