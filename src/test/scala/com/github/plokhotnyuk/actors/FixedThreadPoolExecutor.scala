@@ -1,12 +1,12 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicLong, AtomicBoolean, AtomicReference}
-import java.util.concurrent.locks.AbstractQueuedSynchronizer
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
+import java.util.concurrent.locks.LockSupport
 
 /**
  * A high performance implementation of an `java.util.concurrent.ExecutorService ExecutorService`
- * with fixed number of pooled threads. It efficiently works with thousands of threads without overuse of CPU
+ * with fixed number of pooled threads. It efficiently works with hundreds of threads without overuse of CPU
  * and degradation of latency between submission of task and starting of it execution.
  *
  * For applications that require separate or custom pools, a `FixedThreadPoolExecutor`
@@ -26,10 +26,6 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
  * <a href="http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue">non-intrusive MPSC node-based queue</a>,
  * described by Dmitriy Vyukov.
  *
- * An idea of using of semaphore to control of queue access borrowed from
- * <a href="https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java">ThreadManager</a>,
- * implemented by Bill La Forge.
- *
  * Cooked at kitchen of <a href="https://github.com/plokhotnyuk/actors">actor benchmarks</a>.
  *
  * @param threadCount   A number of worker threads in pool
@@ -37,7 +33,7 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
  * @param onError       The exception handler for unhandled errors during executing of tasks.
  * @param onReject      The handler for rejection of task submission after shutdown
  */
-class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
+class FixedThreadPoolExecutor(threadCount: Int = FixedThreadPoolExecutor.processors,
                               threadFactory: ThreadFactory = new ThreadFactory() {
                                 def newThread(worker: Runnable): Thread = new Thread(worker) {
                                   setDaemon(true)
@@ -48,15 +44,19 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                                 t => throw new RejectedExecutionException("Task " + t + " rejected.")
                               }) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
-  private val requests = new CountingSemaphore()
   private val running = new AtomicBoolean(true)
-  private val tail = new AtomicReference[TaskNode](head.get)
+  private val lastWaiter = new AtomicReference[Thread]()
   private val terminations = new CountDownLatch(threadCount)
+  private val tail = new AtomicReference[TaskNode](head.get)
   private val threads = {
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
-    (1 to threadCount).map(_ => tf.newThread(new Runnable() {
-      def run(): Unit = doWork()
-    }))
+    val t = tail
+    val r = running
+    val oe = onError
+    val ts = terminations
+    val lw = lastWaiter
+    val st = FixedThreadPoolExecutor.processors * 100 / threadCount.toString.length
+    (1 to threadCount).map(_ => tf.newThread(new Worker(t, r, oe, ts, lw, st)))
   }
 
   threads.foreach(t => t.getState match {
@@ -88,7 +88,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   def execute(task: Runnable) {
     if (running.get) {
       enqueue(task)
-      requests.releaseShared(1)
+      LockSupport.unpark(lastWaiter.get)
     } else handleReject(task)
   }
 
@@ -107,11 +107,27 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
       drainTo(ts, n)
     }
 
-  private def doWork() {
+  private def handleReject(task: Runnable) {
+    onReject(task)
+  }
+
+  private def checkShutdownAccess() {
+    val security = System.getSecurityManager
+    if (security != null) {
+      security.checkPermission(FixedThreadPoolExecutor.shutdownPerm)
+      threads.foreach(security.checkAccess(_))
+    }
+  }
+}
+
+private class Worker(tail: AtomicReference[TaskNode], running: AtomicBoolean, onError: Throwable => Unit,
+                     terminations: CountDownLatch, lastWaiter: AtomicReference[Thread], spinThreshold: Int) extends Runnable {
+  var backOffs = 0
+
+  def run() {
     try {
       while (running.get || isNotEmpty) {
         try {
-          requests.acquireSharedInterruptibly(1)
           dequeueAndRun()
         } catch {
           case ex: Throwable => handleError(ex)
@@ -130,49 +146,37 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
       val t = n.task
       n.task = null
       t.run()
-    } else dequeueAndRun()
+      backOffs = 0
+    } else {
+      backOff()
+      dequeueAndRun()
+    }
   }
 
-  private def isNotEmpty: Boolean = requests.canBeAcquired && (head.get ne tail.get)
+  private def backOff() {
+    backOffs += 1
+    if (backOffs < spinThreshold) ()
+    else if (backOffs < 1000) LockSupport.parkNanos(1)
+    else {
+      val ct = Thread.currentThread()
+      val lw = lastWaiter.getAndSet(ct)
+      LockSupport.park()
+      lastWaiter.set(lw)
+      backOffs = 0
+      if (Thread.interrupted()) ct.interrupt()
+    }
+  }
+
+  private def isNotEmpty: Boolean = (tail.get.get ne null) // used only after shutdown call: no new tasks expected
 
   private def handleError(ex: Throwable) {
     if (running.get || !ex.isInstanceOf[InterruptedException]) onError(ex)
   }
-
-  private def handleReject(task: Runnable) {
-    onReject(task)
-  }
-
-  private def checkShutdownAccess() {
-    val security = System.getSecurityManager
-    if (security != null) {
-      security.checkPermission(FixedThreadPoolExecutor.shutdownPerm)
-      threads.foreach(security.checkAccess(_))
-    }
-  }
 }
 
 private object FixedThreadPoolExecutor {
+  private val processors = Runtime.getRuntime.availableProcessors()
   private val shutdownPerm = new RuntimePermission("modifyThread")
-}
-
-private class CountingSemaphore extends AbstractQueuedSynchronizer() {
-  private val count = new AtomicLong()
-
-  def canBeAcquired: Boolean = count.get > 0
-
-  override protected final def tryReleaseShared(releases: Int): Boolean = {
-    count.getAndAdd(releases)
-    true
-  }
-
-  @annotation.tailrec
-  override protected final def tryAcquireShared(acquires: Int): Int = {
-    val current = count.get
-    val next = current - acquires
-    if (next < 0 || count.compareAndSet(current, next)) next.toInt // don't worry, only sign of result value is used
-    else tryAcquireShared(acquires)
-  }
 }
 
 private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
