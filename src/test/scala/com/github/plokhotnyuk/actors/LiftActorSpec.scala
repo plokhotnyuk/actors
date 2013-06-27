@@ -90,16 +90,19 @@ class LiftActorSpec extends BenchmarkSpec {
     val p = 1000
     val n = 5000000
     val l = new CountDownLatch(p * 2)
-    val as = for (i <- 1 to p) yield {
+    var as = for (i <- 1 to p) yield {
       var a1: LiftActor = null
-      val a2 = new LiftActor {
+      var a2 = new LiftActor {
         private var i = n / p / 2
 
         def messageHandler = {
           case b =>
             a1 ! b
             i -= 1
-            if (i == 0) l.countDown()
+            if (i == 0) {
+              l.countDown()
+              a1 = null
+            }
         }
       }
       a1 = new LiftActor {
@@ -109,7 +112,10 @@ class LiftActorSpec extends BenchmarkSpec {
           case b =>
             a2 ! b
             i -= 1
-            if (i == 0) l.countDown()
+            if (i == 0) {
+              l.countDown()
+              a2 = null
+            }
         }
       }
       a2
@@ -117,6 +123,7 @@ class LiftActorSpec extends BenchmarkSpec {
     timed(n) {
       as.foreach(_ ! Message())
       l.await()
+      as = null
     }
   }
 
