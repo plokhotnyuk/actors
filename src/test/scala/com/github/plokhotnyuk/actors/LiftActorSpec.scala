@@ -60,25 +60,23 @@ class LiftActorSpec extends BenchmarkSpec {
     ping(2000000, 1)
   }
 
-  "Ping throughput 1K" in {
+  "Ping throughput" in {
     ping(5000000, 1000)
   }
 
-  def ping(p: Int, n: Int): Result = {
+
+  def ping(n: Int, p: Int): Result = {
     val l = new CountDownLatch(p * 2)
-    var as = for (i <- 1 to p) yield {
+    val as = for (i <- 1 to p) yield {
       var a1: LiftActor = null
-      var a2 = new LiftActor {
+      val a2 = new LiftActor {
         private var i = n / p / 2
 
         def messageHandler = {
           case b =>
             a1 ! b
             i -= 1
-            if (i == 0) {
-              l.countDown()
-              a1 = null
-            }
+            if (i == 0) l.countDown()
         }
       }
       a1 = new LiftActor {
@@ -88,10 +86,7 @@ class LiftActorSpec extends BenchmarkSpec {
           case b =>
             a2 ! b
             i -= 1
-            if (i == 0) {
-              l.countDown()
-              a2 = null
-            }
+            if (i == 0) l.countDown()
         }
       }
       a2
@@ -99,7 +94,6 @@ class LiftActorSpec extends BenchmarkSpec {
     timed(n) {
       as.foreach(_ ! Message())
       l.await()
-      as = null
     }
   }
 
