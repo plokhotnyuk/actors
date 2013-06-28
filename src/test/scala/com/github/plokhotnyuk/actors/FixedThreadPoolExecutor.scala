@@ -85,7 +85,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   def shutdownNow(): java.util.List[Runnable] = {
     shutdown()
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    drainTo(new java.util.LinkedList[Runnable](), tail.getAndSet(head.get)) // drain up to current head
+    drainTo(new java.util.LinkedList[Runnable]())
   }
 
   def isShutdown: Boolean = !running.get
@@ -113,13 +113,16 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   @annotation.tailrec
-  private def drainTo(ts: java.util.List[Runnable], tn: TaskNode): java.util.List[Runnable] =
-    if (tn eq tail.get) ts
-    else {
-      val n = tn.get
+  private def drainTo(ts: java.util.List[Runnable]): java.util.List[Runnable] = {
+    val tn = tail.get
+    val n = tn.get
+    if (n eq null) ts
+    else if (tail.compareAndSet(tn, n)) {
       ts.add(n.task)
-      drainTo(ts, n)
-    }
+      n.task = null
+      drainTo(ts)
+    } else drainTo(ts)
+  }
 
   private def handleReject(task: Runnable) {
     onReject(task)
