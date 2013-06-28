@@ -1,13 +1,12 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicInteger, AtomicBoolean, AtomicReference}
-import java.util.concurrent.locks.LockSupport
-import scala.annotation.tailrec
+import java.util.concurrent.atomic.{AtomicLong, AtomicBoolean, AtomicReference}
+import java.util.concurrent.locks.AbstractQueuedSynchronizer
 
 /**
  * A high performance implementation of an `java.util.concurrent.ExecutorService ExecutorService`
- * with fixed number of pooled threads. It efficiently works with hundreds of threads without overuse of CPU
+ * with fixed number of pooled threads. It efficiently works with thousands of threads without overuse of CPU
  * and degradation of latency between submission of task and starting of it execution.
  *
  * For applications that require separate or custom pools, a `FixedThreadPoolExecutor`
@@ -27,15 +26,17 @@ import scala.annotation.tailrec
  * <a href="http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue">non-intrusive MPSC node-based queue</a>,
  * described by Dmitriy Vyukov.
  *
+ * An idea of using of semaphore to control of queue access borrowed from
+ * <a href="https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java">ThreadManager</a>,
+ * implemented by Bill La Forge.
+ *
  * Cooked at kitchen of <a href="https://github.com/plokhotnyuk/actors">actor benchmarks</a>.
  *
- * @param threadCount       A number of worker threads in pool
- * @param threadFactory     A factory to be used to build worker threads
- * @param onError           The exception handler for unhandled errors during executing of tasks.
- * @param onReject          The handler for rejection of task submission after shutdown
- * @param slowdownThreshold A number of tries before slowdown of worker thread when task queue is empty
- * @param parkThreshold     A number of tries before parking of worker thread when task queue is empty
- * @param name              A name of the executor service
+ * @param threadCount   A number of worker threads in pool
+ * @param threadFactory A factory to be used to build worker threads
+ * @param onError       The exception handler for unhandled errors during executing of tasks.
+ * @param onReject      The handler for rejection of task submission after shutdown
+ * @param name          A name of the executor service
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -47,28 +48,24 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               onReject: Runnable => Unit = {
                                 t => throw new RejectedExecutionException("Task " + t + " rejected.")
                               },
-                              slowdownThreshold: Int = 700,
-                              parkThreshold: Int = 1000,
                               name: String = {
                                 "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1)
                               }) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val running = new AtomicBoolean(true)
-  private val waiters = new AtomicReference[List[Thread]](Nil)
-  private val terminations = new CountDownLatch(threadCount)
+  private val requests = new CountingSemaphore()
   private val tail = new AtomicReference[TaskNode](head.get)
+  private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val t = tail // to avoid long field names
     val r = running
     val ts = terminations
-    val ws = waiters
+    val rs = requests
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
     val oe = onError
-    val st = slowdownThreshold
-    val pt = parkThreshold
     (1 to threadCount).map {
       i =>
-        val wt = tf.newThread(new Worker(t, r, oe, st, pt, ts, ws))
+        val wt = tf.newThread(new Worker(r, rs, t, oe, ts))
         wt.setName(name + "-worker-" + i)
         wt
     }
@@ -103,7 +100,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   def execute(task: Runnable) {
     if (running.get) {
       enqueue(task)
-      unpark()
+      requests.releaseShared(1)
     } else handleReject(task)
   }
 
@@ -113,14 +110,6 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     if (task eq null) throw new NullPointerException
     val n = new TaskNode(task)
     head.getAndSet(n).lazySet(n)
-  }
-
-  @tailrec
-  private def unpark() {
-    val ws = waiters.get
-    if (ws.isEmpty) ()
-    else if (waiters.compareAndSet(ws, ws.tail)) LockSupport.unpark(ws.head)
-    else unpark()
   }
 
   @annotation.tailrec
@@ -145,15 +134,13 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 }
 
-private class Worker(tail: AtomicReference[TaskNode], running: AtomicBoolean,
-                     onError: Throwable => Unit, slowdownThreshold: Int, parkThreshold: Int,
-                     terminations: CountDownLatch, waiters: AtomicReference[List[Thread]]) extends Runnable {
-  var backOffs = 0
-
+private class Worker(running: AtomicBoolean, requests: CountingSemaphore, tail: AtomicReference[TaskNode],
+                     onError: Throwable => Unit,  terminations: CountDownLatch) extends Runnable {
   def run() {
     try {
-      while (running.get || !isEmpty) {
+      while (running.get || isNotEmpty) {
         try {
+          requests.acquireSharedInterruptibly(1)
           dequeueAndRun()
         } catch {
           case ex: Throwable => handleError(ex)
@@ -168,38 +155,13 @@ private class Worker(tail: AtomicReference[TaskNode], running: AtomicBoolean,
   private def dequeueAndRun() {
     val tn = tail.get
     val n = tn.get
-    if (n eq null) {
-      backOff()
-      dequeueAndRun()
-    } else if (tail.compareAndSet(tn, n)) {
+    if ((n ne null) && tail.compareAndSet(tn, n)) {
       n.task.run()
       n.task = null
-      tuneBackOff()
     } else dequeueAndRun()
   }
 
-  private def backOff() {
-    backOffs += 1
-    if (backOffs < slowdownThreshold) ()
-    else if (backOffs < parkThreshold) LockSupport.parkNanos(1)
-    else park(Thread.currentThread())
-  }
-
-  @tailrec
-  private def park(w: Thread) {
-    val ws = waiters.get
-    if (waiters.compareAndSet(ws, w :: ws)) {
-      LockSupport.park()
-      if (Thread.interrupted()) w.interrupt()
-      backOffs = 0
-    } else park(w)
-  }
-
-  private def tuneBackOff() {
-    backOffs = Math.max(slowdownThreshold - backOffs, 0)
-  }
-
-  private def isEmpty: Boolean = tail.get.get eq null
+  private def isNotEmpty: Boolean = tail.get.get ne null
 
   private def handleError(ex: Throwable) {
     if (running.get || !ex.isInstanceOf[InterruptedException]) onError(ex)
@@ -207,8 +169,27 @@ private class Worker(tail: AtomicReference[TaskNode], running: AtomicBoolean,
 }
 
 private object FixedThreadPoolExecutor {
-  private val poolId = new AtomicInteger(1)
+  private val poolId = new AtomicLong(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
+}
+
+private class CountingSemaphore extends AbstractQueuedSynchronizer() {
+  private val count = new AtomicLong()
+
+  def canBeAcquired: Boolean = count.get > 0
+
+  override protected final def tryReleaseShared(releases: Int): Boolean = {
+    count.getAndAdd(releases)
+    true
+  }
+
+  @annotation.tailrec
+  override protected final def tryAcquireShared(acquires: Int): Int = {
+    val current = count.get
+    val next = current - acquires
+    if (next < 0 || count.compareAndSet(current, next)) next.toInt // don't worry, only sign of result value is used
+    else tryAcquireShared(acquires)
+  }
 }
 
 private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]

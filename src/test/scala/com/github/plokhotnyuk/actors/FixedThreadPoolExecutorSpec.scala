@@ -5,7 +5,6 @@ import org.specs2.execute.{Failure, Success, Result}
 import collection.JavaConversions._
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.locks.LockSupport
 
 class FixedThreadPoolExecutorSpec extends Specification {
   val NumOfTasks = 1000
@@ -14,15 +13,17 @@ class FixedThreadPoolExecutorSpec extends Specification {
   "all submitted before shutdown tasks executes async" in {
     testWith(new FixedThreadPoolExecutor) {
       e =>
+        val taskRequests = new Semaphore(0)
         val latch = new CountDownLatch(NumOfTasks)
         for (i <- 1 to NumOfTasks) {
           e.execute(new Runnable() {
+            taskRequests.release()
             def run() {
-              LockSupport.parkNanos(10000) // wait for 10 micros to don't complete all tasks before shutdown call
               latch.countDown()
             }
           })
         }
+        taskRequests.acquire(NumOfTasks)
         e.shutdown()
         assertCountDown(latch, "Should execute a command")
     }
