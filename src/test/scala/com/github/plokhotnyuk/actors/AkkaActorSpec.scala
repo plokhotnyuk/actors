@@ -6,6 +6,7 @@ import com.typesafe.config.ConfigFactory._
 import com.typesafe.config.Config
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import akka.dispatch.{ExecutorServiceFactory, ExecutorServiceConfigurator, DispatcherPrerequisites}
+import org.specs2.execute.Result
 
 class AkkaActorSpec extends BenchmarkSpec {
   val config = load(parseString(
@@ -60,19 +61,14 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    val n = 10000000
-    val l = new CountDownLatch(2)
-    val a1 = playerActor(l, n / 2)
-    val a2 = playerActor(l, n / 2)
-    timed(n) {
-      a1.tell(Message(), a2)
-      l.await()
-    }
+    ping(10000000, 1)
   }
 
-  "Ping throughput" in {
-    val p = 1000
-    val n = 10000000
+  "Ping throughput 1K" in {
+    ping(10000000, 1000)
+  }
+
+  def ping(n: Int, p: Int): Result = {
     val l = new CountDownLatch(p * 2)
     val as = for (i <- 1 to p) yield (playerActor(l, n / p / 2), playerActor(l, n / p / 2))
     timed(n) {

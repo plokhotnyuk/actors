@@ -4,6 +4,7 @@ import api.actor._
 import java.util.concurrent._
 import concurrent.ExecutionContext
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
+import org.specs2.execute.Result
 
 class ProxyActorsActorSpec extends BenchmarkSpec {
   val executorService = createExecutorService()
@@ -44,19 +45,14 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    val n = 10000000
-    val l = new CountDownLatch(2)
-    val a1 = playerActor(l, n / 2)
-    val a2 = playerActor(l, n / 2)
-    timed(n) {
-      a1.ping(a2)
-      l.await()
-    }
+    ping(10000000, 1)
   }
 
-  "Ping throughput" in {
-    val p = 1000
-    val n = 100000
+  "Ping throughput 1K" in {
+    ping(100000, 1000)
+  }
+
+  def ping(n: Int, p: Int): Result = {
     val l = new CountDownLatch(p * 2)
     val as = for (i <- 1 to p) yield (playerActor(l, n / p / 2), playerActor(l, n / p / 2))
     timed(n) {

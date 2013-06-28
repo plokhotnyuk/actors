@@ -3,6 +3,7 @@ package com.github.plokhotnyuk.actors
 import java.util.concurrent.CountDownLatch
 import scala.actors.{SchedulerAdapter, Actor}
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
+import org.specs2.execute.Result
 
 class ScalaActorSpec extends BenchmarkSpec {
   val customScheduler = new SchedulerAdapter {
@@ -66,19 +67,14 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    val n = 1000000
-    val l = new CountDownLatch(2)
-    val a1 = playerActor(l, n / 2)
-    val a2 = playerActor(l, n / 2)
-    timed(n) {
-      a1.send(Message(), a2)
-      l.await()
-    }
+    ping(1000000, 1)
   }
 
-  "Ping throughput" in {
-    val p = 1000
-    val n = 2000000
+  "Ping throughput 1K" in {
+    ping(2000000, 1000)
+  }
+
+  def ping(n: Int, p: Int): Result = {
     val l = new CountDownLatch(p * 2)
     val as = for (i <- 1 to p) yield (playerActor(l, n / p / 2), playerActor(l, n / p / 2))
     timed(n) {

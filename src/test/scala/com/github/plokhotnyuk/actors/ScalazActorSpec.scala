@@ -4,6 +4,7 @@ import scalaz.concurrent._
 import scalaz.concurrent.Actor._
 import java.util.concurrent.CountDownLatch
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
+import org.specs2.execute.Result
 
 class ScalazActorSpec extends BenchmarkSpec {
   val executorService = createExecutorService()
@@ -12,7 +13,9 @@ class ScalazActorSpec extends BenchmarkSpec {
 
     def apply[A](a: => A) = {
       e.execute(new Runnable() {
-        def run(): Unit = a
+        def run() {
+          a
+        }
       })
       () => null.asInstanceOf[A]
     }
@@ -53,34 +56,14 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    val n = 20000000
-    val l = new CountDownLatch(1)
-    var a1: Actor[Message] = null
-    val a2 = actor[Message] {
-      var i = n / 2
-
-      (m: Message) =>
-        a1 ! m
-        i -= 1
-        if (i == 0) l.countDown()
-    }
-    a1 = actor[Message] {
-      var i = n / 2
-
-      (m: Message) =>
-        a2 ! m
-        i -= 1
-        if (i == 0) l.countDown()
-    }
-    timed(n) {
-      a2 ! Message()
-      l.await()
-    }
+    ping(20000000, 1)
   }
 
-  "Ping throughput" in {
-    val p = 1000
-    val n = 20000000
+  "Ping throughput 1K" in {
+    ping(20000000, 1000)
+  }
+
+  def ping(n: Int, p: Int): Result = {
     val l = new CountDownLatch(p * 2)
     val as = for (i <- 1 to p) yield {
       var a1: Actor[Message] = null

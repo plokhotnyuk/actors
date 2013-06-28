@@ -1,8 +1,9 @@
 package com.github.plokhotnyuk.actors
 
-import java.util.concurrent.{ExecutorService, TimeUnit, CountDownLatch}
+import java.util.concurrent.CountDownLatch
 import net.liftweb.actor.{ILAExecute, LAScheduler, LiftActor}
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
+import org.specs2.execute.Result
 
 class LiftActorSpec extends BenchmarkSpec {
   LAScheduler.createExecutor = () => new ILAExecute {
@@ -56,39 +57,14 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    val n = 2000000
-    val l = new CountDownLatch(2)
-    var a1: LiftActor = null
-    val a2 = new LiftActor {
-      private var i = n / 2
-
-      def messageHandler = {
-        case b =>
-          a1 ! b
-          i -= 1
-          if (i == 0) l.countDown()
-      }
-    }
-    a1 = new LiftActor {
-      private var i = n / 2
-
-      def messageHandler = {
-        case b =>
-          a2 ! b
-          i -= 1
-          if (i == 0) l.countDown()
-      }
-    }
-    timed(n) {
-      a2 ! Message()
-      l.await()
-    }
-    a1 = null
+    ping(2000000, 1)
   }
 
-  "Ping throughput" in {
-    val p = 1000
-    val n = 5000000
+  "Ping throughput 1K" in {
+    ping(5000000, 1000)
+  }
+
+  def ping(p: Int, n: Int): Result = {
     val l = new CountDownLatch(p * 2)
     var as = for (i <- 1 to p) yield {
       var a1: LiftActor = null
