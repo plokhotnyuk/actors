@@ -1,7 +1,7 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicLong, AtomicBoolean, AtomicReference}
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong, AtomicReference}
 import java.util.concurrent.locks.AbstractQueuedSynchronizer
 
 /**
@@ -52,22 +52,21 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                                 "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1)
                               }) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
-  private val running = new AtomicBoolean(true)
+  private val state = new AtomicInteger(0) // 0 - running, 1 - shutdown, 2 - shutdownNow
   private val requests = new CountingSemaphore()
   private val tail = new AtomicReference[TaskNode](head.get)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val t = tail // to avoid long field names
-    val r = running
+    val s = state
     val ts = terminations
     val rs = requests
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
     val oe = onError
-    (1 to threadCount).map {
-      i =>
-        val wt = tf.newThread(new Worker(r, rs, t, oe, ts))
-        wt.setName(name + "-worker-" + i)
-        wt
+    for (i <- 1 to threadCount) yield {
+      val wt = tf.newThread(new Worker(s, rs, t, oe, ts))
+      wt.setName(name + "-worker-" + i)
+      wt
     }
   }
 
@@ -79,16 +78,17 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
 
   def shutdown() {
     checkShutdownAccess()
-    running.lazySet(false)
+    setState(1)
   }
 
   def shutdownNow(): java.util.List[Runnable] = {
-    shutdown()
+    checkShutdownAccess()
+    setState(2)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     drainTo(new java.util.LinkedList[Runnable]())
   }
 
-  def isShutdown: Boolean = !running.get
+  def isShutdown: Boolean = state.get != 0
 
   def isTerminated: Boolean = terminations.getCount == 0
 
@@ -98,7 +98,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   def execute(task: Runnable) {
-    if (running.get) {
+    if (state.get == 0) {
       enqueue(task)
       requests.releaseShared(1)
     } else handleReject(task)
@@ -135,22 +135,35 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
       threads.foreach(security.checkAccess(_))
     }
   }
+
+  @annotation.tailrec
+  private def setState(newState: Int) {
+    val currState = state.get
+    if (newState > currState && !state.compareAndSet(currState, newState)) setState(newState)
+  }
 }
 
-private class Worker(running: AtomicBoolean, requests: CountingSemaphore, tail: AtomicReference[TaskNode],
+private class Worker(state: AtomicInteger, requests: CountingSemaphore, tail: AtomicReference[TaskNode],
                      onError: Throwable => Unit,  terminations: CountDownLatch) extends Runnable {
   def run() {
     try {
-      while (running.get || isNotEmpty) {
-        try {
-          requests.acquireSharedInterruptibly(1)
-          dequeueAndRun()
-        } catch {
-          case ex: Throwable => handleError(ex)
-        }
-      }
+      doWork()
     } finally {
       terminations.countDown()
+    }
+  }
+
+  @annotation.tailrec
+  private def doWork() {
+    val s = state.get
+    if (s == 0 || (s == 1 && isNotEmpty)) {
+      try {
+        requests.acquireSharedInterruptibly(1)
+        dequeueAndRun()
+      } catch {
+        case ex: Throwable => handleError(ex)
+      }
+      doWork()
     }
   }
 
@@ -167,12 +180,12 @@ private class Worker(running: AtomicBoolean, requests: CountingSemaphore, tail: 
   private def isNotEmpty: Boolean = tail.get.get ne null
 
   private def handleError(ex: Throwable) {
-    if (running.get || !ex.isInstanceOf[InterruptedException]) onError(ex)
+    if (state.get != 2 || !ex.isInstanceOf[InterruptedException]) onError(ex)
   }
 }
 
 private object FixedThreadPoolExecutor {
-  private val poolId = new AtomicLong(1)
+  private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
 }
 
