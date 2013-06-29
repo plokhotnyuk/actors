@@ -6,8 +6,8 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
 
 /**
  * A high performance implementation of an `java.util.concurrent.ExecutorService ExecutorService`
- * with fixed number of pooled threads. It efficiently works with thousands of threads without overuse of CPU
- * and degradation of latency between submission of task and starting of it execution.
+ * with fixed number of pooled threads. It efficiently works at high rate of task submission
+ * without overuse of CPU and degradation of latency between submission of task and starting of it execution.
  *
  * For applications that require separate or custom pools, a `FixedThreadPoolExecutor`
  * may be constructed with a given pool size; by default, equal to the number of available processors.
@@ -53,7 +53,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               }) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val state = new AtomicInteger(0) // 0 - running, 1 - shutdown, 2 - shutdownNow
-  private val requests = new CountingSemaphore()
+  private val requests = new CountingSemaphore(threadCount)
   private val tail = new AtomicReference[TaskNode](head.get)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
@@ -98,6 +98,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   def execute(task: Runnable) {
+    if (task eq null) throw new NullPointerException
     if (state.get == 0) {
       enqueue(task)
       requests.releaseShared(1)
@@ -107,7 +108,6 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   override def toString: String = name
 
   private def enqueue(task: Runnable) {
-    if (task eq null) throw new NullPointerException
     val n = new TaskNode(task)
     head.getAndSet(n).lazySet(n)
   }
@@ -189,15 +189,10 @@ private object FixedThreadPoolExecutor {
   private val shutdownPerm = new RuntimePermission("modifyThread")
 }
 
-private class CountingSemaphore extends AbstractQueuedSynchronizer() {
+private class CountingSemaphore(maxReleased: Long) extends AbstractQueuedSynchronizer() {
   private val count = new AtomicLong()
 
-  def canBeAcquired: Boolean = count.get > 0
-
-  override protected final def tryReleaseShared(releases: Int): Boolean = {
-    count.getAndAdd(releases)
-    true
-  }
+  override protected final def tryReleaseShared(releases: Int): Boolean = count.getAndAdd(releases) < maxReleased
 
   @annotation.tailrec
   override protected final def tryAcquireShared(acquires: Int): Int = {
