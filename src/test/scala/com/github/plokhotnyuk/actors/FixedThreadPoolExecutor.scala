@@ -6,8 +6,9 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
 
 /**
  * A high performance implementation of an `java.util.concurrent.ExecutorService ExecutorService`
- * with fixed number of pooled threads. It efficiently works at high rate of task submission
- * without overuse of CPU and degradation of latency between submission of task and starting of it execution.
+ * with fixed number of pooled threads. It efficiently works at high rate of task submission and/or
+ * when number of working threads greater than available processors. Its goal don't overuse of CPU and
+ * don't increase latency between submission of tasks and starting of execution of them.
  *
  * For applications that require separate or custom pools, a `FixedThreadPoolExecutor`
  * may be constructed with a given pool size; by default, equal to the number of available processors.
