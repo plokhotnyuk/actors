@@ -60,7 +60,7 @@ class LiftActorSpec extends BenchmarkSpec {
     ping(2000000, 1)
   }
 
-  "Ping throughput" in {
+  "Ping throughput 1K" in {
     ping(5000000, 1000)
   }
 
@@ -73,8 +73,8 @@ class LiftActorSpec extends BenchmarkSpec {
         private var i = n / p / 2
 
         def messageHandler = {
-          case b =>
-            a1 ! b
+          case m =>
+            if (i > 0) a1 ! m
             i -= 1
             if (i == 0) l.countDown()
         }
@@ -83,8 +83,8 @@ class LiftActorSpec extends BenchmarkSpec {
         private var i = n / p / 2
 
         def messageHandler = {
-          case b =>
-            a2 ! b
+          case m =>
+            if (i > 0) a2 ! m
             i -= 1
             if (i == 0) l.countDown()
         }

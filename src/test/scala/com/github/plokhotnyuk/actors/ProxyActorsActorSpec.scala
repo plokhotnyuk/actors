@@ -95,7 +95,7 @@ class PlayerActor(val l: CountDownLatch, val n: Int) {
   private var i = n
 
   def ping(p: PlayerActor) {
-    p.ping(this)
+    if (i > 0) p.ping(this)
     i -= 1
     if (i == 0) l.countDown()
   }

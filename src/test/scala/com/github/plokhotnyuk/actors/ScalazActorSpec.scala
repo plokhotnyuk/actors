@@ -71,7 +71,7 @@ class ScalazActorSpec extends BenchmarkSpec {
         var i = n / p / 2
 
         (m: Message) =>
-          a1 ! m
+          if (i > 0) a1 ! m
           i -= 1
           if (i == 0) l.countDown()
       }
@@ -79,7 +79,7 @@ class ScalazActorSpec extends BenchmarkSpec {
         var i = n / p / 2
 
         (m: Message) =>
-          a2 ! m
+          if (i > 0) a2 ! m
           i -= 1
           if (i == 0) l.countDown()
       }

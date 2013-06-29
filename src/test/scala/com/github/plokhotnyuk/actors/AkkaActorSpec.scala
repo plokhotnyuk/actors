@@ -117,7 +117,7 @@ class PlayerAkkaActor(l: CountDownLatch, n: Int) extends Actor {
 
   def receive = {
     case m =>
-      sender ! m
+      if (i > 0) sender ! m
       i -= 1
       if (i == 0) {
         l.countDown()
