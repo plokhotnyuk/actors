@@ -144,7 +144,10 @@ private object FixedThreadPoolExecutor {
   private val shutdownPerm = new RuntimePermission("modifyThread")
 }
 
-class TaskQueue(totalSpins: Int = 200, slowdownSpins: Int = 20) extends util.AbstractQueue[Runnable] with BlockingQueue[Runnable] {
+import TaskQueue._
+
+class TaskQueue(totalSpins: Int = 300 / cpus,
+                slowdownSpins: Int = 5 * cpus) extends util.AbstractQueue[Runnable] with BlockingQueue[Runnable] {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val count = new AtomicInteger()
   private val notEmptyLock = new ReentrantLock()
@@ -237,6 +240,10 @@ class TaskQueue(totalSpins: Int = 200, slowdownSpins: Int = 20) extends util.Abs
       notEmptyLock.unlock()
     }
   }
+}
+
+object TaskQueue {
+  val cpus = Runtime.getRuntime.availableProcessors()
 }
 
 private class TaskNode(var a: Runnable = null) extends AtomicReference[TaskNode]
