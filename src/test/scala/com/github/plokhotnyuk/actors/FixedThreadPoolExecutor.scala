@@ -144,7 +144,7 @@ private object FixedThreadPoolExecutor {
   private val shutdownPerm = new RuntimePermission("modifyThread")
 }
 
-class TaskQueue(totalSpins: Int = 100, slowdownSpins: Int = 10) extends util.AbstractQueue[Runnable] with BlockingQueue[Runnable] {
+class TaskQueue(totalSpins: Int = 200, slowdownSpins: Int = 20) extends util.AbstractQueue[Runnable] with BlockingQueue[Runnable] {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val count = new AtomicInteger()
   private val notEmptyLock = new ReentrantLock()
@@ -202,14 +202,21 @@ class TaskQueue(totalSpins: Int = 100, slowdownSpins: Int = 10) extends util.Abs
       val a = n.a
       n.a = null
       a
-    } else {
-      if (i > slowdownSpins) ()
-      else if (i == slowdownSpins) Thread.`yield`()
-      else if (i > 0) LockSupport.parkNanos(1)
-      else waitUntilEmpty()
-      take(i - 1)
-    }
+    } else take(backOff(i))
   }
+
+  private def backOff(i: Int): Int =
+    if (i > slowdownSpins) i - 1
+    else if (i == slowdownSpins) {
+      Thread.`yield`()
+      i - 1
+    } else if (i > 0) {
+      LockSupport.parkNanos(1)
+      i - 1
+    } else {
+      waitUntilEmpty()
+      totalSpins
+    }
 
   private def waitUntilEmpty() {
     notEmptyLock.lockInterruptibly()
