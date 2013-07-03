@@ -1,8 +1,9 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicInteger, AtomicLong, AtomicReference}
-import java.util.concurrent.locks.AbstractQueuedSynchronizer
+import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
+import java.util.concurrent.locks.{LockSupport, ReentrantLock}
+import java.util
 
 /**
  * A high performance implementation of an `java.util.concurrent.ExecutorService ExecutorService`
@@ -35,9 +36,10 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
  *
  * @param threadCount   A number of worker threads in pool
  * @param threadFactory A factory to be used to build worker threads
- * @param onError       The exception handler for unhandled errors during executing of tasks.
+ * @param onError       The exception handler for unhandled errors during executing of tasks
  * @param onReject      The handler for rejection of task submission after shutdown
  * @param name          A name of the executor service
+ * @param taskQueue     The queue to use for holding tasks before they are executed 
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -46,26 +48,24 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                                 }
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
-                              onReject: Runnable => Unit = {
-                                t => throw new RejectedExecutionException("Task " + t + " rejected.")
-                              },
-                              name: String = {
-                                "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1)
-                              }) extends AbstractExecutorService {
-  private val head = new AtomicReference[TaskNode](new TaskNode())
-  private val state = new AtomicInteger(0) // 0 - running, 1 - shutdown, 2 - shutdownNow
-  private val requests = new CountingSemaphore(threadCount)
-  private val tail = new AtomicReference[TaskNode](head.get)
+                              onReject: Runnable => Unit = t => throw new RejectedExecutionException("Task " + t + " rejected."),
+                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndIncrement(),
+                              taskQueue: BlockingQueue[Runnable] = new TaskQueue()) extends AbstractExecutorService {
+  private val state = new AtomicInteger() // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
-    val t = tail // to avoid long field names
-    val s = state
-    val ts = terminations
-    val rs = requests
+    val ts = terminations // to avoid long field names
     val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
-    val oe = onError
     for (i <- 1 to threadCount) yield {
-      val wt = tf.newThread(new Worker(s, rs, t, oe, ts))
+      val wt = tf.newThread(new Runnable() {
+        def run() {
+          try {
+            doWork()
+          } finally {
+            ts.countDown()
+          }
+        }
+      })
       wt.setName(name + "-worker-" + i)
       wt
     }
@@ -82,11 +82,13 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     setState(1)
   }
 
-  def shutdownNow(): java.util.List[Runnable] = {
+  def shutdownNow(): util.List[Runnable] = {
     checkShutdownAccess()
     setState(2)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    drainTo(new java.util.LinkedList[Runnable]())
+    val remainingTasks = new util.LinkedList[Runnable]()
+    taskQueue.drainTo(remainingTasks)
+    remainingTasks
   }
 
   def isShutdown: Boolean = state.get != 0
@@ -99,34 +101,27 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   def execute(task: Runnable) {
-    if (task eq null) throw new NullPointerException
-    if (state.get == 0) {
-      enqueue(task)
-      requests.releaseShared(1)
-    } else handleReject(task)
+    if (state.get == 0) taskQueue.put(task)
+    else onReject(task)
   }
 
   override def toString: String = name
 
-  private def enqueue(task: Runnable) {
-    val n = new TaskNode(task)
-    head.getAndSet(n).lazySet(n)
-  }
-
   @annotation.tailrec
-  private def drainTo(ts: java.util.List[Runnable]): java.util.List[Runnable] = {
-    val tn = tail.get
-    val n = tn.get
-    if (n eq null) ts
-    else if (tail.compareAndSet(tn, n)) {
-      ts.add(n.task)
-      n.task = null
-      drainTo(ts)
-    } else drainTo(ts)
+  private def doWork() {
+    val s = state.get
+    if (s == 0 || (s == 1 && !taskQueue.isEmpty)) {
+      try {
+        taskQueue.take().run()
+      } catch {
+        case ex: Throwable => handleError(ex)
+      }
+      doWork()
+    }
   }
 
-  private def handleReject(task: Runnable) {
-    onReject(task)
+  private def handleError(ex: Throwable) {
+    if (state.get != 2 || !ex.isInstanceOf[InterruptedException]) onError(ex)
   }
 
   private def checkShutdownAccess() {
@@ -144,64 +139,100 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 }
 
-private class Worker(state: AtomicInteger, requests: CountingSemaphore, tail: AtomicReference[TaskNode],
-                     onError: Throwable => Unit,  terminations: CountDownLatch) extends Runnable {
-  def run() {
-    try {
-      doWork()
-    } finally {
-      terminations.countDown()
-    }
-  }
-
-  @annotation.tailrec
-  private def doWork() {
-    val s = state.get
-    if (s == 0 || (s == 1 && isNotEmpty)) {
-      try {
-        requests.acquireSharedInterruptibly(1)
-        dequeueAndRun()
-      } catch {
-        case ex: Throwable => handleError(ex)
-      }
-      doWork()
-    }
-  }
-
-  @annotation.tailrec
-  private def dequeueAndRun() {
-    val tn = tail.get
-    val n = tn.get
-    if ((n ne null) && tail.compareAndSet(tn, n)) {
-      n.task.run()
-      n.task = null
-    } else dequeueAndRun()
-  }
-
-  private def isNotEmpty: Boolean = tail.get.get ne null
-
-  private def handleError(ex: Throwable) {
-    if (state.get != 2 || !ex.isInstanceOf[InterruptedException]) onError(ex)
-  }
-}
-
 private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
 }
 
-private class CountingSemaphore(maxReleased: Long) extends AbstractQueuedSynchronizer() {
-  private val count = new AtomicLong()
+class TaskQueue(totalSpins: Int = 100, parkNanosSpins: Int = 10) extends util.AbstractQueue[Runnable] with BlockingQueue[Runnable] {
+  private val head = new AtomicReference[TaskNode](new TaskNode())
+  private val count = new AtomicInteger()
+  private val notEmptyLock = new ReentrantLock()
+  private val notEmptyCondition = notEmptyLock.newCondition()
+  private val tail = new AtomicReference[TaskNode](head.get)
 
-  override protected final def tryReleaseShared(releases: Int): Boolean = count.getAndAdd(releases) < maxReleased
+  final def size(): Int = count.get
+
+  final def put(a: Runnable) {
+    if (a == null) throw new NullPointerException()
+    val n = new TaskNode(a)
+    head.getAndSet(n).lazySet(n)
+    if (count.getAndIncrement() == 0) signalNotEmpty()
+  }
+
+  final def take(): Runnable = take(totalSpins)
+
+  final def drainTo(c: util.Collection[_ >: Runnable]): Int = drainTo(c, Integer.MAX_VALUE)
 
   @annotation.tailrec
-  override protected final def tryAcquireShared(acquires: Int): Int = {
-    val current = count.get
-    val next = current - acquires
-    if (next < 0 || count.compareAndSet(current, next)) next.toInt // don't worry, only sign of result value is used
-    else tryAcquireShared(acquires)
+  final def drainTo(c: util.Collection[_ >: Runnable], maxElements: Int): Int =
+    if (maxElements <= 0) c.size()
+    else {
+      val tn = tail.get
+      val n = tn.get
+      if (n eq null) c.size()
+      else if (tail.compareAndSet(tn, n)) {
+        count.getAndDecrement()
+        c.add(n.a)
+        n.a = null
+        drainTo(c, maxElements - 1)
+      } else drainTo(c, maxElements)
+    }
+
+  def poll(): Runnable = ???
+
+  def peek(): Runnable = ???
+
+  def offer(e: Runnable): Boolean = ???
+
+  def offer(e: Runnable, timeout: Long, unit: TimeUnit): Boolean = ???
+
+  def poll(timeout: Long, unit: TimeUnit): Runnable = ???
+
+  def remainingCapacity(): Int = ???
+
+  def iterator(): util.Iterator[Runnable] = ???
+
+  @annotation.tailrec
+  private def take(i: Int): Runnable = {
+    val tn = tail.get
+    val n = tn.get
+    if ((n ne null) && tail.compareAndSet(tn, n)) {
+      count.getAndDecrement()
+      val a = n.a
+      n.a = null
+      a
+    } else {
+      if (i > parkNanosSpins) take(i - 1)
+      else if (i > 0) {
+        LockSupport.parkNanos(1)
+        take(i - 1)
+      } else {
+        waitUntilEmpty()
+        take(totalSpins)
+      }
+    }
+  }
+
+  private def waitUntilEmpty() {
+    notEmptyLock.lockInterruptibly()
+    try {
+      while (count.get == 0) {
+        notEmptyCondition.await()
+      }
+    } finally {
+      notEmptyLock.unlock()
+    }
+  }
+
+  private def signalNotEmpty() {
+    notEmptyLock.lock()
+    try {
+      notEmptyCondition.signal()
+    } finally {
+      notEmptyLock.unlock()
+    }
   }
 }
 
-private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
+private class TaskNode(var a: Runnable = null) extends AtomicReference[TaskNode]
