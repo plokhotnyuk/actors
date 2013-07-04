@@ -5,6 +5,24 @@ import java.util.concurrent.{TimeUnit, BlockingQueue}
 import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 import java.util.concurrent.locks.{LockSupport, ReentrantLock}
 
+/**
+ * A high performance implementation of an `java.util.BlockingQueue BlockingQueue`
+ *
+ * NOTE: Performance of current implementation highly depend on values of spin parameters.
+ *
+ * It efficiently works at high rate of data exchange operations and/or
+ * when number of taking threads greater than available processors without overuse of CPU and
+ * increasing latency between submission of tasks and starting of execution of them.
+ *
+ * An implementation of the queue based on a structure of
+ * <a href="http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue">non-intrusive MPSC node-based queue</a>,
+ * described by Dmitriy Vyukov.
+ *
+ * Cooked at kitchen of <a href="https://github.com/plokhotnyuk/actors">actor benchmarks</a>.
+ *
+ * @param totalSpins    A total number of fast and slowdown spins before parking of taking thread
+ * @param slowdownSpins A number slowdown spins before parking of taking thread
+ */
 class ConcurrentLinkedBlockingQueue[A](totalSpins: Int,
                                        slowdownSpins: Int) extends util.AbstractQueue[A] with BlockingQueue[A] {
   private val head = new AtomicReference[Node[A]](new Node())
@@ -83,7 +101,7 @@ class ConcurrentLinkedBlockingQueue[A](totalSpins: Int,
       a
     }
 
-    def remove() {
+    override def remove() {
       throw new UnsupportedOperationException("remove")
     }
   }

@@ -5,10 +5,8 @@ import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * A high performance implementation of an `java.util.concurrent.ExecutorService ExecutorService`
- * with fixed number of pooled threads. It efficiently works at high rate of task submission and/or
- * when number of working threads greater than available processors without overuse of CPU and
- * increasing latency between submission of tasks and starting of execution of them.
+ * A efficient implementation of an `java.util.concurrent.ExecutorService ExecutorService`
+ * with fixed number of pooled threads.
  *
  * For applications that require separate or custom pools, a `FixedThreadPoolExecutor`
  * may be constructed with a given pool size; by default, equal to the number of available processors.
@@ -19,13 +17,10 @@ import java.util.concurrent.atomic.AtomicInteger
  * When running of tasks an uncaught exception can occurs. All unhandled exception are redirected to handler
  * that if not adjusted, by default, just print stack trace without stopping of execution of worker thread.
  *
- * Number of submitted but not yet started tasks is practically unlimited.
+ * Number of submitted but not yet started tasks depend on used `java.util.BlockingQueue BlockingQueue`
+ * implementation and for default, when `ConcurrentLinkedBlockingQueue` is used, it is practically unlimited.
  * `java.util.concurrent.RejectedExecutionException` can occurs only after shutdown
  * when pool was initialized with default implementation of `onReject: Runnable => Unit`.
- *
- * An implementation of task queue based on structure of
- * <a href="http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue">non-intrusive MPSC node-based queue</a>,
- * described by Dmitriy Vyukov.
  *
  * Cooked at kitchen of <a href="https://github.com/plokhotnyuk/actors">actor benchmarks</a>.
  *
@@ -147,7 +142,7 @@ private object FixedThreadPoolExecutor {
   def newTaskQueue(): BlockingQueue[Runnable] = {
     System.getProperty("java.specification.version") match {
       case "1.8" => new ConcurrentLinkedBlockingQueue[Runnable](16, 8)
-      case "1.7" => new ConcurrentLinkedBlockingQueue[Runnable](64, 16)
+      case "1.7" => new ConcurrentLinkedBlockingQueue[Runnable](128, 16)
       case _ => new ConcurrentLinkedBlockingQueue[Runnable](256, 32)
     }
   }
