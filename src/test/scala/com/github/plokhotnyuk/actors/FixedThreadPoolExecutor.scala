@@ -1,15 +1,14 @@
 package com.github.plokhotnyuk.actors
 
-import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
-import java.util.concurrent.locks.{LockSupport, ReentrantLock}
 import java.util
+import java.util.concurrent._
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * A high performance implementation of an `java.util.concurrent.ExecutorService ExecutorService`
  * with fixed number of pooled threads. It efficiently works at high rate of task submission and/or
- * when number of working threads greater than available processors. Its goal don't overuse of CPU and
- * don't increase latency between submission of tasks and starting of execution of them.
+ * when number of working threads greater than available processors without overuse of CPU and
+ * increasing latency between submission of tasks and starting of execution of them.
  *
  * For applications that require separate or custom pools, a `FixedThreadPoolExecutor`
  * may be constructed with a given pool size; by default, equal to the number of available processors.
@@ -28,10 +27,6 @@ import java.util
  * <a href="http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue">non-intrusive MPSC node-based queue</a>,
  * described by Dmitriy Vyukov.
  *
- * An idea of using of semaphore to control of queue access borrowed from
- * <a href="https://github.com/laforge49/JActor2/blob/master/jactor-impl/src/main/java/org/agilewiki/jactor/impl/ThreadManagerImpl.java">ThreadManager</a>,
- * implemented by Bill La Forge.
- *
  * Cooked at kitchen of <a href="https://github.com/plokhotnyuk/actors">actor benchmarks</a>.
  *
  * @param threadCount   A number of worker threads in pool
@@ -48,14 +43,20 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                                 }
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
-                              onReject: Runnable => Unit = t => throw new RejectedExecutionException("Task " + t + " rejected."),
-                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndIncrement(),
-                              taskQueue: BlockingQueue[Runnable] = new TaskQueue()) extends AbstractExecutorService {
+                              onReject: Runnable => Unit = {
+                                t => throw new RejectedExecutionException("Task " + t + " rejected.")
+                              },
+                              name: String = {
+                                "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndIncrement()
+                              },
+                              taskQueue: BlockingQueue[Runnable] = {
+                                FixedThreadPoolExecutor.newTaskQueue()
+                              }) extends AbstractExecutorService {
   private val state = new AtomicInteger() // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
-    val ts = terminations // to avoid long field names
-    val tf = threadFactory // to avoid creating of field for the threadFactory constructor param
+    val ts = terminations // to avoid long field name
+    val tf = threadFactory // to avoid creating of field for a constructor param
     for (i <- 1 to threadCount) yield {
       val wt = tf.newThread(new Runnable() {
         def run() {
@@ -142,108 +143,13 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
 private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
-}
 
-import TaskQueue._
-
-class TaskQueue(totalSpins: Int = 300 / cpus,
-                slowdownSpins: Int = 5 * cpus) extends util.AbstractQueue[Runnable] with BlockingQueue[Runnable] {
-  private val head = new AtomicReference[TaskNode](new TaskNode())
-  private val count = new AtomicInteger()
-  private val notEmptyLock = new ReentrantLock()
-  private val notEmptyCondition = notEmptyLock.newCondition()
-  private val tail = new AtomicReference[TaskNode](head.get)
-
-  final def size(): Int = count.get
-
-  final def put(a: Runnable) {
-    if (a == null) throw new NullPointerException()
-    val n = new TaskNode(a)
-    head.getAndSet(n).lazySet(n)
-    if (count.getAndIncrement() == 0) signalNotEmpty()
-  }
-
-  final def take(): Runnable = take(totalSpins)
-
-  final def drainTo(c: util.Collection[_ >: Runnable]): Int = drainTo(c, Integer.MAX_VALUE)
-
-  @annotation.tailrec
-  final def drainTo(c: util.Collection[_ >: Runnable], maxElements: Int): Int =
-    if (maxElements <= 0) c.size()
-    else {
-      val tn = tail.get
-      val n = tn.get
-      if (n eq null) c.size()
-      else if (tail.compareAndSet(tn, n)) {
-        count.getAndDecrement()
-        c.add(n.a)
-        n.a = null
-        drainTo(c, maxElements - 1)
-      } else drainTo(c, maxElements)
-    }
-
-  def poll(): Runnable = ???
-
-  def peek(): Runnable = ???
-
-  def offer(e: Runnable): Boolean = ???
-
-  def offer(e: Runnable, timeout: Long, unit: TimeUnit): Boolean = ???
-
-  def poll(timeout: Long, unit: TimeUnit): Runnable = ???
-
-  def remainingCapacity(): Int = ???
-
-  def iterator(): util.Iterator[Runnable] = ???
-
-  @annotation.tailrec
-  private def take(i: Int): Runnable = {
-    val tn = tail.get
-    val n = tn.get
-    if ((n ne null) && tail.compareAndSet(tn, n)) {
-      count.getAndDecrement()
-      val a = n.a
-      n.a = null
-      a
-    } else take(backOff(i))
-  }
-
-  private def backOff(i: Int): Int =
-    if (i > slowdownSpins) i - 1
-    else if (i == slowdownSpins) {
-      Thread.`yield`()
-      i - 1
-    } else if (i > 0) {
-      LockSupport.parkNanos(1)
-      i - 1
-    } else {
-      waitUntilEmpty()
-      totalSpins
-    }
-
-  private def waitUntilEmpty() {
-    notEmptyLock.lockInterruptibly()
-    try {
-      while (count.get == 0) {
-        notEmptyCondition.await()
-      }
-    } finally {
-      notEmptyLock.unlock()
-    }
-  }
-
-  private def signalNotEmpty() {
-    notEmptyLock.lock()
-    try {
-      notEmptyCondition.signal()
-    } finally {
-      notEmptyLock.unlock()
+  def newTaskQueue(): BlockingQueue[Runnable] = {
+    System.getProperty("java.specification.version") match {
+      case "1.8" => new ConcurrentLinkedBlockingQueue[Runnable](16, 8)
+      case "1.7" => new ConcurrentLinkedBlockingQueue[Runnable](64, 16)
+      case _ => new ConcurrentLinkedBlockingQueue[Runnable](256, 32)
     }
   }
 }
 
-object TaskQueue {
-  val cpus = Runtime.getRuntime.availableProcessors()
-}
-
-private class TaskNode(var a: Runnable = null) extends AtomicReference[TaskNode]
