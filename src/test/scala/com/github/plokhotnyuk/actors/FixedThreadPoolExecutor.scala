@@ -142,7 +142,7 @@ private object FixedThreadPoolExecutor {
   def newTaskQueue(): BlockingQueue[Runnable] = {
     System.getProperty("java.specification.version") match {
       case "1.8" => new ConcurrentLinkedBlockingQueue[Runnable](16, 8)
-      case "1.7" => new ConcurrentLinkedBlockingQueue[Runnable](128, 16)
+      case "1.7" => new ConcurrentLinkedBlockingQueue[Runnable](64, 16)
       case _ => new ConcurrentLinkedBlockingQueue[Runnable](256, 32)
     }
   }
