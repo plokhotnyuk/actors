@@ -43,13 +43,13 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1),
-                              slowdownThreshold: Int = 1000, parkThreshold: Int = 1010) extends AbstractExecutorService {
+                              slowdownThreshold: Int = 1000, parkThreshold: Int = 2000) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val state = new AtomicInteger() // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val notEmptyLock = new ReentrantLock()
   private val notEmptyCondition = notEmptyLock.newCondition()
-  private val tail = new AtomicReference[TaskNode](head.get)
   private val terminations = new CountDownLatch(threadCount)
+  private val tail = new AtomicReference[TaskNode](head.get)
   private val threads = {
     val s = state // to avoid long field name
     val t = tail
@@ -61,7 +61,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     val st = slowdownThreshold
     val pt = parkThreshold
     for (i <- 1 to threadCount) yield {
-      val wt = tf.newThread(new Worker(s, t, nel, nec, oe, ts, st, pt))
+      val wt = tf.newThread(new Worker(s, t, oe, nel, nec, ts, st, pt))
       wt.setName(name + "-worker-" + i)
       wt
     }
@@ -151,10 +151,11 @@ private object FixedThreadPoolExecutor {
   private val shutdownPerm = new RuntimePermission("modifyThread")
 }
 
-private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], notEmptyLock: ReentrantLock,
-                     notEmptyCondition: Condition, onError: Throwable => Unit, terminations: CountDownLatch,
+private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onError: Throwable => Unit,
+                     notEmptyLock: ReentrantLock, notEmptyCondition: Condition, terminations: CountDownLatch,
                      slowdownThreshold: Int, parkThreshold: Int) extends Runnable {
-  private var spins = slowdownThreshold // don't overuse CPU on start
+  private var optimalSpins = slowdownThreshold // don't overuse CPU on start
+  private var spins = optimalSpins
 
   def run() {
     try {
@@ -171,14 +172,12 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], notE
     if (state.get != 2) {
       val tn = tail.get
       val n = tn.get
-      if (n eq null) {
-        if (state.get != 0) return
-        else backOff()
-      } else if (tail.compareAndSet(tn, n)) {
+      if ((n ne null) && tail.compareAndSet(tn, n)) {
         execute(n.task)
         n.task = null
         tuneSpins()
-      } else backOff()
+      } else if (state.get != 0) return
+      else backOff()
       doWork()
     }
   }
@@ -193,7 +192,8 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], notE
   }
 
   private def tuneSpins() {
-    spins = Math.max(slowdownThreshold - spins, 0)
+    optimalSpins = (slowdownThreshold - spins  + optimalSpins) >> 1
+    spins = optimalSpins
   }
 
   private def backOff() {
