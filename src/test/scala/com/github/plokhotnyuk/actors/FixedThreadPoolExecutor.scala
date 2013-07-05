@@ -191,7 +191,7 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
   }
 
   private def tuneSpins() {
-    optimalSpins -= (spins + optimalSpins) >> 2
+    optimalSpins -= (spins + optimalSpins) >> 1
     spins = optimalSpins
   }
 
