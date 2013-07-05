@@ -192,7 +192,7 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
   }
 
   private def tuneSpins() {
-    optimalSpins = slowdownThreshold - ((spins + optimalSpins) >> 1)
+    optimalSpins = (slowdownThreshold - spins + optimalSpins) >> 1
     spins = optimalSpins
   }
 
@@ -202,7 +202,7 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
     else if (spins <= parkThreshold) LockSupport.parkNanos(1)
     else {
       waitUntilEmpty()
-      spins = slowdownThreshold
+      spins = optimalSpins
     }
   }
 
