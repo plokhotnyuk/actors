@@ -155,7 +155,7 @@ private object FixedThreadPoolExecutor {
 private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], notEmptyLock: ReentrantLock,
                      notEmptyCondition: Condition, onError: Throwable => Unit, terminations: CountDownLatch,
                      slowdownThreshold: Int, parkThreshold: Int) extends Runnable {
-  private var spins = parkThreshold // don't overuse CPU on start
+  private var spins = slowdownThreshold // don't overuse CPU on start
 
   def run() {
     try {
@@ -199,9 +199,12 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], notE
 
   private def backOff() {
     spins += 1
-    if (spins < slowdownThreshold) ()
-    else if (spins < parkThreshold) LockSupport.parkNanos(1)
-    else waitUntilEmpty()
+    if (spins <= slowdownThreshold) ()
+    else if (spins <= parkThreshold) LockSupport.parkNanos(1)
+    else {
+      waitUntilEmpty()
+      spins = slowdownThreshold
+    }
   }
 
   private def waitUntilEmpty() {
