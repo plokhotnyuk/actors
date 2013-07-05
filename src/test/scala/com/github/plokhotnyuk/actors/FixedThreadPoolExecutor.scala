@@ -192,7 +192,7 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
   }
 
   private def tuneSpins() {
-    optimalSpins = (slowdownThreshold - spins  + optimalSpins) >> 1
+    optimalSpins = slowdownThreshold - ((spins + optimalSpins) >> 1)
     spins = optimalSpins
   }
 
