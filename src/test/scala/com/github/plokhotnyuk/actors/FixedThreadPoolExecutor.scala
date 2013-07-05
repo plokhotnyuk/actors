@@ -200,15 +200,13 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
     spins += 1
     if (spins <= slowdownThreshold) ()
     else if (spins <= parkThreshold) LockSupport.parkNanos(1)
-    else {
-      waitUntilEmpty()
-      spins = optimalSpins
-    }
+    else waitUntilEmpty()
   }
 
   private def waitUntilEmpty() {
     notEmptyLock.lockInterruptibly()
     try {
+      spins = optimalSpins
       while (tail.get.get eq null) {
         notEmptyCondition.await()
       }
