@@ -12,7 +12,7 @@ import java.util.concurrent.locks.{LockSupport, Condition, ReentrantLock}
  * increasing latency between submission of tasks and starting of execution of them.
  *
  * For applications that require separate or custom pools, a `FixedThreadPoolExecutor`
- * may be constructed with a given pool size; by default, equal to the number of available processors.
+ * may be constructed with a given pool size, that by default is equal to the number of available processors.
  *
  * All threads are created in constructor call using a `java.util.concurrent.ThreadFactory`.
  * If not otherwise specified, a default thread factory is used, that creates threads with daemon status.
@@ -20,8 +20,7 @@ import java.util.concurrent.locks.{LockSupport, Condition, ReentrantLock}
  * When running of tasks an uncaught exception can occurs. All unhandled exception are redirected to handler
  * that if not adjusted, by default, just print stack trace without stopping of execution of worker thread.
  *
- * Number of submitted but not yet started tasks depend on used `java.util.BlockingQueue BlockingQueue`
- * implementation and for default, when `ConcurrentLinkedBlockingQueue` is used, it is practically unlimited.
+ * Number of tasks which submitted but not yet executed is not limited, so
  * `java.util.concurrent.RejectedExecutionException` can occurs only after shutdown
  * when pool was initialized with default implementation of `onReject: Runnable => Unit`.
  *
@@ -32,7 +31,7 @@ import java.util.concurrent.locks.{LockSupport, Condition, ReentrantLock}
  * @param onError           The exception handler for unhandled errors during executing of tasks
  * @param onReject          The handler for rejection of task submission after shutdown
  * @param name              A name of the executor service
- * @param slowdownThreshold A number of spins before starting slowdown of worker thread
+ * @param slowdownThreshold A number of spins before starting of slowdown of worker thread
  * @param parkThreshold     A number of spins before parking of worker thread
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
@@ -43,7 +42,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndIncrement(),
+                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1),
                               slowdownThreshold: Int = 1000, parkThreshold: Int = 1010) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val state = new AtomicInteger() // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
