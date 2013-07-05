@@ -154,7 +154,7 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
                      parkThreshold: Int) extends Runnable {
   private var optimalSpins = 0
   private var spins = 0
-  private val slowdownThreshold = Math.max(Runtime.getRuntime.availableProcessors() >> 1, 1)
+  private val slowdownThreshold = Runtime.getRuntime.availableProcessors()
 
   def run() {
     try {
