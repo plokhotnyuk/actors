@@ -2,11 +2,14 @@ package com.github.plokhotnyuk.actors
 
 import java.util
 import java.util.concurrent._
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
+import java.util.concurrent.locks.{LockSupport, Condition, ReentrantLock}
 
 /**
  * A efficient implementation of an `java.util.concurrent.ExecutorService ExecutorService`
- * with fixed number of pooled threads.
+ * with fixed number of pooled threads. It efficiently works at high rate of task submission and/or
+ * when number of worker threads greater than available processors without overuse of CPU and
+ * increasing latency between submission of tasks and starting of execution of them.
  *
  * For applications that require separate or custom pools, a `FixedThreadPoolExecutor`
  * may be constructed with a given pool size; by default, equal to the number of available processors.
@@ -24,12 +27,13 @@ import java.util.concurrent.atomic.AtomicInteger
  *
  * Cooked at kitchen of <a href="https://github.com/plokhotnyuk/actors">actor benchmarks</a>.
  *
- * @param threadCount   A number of worker threads in pool
- * @param threadFactory A factory to be used to build worker threads
- * @param onError       The exception handler for unhandled errors during executing of tasks
- * @param onReject      The handler for rejection of task submission after shutdown
- * @param name          A name of the executor service
- * @param taskQueue     The queue to use for holding tasks before they are executed 
+ * @param threadCount       A number of worker threads in pool
+ * @param threadFactory     A factory to be used to build worker threads
+ * @param onError           The exception handler for unhandled errors during executing of tasks
+ * @param onReject          The handler for rejection of task submission after shutdown
+ * @param name              A name of the executor service
+ * @param slowdownThreshold A number of spins before starting slowdown of worker thread
+ * @param parkThreshold     A number of spins before parking of worker thread
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -38,30 +42,27 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                                 }
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
-                              onReject: Runnable => Unit = {
-                                t => throw new RejectedExecutionException("Task " + t + " rejected.")
-                              },
-                              name: String = {
-                                "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndIncrement()
-                              },
-                              taskQueue: BlockingQueue[Runnable] = {
-                                FixedThreadPoolExecutor.newTaskQueue()
-                              }) extends AbstractExecutorService {
+                              onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
+                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndIncrement(),
+                              slowdownThreshold: Int = 1000, parkThreshold: Int = 1010) extends AbstractExecutorService {
+  private val head = new AtomicReference[TaskNode](new TaskNode())
   private val state = new AtomicInteger() // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
+  private val notEmptyLock = new ReentrantLock()
+  private val notEmptyCondition = notEmptyLock.newCondition()
+  private val tail = new AtomicReference[TaskNode](head.get)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
-    val ts = terminations // to avoid long field name
+    val s = state // to avoid long field name
+    val t = tail
+    val nel = notEmptyLock
+    val nec = notEmptyCondition
+    val ts = terminations
     val tf = threadFactory // to avoid creating of field for a constructor param
+    val oe = onError
+    val st = slowdownThreshold
+    val pt = parkThreshold
     for (i <- 1 to threadCount) yield {
-      val wt = tf.newThread(new Runnable() {
-        def run() {
-          try {
-            doWork()
-          } finally {
-            ts.countDown()
-          }
-        }
-      })
+      val wt = tf.newThread(new Worker(s, t, nel, nec, oe, ts, st, pt))
       wt.setName(name + "-worker-" + i)
       wt
     }
@@ -82,9 +83,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     checkShutdownAccess()
     setState(2)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    val remainingTasks = new util.LinkedList[Runnable]()
-    taskQueue.drainTo(remainingTasks)
-    remainingTasks
+    drainTo(new util.LinkedList[Runnable]())
   }
 
   def isShutdown: Boolean = state.get != 0
@@ -97,27 +96,40 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   def execute(task: Runnable) {
-    if (state.get == 0) taskQueue.put(task)
+    if (state.get == 0) put(task)
     else onReject(task)
   }
 
   override def toString: String = name
 
   @annotation.tailrec
-  private def doWork() {
-    val s = state.get
-    if (s == 0 || (s == 1 && !taskQueue.isEmpty)) {
-      try {
-        taskQueue.take().run()
-      } catch {
-        case ex: Throwable => handleError(ex)
-      }
-      doWork()
-    }
+  private def drainTo(tasks: util.List[Runnable]): util.List[Runnable] = {
+    val tn = tail.get
+    val n = tn.get
+    if (n eq null) tasks
+    else if (tail.compareAndSet(tn, n)) {
+      tasks.add(n.task)
+      n.task = null
+      drainTo(tasks)
+    } else drainTo(tasks)
   }
 
-  private def handleError(ex: Throwable) {
-    if (state.get != 2 || !ex.isInstanceOf[InterruptedException]) onError(ex)
+  private def put(task: Runnable) {
+    if (task == null) throw new NullPointerException()
+    val n = new TaskNode(task)
+    val hn = head.getAndSet(n)
+    val wasEmpty = hn eq tail.get
+    hn.lazySet(n)
+    if (wasEmpty) signalNotEmpty()
+  }
+
+  private def signalNotEmpty() {
+    notEmptyLock.lock()
+    try {
+      notEmptyCondition.signal()
+    } finally {
+      notEmptyLock.unlock()
+    }
   }
 
   private def checkShutdownAccess() {
@@ -138,13 +150,70 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
 private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
+}
 
-  def newTaskQueue(): BlockingQueue[Runnable] = {
-    System.getProperty("java.specification.version") match {
-      case "1.8" => new ConcurrentLinkedBlockingQueue[Runnable](25, 8)
-      case "1.7" => new ConcurrentLinkedBlockingQueue[Runnable](100, 16)
-      case _ => new ConcurrentLinkedBlockingQueue[Runnable](400, 32)
+private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], notEmptyLock: ReentrantLock,
+                     notEmptyCondition: Condition, onError: Throwable => Unit, terminations: CountDownLatch,
+                     slowdownThreshold: Int, parkThreshold: Int) extends Runnable {
+  private var spins = parkThreshold // don't overuse CPU on start
+
+  def run() {
+    try {
+      doWork()
+    } catch {
+      case ex: InterruptedException => // can occurs on shutdownNow when worker is backing off
+    } finally {
+      terminations.countDown()
+    }
+  }
+
+  @annotation.tailrec
+  private def doWork() {
+    if (state.get != 2) {
+      val tn = tail.get
+      val n = tn.get
+      if (n eq null) {
+        if (state.get != 0) return
+        else backOff()
+      } else if (tail.compareAndSet(tn, n)) {
+        execute(n.task)
+        n.task = null
+        tuneSpins()
+      } else backOff()
+      doWork()
+    }
+  }
+
+  private def execute(task: Runnable) {
+    try {
+      task.run()
+    } catch {
+      case ex: InterruptedException => if (state.get != 2) onError(ex)
+      case ex: Throwable => onError(ex)
+    }
+  }
+
+  private def tuneSpins() {
+    spins = Math.max(slowdownThreshold - spins, 0)
+  }
+
+  private def backOff() {
+    spins += 1
+    if (spins < slowdownThreshold) ()
+    else if (spins < parkThreshold) LockSupport.parkNanos(1)
+    else waitUntilEmpty()
+  }
+
+  private def waitUntilEmpty() {
+    notEmptyLock.lockInterruptibly()
+    try {
+      while (tail.get.get eq null) {
+        notEmptyCondition.await()
+      }
+    } finally {
+      notEmptyLock.unlock()
     }
   }
 }
 
+private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
