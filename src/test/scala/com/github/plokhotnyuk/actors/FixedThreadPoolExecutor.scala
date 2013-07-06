@@ -31,7 +31,7 @@ import java.util.concurrent.locks.{LockSupport, Condition, ReentrantLock}
  * @param onError           The exception handler for unhandled errors during executing of tasks
  * @param onReject          The handler for rejection of task submission after shutdown
  * @param name              A name of the executor service
- * @param parkThreshold     A number of spins before parking of worker thread
+ * @param parkThreshold     A number of slowdown spins before parking of worker thread
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -41,36 +41,27 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1),
-                              parkThreshold: Int = 1000) extends AbstractExecutorService {
+                              name: String = FixedThreadPoolExecutor.nextName(),
+                              parkThreshold: Int = 1024) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
-  private val state = new AtomicInteger() // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
-  private val notEmptyLock = new ReentrantLock()
-  private val notEmptyCondition = notEmptyLock.newCondition()
-  private val terminations = new CountDownLatch(threadCount)
   private val tail = new AtomicReference[TaskNode](head.get)
+  private val state = new AtomicInteger() // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
+  private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val s = state // to avoid long field name
     val t = tail
-    val nel = notEmptyLock
-    val nec = notEmptyCondition
     val ts = terminations
     val tf = threadFactory // to avoid creating of field for a constructor param
     val oe = onError
     val pt = parkThreshold
-    for (i <- 1 to threadCount) yield {
-      val wt = tf.newThread(new Worker(s, t, oe, nel, nec, ts, pt))
-      wt.setName(name + "-worker-" + i)
-      wt
+    (1 to threadCount).map {
+      i =>
+        val wt = tf.newThread(new Worker(s, t, oe, ts, pt))
+        wt.setName(name + "-worker-" + i)
+        wt.start()
+        wt
     }
   }
-
-  threads.foreach(t => t.getState match {
-    case Thread.State.NEW => t.start()
-    case Thread.State.TERMINATED => throw new IllegalThreadStateException("Thread" + t + " is terminated.")
-    case _ => // to be able to reuse already started threads
-  })
-
   def shutdown() {
     checkShutdownAccess()
     setState(1)
@@ -115,17 +106,14 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     if (task == null) throw new NullPointerException()
     val n = new TaskNode(task)
     val hn = head.getAndSet(n)
-    val wasEmpty = hn eq tail.get
+    val wasEmpty = tail.get eq hn
     hn.lazySet(n)
     if (wasEmpty) signalNotEmpty()
   }
 
   private def signalNotEmpty() {
-    notEmptyLock.lock()
-    try {
-      notEmptyCondition.signal()
-    } finally {
-      notEmptyLock.unlock()
+    state.synchronized {
+      state.notify()
     }
   }
 
@@ -147,14 +135,14 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
 private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
+
+  def nextName(): String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1)
 }
 
 private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onError: Throwable => Unit,
-                     notEmptyLock: ReentrantLock, notEmptyCondition: Condition, terminations: CountDownLatch,
-                     parkThreshold: Int) extends Runnable {
+                     terminations: CountDownLatch, parkThreshold: Int) extends Runnable {
   private var optimalSpins = 0
   private var spins = 0
-  private val slowdownThreshold = Runtime.getRuntime.availableProcessors()
 
   def run() {
     try {
@@ -171,12 +159,14 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
     if (state.get != 2) {
       val tn = tail.get
       val n = tn.get
-      if ((n ne null) && tail.compareAndSet(tn, n)) {
+      if (n eq null) {
+        if (state.get != 0) return
+        else backOff()
+      } else if (tail.compareAndSet(tn, n)) {
         execute(n.task)
         n.task = null
         tuneSpins()
-      } else if (state.get != 0) return
-      else backOff()
+      }
       doWork()
     }
   }
@@ -190,27 +180,25 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
     }
   }
 
+  private def backOff() {
+    if (spins < 0) spins += 1
+    else if (spins < parkThreshold) LockSupport.parkNanos(1)
+    else {
+      tuneSpins()
+      waitUntilEmpty()
+    }
+  }
+
   private def tuneSpins() {
     optimalSpins -= (spins + optimalSpins) >> 1
     spins = optimalSpins
   }
 
-  private def backOff() {
-    spins += 1
-    if (spins <= slowdownThreshold) ()
-    else if (spins <= parkThreshold) LockSupport.parkNanos(1)
-    else waitUntilEmpty()
-  }
-
   private def waitUntilEmpty() {
-    notEmptyLock.lockInterruptibly()
-    try {
-      spins = optimalSpins
+    state.synchronized {
       while (tail.get.get eq null) {
-        notEmptyCondition.await()
+        state.wait()
       }
-    } finally {
-      notEmptyLock.unlock()
     }
   }
 }
