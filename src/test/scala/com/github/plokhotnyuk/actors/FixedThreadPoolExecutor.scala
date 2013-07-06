@@ -159,7 +159,7 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
         execute(n.task)
         n.task = null
         tuneSpins()
-      }
+      } else backOff()
       doWork()
     }
   }
