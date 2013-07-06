@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
 import java.util.concurrent.locks.{LockSupport, Condition, ReentrantLock}
 
 /**
- * A efficient implementation of an `java.util.concurrent.ExecutorService ExecutorService`
+ * An alternative implementation of an `java.util.concurrent.ExecutorService ExecutorService`
  * with fixed number of pooled threads. It efficiently works at high rate of task submission and/or
  * when number of worker threads greater than available processors without overuse of CPU and
  * increasing latency between submission of tasks and starting of execution of them.
@@ -41,11 +41,11 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = FixedThreadPoolExecutor.nextName(),
+                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1),
                               parkThreshold: Int = 1024) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val tail = new AtomicReference[TaskNode](head.get)
-  private val state = new AtomicInteger() // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
+  private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val s = state // to avoid long field name
@@ -62,6 +62,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
         wt
     }
   }
+
   def shutdown() {
     checkShutdownAccess()
     setState(1)
@@ -135,8 +136,6 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
 private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
-
-  def nextName(): String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1)
 }
 
 private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onError: Throwable => Unit,
