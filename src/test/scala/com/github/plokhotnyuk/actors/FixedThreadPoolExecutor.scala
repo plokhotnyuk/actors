@@ -3,10 +3,10 @@ package com.github.plokhotnyuk.actors
 import java.util
 import java.util.concurrent._
 import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
-import java.util.concurrent.locks.{LockSupport, Condition, ReentrantLock}
+import java.util.concurrent.locks.LockSupport
 
 /**
- * An alternative implementation of an `java.util.concurrent.ExecutorService ExecutorService`
+ * An implementation of an `java.util.concurrent.ExecutorService ExecutorService`
  * with fixed number of pooled threads. It efficiently works at high rate of task submission and/or
  * when number of worker threads greater than available processors without overuse of CPU and
  * increasing latency between submission of tasks and starting of execution of them.
@@ -24,14 +24,12 @@ import java.util.concurrent.locks.{LockSupport, Condition, ReentrantLock}
  * `java.util.concurrent.RejectedExecutionException` can occurs only after shutdown
  * when pool was initialized with default implementation of `onReject: Runnable => Unit`.
  *
- * Cooked at kitchen of <a href="https://github.com/plokhotnyuk/actors">actor benchmarks</a>.
- *
- * @param threadCount       A number of worker threads in pool
- * @param threadFactory     A factory to be used to build worker threads
- * @param onError           The exception handler for unhandled errors during executing of tasks
- * @param onReject          The handler for rejection of task submission after shutdown
- * @param name              A name of the executor service
- * @param parkThreshold     A number of slowdown spins before parking of worker thread
+ * @param threadCount   A number of worker threads in pool
+ * @param threadFactory A factory to be used to build worker threads
+ * @param onError       The exception handler for unhandled errors during executing of tasks
+ * @param onReject      The handler for rejection of task submission after shutdown
+ * @param name          A name of the executor service
+ * @param parkThreshold A number of slowdown spins before parking of worker thread
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -48,12 +46,8 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
-    val s = state // to avoid long field name
-    val t = tail
-    val ts = terminations
-    val tf = threadFactory // to avoid creating of field for a constructor param
-    val oe = onError
-    val pt = parkThreshold
+    val (s, t, ts) = (state, tail, terminations) // to avoid long field names
+    val (tf, oe, pt) = (threadFactory, onError, parkThreshold) // to avoid creating of fields for a constructor params
     (1 to threadCount).map {
       i =>
         val wt = tf.newThread(new Worker(s, t, oe, ts, pt))
