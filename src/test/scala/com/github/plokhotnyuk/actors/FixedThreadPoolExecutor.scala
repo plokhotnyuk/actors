@@ -29,6 +29,7 @@ import java.util.concurrent.locks.LockSupport
  * @param onError       The exception handler for unhandled errors during executing of tasks
  * @param onReject      The handler for rejection of task submission after shutdown
  * @param name          A name of the executor service
+ * @param parkThreshold A number of spins before parking of worker thread
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -38,17 +39,18 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = FixedThreadPoolExecutor.nextName()) extends AbstractExecutorService {
+                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1),
+                              parkThreshold: Int = 256) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val tail = new AtomicReference[TaskNode](head.get)
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val (s, t, ts) = (state, tail, terminations) // to avoid long field names
-    val (tf, oe) = (threadFactory, onError) // to avoid creating of fields for a constructor params
+    val (tf, oe, pt) = (threadFactory, onError, parkThreshold) // to avoid creating of fields for a constructor params
     (1 to threadCount).map {
       i =>
-        val wt = tf.newThread(new Worker(s, t, oe, ts))
+        val wt = tf.newThread(new Worker(s, t, oe, ts, pt))
         wt.setName(name + "-worker-" + i)
         wt.start()
         wt
@@ -128,12 +130,13 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
 private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
-
-  def nextName(): String = "FixedThreadPool-" + poolId.getAndAdd(1)
 }
 
 private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onError: Throwable => Unit,
-                     terminations: CountDownLatch) extends Runnable {
+                     terminations: CountDownLatch, parkThreshold: Int) extends Runnable {
+  private var optimalSpins = 0
+  private var spins = 0
+
   def run() {
     try {
       doWork()
@@ -150,12 +153,13 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
       val tn = tail.get
       val n = tn.get
       if (n eq null) {
-          if (state.get != 0) return
-          else waitUntilEmpty()
+        if (state.get != 0) return
+        else backOff()
       } else if (tail.compareAndSet(tn, n)) {
         execute(n.task)
         n.task = null
-      }
+        tuneSpins()
+      } else backOff()
       doWork()
     }
   }
@@ -167,6 +171,16 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
       case ex: InterruptedException => if (state.get != 2) onError(ex)
       case ex: Throwable => onError(ex)
     }
+  }
+
+  private def backOff() {
+    spins += 1
+    if (spins > parkThreshold) waitUntilEmpty()
+  }
+
+  private def tuneSpins() {
+    optimalSpins -= (spins + optimalSpins) >> 1
+    spins = optimalSpins
   }
 
   private def waitUntilEmpty() {
