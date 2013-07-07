@@ -177,9 +177,11 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
 
   private def emptyQueueBackOff() {
     casFailures = 0
-    if (emptyQueues < 0) emptyQueues += 1
-    else if (emptyQueues < parkThreshold) LockSupport.parkNanos(1)
-    else waitUntilEmpty()
+    emptyQueues += 1
+    if (emptyQueues >= 0) {
+      if (emptyQueues < parkThreshold) LockSupport.parkNanos(1)
+      else waitUntilEmpty()
+    }
   }
 
   private def casBackOff() {
