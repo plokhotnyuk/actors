@@ -40,7 +40,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1),
-                              parkThreshold: Int = 1024) extends AbstractExecutorService {
+                              parkThreshold: Int = 256) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val tail = new AtomicReference[TaskNode](head.get)
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
@@ -134,10 +134,8 @@ private object FixedThreadPoolExecutor {
 
 private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onError: Throwable => Unit,
                      terminations: CountDownLatch, parkThreshold: Int) extends Runnable {
-  private val processors = Runtime.getRuntime.availableProcessors()
-  private var casFailures = 0
-  private var optimalEmptyQueues = 0
-  private var emptyQueues = 0
+  private var optimalSpins = 0
+  private var spins = 0
 
   def run() {
     try {
@@ -156,12 +154,12 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
       val n = tn.get
       if (n eq null) {
         if (state.get != 0) return
-        else emptyQueueBackOff()
+        else backOff()
       } else if (tail.compareAndSet(tn, n)) {
         execute(n.task)
         n.task = null
         tuneSpins()
-      } else casBackOff()
+      } else backOff()
       doWork()
     }
   }
@@ -175,27 +173,19 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
     }
   }
 
-  private def emptyQueueBackOff() {
-    casFailures = 0
-    emptyQueues += 1
-    if (emptyQueues >= 0) {
-      if (emptyQueues < parkThreshold) LockSupport.parkNanos(1)
-      else waitUntilEmpty()
-    }
-  }
-
-  private def casBackOff() {
-    if (casFailures < processors) casFailures += 1
+  private def backOff() {
+    if (spins < 0) spins += 1
+    else if (spins < parkThreshold) LockSupport.parkNanos(1)
     else waitUntilEmpty()
   }
 
   private def tuneSpins() {
-    casFailures = 0
-    optimalEmptyQueues -= (emptyQueues + optimalEmptyQueues) >> 1
-    emptyQueues = optimalEmptyQueues
+    optimalSpins -= (spins + optimalSpins) >> 1
+    spins = optimalSpins
   }
 
   private def waitUntilEmpty() {
+    tuneSpins()
     state.synchronized {
       while (tail.get.get eq null) {
         state.wait()
