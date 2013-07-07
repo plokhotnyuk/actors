@@ -196,7 +196,6 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
   }
 
   private def waitUntilEmpty() {
-    tuneSpins()
     state.synchronized {
       while (tail.get.get eq null) {
         state.wait()
