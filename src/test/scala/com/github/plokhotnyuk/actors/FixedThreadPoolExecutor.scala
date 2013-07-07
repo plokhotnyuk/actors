@@ -134,11 +134,6 @@ private object FixedThreadPoolExecutor {
 
 private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onError: Throwable => Unit,
                      terminations: CountDownLatch) extends Runnable {
-  private val maxCasFailureSpins = 100 / Runtime.getRuntime.availableProcessors()
-  private var casFailureSpins = 0
-  private var optimalEmptyQueueSpins = 0
-  private var emptyQueueSpins = 0
-
   def run() {
     try {
       doWork()
@@ -155,13 +150,12 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
       val tn = tail.get
       val n = tn.get
       if (n eq null) {
-        if (state.get != 0) return
-        else emptyQueueBackOff()
+          if (state.get != 0) return
+          else waitUntilEmpty()
       } else if (tail.compareAndSet(tn, n)) {
         execute(n.task)
         n.task = null
-        tuneEmptyQueueSpins()
-      } else casFailureBackOff()
+      }
       doWork()
     }
   }
@@ -173,29 +167,6 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
       case ex: InterruptedException => if (state.get != 2) onError(ex)
       case ex: Throwable => onError(ex)
     }
-  }
-
-  private def emptyQueueBackOff() {
-    casFailureSpins = 0
-    if (emptyQueueSpins < 0) emptyQueueSpins += 1
-    else {
-      tuneEmptyQueueSpins()
-      waitUntilEmpty()
-    }
-  }
-
-  private def casFailureBackOff() {
-    if (casFailureSpins < maxCasFailureSpins) casFailureSpins += 1
-    else {
-      casFailureSpins = 0
-      waitUntilEmpty()
-    }
-  }
-
-  private def tuneEmptyQueueSpins() {
-    casFailureSpins = 0
-    optimalEmptyQueueSpins -= (emptyQueueSpins + optimalEmptyQueueSpins) >> 1
-    emptyQueueSpins = optimalEmptyQueueSpins
   }
 
   private def waitUntilEmpty() {
