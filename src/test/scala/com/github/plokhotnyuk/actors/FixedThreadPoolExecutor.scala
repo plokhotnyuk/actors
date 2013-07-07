@@ -134,8 +134,10 @@ private object FixedThreadPoolExecutor {
 
 private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onError: Throwable => Unit,
                      terminations: CountDownLatch, parkThreshold: Int) extends Runnable {
-  private var optimalSpins = 0
-  private var spins = 0
+  private val processors = Runtime.getRuntime.availableProcessors()
+  private var casFailures = 0
+  private var optimalEmptyQueues = 0
+  private var emptyQueues = 0
 
   def run() {
     try {
@@ -154,12 +156,12 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
       val n = tn.get
       if (n eq null) {
         if (state.get != 0) return
-        else backOff()
+        else emptyQueueBackOff()
       } else if (tail.compareAndSet(tn, n)) {
         execute(n.task)
         n.task = null
         tuneSpins()
-      } else backOff()
+      } else casBackOff()
       doWork()
     }
   }
@@ -173,18 +175,22 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
     }
   }
 
-  private def backOff() {
-    if (spins < 0) spins += 1
-    else if (spins < parkThreshold) LockSupport.parkNanos(1)
-    else {
-      tuneSpins()
-      waitUntilEmpty()
-    }
+  private def emptyQueueBackOff() {
+    casFailures = 0
+    if (emptyQueues < 0) emptyQueues += 1
+    else if (emptyQueues < parkThreshold) LockSupport.parkNanos(1)
+    else waitUntilEmpty()
+  }
+
+  private def casBackOff() {
+    if (casFailures < processors) casFailures += 1
+    else waitUntilEmpty()
   }
 
   private def tuneSpins() {
-    optimalSpins -= (spins + optimalSpins) >> 1
-    spins = optimalSpins
+    casFailures = 0
+    optimalEmptyQueues -= (emptyQueues + optimalEmptyQueues) >> 1
+    emptyQueues = optimalEmptyQueues
   }
 
   private def waitUntilEmpty() {
