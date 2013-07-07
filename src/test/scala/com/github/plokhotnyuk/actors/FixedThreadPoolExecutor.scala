@@ -29,7 +29,6 @@ import java.util.concurrent.locks.LockSupport
  * @param onError       The exception handler for unhandled errors during executing of tasks
  * @param onReject      The handler for rejection of task submission after shutdown
  * @param name          A name of the executor service
- * @param parkThreshold A number of slowdown spins before parking of worker thread
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -39,18 +38,17 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1),
-                              parkThreshold: Int = 256) extends AbstractExecutorService {
+                              name: String = FixedThreadPoolExecutor.nextName()) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val tail = new AtomicReference[TaskNode](head.get)
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val (s, t, ts) = (state, tail, terminations) // to avoid long field names
-    val (tf, oe, pt) = (threadFactory, onError, parkThreshold) // to avoid creating of fields for a constructor params
+    val (tf, oe) = (threadFactory, onError) // to avoid creating of fields for a constructor params
     (1 to threadCount).map {
       i =>
-        val wt = tf.newThread(new Worker(s, t, oe, ts, pt))
+        val wt = tf.newThread(new Worker(s, t, oe, ts))
         wt.setName(name + "-worker-" + i)
         wt.start()
         wt
@@ -130,12 +128,16 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
 private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
+
+  def nextName(): String = "FixedThreadPool-" + poolId.getAndAdd(1)
 }
 
 private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onError: Throwable => Unit,
-                     terminations: CountDownLatch, parkThreshold: Int) extends Runnable {
-  private var optimalSpins = 0
-  private var spins = 0
+                     terminations: CountDownLatch) extends Runnable {
+  private val maxCasFailureSpins = 100 / Runtime.getRuntime.availableProcessors()
+  private var casFailureSpins = 0
+  private var optimalEmptyQueueSpins = 0
+  private var emptyQueueSpins = 0
 
   def run() {
     try {
@@ -154,12 +156,12 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
       val n = tn.get
       if (n eq null) {
         if (state.get != 0) return
-        else backOff()
+        else emptyQueueBackOff()
       } else if (tail.compareAndSet(tn, n)) {
         execute(n.task)
         n.task = null
-        tuneSpins()
-      } else backOff()
+        tuneEmptyQueueSpins()
+      } else casFailureBackOff()
       doWork()
     }
   }
@@ -173,19 +175,31 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
     }
   }
 
-  private def backOff() {
-    if (spins < 0) spins += 1
-    else if (spins < parkThreshold) LockSupport.parkNanos(1)
-    else waitUntilEmpty()
+  private def emptyQueueBackOff() {
+    casFailureSpins = 0
+    if (emptyQueueSpins < 0) emptyQueueSpins += 1
+    else {
+      tuneEmptyQueueSpins()
+      waitUntilEmpty()
+    }
   }
 
-  private def tuneSpins() {
-    optimalSpins -= (spins + optimalSpins) >> 1
-    spins = optimalSpins
+  private def casFailureBackOff() {
+    if (casFailureSpins < maxCasFailureSpins) casFailureSpins += 1
+    else {
+      casFailureSpins = 0
+      waitUntilEmpty()
+    }
+  }
+
+  private def tuneEmptyQueueSpins() {
+    casFailureSpins = 0
+    optimalEmptyQueueSpins -= (emptyQueueSpins + optimalEmptyQueueSpins) >> 1
+    emptyQueueSpins = optimalEmptyQueueSpins
   }
 
   private def waitUntilEmpty() {
-    tuneSpins()
+    LockSupport.parkNanos(1)
     state.synchronized {
       while (tail.get.get eq null) {
         state.wait()

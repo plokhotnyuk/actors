@@ -52,10 +52,4 @@ number of available processors, 1, 10, and 100 accordingly:
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.8.0-ea-b96 64-bit
 
 #### out1*.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_40-ea-b29 64-bit
-
-#### out2.txt
-Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1333, Ubuntu 12.04, JDK 1.7.0_40-ea-b28 64-bit
-
-#### out3.txt
-Intel(R) Core(TM) i7-3720QM CPU @ 2.60GHz (max 3.60GHz), RAM 16Gb DDR3-1600, Mac OS X 10.8.4, JDK 1.7.0_21-b12 64-bit
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_40-ea-b31 64-bit
