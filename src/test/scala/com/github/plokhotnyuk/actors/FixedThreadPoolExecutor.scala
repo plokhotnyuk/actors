@@ -41,9 +41,10 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1)
                                ) extends AbstractExecutorService {
   private var head = new TaskNode()
-  private var tail = head
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
+  private val lock = new Object() // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val terminations = new CountDownLatch(threadCount)
+  private var tail = head
   private val threads = {
     val tf = threadFactory // to avoid creating of fields for a constructor params
     (1 to threadCount).map {
@@ -75,7 +76,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     setState(2)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     val remainingTasks = new util.LinkedList[Runnable]()
-    state.synchronized {
+    lock.synchronized {
       var n = tail.next
       while (n ne null) {
         remainingTasks.add(n.task)
@@ -104,22 +105,22 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   private def put(task: Runnable) {
     if (task == null) throw new NullPointerException()
     val n = new TaskNode(task)
-    state.synchronized {
+    lock.synchronized {
       val hn = head
+      if (hn.task eq null) lock.notify()
       hn.next = n
       head = n
-      if (tail eq hn) state.notify()
     }
   }
 
   @annotation.tailrec
   private def doWork() {
     if (state.get != 2) {
-      val task = state.synchronized {
+      val task = lock.synchronized {
         val n = tail.next
         if (n eq null) {
           if (state.get == 0) {
-            state.wait()
+            lock.wait()
             null
           } else return
         } else {
