@@ -2,8 +2,7 @@ package com.github.plokhotnyuk.actors
 
 import java.util
 import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
-import java.util.concurrent.locks.LockSupport
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * An implementation of an `java.util.concurrent.ExecutorService ExecutorService`
@@ -41,8 +40,9 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1)
                                ) extends AbstractExecutorService {
   private var head = new TaskNode()
+  private val putLock = new Object()
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
-  private val lock = new Object() // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
+  private val takeLock = new Object()
   private val terminations = new CountDownLatch(threadCount)
   private var tail = head
   private val threads = {
@@ -76,7 +76,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     setState(2)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     val remainingTasks = new util.LinkedList[Runnable]()
-    lock.synchronized {
+    takeLock.synchronized {
       var n = tail.next
       while (n ne null) {
         remainingTasks.add(n.task)
@@ -105,28 +105,31 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   private def put(task: Runnable) {
     if (task == null) throw new NullPointerException()
     val n = new TaskNode(task)
-    lock.synchronized {
+    val wasEmpty = putLock.synchronized {
       val hn = head
-      if (hn.task eq null) lock.notify()
       hn.next = n
       head = n
+      hn.task eq null
+    }
+    if (wasEmpty) takeLock.synchronized {
+      takeLock.notify()
     }
   }
 
   @annotation.tailrec
   private def doWork() {
     if (state.get != 2) {
-      val task = lock.synchronized {
+      val task = takeLock.synchronized {
         val n = tail.next
         if (n eq null) {
           if (state.get == 0) {
-            lock.wait()
+            takeLock.wait()
             null
           } else return
         } else {
-          tail = n
           val task = n.task
           n.task = null
+          tail = n
           task
         }
       }
