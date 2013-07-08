@@ -40,16 +40,25 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1)
                                ) extends AbstractExecutorService {
-  private val head = new AtomicReference[TaskNode](new TaskNode())
-  private val tail = new AtomicReference[TaskNode](head.get)
+  private var head = new TaskNode()
+  private var tail = head
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
-    val (s, t, ts) = (state, tail, terminations) // to avoid long field names
-    val (tf, oe) = (threadFactory, onError) // to avoid creating of fields for a constructor params
+    val tf = threadFactory // to avoid creating of fields for a constructor params
     (1 to threadCount).map {
       i =>
-        val wt = tf.newThread(new Worker(s, t, oe, ts))
+        val wt = tf.newThread(new Runnable() {
+          def run() {
+            try {
+              doWork()
+            } catch {
+              case ex: InterruptedException => // can occurs on shutdownNow when worker is backing off
+            } finally {
+              terminations.countDown()
+            }
+          }
+        })
         wt.setName(name + "-worker-" + i)
         wt.start()
         wt
@@ -65,7 +74,15 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     checkShutdownAccess()
     setState(2)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    drainTo(new util.LinkedList[Runnable]())
+    val remainingTasks = new util.LinkedList[Runnable]()
+    state.synchronized {
+      var n = tail.next
+      while (n ne null) {
+        remainingTasks.add(n.task)
+        n = n.next
+      }
+    }
+    remainingTasks
   }
 
   def isShutdown: Boolean = state.get != 0
@@ -84,22 +101,46 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
 
   override def toString: String = name
 
-  @annotation.tailrec
-  private def drainTo(tasks: util.List[Runnable]): util.List[Runnable] = {
-    val tn = tail.get
-    val n = tn.get
-    if (n eq null) tasks
-    else if (tail.compareAndSet(tn, n)) {
-      tasks.add(n.task)
-      n.task = null
-      drainTo(tasks)
-    } else drainTo(tasks)
-  }
-
   private def put(task: Runnable) {
     if (task == null) throw new NullPointerException()
     val n = new TaskNode(task)
-    head.getAndSet(n).lazySet(n)
+    state.synchronized {
+      val hn = head
+      hn.next = n
+      head = n
+      if (tail eq hn) state.notify()
+    }
+  }
+
+  @annotation.tailrec
+  private def doWork() {
+    if (state.get != 2) {
+      val task = state.synchronized {
+        val n = tail.next
+        if (n eq null) {
+          if (state.get == 0) {
+            state.wait()
+            null
+          } else return
+        } else {
+          tail = n
+          val task = n.task
+          n.task = null
+          task
+        }
+      }
+      if (task ne null) run(task)
+      doWork()
+    }
+  }
+
+  private def run(task: Runnable) {
+    try {
+      task.run()
+    } catch {
+      case ex: InterruptedException => if (state.get != 2) onError(ex)
+      case ex: Throwable => onError(ex)
+    }
   }
 
   private def checkShutdownAccess() {
@@ -122,46 +163,4 @@ private object FixedThreadPoolExecutor {
   private val shutdownPerm = new RuntimePermission("modifyThread")
 }
 
-private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onError: Throwable => Unit,
-                     terminations: CountDownLatch) extends Runnable {
-  def run() {
-    try {
-      doWork()
-    } catch {
-      case ex: InterruptedException => // can occurs on shutdownNow when worker is backing off
-    } finally {
-      terminations.countDown()
-    }
-  }
-
-  @annotation.tailrec
-  private def doWork() {
-    if (state.get != 2) {
-      val tn = tail.get
-      val n = tn.get
-      if (n eq null) {
-        if (state.get != 0) return
-        else backOff()
-      } else if (tail.compareAndSet(tn, n)) {
-        execute(n.task)
-        n.task = null
-      }
-      doWork()
-    }
-  }
-
-  private def execute(task: Runnable) {
-    try {
-      task.run()
-    } catch {
-      case ex: InterruptedException => if (state.get != 2) onError(ex)
-      case ex: Throwable => onError(ex)
-    }
-  }
-
-  private def backOff() {
-    LockSupport.parkNanos(1)
-  }
-}
-
-private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
+private class TaskNode(var task: Runnable = null, var next: TaskNode = null)
