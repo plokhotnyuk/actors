@@ -47,10 +47,9 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   private val threads = {
     val (s, t, ts) = (state, tail, terminations) // to avoid long field names
     val (tf, oe) = (threadFactory, onError) // to avoid creating of fields for a constructor params
-    val pt = Math.max(32 / Math.min(Runtime.getRuntime.availableProcessors(), threadCount), 1)
     (1 to threadCount).map {
       i =>
-        val wt = tf.newThread(new Worker(s, t, oe, ts, pt))
+        val wt = tf.newThread(new Worker(s, t, oe, ts))
         wt.setName(name + "-worker-" + i)
         wt.start()
         wt
@@ -100,16 +99,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   private def put(task: Runnable) {
     if (task == null) throw new NullPointerException()
     val n = new TaskNode(task)
-    val hn = head.getAndSet(n)
-    val wasEmpty = tail.get eq hn
-    hn.lazySet(n)
-    if (wasEmpty) signalNotEmpty()
-  }
-
-  private def signalNotEmpty() {
-    state.synchronized {
-      state.notify()
-    }
+    head.getAndSet(n).lazySet(n)
   }
 
   private def checkShutdownAccess() {
@@ -133,10 +123,7 @@ private object FixedThreadPoolExecutor {
 }
 
 private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onError: Throwable => Unit,
-                     terminations: CountDownLatch, parkThreshold: Int) extends Runnable {
-  private var optimalSpins = 0
-  private var spins = 0
-
+                     terminations: CountDownLatch) extends Runnable {
   def run() {
     try {
       doWork()
@@ -158,8 +145,7 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
       } else if (tail.compareAndSet(tn, n)) {
         execute(n.task)
         n.task = null
-        tuneSpins()
-      } else backOff()
+      }
       doWork()
     }
   }
@@ -174,22 +160,7 @@ private class Worker(state: AtomicInteger, tail: AtomicReference[TaskNode], onEr
   }
 
   private def backOff() {
-    spins += 1
-    if (spins > parkThreshold) waitUntilEmpty()
-  }
-
-  private def tuneSpins() {
-    optimalSpins -= (spins + optimalSpins) >> 1
-    spins = optimalSpins
-  }
-
-  private def waitUntilEmpty() {
     LockSupport.parkNanos(1)
-    state.synchronized {
-      while (tail.get.get eq null) {
-        state.wait()
-      }
-    }
   }
 }
 
