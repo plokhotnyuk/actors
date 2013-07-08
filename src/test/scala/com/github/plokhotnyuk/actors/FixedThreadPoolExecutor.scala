@@ -29,7 +29,6 @@ import java.util.concurrent.locks.LockSupport
  * @param onError       The exception handler for unhandled errors during executing of tasks
  * @param onReject      The handler for rejection of task submission after shutdown
  * @param name          A name of the executor service
- * @param parkThreshold An initial number of spins before parking of worker thread
  */
 class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -39,15 +38,16 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1),
-                              parkThreshold: Int = 32) extends AbstractExecutorService {
+                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1)
+                               ) extends AbstractExecutorService {
   private val head = new AtomicReference[TaskNode](new TaskNode())
   private val tail = new AtomicReference[TaskNode](head.get)
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val terminations = new CountDownLatch(threadCount)
   private val threads = {
     val (s, t, ts) = (state, tail, terminations) // to avoid long field names
-    val (tf, oe, pt) = (threadFactory, onError, parkThreshold) // to avoid creating of fields for a constructor params
+    val (tf, oe) = (threadFactory, onError) // to avoid creating of fields for a constructor params
+    val pt = Math.max(32 / Math.min(Runtime.getRuntime.availableProcessors(), threadCount), 1)
     (1 to threadCount).map {
       i =>
         val wt = tf.newThread(new Worker(s, t, oe, ts, pt))
