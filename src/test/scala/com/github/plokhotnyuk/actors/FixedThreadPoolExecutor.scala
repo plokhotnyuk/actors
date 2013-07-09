@@ -42,7 +42,6 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   private var head = new TaskNode()
   private val putLock = new Object()
   private val state = new AtomicInteger(0)
-  // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val takeLock = new Object()
   private val terminations = new CountDownLatch(threadCount)
   private var tail = head
@@ -96,7 +95,15 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     else onReject(task)
   }
 
-  override def toString: String = name
+  override def toString: String = {
+    val stateName = (state.get, isTerminated) match {
+      case (0, false) => "Running"
+      case (1, false) => "Shutdown"
+      case (2, false) => "Stop"
+      case (_, true) => "Terminated"
+    }
+    super.toString + "[" + stateName + ", thread count = " + threads.size + ", name = " + name + "]"
+  }
 
   @annotation.tailrec
   private def drainTo(tasks: util.List[Runnable]): util.List[Runnable] = {
