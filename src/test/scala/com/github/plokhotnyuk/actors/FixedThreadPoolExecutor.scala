@@ -96,12 +96,13 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   override def toString: String = {
-    val stateName = (state.get, isTerminated) match {
-      case (0, false) => "Running"
-      case (1, false) => "Shutdown"
-      case (2, false) => "Stop"
-      case (_, true) => "Terminated"
-    }
+    val stateName =
+      if (isTerminated) "Terminated"
+      else state.get match {
+        case 0 => "Running"
+        case 1 => "Shutdown"
+        case 2 => "Stop"
+      }
     super.toString + "[" + stateName + ", thread count = " + threads.size + ", name = " + name + "]"
   }
 
