@@ -41,12 +41,14 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                                ) extends AbstractExecutorService {
   private var head = new TaskNode()
   private val putLock = new Object()
-  private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
+  private val state = new AtomicInteger(0)
+  // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val takeLock = new Object()
   private val terminations = new CountDownLatch(threadCount)
   private var tail = head
   private val threads = {
     val tf = threadFactory // to avoid creating of fields for a constructor params
+    val ts = terminations // to avoid long field name
     (1 to threadCount).map {
       i =>
         val wt = tf.newThread(new Runnable() {
@@ -56,7 +58,7 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
             } catch {
               case ex: InterruptedException => // can occurs on shutdownNow when worker is backing off
             } finally {
-              terminations.countDown()
+              ts.countDown()
             }
           }
         })
@@ -75,15 +77,9 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     checkShutdownAccess()
     setState(2)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    val remainingTasks = new util.LinkedList[Runnable]()
     takeLock.synchronized {
-      var n = tail.next
-      while (n ne null) {
-        remainingTasks.add(n.task)
-        n = n.next
-      }
+      drainTo(new util.LinkedList[Runnable]())
     }
-    remainingTasks
   }
 
   def isShutdown: Boolean = state.get != 0
@@ -101,6 +97,18 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   override def toString: String = name
+
+  @annotation.tailrec
+  private def drainTo(tasks: util.List[Runnable]): util.List[Runnable] = {
+    val n = tail.next
+    if (n eq null) tasks
+    else {
+      tasks.add(n.task)
+      n.task = null
+      tail = n
+      drainTo(tasks)
+    }
+  }
 
   private def put(task: Runnable) {
     if (task == null) throw new NullPointerException()
