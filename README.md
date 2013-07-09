@@ -60,3 +60,5 @@ Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1333, Ubunt
 #### out3.txt
 Intel(R) Core(TM) i7-3720QM CPU @ 2.60GHz (max 3.60GHz), RAM 16Gb DDR3-1600, Mac OS X 10.8.4, JDK 1.7.0_21-b12 64-bit
 
+#### out4.txt <-- 50M messages per second of throughput for Akka actors
+Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz (max 3.90GHz) overclocked to 4.30GHz, RAM 32Gb DDR3-1666, Linux Mint 14, 1.7.0_25-b15 64-bit
