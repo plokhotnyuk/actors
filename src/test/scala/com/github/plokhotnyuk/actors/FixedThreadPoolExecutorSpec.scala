@@ -31,7 +31,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
 
   "errors of tasks are caught and can be handled without interruption of worker threads" in {
     val latch = new CountDownLatch(NumOfTasks)
-    testWith(new FixedThreadPoolExecutor(threadCount = 1, // single thread to check if it wasn't terminated later
+    testWith(new FixedThreadPoolExecutor(poolSize = 1, // single thread to check if it wasn't terminated later
       onError = _ => latch.countDown())) {
       e =>
         for (i <- 1 to NumOfTasks) {

@@ -23,13 +23,13 @@ import java.util.concurrent.atomic.AtomicInteger
  * `java.util.concurrent.RejectedExecutionException` can occurs only after shutdown
  * when pool was initialized with default implementation of `onReject: Runnable => Unit`.
  *
- * @param threadCount   A number of worker threads in pool
+ * @param poolSize      A number of worker threads in pool
  * @param threadFactory A factory to be used to build worker threads
  * @param onError       The exception handler for unhandled errors during executing of tasks
  * @param onReject      The handler for rejection of task submission after shutdown
  * @param name          A name of the executor service
  */
-class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availableProcessors(),
+class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
                                 def newThread(worker: Runnable): Thread = new Thread(worker) {
                                   setDaemon(true)
@@ -37,18 +37,17 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.getAndAdd(1)
-                               ) extends AbstractExecutorService {
+                              name: String = FixedThreadPoolExecutor.nextName()) extends AbstractExecutorService {
   private var head = new TaskNode()
   private val putLock = new Object()
   private val state = new AtomicInteger(0)
   private val takeLock = new Object()
-  private val terminations = new CountDownLatch(threadCount)
+  private val terminations = new CountDownLatch(poolSize)
   private var tail = head
   private val threads = {
     val tf = threadFactory // to avoid creating of fields for a constructor params
     val ts = terminations // to avoid long field name
-    (1 to threadCount).map {
+    (1 to poolSize).map {
       i =>
         val wt = tf.newThread(new Runnable() {
           def run() {
@@ -68,12 +67,12 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
   }
 
   def shutdown() {
-    checkShutdownAccess()
+    FixedThreadPoolExecutor.checkShutdownAccess(threads)
     setState(1)
   }
 
   def shutdownNow(): util.List[Runnable] = {
-    checkShutdownAccess()
+    FixedThreadPoolExecutor.checkShutdownAccess(threads)
     setState(2)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     takeLock.synchronized {
@@ -95,16 +94,8 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     else onReject(task)
   }
 
-  override def toString: String = {
-    val stateName =
-      if (isTerminated) "Terminated"
-      else state.get match {
-        case 0 => "Running"
-        case 1 => "Shutdown"
-        case 2 => "Stop"
-      }
-    super.toString + "[" + stateName + ", thread count = " + threads.size + ", name = " + name + "]"
-  }
+  override def toString: String = super.toString +
+    "[" + status + ", pool size = " + threads.size + ", name = " + name + "]"
 
   @annotation.tailrec
   private def drainTo(tasks: util.List[Runnable]): util.List[Runnable] = {
@@ -143,10 +134,10 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
             null
           } else return
         } else {
-          val task = n.task
+          val t = n.task
           n.task = null
           tail = n
-          task
+          t
         }
       }
       if (task ne null) run(task)
@@ -163,24 +154,34 @@ class FixedThreadPoolExecutor(threadCount: Int = Runtime.getRuntime.availablePro
     }
   }
 
-  private def checkShutdownAccess() {
-    val security = System.getSecurityManager
-    if (security != null) {
-      security.checkPermission(FixedThreadPoolExecutor.shutdownPerm)
-      threads.foreach(security.checkAccess(_))
-    }
-  }
-
   @annotation.tailrec
   private def setState(newState: Int) {
     val currState = state.get
     if (newState > currState && !state.compareAndSet(currState, newState)) setState(newState)
   }
+
+  private def status: String =
+    if (isTerminated) "Terminated"
+    else state.get match {
+      case 0 => "Running"
+      case 1 => "Shutdown"
+      case 2 => "Stop"
+    }
 }
 
 private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
+
+  def nextName(): String = "FixedThreadPool-" + poolId.getAndAdd(1)
+
+  def checkShutdownAccess(threads: Seq[Thread]) {
+    val security = System.getSecurityManager
+    if (security != null) {
+      security.checkPermission(shutdownPerm)
+      threads.foreach(security.checkAccess(_))
+    }
+  }
 }
 
 private class TaskNode(var task: Runnable = null, var next: TaskNode = null)
