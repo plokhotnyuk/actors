@@ -14,24 +14,21 @@ Evaluation of API and performance of different actor libraries written on Scala:
 [![Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
 
 ## Benchmarks and their goals
-* `Single-producer sending` - tests throughput of messages sending from external thread to an actor
-* `Multi-producer sending` - tests throughput of messages sending from several external threads to an actor
-* `Max throughput` - tests throughput of messages sending from several external threads to several actors
-* `Ping latency` - tests average latency of sending a message between two actors when their message queues are empty
-* `Ping throughput 1K` - tests throughput of executor service by sending a message between 1K pairs of actors
+* `Single-producer sending` - throughput of messages sending from external thread to an actor
+* `Multi-producer sending` - throughput of messages sending from several external threads to an actor
+* `Max throughput` - throughput of messages sending from several external threads to several actors
+* `Ping latency` - average latency of sending a message between two actors when their message queues are empty
+* `Ping throughput 1K` - throughput of executor service by sending a message between 1K pairs of actors
 
 ## Hardware required
-
 - CPU: 2 cores or more
 - RAM: min 6Gb (for JDK 64-bit) or min 3Gb (for JDK 32-bit)
 
 ## Software installed required
-
 - JDK: 1.7.0_x or newer (can require of removing of some unsupported JVM options from test configuration)
 - Maven: 3.0.4 or sbt: 0.12.3
 
 ## Building & running benchmarks
-
 Use following command-line instructions to build from sources and run benchmarks with Scala's ForkJoinPool in FIFO mode:
 ```sh
 mvn -B clean test >outX.txt
@@ -50,9 +47,7 @@ Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS s
 ```
 
 ## Test result descriptions
-
-
-Results of running mvnAll.bat or mvnAll.sh scripts on different environments with pool size set to 
+Results of running mvnAll.bat or mvnAll.sh scripts on different environments with pool size set to
 number of available processors, 1, 10, and 100 accordingly:
 
 #### out0*.txt
