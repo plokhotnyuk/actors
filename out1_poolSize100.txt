@@ -15,7 +15,7 @@
 [INFO] --- scala-maven-plugin:3.1.3:compile (compile) @ actors ---
 [WARNING]  Expected all dependencies to require Scala version: 2.10.2
 [WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0-RC2 requires scala version: 2.10.2
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0 requires scala version: 2.10.2
 [WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
 [WARNING] Multiple versions of scala libraries detected!
 [WARNING] No source files found.
@@ -28,18 +28,18 @@
 [INFO] --- scala-maven-plugin:3.1.3:testCompile (testCompile) @ actors ---
 [WARNING]  Expected all dependencies to require Scala version: 2.10.2
 [WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0-RC2 requires scala version: 2.10.2
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0 requires scala version: 2.10.2
 [WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
 [WARNING] Multiple versions of scala libraries detected!
 [INFO] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala:-1: info: compiling
-[INFO] Compiling 9 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\test-classes at 1373306419559
+[INFO] Compiling 9 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\test-classes at 1373548944750
 [INFO] prepare-compile in 0 s
-[INFO] compile in 10 s
+[INFO] compile in 9 s
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 11.404s
-[INFO] Finished at: Mon Jul 08 21:00:29 EEST 2013
+[INFO] Total time: 10.780s
+[INFO] Finished at: Thu Jul 11 16:22:34 EEST 2013
 [INFO] Final Memory: 14M/1024M
 [INFO] ------------------------------------------------------------------------
 [INFO] Scanning for projects...
@@ -56,7 +56,7 @@
 [INFO] --- scala-maven-plugin:3.1.3:compile (compile) @ actors ---
 [WARNING]  Expected all dependencies to require Scala version: 2.10.2
 [WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0-RC2 requires scala version: 2.10.2
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0 requires scala version: 2.10.2
 [WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
 [WARNING] Multiple versions of scala libraries detected!
 [WARNING] No source files found.
@@ -69,7 +69,7 @@
 [INFO] --- scala-maven-plugin:3.1.3:testCompile (testCompile) @ actors ---
 [WARNING]  Expected all dependencies to require Scala version: 2.10.2
 [WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0-RC2 requires scala version: 2.10.2
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0 requires scala version: 2.10.2
 [WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
 [WARNING] Multiple versions of scala libraries detected!
 [INFO] Nothing to compile - all classes are up to date
@@ -89,923 +89,191 @@ Executor service type: fixed-thread-pool
 
 Single-producer sending:
 40,000,000 ops
-3,354 ms
-83 ns/op
-11,926,058 ops/s
-50.6 % of CPU usage
+3,276 ms
+81 ns/op
+12,210,012 ops/s
+54.0 % of CPU usage
 
 Multi-producer sending:
+20,000,000 ops
+2,013 ms
+100 ns/op
+9,935,419 ops/s
+74.4 % of CPU usage
+
+Max throughput:
+40,000,000 ops
+1,934 ms
+48 ns/op
+20,682,523 ops/s
+95.8 % of CPU usage
+
+Ping latency:
+10,000,000 ops
+6,318 ms
+631 ns/op
+1,582,779 ops/s
+45.1 % of CPU usage
+
+Ping throughput 1K:
+10,000,000 ops
+1,607 ms
+160 ns/op
+6,222,775 ops/s
+85.2 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.786 sec
+Running com.github.plokhotnyuk.actors.LiftActorSpec
+Executor service type: fixed-thread-pool
+
+Single-producer sending:
 20,000,000 ops
 2,106 ms
 105 ns/op
 9,496,676 ops/s
-68.7 % of CPU usage
-
-Max throughput:
-40,000,000 ops
-1,887 ms
-47 ns/op
-21,197,668 ops/s
-92.0 % of CPU usage
-
-Ping latency:
-10,000,000 ops
-7,270 ms
-727 ns/op
-1,375,515 ops/s
-42.2 % of CPU usage
-
-Ping throughput 1K:
-10,000,000 ops
-2,169 ms
-216 ns/op
-4,610,419 ops/s
-29.3 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.502 sec
-Running com.github.plokhotnyuk.actors.LiftActorSpec
-Executor service type: fixed-thread-pool
-
-Single-producer sending:
-20,000,000 ops
-1,825 ms
-91 ns/op
-10,958,904 ops/s
-40.8 % of CPU usage
+42.0 % of CPU usage
 
 Multi-producer sending:
 20,000,000 ops
-3,152 ms
-157 ns/op
-6,345,177 ops/s
-65.6 % of CPU usage
+3,058 ms
+152 ns/op
+6,540,222 ops/s
+61.6 % of CPU usage
 
 Max throughput:
 20,000,000 ops
-2,262 ms
-113 ns/op
-8,841,732 ops/s
-67.9 % of CPU usage
+1,170 ms
+58 ns/op
+17,094,017 ops/s
+93.0 % of CPU usage
 
 Ping latency:
 2,000,000 ops
-3,463 ms
-1,731 ns/op
-577,533 ops/s
-45.0 % of CPU usage
+3,494 ms
+1,747 ns/op
+572,409 ops/s
+45.7 % of CPU usage
 
 Ping throughput 1K:
 5,000,000 ops
-2,776 ms
-555 ns/op
-1,801,152 ops/s
-51.8 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 14.493 sec
-Running com.github.plokhotnyuk.actors.ProxyActorsActorSpec
-Executor service type: fixed-thread-pool
-
-Single-producer sending:
-10,000,000 ops
-1,747 ms
-174 ns/op
-5,724,098 ops/s
-73.7 % of CPU usage
-
-Multi-producer sending:
-10,000,000 ops
-1,685 ms
-168 ns/op
-5,934,718 ops/s
-63.9 % of CPU usage
-
-Max throughput:
-5,000,000 ops
-749 ms
-149 ns/op
-6,675,567 ops/s
-63.5 % of CPU usage
-
-Ping latency:
-10,000,000 ops
-6,489 ms
-648 ns/op
-1,541,069 ops/s
-44.5 % of CPU usage
-
-Ping throughput 1K:
-100,000 ops
-2,075 ms
-20,750 ns/op
-48,192 ops/s
-70.7 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.24 sec
-Running com.github.plokhotnyuk.actors.ScalaActorSpec
-Executor service type: fixed-thread-pool
-
-Single-producer sending:
-1,000,000 ops
-3,073 ms
-3,073 ns/op
-325,414 ops/s
-54.7 % of CPU usage
-
-Multi-producer sending:
-1,000,000 ops
-3,260 ms
-3,260 ns/op
-306,748 ops/s
-52.0 % of CPU usage
-
-Max throughput:
-5,000,000 ops
-5,569 ms
-1,113 ns/op
-897,827 ops/s
-27.9 % of CPU usage
-
-Ping latency:
-1,000,000 ops
-4,758 ms
-4,758 ns/op
-210,172 ops/s
-62.7 % of CPU usage
-
-Ping throughput 1K:
-2,000,000 ops
-2,324 ms
-1,162 ns/op
-860,585 ops/s
-99.7 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.077 sec
-Running com.github.plokhotnyuk.actors.ScalazActorSpec
-Executor service type: fixed-thread-pool
-
-Single-producer sending:
-100,000,000 ops
-3,495 ms
-34 ns/op
-28,612,303 ops/s
-67.5 % of CPU usage
-
-Multi-producer sending:
-50,000,000 ops
-3,105 ms
-62 ns/op
-16,103,059 ops/s
-98.3 % of CPU usage
-
-Max throughput:
-200,000,000 ops
-2,231 ms
-11 ns/op
-89,645,898 ops/s
-97.7 % of CPU usage
-
-Ping latency:
-20,000,000 ops
-4,259 ms
-212 ns/op
-4,695,938 ops/s
-45.0 % of CPU usage
-
-Ping throughput 1K:
-20,000,000 ops
-1,591 ms
-79 ns/op
-12,570,710 ops/s
+2,043 ms
+408 ns/op
+2,447,381 ops/s
 25.2 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.694 sec
-
-Results :
-
-Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
-
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 1:33.694s
-[INFO] Finished at: Mon Jul 08 21:02:04 EEST 2013
-[INFO] Final Memory: 18M/1024M
-[INFO] ------------------------------------------------------------------------
-[INFO] Scanning for projects...
-[INFO]                                                                         
-[INFO] ------------------------------------------------------------------------
-[INFO] Building Actors 1.0-SNAPSHOT
-[INFO] ------------------------------------------------------------------------
-[INFO] 
-[INFO] --- maven-resources-plugin:2.5:resources (default-resources) @ actors ---
-[debug] execute contextualize
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.3:compile (compile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.10.2
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0-RC2 requires scala version: 2.10.2
-[WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
-[WARNING] Multiple versions of scala libraries detected!
-[WARNING] No source files found.
-[INFO] 
-[INFO] --- maven-resources-plugin:2.5:testResources (default-testResources) @ actors ---
-[debug] execute contextualize
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.3:testCompile (testCompile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.10.2
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0-RC2 requires scala version: 2.10.2
-[WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
-[WARNING] Multiple versions of scala libraries detected!
-[INFO] Nothing to compile - all classes are up to date
-[INFO] 
-[INFO] --- maven-surefire-plugin:2.13:test (default-test) @ actors ---
-[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-Running com.github.plokhotnyuk.actors.AkkaActorSpec
-Executor service type: scala-forkjoin-pool
-
-Single-producer sending:
-40,000,000 ops
-3,073 ms
-76 ns/op
-13,016,596 ops/s
-50.9 % of CPU usage
-
-Multi-producer sending:
-20,000,000 ops
-1,996 ms
-99 ns/op
-10,020,040 ops/s
-73.7 % of CPU usage
-
-Max throughput:
-40,000,000 ops
-1,966 ms
-49 ns/op
-20,345,879 ops/s
-87.1 % of CPU usage
-
-Ping latency:
-10,000,000 ops
-6,911 ms
-691 ns/op
-1,446,968 ops/s
-99.2 % of CPU usage
-
-Ping throughput 1K:
-10,000,000 ops
-2,870 ms
-287 ns/op
-3,484,320 ops/s
-99.3 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.44 sec
-Running com.github.plokhotnyuk.actors.LiftActorSpec
-Executor service type: scala-forkjoin-pool
-
-Single-producer sending:
-20,000,000 ops
-2,137 ms
-106 ns/op
-9,358,914 ops/s
-42.3 % of CPU usage
-
-Multi-producer sending:
-20,000,000 ops
-3,151 ms
-157 ns/op
-6,347,191 ops/s
-65.8 % of CPU usage
-
-Max throughput:
-20,000,000 ops
-1,513 ms
-75 ns/op
-13,218,770 ops/s
-91.0 % of CPU usage
-
-Ping latency:
-2,000,000 ops
-1,950 ms
-975 ns/op
-1,025,641 ops/s
-97.4 % of CPU usage
-
-Ping throughput 1K:
-5,000,000 ops
-1,684 ms
-336 ns/op
-2,969,121 ops/s
-100.0 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.481 sec
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.901 sec
 Running com.github.plokhotnyuk.actors.ProxyActorsActorSpec
-Executor service type: scala-forkjoin-pool
+Executor service type: fixed-thread-pool
 
 Single-producer sending:
 10,000,000 ops
-2,824 ms
-282 ns/op
-3,541,076 ops/s
-86.2 % of CPU usage
-
-Multi-producer sending:
-10,000,000 ops
-3,635 ms
-363 ns/op
-2,751,031 ops/s
-77.4 % of CPU usage
-
-Max throughput:
-5,000,000 ops
-1,388 ms
-277 ns/op
-3,602,305 ops/s
-80.1 % of CPU usage
-
-Ping latency:
-10,000,000 ops
-6,349 ms
-634 ns/op
-1,575,051 ops/s
-99.8 % of CPU usage
-
-Ping throughput 1K:
-100,000 ops
-1,888 ms
-18,880 ns/op
-52,966 ops/s
-69.8 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.64 sec
-Running com.github.plokhotnyuk.actors.ScalaActorSpec
-Executor service type: scala-forkjoin-pool
-
-Single-producer sending:
-1,000,000 ops
-1,982 ms
-1,982 ns/op
-504,540 ops/s
-97.8 % of CPU usage
-
-Multi-producer sending:
-1,000,000 ops
-1,904 ms
-1,904 ns/op
-525,210 ops/s
-98.9 % of CPU usage
-
-Max throughput:
-5,000,000 ops
-9,828 ms
-1,965 ns/op
-508,750 ops/s
-99.6 % of CPU usage
-
-Ping latency:
-1,000,000 ops
-2,340 ms
-2,340 ns/op
-427,350 ops/s
-99.0 % of CPU usage
-
-Ping throughput 1K:
-2,000,000 ops
-3,104 ms
-1,552 ns/op
-644,329 ops/s
-98.9 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.234 sec
-Running com.github.plokhotnyuk.actors.ScalazActorSpec
-Executor service type: scala-forkjoin-pool
-
-Single-producer sending:
-100,000,000 ops
-8,861 ms
-88 ns/op
-11,285,407 ops/s
-95.9 % of CPU usage
-
-Multi-producer sending:
-50,000,000 ops
-3,885 ms
-77 ns/op
-12,870,012 ops/s
-97.9 % of CPU usage
-
-Max throughput:
-200,000,000 ops
-20,779 ms
-103 ns/op
-9,625,102 ops/s
-98.6 % of CPU usage
-
-Ping latency:
-20,000,000 ops
-10,218 ms
-510 ns/op
-1,957,330 ops/s
-99.7 % of CPU usage
-
-Ping throughput 1K:
-20,000,000 ops
-4,695 ms
-234 ns/op
-4,259,850 ops/s
-99.3 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 49.436 sec
-
-Results :
-
-Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
-
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 2:07.718s
-[INFO] Finished at: Mon Jul 08 21:04:13 EEST 2013
-[INFO] Final Memory: 18M/1024M
-[INFO] ------------------------------------------------------------------------
-[INFO] Scanning for projects...
-[INFO]                                                                         
-[INFO] ------------------------------------------------------------------------
-[INFO] Building Actors 1.0-SNAPSHOT
-[INFO] ------------------------------------------------------------------------
-[INFO] 
-[INFO] --- maven-resources-plugin:2.5:resources (default-resources) @ actors ---
-[debug] execute contextualize
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.3:compile (compile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.10.2
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0-RC2 requires scala version: 2.10.2
-[WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
-[WARNING] Multiple versions of scala libraries detected!
-[WARNING] No source files found.
-[INFO] 
-[INFO] --- maven-resources-plugin:2.5:testResources (default-testResources) @ actors ---
-[debug] execute contextualize
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.3:testCompile (testCompile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.10.2
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0-RC2 requires scala version: 2.10.2
-[WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
-[WARNING] Multiple versions of scala libraries detected!
-[INFO] Nothing to compile - all classes are up to date
-[INFO] 
-[INFO] --- maven-surefire-plugin:2.13:test (default-test) @ actors ---
-[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-Running com.github.plokhotnyuk.actors.AkkaActorSpec
-Executor service type: java-forkjoin-pool
-
-Single-producer sending:
-40,000,000 ops
-3,042 ms
-76 ns/op
-13,149,243 ops/s
-49.4 % of CPU usage
-
-Multi-producer sending:
-20,000,000 ops
-2,059 ms
-102 ns/op
-9,713,453 ops/s
-71.6 % of CPU usage
-
-Max throughput:
-40,000,000 ops
-1,872 ms
-46 ns/op
-21,367,521 ops/s
-95.2 % of CPU usage
-
-Ping latency:
-10,000,000 ops
-3,120 ms
-312 ns/op
-3,205,128 ops/s
-98.3 % of CPU usage
-
-Ping throughput 1K:
-10,000,000 ops
-998 ms
-99 ns/op
-10,020,040 ops/s
-99.6 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.652 sec
-Running com.github.plokhotnyuk.actors.LiftActorSpec
-Executor service type: java-forkjoin-pool
-
-Single-producer sending:
-20,000,000 ops
 1,794 ms
-89 ns/op
-11,148,272 ops/s
-40.7 % of CPU usage
-
-Multi-producer sending:
-20,000,000 ops
-2,917 ms
-145 ns/op
-6,856,359 ops/s
-63.2 % of CPU usage
-
-Max throughput:
-20,000,000 ops
-1,513 ms
-75 ns/op
-13,218,770 ops/s
-91.8 % of CPU usage
-
-Ping latency:
-2,000,000 ops
-1,982 ms
-991 ns/op
-1,009,081 ops/s
-95.2 % of CPU usage
-
-Ping throughput 1K:
-5,000,000 ops
-1,123 ms
-224 ns/op
-4,452,359 ops/s
-99.7 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.312 sec
-Running com.github.plokhotnyuk.actors.ProxyActorsActorSpec
-Executor service type: java-forkjoin-pool
-
-Single-producer sending:
-10,000,000 ops
-9,734 ms
-973 ns/op
-1,027,326 ops/s
-98.8 % of CPU usage
+179 ns/op
+5,574,136 ops/s
+74.8 % of CPU usage
 
 Multi-producer sending:
 10,000,000 ops
-10,093 ms
-1,009 ns/op
-990,785 ops/s
-98.5 % of CPU usage
-
-Max throughput:
-5,000,000 ops
-4,742 ms
-948 ns/op
-1,054,407 ops/s
-98.9 % of CPU usage
-
-Ping latency:
-10,000,000 ops
-3,510 ms
-351 ns/op
-2,849,002 ops/s
-99.1 % of CPU usage
-
-Ping throughput 1K:
-100,000 ops
 1,763 ms
-17,630 ns/op
-56,721 ops/s
-63.0 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 33.212 sec
-Running com.github.plokhotnyuk.actors.ScalaActorSpec
-Executor service type: java-forkjoin-pool
-
-Single-producer sending:
-1,000,000 ops
-1,810 ms
-1,810 ns/op
-552,486 ops/s
-95.7 % of CPU usage
-
-Multi-producer sending:
-1,000,000 ops
-1,669 ms
-1,669 ns/op
-599,161 ops/s
-99.1 % of CPU usage
+176 ns/op
+5,672,149 ops/s
+72.6 % of CPU usage
 
 Max throughput:
 5,000,000 ops
-8,627 ms
-1,725 ns/op
-579,575 ops/s
-99.5 % of CPU usage
-
-Ping latency:
-1,000,000 ops
-2,230 ms
-2,230 ns/op
-448,430 ops/s
-98.6 % of CPU usage
-
-Ping throughput 1K:
-2,000,000 ops
-3,385 ms
-1,692 ns/op
-590,841 ops/s
-99.7 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.83 sec
-Running com.github.plokhotnyuk.actors.ScalazActorSpec
-Executor service type: java-forkjoin-pool
-
-Single-producer sending:
-100,000,000 ops
-10,530 ms
-105 ns/op
-9,496,676 ops/s
-93.6 % of CPU usage
-
-Multi-producer sending:
-50,000,000 ops
-3,074 ms
-61 ns/op
-16,265,452 ops/s
-98.5 % of CPU usage
-
-Max throughput:
-200,000,000 ops
-7,378 ms
-36 ns/op
-27,107,617 ops/s
-99.1 % of CPU usage
-
-Ping latency:
-20,000,000 ops
-7,426 ms
-371 ns/op
-2,693,239 ops/s
-99.9 % of CPU usage
-
-Ping throughput 1K:
-20,000,000 ops
-5,382 ms
-269 ns/op
-3,716,090 ops/s
-99.8 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 34.788 sec
-
-Results :
-
-Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
-
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 1:58.357s
-[INFO] Finished at: Mon Jul 08 21:06:13 EEST 2013
-[INFO] Final Memory: 18M/1024M
-[INFO] ------------------------------------------------------------------------
-[INFO] Scanning for projects...
-[INFO]                                                                         
-[INFO] ------------------------------------------------------------------------
-[INFO] Building Actors 1.0-SNAPSHOT
-[INFO] ------------------------------------------------------------------------
-[INFO] 
-[INFO] --- maven-resources-plugin:2.5:resources (default-resources) @ actors ---
-[debug] execute contextualize
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.3:compile (compile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.10.2
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0-RC2 requires scala version: 2.10.2
-[WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
-[WARNING] Multiple versions of scala libraries detected!
-[WARNING] No source files found.
-[INFO] 
-[INFO] --- maven-resources-plugin:2.5:testResources (default-testResources) @ actors ---
-[debug] execute contextualize
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.3:testCompile (testCompile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.10.2
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0-RC2 requires scala version: 2.10.2
-[WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
-[WARNING] Multiple versions of scala libraries detected!
-[INFO] Nothing to compile - all classes are up to date
-[INFO] 
-[INFO] --- maven-surefire-plugin:2.13:test (default-test) @ actors ---
-[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-Running com.github.plokhotnyuk.actors.AkkaActorSpec
-Executor service type: thread-pool
-
-Single-producer sending:
-40,000,000 ops
-3,214 ms
-80 ns/op
-12,445,550 ops/s
-52.9 % of CPU usage
-
-Multi-producer sending:
-20,000,000 ops
-2,169 ms
-108 ns/op
-9,220,839 ops/s
-69.9 % of CPU usage
-
-Max throughput:
-40,000,000 ops
-1,872 ms
-46 ns/op
-21,367,521 ops/s
-96.7 % of CPU usage
+796 ms
+159 ns/op
+6,281,407 ops/s
+59.3 % of CPU usage
 
 Ping latency:
 10,000,000 ops
-34,632 ms
-3,463 ns/op
-288,750 ops/s
-27.1 % of CPU usage
-
-Ping throughput 1K:
-10,000,000 ops
-4,041 ms
-404 ns/op
-2,474,634 ops/s
-59.8 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 47.58 sec
-Running com.github.plokhotnyuk.actors.LiftActorSpec
-Executor service type: thread-pool
-
-Single-producer sending:
-20,000,000 ops
-1,966 ms
-98 ns/op
-10,172,939 ops/s
-41.9 % of CPU usage
-
-Multi-producer sending:
-20,000,000 ops
-3,073 ms
-153 ns/op
-6,508,298 ops/s
-65.4 % of CPU usage
-
-Max throughput:
-20,000,000 ops
-1,451 ms
-72 ns/op
-13,783,597 ops/s
-94.3 % of CPU usage
-
-Ping latency:
-2,000,000 ops
-7,800 ms
-3,900 ns/op
-256,410 ops/s
-30.7 % of CPU usage
-
-Ping throughput 1K:
-5,000,000 ops
-2,012 ms
-402 ns/op
-2,485,089 ops/s
-78.5 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.332 sec
-Running com.github.plokhotnyuk.actors.ProxyActorsActorSpec
-Executor service type: thread-pool
-
-Single-producer sending:
-10,000,000 ops
-3,089 ms
-308 ns/op
-3,237,293 ops/s
-57.8 % of CPU usage
-
-Multi-producer sending:
-10,000,000 ops
-3,307 ms
-330 ns/op
-3,023,888 ops/s
-73.7 % of CPU usage
-
-Max throughput:
-5,000,000 ops
-1,638 ms
-327 ns/op
-3,052,503 ops/s
-67.6 % of CPU usage
-
-Ping latency:
-10,000,000 ops
-39,999 ms
-3,999 ns/op
-250,006 ops/s
-28.9 % of CPU usage
+7,909 ms
+790 ns/op
+1,264,382 ops/s
+43.5 % of CPU usage
 
 Ping throughput 1K:
 100,000 ops
 1,919 ms
 19,190 ns/op
 52,110 ops/s
-69.3 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 53.508 sec
+51.0 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.613 sec
 Running com.github.plokhotnyuk.actors.ScalaActorSpec
-Executor service type: thread-pool
+Executor service type: fixed-thread-pool
 
 Single-producer sending:
 1,000,000 ops
-2,839 ms
-2,839 ns/op
-352,236 ops/s
-52.5 % of CPU usage
+3,463 ms
+3,463 ns/op
+288,766 ops/s
+56.1 % of CPU usage
 
 Multi-producer sending:
 1,000,000 ops
-2,387 ms
-2,387 ns/op
-418,935 ops/s
-47.5 % of CPU usage
+3,603 ms
+3,603 ns/op
+277,546 ops/s
+56.2 % of CPU usage
 
 Max throughput:
 5,000,000 ops
-5,522 ms
-1,104 ns/op
-905,469 ops/s
-70.5 % of CPU usage
+6,147 ms
+1,229 ns/op
+813,404 ops/s
+28.2 % of CPU usage
 
 Ping latency:
 1,000,000 ops
-8,315 ms
-8,315 ns/op
-120,264 ops/s
-39.9 % of CPU usage
+4,493 ms
+4,493 ns/op
+222,568 ops/s
+62.2 % of CPU usage
 
 Ping throughput 1K:
 2,000,000 ops
-3,088 ms
-1,544 ns/op
-647,668 ops/s
-90.4 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.197 sec
+3,682 ms
+1,841 ns/op
+543,183 ops/s
+25.2 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.402 sec
 Running com.github.plokhotnyuk.actors.ScalazActorSpec
-Executor service type: thread-pool
+Executor service type: fixed-thread-pool
 
 Single-producer sending:
 100,000,000 ops
-4,462 ms
-44 ns/op
-22,411,474 ops/s
-49.6 % of CPU usage
+3,385 ms
+33 ns/op
+29,542,097 ops/s
+67.6 % of CPU usage
 
 Multi-producer sending:
 50,000,000 ops
-3,291 ms
+3,276 ms
 65 ns/op
-15,192,950 ops/s
-97.5 % of CPU usage
+15,262,515 ops/s
+98.3 % of CPU usage
 
 Max throughput:
 200,000,000 ops
-2,402 ms
-12 ns/op
-83,263,946 ops/s
-92.9 % of CPU usage
+2,215 ms
+11 ns/op
+90,293,453 ops/s
+98.6 % of CPU usage
 
 Ping latency:
 20,000,000 ops
-5,663 ms
-283 ns/op
-3,531,696 ops/s
-41.7 % of CPU usage
+4,305 ms
+215 ns/op
+4,645,760 ops/s
+47.5 % of CPU usage
 
 Ping throughput 1K:
 20,000,000 ops
-6,412 ms
-320 ns/op
-3,119,151 ops/s
-46.7 % of CPU usage
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.213 sec
+1,669 ms
+83 ns/op
+11,983,223 ops/s
+25.0 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.912 sec
 
 Results :
 
@@ -1014,7 +282,739 @@ Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 2:53.441s
-[INFO] Finished at: Mon Jul 08 21:09:08 EEST 2013
+[INFO] Total time: 1:34.256s
+[INFO] Finished at: Thu Jul 11 16:24:09 EEST 2013
+[INFO] Final Memory: 18M/1024M
+[INFO] ------------------------------------------------------------------------
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Actors 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:2.5:resources (default-resources) @ actors ---
+[debug] execute contextualize
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.3:compile (compile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.2
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0 requires scala version: 2.10.2
+[WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
+[WARNING] Multiple versions of scala libraries detected!
+[WARNING] No source files found.
+[INFO] 
+[INFO] --- maven-resources-plugin:2.5:testResources (default-testResources) @ actors ---
+[debug] execute contextualize
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.3:testCompile (testCompile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.2
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0 requires scala version: 2.10.2
+[WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.13:test (default-test) @ actors ---
+[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running com.github.plokhotnyuk.actors.AkkaActorSpec
+Executor service type: scala-forkjoin-pool
+
+Single-producer sending:
+40,000,000 ops
+3,167 ms
+79 ns/op
+12,630,249 ops/s
+54.4 % of CPU usage
+
+Multi-producer sending:
+20,000,000 ops
+2,091 ms
+104 ns/op
+9,564,801 ops/s
+70.7 % of CPU usage
+
+Max throughput:
+40,000,000 ops
+2,246 ms
+56 ns/op
+17,809,439 ops/s
+95.2 % of CPU usage
+
+Ping latency:
+10,000,000 ops
+8,502 ms
+850 ns/op
+1,176,193 ops/s
+98.9 % of CPU usage
+
+Ping throughput 1K:
+10,000,000 ops
+3,120 ms
+312 ns/op
+3,205,128 ops/s
+99.8 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.748 sec
+Running com.github.plokhotnyuk.actors.LiftActorSpec
+Executor service type: scala-forkjoin-pool
+
+Single-producer sending:
+20,000,000 ops
+1,732 ms
+86 ns/op
+11,547,344 ops/s
+37.6 % of CPU usage
+
+Multi-producer sending:
+20,000,000 ops
+3,331 ms
+166 ns/op
+6,004,202 ops/s
+54.9 % of CPU usage
+
+Max throughput:
+20,000,000 ops
+1,262 ms
+63 ns/op
+15,847,860 ops/s
+91.2 % of CPU usage
+
+Ping latency:
+2,000,000 ops
+2,447 ms
+1,223 ns/op
+817,327 ops/s
+93.6 % of CPU usage
+
+Ping throughput 1K:
+5,000,000 ops
+2,015 ms
+403 ns/op
+2,481,389 ops/s
+93.7 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.899 sec
+Running com.github.plokhotnyuk.actors.ProxyActorsActorSpec
+Executor service type: scala-forkjoin-pool
+
+Single-producer sending:
+10,000,000 ops
+3,472 ms
+347 ns/op
+2,880,184 ops/s
+79.5 % of CPU usage
+
+Multi-producer sending:
+10,000,000 ops
+3,872 ms
+387 ns/op
+2,582,644 ops/s
+76.3 % of CPU usage
+
+Max throughput:
+5,000,000 ops
+1,309 ms
+261 ns/op
+3,819,709 ops/s
+95.0 % of CPU usage
+
+Ping latency:
+10,000,000 ops
+7,176 ms
+717 ns/op
+1,393,534 ops/s
+99.0 % of CPU usage
+
+Ping throughput 1K:
+100,000 ops
+2,506 ms
+25,060 ns/op
+39,904 ops/s
+66.8 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.233 sec
+Running com.github.plokhotnyuk.actors.ScalaActorSpec
+Executor service type: scala-forkjoin-pool
+
+Single-producer sending:
+1,000,000 ops
+2,054 ms
+2,054 ns/op
+486,854 ops/s
+98.5 % of CPU usage
+
+Multi-producer sending:
+1,000,000 ops
+1,936 ms
+1,936 ns/op
+516,528 ops/s
+97.9 % of CPU usage
+
+Max throughput:
+5,000,000 ops
+9,959 ms
+1,991 ns/op
+502,058 ops/s
+98.4 % of CPU usage
+
+Ping latency:
+1,000,000 ops
+2,123 ms
+2,123 ns/op
+471,031 ops/s
+99.0 % of CPU usage
+
+Ping throughput 1K:
+2,000,000 ops
+4,139 ms
+2,069 ns/op
+483,208 ops/s
+98.7 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 21.277 sec
+Running com.github.plokhotnyuk.actors.ScalazActorSpec
+Executor service type: scala-forkjoin-pool
+
+Single-producer sending:
+100,000,000 ops
+9,983 ms
+99 ns/op
+10,017,028 ops/s
+96.0 % of CPU usage
+
+Multi-producer sending:
+50,000,000 ops
+4,119 ms
+82 ns/op
+12,138,868 ops/s
+93.6 % of CPU usage
+
+Max throughput:
+200,000,000 ops
+24,405 ms
+122 ns/op
+8,195,041 ops/s
+99.0 % of CPU usage
+
+Ping latency:
+20,000,000 ops
+10,937 ms
+546 ns/op
+1,828,655 ops/s
+99.2 % of CPU usage
+
+Ping throughput 1K:
+20,000,000 ops
+11,698 ms
+584 ns/op
+1,709,693 ops/s
+99.6 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 62.162 sec
+
+Results :
+
+Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 2:26.999s
+[INFO] Finished at: Thu Jul 11 16:26:38 EEST 2013
+[INFO] Final Memory: 18M/1024M
+[INFO] ------------------------------------------------------------------------
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Actors 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:2.5:resources (default-resources) @ actors ---
+[debug] execute contextualize
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.3:compile (compile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.2
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0 requires scala version: 2.10.2
+[WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
+[WARNING] Multiple versions of scala libraries detected!
+[WARNING] No source files found.
+[INFO] 
+[INFO] --- maven-resources-plugin:2.5:testResources (default-testResources) @ actors ---
+[debug] execute contextualize
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.3:testCompile (testCompile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.2
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0 requires scala version: 2.10.2
+[WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.13:test (default-test) @ actors ---
+[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running com.github.plokhotnyuk.actors.AkkaActorSpec
+Executor service type: java-forkjoin-pool
+
+Single-producer sending:
+40,000,000 ops
+3,429 ms
+85 ns/op
+11,665,208 ops/s
+53.7 % of CPU usage
+
+Multi-producer sending:
+20,000,000 ops
+2,242 ms
+112 ns/op
+8,920,606 ops/s
+69.6 % of CPU usage
+
+Max throughput:
+40,000,000 ops
+2,182 ms
+54 ns/op
+18,331,805 ops/s
+85.1 % of CPU usage
+
+Ping latency:
+10,000,000 ops
+2,840 ms
+284 ns/op
+3,521,126 ops/s
+97.4 % of CPU usage
+
+Ping throughput 1K:
+10,000,000 ops
+1,769 ms
+176 ns/op
+5,652,911 ops/s
+99.0 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 14.115 sec
+Running com.github.plokhotnyuk.actors.LiftActorSpec
+Executor service type: java-forkjoin-pool
+
+Single-producer sending:
+20,000,000 ops
+1,743 ms
+87 ns/op
+11,474,469 ops/s
+41.6 % of CPU usage
+
+Multi-producer sending:
+20,000,000 ops
+3,062 ms
+153 ns/op
+6,531,678 ops/s
+62.7 % of CPU usage
+
+Max throughput:
+20,000,000 ops
+1,261 ms
+63 ns/op
+15,860,428 ops/s
+95.6 % of CPU usage
+
+Ping latency:
+2,000,000 ops
+1,985 ms
+992 ns/op
+1,007,556 ops/s
+92.5 % of CPU usage
+
+Ping throughput 1K:
+5,000,000 ops
+1,389 ms
+277 ns/op
+3,599,712 ops/s
+97.1 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.497 sec
+Running com.github.plokhotnyuk.actors.ProxyActorsActorSpec
+Executor service type: java-forkjoin-pool
+
+Single-producer sending:
+10,000,000 ops
+10,679 ms
+1,067 ns/op
+936,417 ops/s
+97.9 % of CPU usage
+
+Multi-producer sending:
+10,000,000 ops
+10,925 ms
+1,092 ns/op
+915,331 ops/s
+97.5 % of CPU usage
+
+Max throughput:
+5,000,000 ops
+5,035 ms
+1,007 ns/op
+993,048 ops/s
+98.0 % of CPU usage
+
+Ping latency:
+10,000,000 ops
+3,523 ms
+352 ns/op
+2,838,489 ops/s
+98.4 % of CPU usage
+
+Ping throughput 1K:
+100,000 ops
+2,053 ms
+20,530 ns/op
+48,709 ops/s
+70.5 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 36.021 sec
+Running com.github.plokhotnyuk.actors.ScalaActorSpec
+Executor service type: java-forkjoin-pool
+
+Single-producer sending:
+1,000,000 ops
+1,628 ms
+1,628 ns/op
+614,250 ops/s
+98.9 % of CPU usage
+
+Multi-producer sending:
+1,000,000 ops
+1,670 ms
+1,670 ns/op
+598,802 ops/s
+98.3 % of CPU usage
+
+Max throughput:
+5,000,000 ops
+7,501 ms
+1,500 ns/op
+666,577 ops/s
+99.3 % of CPU usage
+
+Ping latency:
+1,000,000 ops
+2,400 ms
+2,400 ns/op
+416,666 ops/s
+98.6 % of CPU usage
+
+Ping throughput 1K:
+2,000,000 ops
+2,187 ms
+1,093 ns/op
+914,494 ops/s
+99.0 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.496 sec
+Running com.github.plokhotnyuk.actors.ScalazActorSpec
+Executor service type: java-forkjoin-pool
+
+Single-producer sending:
+100,000,000 ops
+8,269 ms
+82 ns/op
+12,093,360 ops/s
+88.6 % of CPU usage
+
+Multi-producer sending:
+50,000,000 ops
+3,377 ms
+67 ns/op
+14,806,040 ops/s
+98.5 % of CPU usage
+
+Max throughput:
+200,000,000 ops
+9,495 ms
+47 ns/op
+21,063,717 ops/s
+98.7 % of CPU usage
+
+Ping latency:
+20,000,000 ops
+4,933 ms
+246 ns/op
+4,054,327 ops/s
+99.6 % of CPU usage
+
+Ping throughput 1K:
+20,000,000 ops
+4,869 ms
+243 ns/op
+4,107,619 ops/s
+99.8 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 31.997 sec
+
+Results :
+
+Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 1:57.737s
+[INFO] Finished at: Thu Jul 11 16:28:37 EEST 2013
+[INFO] Final Memory: 18M/1024M
+[INFO] ------------------------------------------------------------------------
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Actors 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:2.5:resources (default-resources) @ actors ---
+[debug] execute contextualize
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.3:compile (compile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.2
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0 requires scala version: 2.10.2
+[WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
+[WARNING] Multiple versions of scala libraries detected!
+[WARNING] No source files found.
+[INFO] 
+[INFO] --- maven-resources-plugin:2.5:testResources (default-testResources) @ actors ---
+[debug] execute contextualize
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.3:testCompile (testCompile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.2
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.2
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.2.0 requires scala version: 2.10.2
+[WARNING]  net.liftweb:lift-common_2.10:2.5.1 requires scala version: 2.10.0
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.13:test (default-test) @ actors ---
+[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running com.github.plokhotnyuk.actors.AkkaActorSpec
+Executor service type: thread-pool
+
+Single-producer sending:
+40,000,000 ops
+3,446 ms
+86 ns/op
+11,607,661 ops/s
+54.1 % of CPU usage
+
+Multi-producer sending:
+20,000,000 ops
+2,198 ms
+109 ns/op
+9,099,181 ops/s
+67.8 % of CPU usage
+
+Max throughput:
+40,000,000 ops
+2,423 ms
+60 ns/op
+16,508,460 ops/s
+95.4 % of CPU usage
+
+Ping latency:
+10,000,000 ops
+36,500 ms
+3,650 ns/op
+273,972 ops/s
+27.5 % of CPU usage
+
+Ping throughput 1K:
+10,000,000 ops
+4,469 ms
+446 ns/op
+2,237,637 ops/s
+58.8 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 50.706 sec
+Running com.github.plokhotnyuk.actors.LiftActorSpec
+Executor service type: thread-pool
+
+Single-producer sending:
+20,000,000 ops
+1,879 ms
+93 ns/op
+10,643,959 ops/s
+41.3 % of CPU usage
+
+Multi-producer sending:
+20,000,000 ops
+3,189 ms
+159 ns/op
+6,271,558 ops/s
+63.6 % of CPU usage
+
+Max throughput:
+20,000,000 ops
+1,389 ms
+69 ns/op
+14,398,848 ops/s
+91.3 % of CPU usage
+
+Ping latency:
+2,000,000 ops
+7,623 ms
+3,811 ns/op
+262,363 ops/s
+35.2 % of CPU usage
+
+Ping throughput 1K:
+5,000,000 ops
+2,773 ms
+554 ns/op
+1,803,101 ops/s
+59.4 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.868 sec
+Running com.github.plokhotnyuk.actors.ProxyActorsActorSpec
+Executor service type: thread-pool
+
+Single-producer sending:
+10,000,000 ops
+3,266 ms
+326 ns/op
+3,061,849 ops/s
+60.3 % of CPU usage
+
+Multi-producer sending:
+10,000,000 ops
+3,490 ms
+349 ns/op
+2,865,329 ops/s
+71.3 % of CPU usage
+
+Max throughput:
+5,000,000 ops
+1,691 ms
+338 ns/op
+2,956,830 ops/s
+71.5 % of CPU usage
+
+Ping latency:
+10,000,000 ops
+36,079 ms
+3,607 ns/op
+277,169 ops/s
+29.0 % of CPU usage
+
+Ping throughput 1K:
+100,000 ops
+1,987 ms
+19,870 ns/op
+50,327 ops/s
+68.5 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 50.204 sec
+Running com.github.plokhotnyuk.actors.ScalaActorSpec
+Executor service type: thread-pool
+
+Single-producer sending:
+1,000,000 ops
+3,512 ms
+3,512 ns/op
+284,738 ops/s
+52.9 % of CPU usage
+
+Multi-producer sending:
+1,000,000 ops
+3,089 ms
+3,089 ns/op
+323,729 ops/s
+49.5 % of CPU usage
+
+Max throughput:
+5,000,000 ops
+5,919 ms
+1,183 ns/op
+844,737 ops/s
+78.0 % of CPU usage
+
+Ping latency:
+1,000,000 ops
+8,933 ms
+8,933 ns/op
+111,944 ops/s
+41.4 % of CPU usage
+
+Ping throughput 1K:
+2,000,000 ops
+3,342 ms
+1,671 ns/op
+598,444 ops/s
+88.5 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 25.866 sec
+Running com.github.plokhotnyuk.actors.ScalazActorSpec
+Executor service type: thread-pool
+
+Single-producer sending:
+100,000,000 ops
+4,649 ms
+46 ns/op
+21,510,002 ops/s
+57.1 % of CPU usage
+
+Multi-producer sending:
+50,000,000 ops
+3,080 ms
+61 ns/op
+16,233,766 ops/s
+97.1 % of CPU usage
+
+Max throughput:
+200,000,000 ops
+2,349 ms
+11 ns/op
+85,142,613 ops/s
+93.3 % of CPU usage
+
+Ping latency:
+20,000,000 ops
+6,052 ms
+302 ns/op
+3,304,692 ops/s
+44.3 % of CPU usage
+
+Ping throughput 1K:
+20,000,000 ops
+6,598 ms
+329 ns/op
+3,031,221 ops/s
+50.2 % of CPU usage
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.762 sec
+
+Results :
+
+Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 2:57.064s
+[INFO] Finished at: Thu Jul 11 16:31:35 EEST 2013
 [INFO] Final Memory: 18M/1024M
 [INFO] ------------------------------------------------------------------------

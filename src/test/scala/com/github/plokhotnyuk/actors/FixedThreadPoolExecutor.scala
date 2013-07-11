@@ -89,68 +89,57 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
     terminations.await(timeout, unit)
   }
 
-  def execute(task: Runnable) {
-    if (state.get == 0) put(task)
-    else onReject(task)
+  def execute(t: Runnable) {
+    if (t == null) throw new NullPointerException()
+    else if (state.get != 0) onReject(t)
+    else {
+      val n = new TaskNode(t)
+      if (putLock.synchronized {
+        val hn = head
+        hn.next = n
+        head = n
+        hn.task eq null
+      }) takeLock.synchronized(takeLock.notify())
+    }
   }
 
   override def toString: String = super.toString +
     "[" + status + ", pool size = " + threads.size + ", name = " + name + "]"
 
   @annotation.tailrec
-  private def drainTo(tasks: util.List[Runnable]): util.List[Runnable] = {
+  private def drainTo(ts: util.List[Runnable]): util.List[Runnable] = {
     val n = tail.next
-    if (n eq null) tasks
+    if (n eq null) ts
     else {
-      tasks.add(n.task)
+      ts.add(n.task)
       n.task = null
       tail = n
-      drainTo(tasks)
-    }
-  }
-
-  private def put(task: Runnable) {
-    if (task == null) throw new NullPointerException()
-    val n = new TaskNode(task)
-    val wasEmpty = putLock.synchronized {
-      val hn = head
-      hn.next = n
-      head = n
-      hn.task eq null
-    }
-    if (wasEmpty) takeLock.synchronized {
-      takeLock.notify()
+      drainTo(ts)
     }
   }
 
   @annotation.tailrec
   private def doWork() {
-    if (state.get != 2) {
-      val task = takeLock.synchronized {
-        val n = tail.next
-        if (n eq null) {
-          if (state.get == 0) {
-            takeLock.wait()
-            null
-          } else return
-        } else {
-          val t = n.task
-          n.task = null
-          tail = n
-          t
-        }
-      }
-      if (task ne null) run(task)
-      doWork()
-    }
+    run(takeLock.synchronized {
+      val n = tail.next
+      if (n ne null) {
+        val t = n.task
+        n.task = null
+        tail = n
+        t
+      } else if (state.get == 0) {
+        takeLock.wait()
+        null
+      } else return
+    })
+    if (state.get != 2) doWork()
   }
 
-  private def run(task: Runnable) {
-    try {
-      task.run()
+  private def run(t: Runnable) {
+    if (t ne null) try {
+      t.run()
     } catch {
-      case ex: InterruptedException => if (state.get != 2) onError(ex)
-      case ex: Throwable => onError(ex)
+      case ex: Throwable => if (!ex.isInstanceOf[InterruptedException] || state.get != 2) onError(ex)
     }
   }
 

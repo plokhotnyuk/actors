@@ -14,15 +14,15 @@ Evaluation of API and performance of different actor libraries written on Scala:
 [![Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
 
 ## Benchmarks and their goals
-* `Single-producer sending` - throughput of messages sending from external thread to an actor
-* `Multi-producer sending` - throughput of messages sending from several external threads to an actor
-* `Max throughput` - throughput of messages sending from several external threads to several actors
-* `Ping latency` - average latency of sending a message between two actors when their message queues are empty
-* `Ping throughput 1K` - throughput of executor service by sending a message between 1K pairs of actors
+* `Single-producer sending` - throughput of message sending from external thread to an actor
+* `Multi-producer sending` - throughput of message sending from several external threads to an actor
+* `Max throughput` - throughput of message sending from several external threads to several actors
+* `Ping latency` - average latency of sending of a ping message between two actors when their message queues are empty
+* `Ping throughput 1K` - throughput of executor service by sending of a ping message between 1K pairs of actors
 
 ## Hardware required
 - CPU: 2 cores or more
-- RAM: min 6Gb (for JDK 64-bit) or min 3Gb (for JDK 32-bit)
+- RAM: 6Gb or greater
 
 ## Software installed required
 - JDK: 1.7.0_x or newer (can require of removing of some unsupported JVM options from test configuration)
