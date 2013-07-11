@@ -5,5 +5,10 @@ jdk:
   - openjdk7
   - oraclejdk7
 install: /bin/true # always succeeds
-script: ./travis-ci.sh
+script:
+  - mvn -B test-compile
+  - mvn -B -Dbenchmark.executorServiceType=fixed-thread-pool test -Ptravis
+  - mvn -B -Dbenchmark.executorServiceType=scala-forkjoin-pool test -Ptravis
+  - mvn -B -Dbenchmark.executorServiceType=java-forkjoin-pool test -Ptravis
+  - mvn -B -Dbenchmark.executorServiceType=thread-pool test -Ptravis
 
