@@ -17,7 +17,7 @@ Evaluation of API and performance of different actor libraries written on Scala:
 * `Single-producer sending` - throughput of message sending from external thread to an actor
 * `Multi-producer sending` - throughput of message sending from several external threads to an actor
 * `Max throughput` - throughput of message sending from several external threads to several actors
-* `Ping latency` - average latency of sending of a ping message between two actors when their message queues are empty
+* `Ping latency` - average latency of sending of a ping message between two actors
 * `Ping throughput 1K` - throughput of executor service by sending of a ping message between 1K pairs of actors
 
 ## Hardware required
@@ -25,7 +25,7 @@ Evaluation of API and performance of different actor libraries written on Scala:
 - RAM: 10Gb or greater
 
 ## Software installed required
-- JDK: 1.7.0_x or newer (can require of removing of some unsupported JVM options from test configuration)
+- JDK: 1.7.0_x or newer
 - Maven: 3.0.4 or sbt: 0.12.3
 
 ## Building & running benchmarks
@@ -38,7 +38,7 @@ or
 sbt clean test >outX.txt
 ```
 
-To run benchmarks for all available types of executor service use mvnAll.sh or sbtAll.sh scripts (for Windows: mvnAll.bat or sbtAll.bat).
+To run benchmarks for all available types of executor service use `mvnAll.sh` or `sbtAll.sh` scripts (for Windows: `mvnAll.bat` or `sbtAll.bat`).
 
 Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS system variables:
 
@@ -48,7 +48,7 @@ Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS s
 
 ## Test result descriptions
 Results of running mvnAll.bat or mvnAll.sh scripts on different environments with pool size set to
-number of available processors, 1, 10, and 100 accordingly:
+number of available processors, 1, 10, or 100 accordingly:
 
 #### out0*.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.8.0-ea-b96 64-bit
@@ -57,5 +57,4 @@ Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Wind
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_40-ea-b31 64-bit
 
 #### out2.txt
-Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1333, Ubuntu 12.04, JDK 1.7.0_40-ea-b28 64-bit
-
+Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1333, Ubuntu 12.04, Oracle JDK 1.7.0_40-ea-b28 64-bit
