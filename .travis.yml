@@ -6,7 +6,7 @@ jdk:
   - oraclejdk7
 install: /bin/true # always succeeds
 script:
-  - mvn -B test-compile
+  - mvn -B -DskipTests test
   - mvn -B -Dbenchmark.executorServiceType=fixed-thread-pool test -Ptravis
   - mvn -B -Dbenchmark.executorServiceType=scala-forkjoin-pool test -Ptravis
   - mvn -B -Dbenchmark.executorServiceType=java-forkjoin-pool test -Ptravis
