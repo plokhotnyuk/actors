@@ -23,11 +23,12 @@ import java.util.concurrent.atomic.AtomicInteger
  * `java.util.concurrent.RejectedExecutionException` can occurs only after shutdown
  * when pool was initialized with default implementation of `onReject: Runnable => Unit`.
  *
- * @param poolSize      A number of worker threads in pool
- * @param threadFactory A factory to be used to build worker threads
- * @param onError       The exception handler for unhandled errors during executing of tasks
- * @param onReject      The handler for rejection of task submission after shutdown
- * @param name          A name of the executor service
+ * @param poolSize       A number of worker threads in pool
+ * @param threadFactory  A factory to be used to build worker threads
+ * @param onError        The exception handler for unhandled errors during executing of tasks
+ * @param onReject       The handler for rejection of task submission after shutdown
+ * @param name           A name of the executor service
+ * @param contentionMask A number for tuning a latency & CPU usage at high submission rate
  */
 class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -37,9 +38,9 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = FixedThreadPoolExecutor.nextName()) extends AbstractExecutorService {
-  private val contentionMask = Runtime.getRuntime.availableProcessors() - 1
-  private var contendedCount = 0 // should slowdown count on contention of worker threads
+                              name: String = FixedThreadPoolExecutor.nextName(),
+                              contentionMask: Int = 5) extends AbstractExecutorService {
+  private var contention = 0 // should slowdown counting on contention of worker threads
   private var head = new TaskNode()
   private val putLock = new Object()
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
@@ -102,10 +103,10 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
         head = n
         hn.task eq null
       }) {
-        contendedCount += 1
+        contention += 1
         takeLock.synchronized {
-          if ((contendedCount & contentionMask) == 0) takeLock.notifyAll()
-          else takeLock.notify()
+          if ((contention & contentionMask) == 0) takeLock.notify()
+          else takeLock.notifyAll()
         }
       }
     }
