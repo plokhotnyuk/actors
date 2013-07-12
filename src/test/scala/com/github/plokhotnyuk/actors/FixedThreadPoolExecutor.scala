@@ -38,9 +38,10 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = FixedThreadPoolExecutor.nextName()) extends AbstractExecutorService {
+  private var contendedCount = 0 // should slowdown count on contention of worker threads
   private var head = new TaskNode()
   private val putLock = new Object()
-  private val state = new AtomicInteger(0)
+  private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val takeLock = new Object()
   private val terminations = new CountDownLatch(poolSize)
   private var tail = head
@@ -99,7 +100,13 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
         hn.next = n
         head = n
         hn.task eq null
-      }) takeLock.synchronized(takeLock.notifyAll())
+      }) {
+        contendedCount += 1
+        takeLock.synchronized {
+          if ((contendedCount & 3) == 0) takeLock.notifyAll()
+          else takeLock.notify()
+        }
+      }
     }
   }
 
