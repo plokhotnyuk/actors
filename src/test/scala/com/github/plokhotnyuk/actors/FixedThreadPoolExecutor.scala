@@ -3,6 +3,7 @@ package com.github.plokhotnyuk.actors
 import java.util
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
+import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
 
 /**
  * An implementation of an `java.util.concurrent.ExecutorService ExecutorService`
@@ -28,9 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger
  * @param onError        The exception handler for unhandled errors during executing of tasks
  * @param onReject       The handler for rejection of task submission after shutdown
  * @param name           A name of the executor service
- * @param contentionMask A number for tuning a latency & CPU usage at high submission rate
  */
-class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProcessors(),
+class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
                               threadFactory: ThreadFactory = new ThreadFactory() {
                                 def newThread(worker: Runnable): Thread = new Thread(worker) {
                                   setDaemon(true)
@@ -38,9 +38,8 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = FixedThreadPoolExecutor.nextName(),
-                              contentionMask: Int = 5) extends AbstractExecutorService {
-  private var contention = 0 // should slowdown counting on contention of worker threads
+                              name: String = nextName()) extends AbstractExecutorService {
+  private var contendedCount = 0 // should slowdown counting on contention of worker threads
   private var head = new TaskNode()
   private val putLock = new Object()
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
@@ -70,12 +69,12 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
   }
 
   def shutdown() {
-    FixedThreadPoolExecutor.checkShutdownAccess(threads)
+    checkShutdownAccess(threads)
     setState(1)
   }
 
   def shutdownNow(): util.List[Runnable] = {
-    FixedThreadPoolExecutor.checkShutdownAccess(threads)
+    checkShutdownAccess(threads)
     setState(2)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     takeLock.synchronized {
@@ -103,10 +102,10 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
         head = n
         hn.task eq null
       }) {
-        contention += 1
+        contendedCount += 1
         takeLock.synchronized {
-          if ((contention & contentionMask) == 0) takeLock.notify()
-          else takeLock.notifyAll()
+          if ((contendedCount & 5) == 0) takeLock.notifyAll()
+          else takeLock.notify()
         }
       }
     }
@@ -168,6 +167,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
 }
 
 private object FixedThreadPoolExecutor {
+  private val cpuNum = Runtime.getRuntime.availableProcessors()
   private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
 
