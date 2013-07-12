@@ -38,6 +38,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = FixedThreadPoolExecutor.nextName()) extends AbstractExecutorService {
+  private val contentionMask = Runtime.getRuntime.availableProcessors() - 1
   private var contendedCount = 0 // should slowdown count on contention of worker threads
   private var head = new TaskNode()
   private val putLock = new Object()
@@ -103,7 +104,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
       }) {
         contendedCount += 1
         takeLock.synchronized {
-          if ((contendedCount & 1) == 0) takeLock.notifyAll()
+          if ((contendedCount & contentionMask) == 0) takeLock.notifyAll()
           else takeLock.notify()
         }
       }
