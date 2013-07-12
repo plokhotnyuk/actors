@@ -99,7 +99,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
         hn.next = n
         head = n
         hn.task eq null
-      }) takeLock.synchronized(takeLock.notify())
+      }) takeLock.synchronized(takeLock.notifyAll())
     }
   }
 
