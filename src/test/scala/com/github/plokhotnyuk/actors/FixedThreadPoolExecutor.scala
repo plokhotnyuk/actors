@@ -38,8 +38,7 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = nextName(),
-                              notifyAllThreshold: Int = 32) extends AbstractExecutorService {
+                              name: String = nextName()) extends AbstractExecutorService {
   private var head = new TaskNode()
   private val putLock = new Object()
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
