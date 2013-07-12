@@ -103,7 +103,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
       }) {
         contendedCount += 1
         takeLock.synchronized {
-          if ((contendedCount & 3) == 0) takeLock.notifyAll()
+          if ((contendedCount & 1) == 0) takeLock.notifyAll()
           else takeLock.notify()
         }
       }
