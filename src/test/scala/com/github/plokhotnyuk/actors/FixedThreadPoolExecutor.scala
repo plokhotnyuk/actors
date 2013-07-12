@@ -40,13 +40,14 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = nextName(),
                               notifyAllThreshold: Int = 32) extends AbstractExecutorService {
-  private var notifies = notifyAllThreshold
   private var head = new TaskNode()
   private val putLock = new Object()
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val takeLock = new Object()
   private val terminations = new CountDownLatch(poolSize)
   private var tail = head
+  private var waiters = 0
+  private val optimalWaiters = poolSize - cpuNum
   private val threads = {
     val tf = threadFactory // to avoid creating of fields for a constructor params
     val ts = terminations // to avoid long field name
@@ -55,7 +56,7 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
         val wt = tf.newThread(new Runnable() {
           def run() {
             try {
-              doWork()
+              doWork(0)
             } catch {
               case ex: InterruptedException => // can occurs on shutdownNow when worker is backing off
             } finally {
@@ -102,15 +103,7 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
         hn.next = n
         head = n
         hn.task eq null
-      }) takeLock.synchronized {
-        if (notifies > 0) {
-          notifies -= 1
-          takeLock.notify()
-        } else {
-          notifies = notifyAllThreshold
-          takeLock.notifyAll()
-        }
-      }
+      }) signalWaiters()
     }
   }
 
@@ -129,8 +122,23 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
     }
   }
 
+  private def signalWaiters() {
+    takeLock.synchronized {
+      val w = waiters
+      if (w > 0) {
+        waiters = if (w < optimalWaiters) {
+          takeLock.notify()
+          w - 1
+        } else {
+          takeLock.notifyAll()
+          0
+        }
+      }
+    }
+  }
+
   @annotation.tailrec
-  private def doWork() {
+  private def doWork(s: Int) {
     run(takeLock.synchronized {
       val n = tail.next
       if (n ne null) {
@@ -138,12 +146,13 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
         n.task = null
         tail = n
         t
-      } else if (state.get == 0) {
+      } else if (s == 0) {
+        waiters += 1
         takeLock.wait()
         null
       } else return
     })
-    if (state.get != 2) doWork()
+    if (s != 2) doWork(state.get)
   }
 
   private def run(t: Runnable) {
