@@ -39,14 +39,14 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = nextName()) extends AbstractExecutorService {
+  private val optimalWaiters = poolSize - cpuNum
+  private var waiters = 0
   private var head = new TaskNode()
   private val putLock = new Object()
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
   private val takeLock = new Object()
   private val terminations = new CountDownLatch(poolSize)
   private var tail = head
-  private var waiters = 0
-  private val optimalWaiters = poolSize - cpuNum
   private val threads = {
     val tf = threadFactory // to avoid creating of fields for a constructor params
     val ts = terminations // to avoid long field name
@@ -123,15 +123,12 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
 
   private def signalWaiters() {
     takeLock.synchronized {
-      val w = waiters
-      if (w > 0) {
-        waiters = if (w < optimalWaiters) {
-          takeLock.notify()
-          w - 1
-        } else {
-          takeLock.notifyAll()
-          0
-        }
+      if (waiters >= optimalWaiters) {
+        takeLock.notifyAll()
+        waiters = 0
+      } else if (waiters > 0) {
+        takeLock.notify()
+        waiters -= 1
       }
     }
   }
