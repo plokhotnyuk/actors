@@ -29,15 +29,11 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * @param onError        The exception handler for unhandled errors during executing of tasks
  * @param onReject       The handler for rejection of task submission after shutdown
  * @param name           A name of the executor service
- * @param notifyAll      A flag either all or one waiting thread(s) will be awoken on message
+ * @param notifyAll      A flag either all or one waiting thread(s) will be awoken on task
  *                       submission when task queue was empty
  */
 class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
-                              threadFactory: ThreadFactory = new ThreadFactory() {
-                                def newThread(worker: Runnable): Thread = new Thread(worker) {
-                                  setDaemon(true)
-                                }
-                              },
+                              threadFactory: ThreadFactory = newDaemonThreadFactory(),
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = nextName(),
@@ -110,8 +106,8 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
     }
   }
 
-  override def toString: String = super.toString +
-    "[" + status + ", pool size = " + threads.size + ", name = " + name + "]"
+  override def toString: String =
+    super.toString + "[" + status + ", pool size = " + threads.size + ", name = " + name + "]"
 
   @annotation.tailrec
   private def drainTo(ts: util.List[Runnable]): util.List[Runnable] = {
@@ -170,13 +166,19 @@ private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
 
+  def newDaemonThreadFactory(): ThreadFactory = new ThreadFactory() {
+    def newThread(worker: Runnable): Thread = new Thread(worker) {
+      setDaemon(true)
+    }
+  }
+
   def nextName(): String = "FixedThreadPool-" + poolId.getAndAdd(1)
 
   def checkShutdownAccess(threads: Seq[Thread]) {
     val security = System.getSecurityManager
     if (security != null) {
       security.checkPermission(shutdownPerm)
-      threads.foreach(security.checkAccess(_))
+      threads.foreach(security.checkAccess)
     }
   }
 }
