@@ -29,6 +29,8 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * @param onError        The exception handler for unhandled errors during executing of tasks
  * @param onReject       The handler for rejection of task submission after shutdown
  * @param name           A name of the executor service
+ * @param notifyAll      A flag either all or one waiting thread(s) will be awoken on message
+ *                       submission when task queue was empty
  */
 class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -38,9 +40,8 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = nextName()) extends AbstractExecutorService {
-  private val optimalWaiters = poolSize - cpuNum
-  private var waiters = 0
+                              name: String = nextName(),
+                              notifyAll: Boolean = true) extends AbstractExecutorService {
   private var head = new TaskNode()
   private val putLock = new Object()
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
@@ -97,12 +98,15 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
     else if (state.get != 0) onReject(t)
     else {
       val n = new TaskNode(t)
-      if (putLock.synchronized {
+      if (null eq putLock.synchronized {
         val hn = head
         hn.next = n
         head = n
-        hn.task eq null
-      }) signalWaiters()
+        hn.task
+      }) takeLock.synchronized {
+        if (notifyAll) takeLock.notifyAll()
+        else takeLock.notify()
+      }
     }
   }
 
@@ -121,18 +125,6 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
     }
   }
 
-  private def signalWaiters() {
-    takeLock.synchronized {
-      if (waiters >= optimalWaiters) {
-        takeLock.notifyAll()
-        waiters = 0
-      } else if (waiters > 0) {
-        takeLock.notify()
-        waiters -= 1
-      }
-    }
-  }
-
   @annotation.tailrec
   private def doWork(s: Int) {
     run(takeLock.synchronized {
@@ -143,7 +135,6 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
         tail = n
         t
       } else if (s == 0) {
-        waiters += 1
         takeLock.wait()
         null
       } else return
