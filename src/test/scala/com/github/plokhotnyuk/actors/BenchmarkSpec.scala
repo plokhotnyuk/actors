@@ -3,7 +3,7 @@ package com.github.plokhotnyuk.actors
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import org.specs2.mutable.Specification
-import org.specs2.execute.{Success, Result}
+import org.specs2.execute.Success
 import org.specs2.specification.{Step, Fragments, Example}
 import concurrent.forkjoin.{ForkJoinWorkerThread => ScalaForkJoinWorkerThread, ForkJoinPool => ScalaForkJoinPool}
 import java.util.concurrent._
@@ -46,6 +46,8 @@ object BenchmarkSpec {
   val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
   val osMBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
   var cpuId: Int = 0
+
+  implicit def anyToSuccess(a: Any) = Success()
 
   def affinityType: String =
     if (NativeAffinity.LOADED) "JNI-based"
@@ -91,10 +93,10 @@ object BenchmarkSpec {
     }
   }
 
-  def timed(n: => Int)(benchmark: => Unit): Result = {
+  def timed[A](n: Int)(benchmark: => A): A = {
     val t = System.currentTimeMillis * 1000000L
     val ct = osMBean.getProcessCpuTime
-    benchmark
+    val r = benchmark
     val cd = osMBean.getProcessCpuTime - ct
     val d = System.currentTimeMillis * 1000000L - t
     println(f"$n%,d ops")
@@ -102,7 +104,30 @@ object BenchmarkSpec {
     println(f"${d / n}%,d ns/op")
     println(f"${(n * 1000000000L) / d}%,d ops/s")
     println(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
-    Success()
+    r
+  }
+
+  def footprintedCollect[A](n: Int)(construct: Int => A): Seq[A] = {
+    def usedMemory: Long = {
+      for (i <- 1 to 3) {
+        System.gc()
+        Thread.sleep(100)
+      }
+      Runtime.getRuntime.totalMemory() - Runtime.getRuntime.freeMemory()
+    }
+
+    val as = Array.ofDim(n).asInstanceOf[Array[A]]
+    val u = usedMemory
+    timed(n) {
+      var i = n
+      while (i > 0) {
+        i -= 1
+        as(i) = construct(i)
+      }
+    }
+    val m = usedMemory - u
+    println(f"${m / n}%,d bytes per instance")
+    as
   }
 
   def fork(code: => Unit) {

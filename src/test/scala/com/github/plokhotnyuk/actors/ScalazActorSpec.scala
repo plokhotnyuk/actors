@@ -59,31 +59,38 @@ class ScalazActorSpec extends BenchmarkSpec {
     ping(20000000, 1)
   }
 
-  "Ping throughput 1K" in {
-    ping(20000000, 1000)
+  "Ping throughput 10K" in {
+    ping(20000000, 10000)
+  }
+
+  "Initiation 1M" in {
+    footprintedCollect(1000000)(_ => actor[Message] {
+      (m: Message) =>
+    })
   }
 
   def ping(n: Int, p: Int): Result = {
     val l = new CountDownLatch(p * 2)
-    val as = for (i <- 1 to p) yield {
-      var a1: Actor[Message] = null
-      val a2 = actor[Message] {
-        var i = n / p / 2
+    val as = (1 to p).map {
+      _ =>
+        var a1: Actor[Message] = null
+        val a2 = actor[Message] {
+          var i = n / p / 2
 
-        (m: Message) =>
-          if (i > 0) a1 ! m
-          i -= 1
-          if (i == 0) l.countDown()
-      }
-      a1 = actor[Message] {
-        var i = n / p / 2
+          (m: Message) =>
+            if (i > 0) a1 ! m
+            i -= 1
+            if (i == 0) l.countDown()
+        }
+        a1 = actor[Message] {
+          var i = n / p / 2
 
-        (m: Message) =>
-          if (i > 0) a2 ! m
-          i -= 1
-          if (i == 0) l.countDown()
-      }
-      a2
+          (m: Message) =>
+            if (i > 0) a2 ! m
+            i -= 1
+            if (i == 0) l.countDown()
+        }
+        a2
     }
     timed(n) {
       as.foreach(_ ! Message())

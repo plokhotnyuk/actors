@@ -70,13 +70,25 @@ class ScalaActorSpec extends BenchmarkSpec {
     ping(1000000, 1)
   }
 
-  "Ping throughput 1K" in {
-    ping(2000000, 1000)
+  "Ping throughput 10K" in {
+    ping(2000000, 10000)
+  }
+
+  "Initiation 1M" in {
+    footprintedCollect(1000000)(_ => new Actor {
+      def act() {
+        loop {
+          react {
+            case _ =>
+          }
+        }
+      }
+    })
   }
 
   def ping(n: Int, p: Int): Result = {
     val l = new CountDownLatch(p * 2)
-    val as = for (i <- 1 to p) yield (playerActor(l, n / p / 2), playerActor(l, n / p / 2))
+    val as = (1 to p).map(_ => (playerActor(l, n / p / 2), playerActor(l, n / p / 2)))
     timed(n) {
       as.foreach {
         case (a1, a2) => a1.send(Message(), a2)

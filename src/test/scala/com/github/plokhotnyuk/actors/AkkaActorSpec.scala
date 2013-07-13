@@ -64,13 +64,17 @@ class AkkaActorSpec extends BenchmarkSpec {
     ping(10000000, 1)
   }
 
-  "Ping throughput 1K" in {
-    ping(10000000, 1000)
+  "Ping throughput 10K" in {
+    ping(10000000, 10000)
+  }
+
+  "Initiation 1M" in {
+    footprintedCollect(1000000)(_ => minimalActor())
   }
 
   def ping(n: Int, p: Int): Result = {
     val l = new CountDownLatch(p * 2)
-    val as = for (i <- 1 to p) yield (playerActor(l, n / p / 2), playerActor(l, n / p / 2))
+    val as = (1 to p).map(_ => (playerActor(l, n / p / 2), playerActor(l, n / p / 2)))
     timed(n) {
       as.foreach {
         case (a1, a2) => a1.tell(Message(), a2)
@@ -97,6 +101,9 @@ class AkkaActorSpec extends BenchmarkSpec {
 
   private def playerActor(l: CountDownLatch, n: Int): ActorRef =
     actorSystem.actorOf(Props(classOf[PlayerAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
+
+  private def minimalActor(): ActorRef =
+    actorSystem.actorOf(Props(classOf[MinimalActor]).withDispatcher("akka.actor.benchmark-dispatcher"))
 }
 
 class TickAkkaActor(l: CountDownLatch, n: Int) extends Actor {
@@ -123,6 +130,12 @@ class PlayerAkkaActor(l: CountDownLatch, n: Int) extends Actor {
         l.countDown()
         context.stop(self)
       }
+  }
+}
+
+class MinimalActor extends Actor {
+  def receive = {
+    case m =>
   }
 }
 

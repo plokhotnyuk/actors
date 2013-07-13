@@ -18,7 +18,8 @@ Evaluation of API and performance of different actor libraries written on Scala:
 * `Multi-producer sending` - throughput of message sending from several external threads to an actor
 * `Max throughput` - throughput of message sending from several external threads to several actors
 * `Ping latency` - average latency of sending of a ping message between two actors
-* `Ping throughput 1K` - throughput of executor service by sending of a ping message between 1K pairs of actors
+* `Ping throughput 10K` - throughput of executor service by sending of a ping message between 10K pairs of actors
+* `Initiation 1M` - memory footprint of 1M minimal actors and initiation time in a single thread 
 
 ## Hardware required
 - CPU: 2 cores or more
@@ -47,11 +48,10 @@ Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS s
 ```
 
 ## Test result descriptions
-Results of running mvnAll.bat or mvnAll.sh scripts on different environments with pool size set to
-number of available processors, 1, 10, or 100 accordingly:
+Results of running mvnAll.bat or mvnAll.sh scripts on different environments with pool size set to number of available processors:
 
-#### out0*.txt
+#### out0.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.8.0-ea-b96 64-bit
 
-#### out1*.txt
+#### out1.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_40-ea-b31 64-bit
