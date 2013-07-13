@@ -32,7 +32,7 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * @param notifyAll      A flag either all or one waiting thread(s) will be awoken on task
  *                       submission when task queue was empty
  */
-class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
+class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = newDaemonThreadFactory(),
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
@@ -162,7 +162,6 @@ class FixedThreadPoolExecutor(poolSize: Int = cpuNum,
 }
 
 private object FixedThreadPoolExecutor {
-  private val cpuNum = Runtime.getRuntime.availableProcessors()
   private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
 
