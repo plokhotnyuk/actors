@@ -25,6 +25,7 @@ class AkkaActorSpec extends BenchmarkSpec {
       }
     """))
   val actorSystem = ActorSystem("system", config)
+  val minimalProps = Props(classOf[MinimalActor])
 
   "Single-producer sending" in {
     val n = 40000000
@@ -69,7 +70,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Initiation 1M" in {
-    footprintedCollect(1000000)(_ => minimalActor())
+    footprintedCollect(1000000)(_ => actorSystem.actorOf(minimalProps))
   }
 
   def ping(n: Int, p: Int): Result = {
@@ -101,9 +102,6 @@ class AkkaActorSpec extends BenchmarkSpec {
 
   private def playerActor(l: CountDownLatch, n: Int): ActorRef =
     actorSystem.actorOf(Props(classOf[PlayerAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
-
-  private def minimalActor(): ActorRef =
-    actorSystem.actorOf(Props(classOf[MinimalActor]).withDispatcher("akka.actor.benchmark-dispatcher"))
 }
 
 class TickAkkaActor(l: CountDownLatch, n: Int) extends Actor {
