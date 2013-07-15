@@ -2,9 +2,8 @@ package com.github.plokhotnyuk.actors
 
 import java.util
 import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
+import java.util.concurrent.atomic.AtomicInteger
 import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
-import java.util.concurrent.locks.LockSupport
 
 /**
  * An implementation of an `java.util.concurrent.ExecutorService ExecutorService`
@@ -39,11 +38,12 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = nextName(),
                               notifyAll: Boolean = true) extends AbstractExecutorService {
-  private val head = new AtomicReference(new TaskNode())
+  private var head = new TaskNode()
+  private val putLock = new Object()
   private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
-  private val lock = new Object()
-  private val tail = new AtomicReference(head.get)
+  private val takeLock = new Object()
   private val terminations = new CountDownLatch(poolSize)
+  private var tail = head
   private val threads = {
     val tf = threadFactory // to avoid creating of fields for a constructor params
     val ts = terminations // to avoid long field name
@@ -75,7 +75,9 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
     checkShutdownAccess(threads)
     setState(2)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    drainTo(new util.LinkedList[Runnable]())
+    takeLock.synchronized {
+      drainTo(new util.LinkedList[Runnable]())
+    }
   }
 
   def isShutdown: Boolean = state.get != 0
@@ -92,9 +94,15 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
     else if (state.get != 0) onReject(t)
     else {
       val n = new TaskNode(t)
-      val hn = head.getAndSet(n)
-      hn.set(n)
-      if (hn.task eq null) lock.synchronized(lock.notifyAll())
+      if (null eq putLock.synchronized {
+        val hn = head
+        hn.next = n
+        head = n
+        hn.task
+      }) takeLock.synchronized {
+        if (notifyAll) takeLock.notifyAll()
+        else takeLock.notify()
+      }
     }
   }
 
@@ -103,32 +111,35 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
 
   @annotation.tailrec
   private def drainTo(ts: util.List[Runnable]): util.List[Runnable] = {
-    val tn = tail.get
-    val n = tn.get
+    val n = tail.next
     if (n eq null) ts
-    else if (tail.compareAndSet(tn, n)) {
+    else {
       ts.add(n.task)
       n.task = null
+      tail = n
       drainTo(ts)
-    } else drainTo(ts)
+    }
   }
 
   @annotation.tailrec
   private def doWork(s: Int) {
-    val tn = tail.get
-    val n = tn.get
-    if (n eq null) {
-      if (s == 0) lock.synchronized(lock.wait())
-      else return
-    } else if (tail.compareAndSet(tn, n)) {
-      run(n.task)
-      n.task = null
-    }
+    run(takeLock.synchronized {
+      val n = tail.next
+      if (n ne null) {
+        val t = n.task
+        n.task = null
+        tail = n
+        t
+      } else if (s == 0) {
+        takeLock.wait()
+        null
+      } else return
+    })
     if (s != 2) doWork(state.get)
   }
 
   private def run(t: Runnable) {
-    try {
+    if (t ne null) try {
       t.run()
     } catch {
       case ex: Throwable => if (!ex.isInstanceOf[InterruptedException] || state.get != 2) onError(ex)
@@ -171,4 +182,4 @@ private object FixedThreadPoolExecutor {
   }
 }
 
-private class TaskNode(@volatile var task: Runnable = null) extends AtomicReference[TaskNode]
+private class TaskNode(var task: Runnable = null, var next: TaskNode = null)
