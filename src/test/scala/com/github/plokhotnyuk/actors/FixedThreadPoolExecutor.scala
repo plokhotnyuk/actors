@@ -33,9 +33,9 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  *                       submission when task queue was empty
  */
 class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProcessors(),
-                              threadFactory: ThreadFactory = newDaemonThreadFactory(),
-                              onError: Throwable => Unit = _.printStackTrace(),
-                              onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
+                              threadFactory: ThreadFactory = defaultThreadFactory,
+                              onError: Throwable => Unit = defaultOnError,
+                              onReject: Runnable => Unit = defaultOnReject,
                               name: String = nextName(),
                               notifyAll: Boolean = true) extends AbstractExecutorService {
   private var head = new TaskNode()
@@ -164,8 +164,9 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
 private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger(1)
   private val shutdownPerm = new RuntimePermission("modifyThread")
-
-  def newDaemonThreadFactory(): ThreadFactory = new ThreadFactory() {
+  private val defaultOnError = (ex: Throwable) => ex.printStackTrace()
+  private val defaultOnReject = (t: Runnable) => throw new RejectedExecutionException(t.toString)
+  private val defaultThreadFactory = new ThreadFactory() {
     def newThread(worker: Runnable): Thread = new Thread(worker) {
       setDaemon(true)
     }
