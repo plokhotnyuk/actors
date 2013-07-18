@@ -83,6 +83,8 @@ class ScalaActorSpec extends BenchmarkSpec {
           }
         }
       }
+
+      override def scheduler = customScheduler
     })
   }
 
