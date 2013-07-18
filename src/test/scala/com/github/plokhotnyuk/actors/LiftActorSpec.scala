@@ -67,7 +67,7 @@ class LiftActorSpec extends BenchmarkSpec {
   "Initiation 1M" in {
     footprintedCollect(1000000)(_ => new LiftActor {
       def messageHandler = {
-        case m =>
+        case _ =>
       }
     })
   }
