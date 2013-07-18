@@ -64,9 +64,9 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Initiation 1M" in {
-    footprintedCollect(1000000)(_ => actor[Message] {
-      (m: Message) =>
-    })
+    val handler = (m: Message) => ()
+    val onError = (ex: Throwable) => throw(ex)
+    footprintedCollect(1000000)(_ => new Actor[Message](handler, onError))
   }
 
   def ping(n: Int, p: Int): Result = {
