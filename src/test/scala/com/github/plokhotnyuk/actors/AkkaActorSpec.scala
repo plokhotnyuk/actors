@@ -86,6 +86,7 @@ class AkkaActorSpec extends BenchmarkSpec {
 
   def shutdown() {
     actorSystem.shutdown()
+    actorSystem.awaitTermination()
   }
 
   private def tickActor(l: CountDownLatch, n: Int): ActorRef =
