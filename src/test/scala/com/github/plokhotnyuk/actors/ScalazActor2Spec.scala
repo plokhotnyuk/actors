@@ -1,12 +1,12 @@
 package com.github.plokhotnyuk.actors
 
-import scalaz.concurrent._
-import scalaz.concurrent.Actor._
+import com.github.plokhotnyuk.actors.Actor2._
 import java.util.concurrent.CountDownLatch
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import org.specs2.execute.Result
+import scalaz.concurrent.Strategy
 
-class ScalazActorSpec extends BenchmarkSpec {
+class ScalazActor2Spec extends BenchmarkSpec {
   val executorService = createExecutorService()
   implicit val strategy = new Strategy {
     private val e = executorService
@@ -73,7 +73,7 @@ class ScalazActorSpec extends BenchmarkSpec {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
-        var a1: Actor[Message] = null
+        var a1: Actor2[Message] = null
         val a2 = actor[Message] {
           var i = n / p / 2
 
@@ -102,7 +102,7 @@ class ScalazActorSpec extends BenchmarkSpec {
     fullShutdown(executorService)
   }
 
-  private def tickActor(l: CountDownLatch, n: Int): Actor[Message] = actor[Message] {
+  private def tickActor(l: CountDownLatch, n: Int): Actor2[Message] = actor[Message] {
     var i = n
 
     (m: Message) =>
@@ -110,7 +110,7 @@ class ScalazActorSpec extends BenchmarkSpec {
       if (i == 0) l.countDown()
   }
 
-  private def sendTicks(a: Actor[Message], n: Int) {
+  private def sendTicks(a: Actor2[Message], n: Int) {
     val t = Message()
     var i = n
     while (i > 0) {
