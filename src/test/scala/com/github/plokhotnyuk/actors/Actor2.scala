@@ -25,10 +25,10 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   self =>
 
   @volatile private var tail = new Node[A]()
-  private val state = new AtomicInteger() // 0 - running, 1 - suspended
+  private val state = new AtomicInteger() // actor state: 0 - suspended, 1 - running
   private val head = new AtomicReference(tail)
 
-  val toEffect: Run[A] = Run[A](a => this ! a)
+  def toEffect: Run[A] = Run[A](a => this ! a)
 
   /** Alias for `apply` */
   def !(a: A) {
@@ -49,39 +49,38 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   }
 
   private def schedule() {
-    strategy(act(tail, 1024))
+    strategy(act(tail))
+  }
+
+  private def act(t: Node[A]) {
+    val n = batchHandle(t, 1024)
+    if (n ne t) {
+      setTail(n)
+      schedule()
+    } else {
+      state.set(0)
+      if (n.get ne null) trySchedule()
+    }
   }
 
   @annotation.tailrec
-  private def act(t: Node[A], i: Int) {
+  private def batchHandle(t: Node[A], i: Int): Node[A] = {
     val n = t.get
     if (n ne null) {
-      handle(n)
-      if (i > 0) act(n, i - 1)
-      else {
-        setTail(n)
-        schedule()
+      try {
+        handler(n.a)
+      } catch {
+        case ex: Throwable =>
+          setTail(n)
+          onError(ex)
       }
-    } else {
-      setTail(t)
-      state.set(0)
-      if (t.get ne null) trySchedule()
-    }
-  }
-
-  private def handle(n: Node[A]) {
-    try {
-      handler(n.a)
-    } catch {
-      case ex: Throwable =>
-        setTail(n)
-        onError(ex)
-    }
+      if (i > 0) batchHandle(n, i - 1) else n
+    } else t
   }
 
   private def setTail(n: Node[A]) {
-    n.a = null.asInstanceOf[A]
     tail = n
+    n.a = null.asInstanceOf[A]
   }
 }
 
