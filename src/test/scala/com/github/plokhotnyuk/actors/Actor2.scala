@@ -20,7 +20,7 @@ import scalaz.Contravariant
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2.rethrowError)
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)
                          (implicit val strategy: Strategy) {
   self =>
 
@@ -49,12 +49,12 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   }
 
   private def schedule() {
-    strategy(act(tail))
+    strategy(act())
   }
 
-  private def act(t: Node[A]) {
-    val n = batchHandle(t, 1024)
-    if (n ne t) {
+  private def act() {
+    val n = batchHandle(tail, 1024)
+    if (n ne tail) {
       setTail(n)
       schedule()
     } else {
@@ -86,9 +86,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
 
 private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
 
-object Actor2 extends ActorFunctions2 with ActorInstances2 {
-  val rethrowError = (ex: Throwable) => throw ex
-}
+object Actor2 extends ActorFunctions2 with ActorInstances2
 
 trait ActorInstances2 {
   implicit def actorContravariant: Contravariant[Actor2] = new Contravariant[Actor2] {
@@ -97,7 +95,7 @@ trait ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  def actor[A](e: A => Unit, err: Throwable => Unit = Actor2.rethrowError)(implicit s: Strategy): Actor2[A] =
+  def actor[A](e: A => Unit, err: Throwable => Unit = throw _)(implicit s: Strategy): Actor2[A] =
     new Actor2[A](e, err)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
