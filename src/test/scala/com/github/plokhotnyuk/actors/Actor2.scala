@@ -53,9 +53,11 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   }
 
   private def act() {
-    val n = batchHandle(tail, 1024)
-    if (n ne tail) {
-      setTail(n)
+    val t = tail
+    val n = batchHandle(t, 1024)
+    if (n ne t) {
+      tail = n
+      n.a = null.asInstanceOf[A]
       schedule()
     } else {
       state.set(0)
@@ -71,16 +73,12 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
         handler(n.a)
       } catch {
         case ex: Throwable =>
-          setTail(n)
+          tail = n
+          n.a = null.asInstanceOf[A]
           onError(ex)
       }
       if (i > 0) batchHandle(n, i - 1) else n
     } else t
-  }
-
-  private def setTail(n: Node[A]) {
-    tail = n
-    n.a = null.asInstanceOf[A]
   }
 }
 
