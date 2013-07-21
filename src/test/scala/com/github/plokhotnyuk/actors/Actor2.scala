@@ -45,21 +45,14 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B]((b: B) => this ! f(b), onError)(strategy)
 
   private def trySchedule() {
-    if (state.compareAndSet(0, 1)) schedule()
+    if (state.compareAndSet(0, 1)) strategy(act())
   }
 
-  private def schedule() {
-    strategy(act())
-  }
-
-  private def act() {
-    val t = tail
+  private def act(t: Node[A] = tail) {
     val n = batchHandle(t, 1024)
-    if (n ne t) {
-      tail = n
-      n.a = null.asInstanceOf[A]
-      schedule()
-    } else {
+    if (n ne t) strategy(act(n))
+    else {
+      setTail(n)
       state.set(0)
       if (n.get ne null) trySchedule()
     }
@@ -73,12 +66,16 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
         handler(n.a)
       } catch {
         case ex: Throwable =>
-          tail = n
-          n.a = null.asInstanceOf[A]
+          setTail(n)
           onError(ex)
       }
       if (i > 0) batchHandle(n, i - 1) else n
     } else t
+  }
+
+  private def setTail(n: Node[A]) {
+    tail = n
+    n.a = null.asInstanceOf[A]
   }
 }
 
