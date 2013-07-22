@@ -19,7 +19,7 @@ abstract class BenchmarkSpec extends Specification {
   xonly
 
   override def map(fs: => Fragments) = Step(setup()) ^ fs.map {
-    case Example(desc, body) => Example(desc.toString, {
+    case Example(desc, body, _, _, _) => Example(desc, {
       println()
       println(s"$desc:")
       body()
