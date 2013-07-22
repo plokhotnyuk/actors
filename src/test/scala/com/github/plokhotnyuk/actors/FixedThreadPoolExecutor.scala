@@ -33,14 +33,18 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  *                       submission when task queue was empty
  */
 class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProcessors(),
-                              threadFactory: ThreadFactory = defaultThreadFactory,
-                              onError: Throwable => Unit = defaultOnError,
-                              onReject: Runnable => Unit = defaultOnReject,
+                              threadFactory: ThreadFactory = new ThreadFactory() {
+                                def newThread(worker: Runnable): Thread = new Thread(worker) {
+                                  setDaemon(true)
+                                }
+                              },
+                              onError: Throwable => Unit = _.printStackTrace(),
+                              onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = nextName(),
                               notifyAll: Boolean = true) extends AbstractExecutorService {
   private var head = new TaskNode()
   private val putLock = new Object()
-  private val state = new AtomicInteger(0) // pool state (0 - running, 1 - shutdown, 2 - shutdownNow)
+  private val state = new AtomicInteger() // pool state (0 - running, 1 - shutdown, 2 - stop)
   private val takeLock = new Object()
   private val terminations = new CountDownLatch(poolSize)
   private var tail = head
@@ -162,17 +166,10 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
 }
 
 private object FixedThreadPoolExecutor {
-  private val poolId = new AtomicInteger(1)
+  private val poolId = new AtomicInteger()
   private val shutdownPerm = new RuntimePermission("modifyThread")
-  private val defaultOnError = (ex: Throwable) => ex.printStackTrace()
-  private val defaultOnReject = (t: Runnable) => throw new RejectedExecutionException(t.toString)
-  private val defaultThreadFactory = new ThreadFactory() {
-    def newThread(worker: Runnable): Thread = new Thread(worker) {
-      setDaemon(true)
-    }
-  }
 
-  def nextName(): String = "FixedThreadPool-" + poolId.getAndAdd(1)
+  def nextName(): String = "FixedThreadPool-" + poolId.incrementAndGet()
 
   def checkShutdownAccess(threads: Seq[Thread]) {
     val security = System.getSecurityManager
