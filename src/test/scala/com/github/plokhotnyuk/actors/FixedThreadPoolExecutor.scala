@@ -3,7 +3,6 @@ package com.github.plokhotnyuk.actors
 import java.util
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
-import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
 
 /**
  * An implementation of an `java.util.concurrent.ExecutorService ExecutorService`
@@ -29,8 +28,6 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * @param onError        The exception handler for unhandled errors during executing of tasks
  * @param onReject       The handler for rejection of task submission after shutdown
  * @param name           A name of the executor service
- * @param notifyAll      A flag either all or one waiting thread(s) will be awoken on task
- *                       submission when task queue was empty
  */
 class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProcessors(),
                               threadFactory: ThreadFactory = new ThreadFactory() {
@@ -40,8 +37,8 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
                               },
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = nextName(),
-                              notifyAll: Boolean = true) extends AbstractExecutorService {
+                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.incrementAndGet()
+                               ) extends AbstractExecutorService {
   private var head = new TaskNode()
   private val putLock = new Object()
   private val state = new AtomicInteger() // pool state (0 - running, 1 - shutdown, 2 - stop)
@@ -103,10 +100,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
         hn.next = n
         head = n
         hn.task
-      }) takeLock.synchronized {
-        if (notifyAll) takeLock.notifyAll()
-        else takeLock.notify()
-      }
+      }) takeLock.synchronized(takeLock.notifyAll())
     }
   }
 
@@ -163,21 +157,19 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
       case 1 => "Shutdown"
       case 2 => "Stop"
     }
+
+  private def checkShutdownAccess(threads: Seq[Thread]) {
+    val security = System.getSecurityManager
+    if (security != null) {
+      security.checkPermission(FixedThreadPoolExecutor.shutdownPerm)
+      threads.foreach(security.checkAccess)
+    }
+  }
 }
 
 private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger()
   private val shutdownPerm = new RuntimePermission("modifyThread")
-
-  def nextName(): String = "FixedThreadPool-" + poolId.incrementAndGet()
-
-  def checkShutdownAccess(threads: Seq[Thread]) {
-    val security = System.getSecurityManager
-    if (security != null) {
-      security.checkPermission(shutdownPerm)
-      threads.foreach(security.checkAccess)
-    }
-  }
 }
 
 private class TaskNode(var task: Runnable = null, var next: TaskNode = null)
