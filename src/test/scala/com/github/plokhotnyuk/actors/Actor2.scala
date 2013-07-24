@@ -22,8 +22,6 @@ import scalaz.Contravariant
  */
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)
                          (implicit val strategy: Strategy) {
-  self =>
-
   @volatile private var tail = new Node[A]()
   private val state = new AtomicInteger() // actor state: 0 - suspended, 1 - running
   private val head = new AtomicReference(tail)
@@ -45,32 +43,38 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B]((b: B) => this ! f(b), onError)(strategy)
 
   private def reschedule(t: Node[A]) {
-    tail = t
     state.set(0)
     if (t.get ne null) trySchedule()
     else t.a = null.asInstanceOf[A]
   }
 
   private def trySchedule() {
-    if (state.compareAndSet(0, 1)) strategy(act())
+    if (state.compareAndSet(0, 1)) schedule()
   }
 
-  private def act(t: Node[A] = tail) {
+  private def schedule() {
+    strategy(act())
+  }
+
+  private def act() {
+    val t = tail
     val n = batchHandle(t, 1024)
-    if (n ne t) strategy(act(n))
-    else reschedule(t)
+    if (n ne t) {
+      tail = n
+      schedule()
+    } else reschedule(t)
   }
 
   @annotation.tailrec
   private def batchHandle(t: Node[A], i: Int): Node[A] = {
     val n = t.get
-    if (n ne null) {
+    if ((n ne null) && i > 0) {
       try {
         handler(n.a)
       } catch {
         case ex: Throwable => handleError(n, ex)
       }
-      if (i > 0) batchHandle(n, i - 1) else n
+      batchHandle(n, i - 1)
     } else t
   }
 
@@ -79,6 +83,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
       onError(ex)
     } catch {
       case ex: Throwable =>
+        tail = t
         reschedule(t)
         throw ex
     }
