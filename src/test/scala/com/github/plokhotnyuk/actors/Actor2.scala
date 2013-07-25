@@ -22,7 +22,7 @@ import scalaz.Contravariant
  */
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)
                          (implicit val strategy: Strategy) {
-  @volatile private var tail = new Node[A]()
+  private var tail = new Node[A]()
   private val state = new AtomicInteger() // actor state: 0 - suspended, 1 - running
   private val head = new AtomicReference(tail)
 
@@ -43,26 +43,20 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B]((b: B) => this ! f(b), onError)(strategy)
 
   private def reschedule(t: Node[A]) {
+    tail = t
     state.set(0)
     if (t.get ne null) trySchedule()
     else t.a = null.asInstanceOf[A]
   }
 
   private def trySchedule() {
-    if (state.compareAndSet(0, 1)) schedule()
+    if (state.compareAndSet(0, 1)) strategy(act(tail))
   }
 
-  private def schedule() {
-    strategy(act())
-  }
-
-  private def act() {
-    val t = tail
+  private def act(t: Node[A]) {
     val n = batchHandle(t, 1024)
-    if (n ne t) {
-      tail = n
-      schedule()
-    } else reschedule(t)
+    if (n ne t) strategy(act(n))
+    else reschedule(t)
   }
 
   @annotation.tailrec
@@ -83,7 +77,6 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
       onError(ex)
     } catch {
       case ex: Throwable =>
-        tail = t
         reschedule(t)
         throw ex
     }
