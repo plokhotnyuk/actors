@@ -22,9 +22,9 @@ import scalaz.Contravariant
  */
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)
                          (implicit val strategy: Strategy) {
-  private val tail = new AtomicReference(new Node[A]())
+  @volatile private var tail = new Node[A]()
   private val state = new AtomicInteger() // actor state: 0 - suspended, 1 - running
-  private val head = new AtomicReference(tail.get)
+  private val head = new AtomicReference(tail)
 
   def toEffect: Run[A] = Run[A](a => this ! a)
 
@@ -57,10 +57,10 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   }
 
   private def act() {
-    val t = tail.get
+    val t = tail
     val n = batchHandle(t, 1024)
     if (n ne t) {
-      tail.lazySet(n)
+      tail = n
       schedule()
     } else reschedule(t)
   }
@@ -83,7 +83,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
       onError(ex)
     } catch {
       case ex: Throwable =>
-        tail.lazySet(t)
+        tail = t
         reschedule(t)
         throw ex
     }

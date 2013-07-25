@@ -7,8 +7,8 @@ jdk:
 install: /bin/true # always succeeds
 script:
   - mvn -B -DskipTests test
-  - mvn -B -Dbenchmark.poolSize=1 -Dbenchmark.executorServiceType=fixed-thread-pool test -Ptravis
-  - mvn -B -Dbenchmark.poolSize=1 -Dbenchmark.executorServiceType=scala-forkjoin-pool test -Ptravis
-  - mvn -B -Dbenchmark.poolSize=1 -Dbenchmark.executorServiceType=java-forkjoin-pool test -Ptravis
-  - mvn -B -Dbenchmark.poolSize=1 -Dbenchmark.executorServiceType=thread-pool test -Ptravis
+  - mvn -B -Dbenchmark.executorServiceType=fixed-thread-pool test -Ptravis
+  - mvn -B -Dbenchmark.executorServiceType=scala-forkjoin-pool test -Ptravis
+  - mvn -B -Dbenchmark.executorServiceType=java-forkjoin-pool test -Ptravis
+  - mvn -B -Dbenchmark.executorServiceType=thread-pool test -Ptravis
 
