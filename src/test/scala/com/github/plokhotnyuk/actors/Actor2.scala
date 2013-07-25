@@ -1,6 +1,6 @@
 package com.github.plokhotnyuk.actors
 
-import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
+import java.util.concurrent.atomic.AtomicReference
 import scalaz.concurrent.Strategy
 import scalaz.concurrent.Run
 import scalaz.Contravariant
@@ -22,9 +22,10 @@ import scalaz.Contravariant
  */
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)
                          (implicit val strategy: Strategy) {
-  private var tail = new Node[A]()
-  private val state = new AtomicInteger() // actor state: 0 - suspended, 1 - running
-  private val head = new AtomicReference(tail)
+  self =>
+
+  private val tail = new AtomicReference(new Node[A]())
+  private val head = new AtomicReference(tail.get)
 
   def toEffect: Run[A] = Run[A](a => this ! a)
 
@@ -43,34 +44,32 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B]((b: B) => this ! f(b), onError)(strategy)
 
   private def reschedule(t: Node[A]) {
-    tail = t
-    state.set(0)
+    tail.set(t)
     if (t.get ne null) trySchedule()
     else t.a = null.asInstanceOf[A]
   }
 
   private def trySchedule() {
-    if (state.compareAndSet(0, 1)) strategy(act(tail))
+    val t = tail.getAndSet(null)
+    if (t ne null) strategy(act(t))
   }
 
   private def act(t: Node[A]) {
-    val n = batchHandle(t, 1024)
+    val n = batchHandle(t, t.get, 1024)
     if (n ne t) strategy(act(n))
     else reschedule(t)
   }
 
   @annotation.tailrec
-  private def batchHandle(t: Node[A], i: Int): Node[A] = {
-    val n = t.get
+  private def batchHandle(t: Node[A], n: Node[A], i: Int): Node[A] =
     if ((n ne null) && i > 0) {
       try {
         handler(n.a)
       } catch {
         case ex: Throwable => handleError(n, ex)
       }
-      batchHandle(n, i - 1)
+      batchHandle(n, n.get, i - 1)
     } else t
-  }
 
   private def handleError(t: Node[A], ex: Throwable) {
     try {
@@ -94,8 +93,7 @@ trait ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  def actor[A](e: A => Unit, err: Throwable => Unit = throw _)(implicit s: Strategy): Actor2[A] =
-    new Actor2[A](e, err)
+  def actor[A](e: A => Unit, err: Throwable => Unit = throw _)(implicit s: Strategy): Actor2[A] = new Actor2[A](e, err)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
