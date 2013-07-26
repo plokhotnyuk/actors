@@ -1,14 +1,12 @@
 package com.github.plokhotnyuk.actors
 
-import java.util.concurrent.atomic.AtomicReference
-import scalaz.concurrent.Strategy
-import scalaz.concurrent.Run
+import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
+import scalaz.concurrent.{Strategy, Run}
 import scalaz.Contravariant
 
 /**
- * Processes messages of type `A` sequentially. Messages are submitted to
- * the actor with the method `!`. Processing is typically performed asynchronously,
- * this is controlled by the provided `strategy`.
+ * Processes messages of type `A` sequentially. Messages are submitted to the actor with the method `!`.
+ * Processing is typically performed asynchronously, this is controlled by the provided `strategy`.
  *
  * Implementation based on non-intrusive MPSC node-based queue, described by Dmitriy Vyukov:
  * http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue
@@ -22,10 +20,9 @@ import scalaz.Contravariant
  */
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)
                          (implicit val strategy: Strategy) {
-  self =>
-
-  private val tail = new AtomicReference(new Node[A]())
-  private val head = new AtomicReference(tail.get)
+  private var tail = new Node[A]()
+  private val state = new AtomicInteger() // 0 - suspended, 1 - running
+  private val head = new AtomicReference(tail)
 
   def toEffect: Run[A] = Run[A](a => this ! a)
 
@@ -44,20 +41,22 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B]((b: B) => this ! f(b), onError)(strategy)
 
   private def reschedule(t: Node[A]) {
-    tail.set(t)
+    state.set(0)
     if (t.get ne null) trySchedule()
     else t.a = null.asInstanceOf[A]
   }
 
   private def trySchedule() {
-    val t = tail.getAndSet(null)
-    if (t ne null) strategy(act(t))
+    if (state.compareAndSet(0, 1)) strategy(act())
   }
 
-  private def act(t: Node[A]) {
+  private def act() {
+    val t = tail
     val n = batchHandle(t, t.get, 1024)
-    if (n ne t) strategy(act(n))
-    else reschedule(t)
+    if (n ne t) {
+      tail = n
+      strategy(act())
+    } else reschedule(t)
   }
 
   @annotation.tailrec
@@ -76,6 +75,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
       onError(ex)
     } catch {
       case ex: Throwable =>
+        tail = t
         reschedule(t)
         throw ex
     }
