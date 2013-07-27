@@ -22,8 +22,8 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
                          (implicit val strategy: Strategy) {
   self =>
 
-  private val tail = new AtomicReference(new Node[A]())
-  private val head = new AtomicReference(tail.get)
+  private val head = new AtomicReference(new Node[A]())
+  private val tail = new AtomicReference(head.get)
 
   def toEffect: Run[A] = Run[A](a => this ! a)
 
@@ -49,25 +49,26 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
 
   private def trySchedule() {
     val t = tail.getAndSet(null)
-    if (t ne null) strategy(act(t))
+    if (t ne null) schedule(t)
   }
 
-  private def act(t: Node[A]) {
-    val n = batchHandle(t, t.get, 1024)
-    if (n ne t) strategy(act(n))
-    else reschedule(t)
+  private def schedule(t: Node[A]) {
+    strategy(act(t, 1024))
   }
 
   @annotation.tailrec
-  private def batchHandle(t: Node[A], n: Node[A], i: Int): Node[A] =
-    if ((n ne null) && i > 0) {
+  private def act(t: Node[A], i: Int) {
+    val n = t.get
+    if (n ne null) {
       try {
         handler(n.a)
       } catch {
         case ex: Throwable => handleError(n, ex)
       }
-      batchHandle(n, n.get, i - 1)
-    } else t
+      if (i > 0) act(n, i - 1)
+      else schedule(n)
+    } else reschedule(t)
+  }
 
   private def handleError(t: Node[A], ex: Throwable) {
     try {
