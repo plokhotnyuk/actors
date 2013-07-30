@@ -20,7 +20,6 @@ import scalaz.Contravariant
  */
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)
                          (implicit val strategy: Strategy) {
-  self =>
 
   private val head = new AtomicReference(new Node[A]())
   private val tail = new AtomicReference(head.get)
@@ -49,25 +48,26 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
 
   private def trySchedule() {
     val t = tail.getAndSet(null)
-    if (t ne null) schedule(t)
+    if (t ne null) strategy(act(t))
   }
 
-  private def schedule(t: Node[A]) {
-    strategy(act(t, 1024))
+  private def act(t: Node[A]) {
+    val n = batchHandle(t, 1024)
+    if (n ne t) strategy(act(n))
+    else reschedule(t)
   }
 
   @annotation.tailrec
-  private def act(t: Node[A], i: Int) {
+  private def batchHandle(t: Node[A], i: Int): Node[A] = {
     val n = t.get
-    if (n ne null) {
+    if ((n ne null) && i > 0) {
       try {
         handler(n.a)
       } catch {
         case ex: Throwable => handleError(n, ex)
       }
-      if (i > 0) act(n, i - 1)
-      else schedule(n)
-    } else reschedule(t)
+      batchHandle(n, i - 1)
+    } else t
   }
 
   private def handleError(t: Node[A], ex: Throwable) {
