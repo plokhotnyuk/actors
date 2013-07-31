@@ -10,7 +10,6 @@ class ScalazActor2Spec extends BenchmarkSpec {
   val executorService = createExecutorService()
   implicit val strategy = new Strategy {
     private val e = executorService
-    private val r = () => null
 
     def apply[A](a: => A) = {
       e.execute(new Runnable() {
@@ -18,7 +17,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
           a
         }
       })
-      r.asInstanceOf[() => A]
+      null.asInstanceOf[() => A]
     }
   }
 
