@@ -22,10 +22,10 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
                          (implicit val strategy: Strategy) {
 
   private var tail = new Node[A]()
-  private val state = new AtomicInteger() // 0 - suspanded, 1 - running
+  private val state = new AtomicInteger() // 0 - suspended, 1 - running
   private val head = new AtomicReference(tail)
 
-  val toEffect: Run[A] = Run[A](a => this ! a)
+  def toEffect: Run[A] = Run[A](a => this ! a)
 
   /** Alias for `apply` */
   def !(a: A) {
