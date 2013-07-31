@@ -24,7 +24,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   private val head = new AtomicReference(new Node[A]())
   private val tail = new AtomicReference(head.get)
 
-  def toEffect: Run[A] = Run[A](a => this ! a)
+  val toEffect: Run[A] = Run[A](a => this ! a)
 
   /** Alias for `apply` */
   def !(a: A) {
