@@ -1,6 +1,6 @@
 package com.github.plokhotnyuk.actors
 
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 import scalaz.concurrent.{Strategy, Run}
 import scalaz.Contravariant
 
@@ -21,8 +21,9 @@ import scalaz.Contravariant
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)
                          (implicit val strategy: Strategy) {
 
-  private val head = new AtomicReference(new Node[A]())
-  private val tail = new AtomicReference(head.get)
+  private var tail = new Node[A]()
+  private val state = new AtomicInteger() // 0 - suspanded, 1 - running
+  private val head = new AtomicReference(tail)
 
   val toEffect: Run[A] = Run[A](a => this ! a)
 
@@ -41,17 +42,17 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B]((b: B) => this ! f(b), onError)(strategy)
 
   private def reschedule(t: Node[A]) {
-    tail.set(t)
+    tail = t
+    state.set(0)
     if (t.get ne null) trySchedule()
     else t.a = null.asInstanceOf[A]
   }
 
   private def trySchedule() {
-    val t = tail.getAndSet(null)
-    if (t ne null) strategy(act(t))
+    if (state.compareAndSet(0, 1)) strategy(act())
   }
 
-  private def act(t: Node[A]) {
+  private def act(t: Node[A] = tail) {
     val n = batchHandle(t, 1024)
     if (n ne t) strategy(act(n))
     else reschedule(t)
