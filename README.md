@@ -61,7 +61,7 @@ Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Wind
 #### out2*.txt
 Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, Ubuntu 12.04, JDK 1.7.0_25-b15 64-bit
 
-Here are results with 60M msg/sec of throughput for Akka actors from this desktop:
+Here are results from this desktop with 60M msg/sec of throughput for Akka actors:
 - JDK 7 ForkJoinPool: http://goo.gl/fQljxN
 - JDK 7 ThreadPoolExecutor: http://goo.gl/Bv3R6Q
 
