@@ -6,7 +6,6 @@ import com.typesafe.config.ConfigFactory._
 import com.typesafe.config.Config
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import akka.dispatch.{ExecutorServiceFactory, ExecutorServiceConfigurator, DispatcherPrerequisites}
-import org.specs2.execute.Result
 
 class AkkaActorSpec extends BenchmarkSpec {
   val config = load(parseString(
@@ -73,7 +72,7 @@ class AkkaActorSpec extends BenchmarkSpec {
     footprintedCollect(1000000)(_ => actorSystem.actorOf(props))
   }
 
-  def ping(n: Int, p: Int): Result = {
+  def ping(n: Int, p: Int) {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map(_ => (playerActor(l, n / p / 2), playerActor(l, n / p / 2)))
     timed(n) {

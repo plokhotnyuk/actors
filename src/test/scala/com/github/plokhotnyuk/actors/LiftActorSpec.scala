@@ -3,7 +3,6 @@ package com.github.plokhotnyuk.actors
 import java.util.concurrent.CountDownLatch
 import net.liftweb.actor.{ILAExecute, LAScheduler, LiftActor}
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import org.specs2.execute.Result
 
 class LiftActorSpec extends BenchmarkSpec {
   LAScheduler.createExecutor = () => new ILAExecute {
@@ -72,7 +71,7 @@ class LiftActorSpec extends BenchmarkSpec {
     })
   }
 
-  def ping(n: Int, p: Int): Result = {
+  def ping(n: Int, p: Int) {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>

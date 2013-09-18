@@ -3,7 +3,6 @@ package com.github.plokhotnyuk.actors
 import java.util.concurrent.CountDownLatch
 import scala.actors.{SchedulerAdapter, Actor}
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import org.specs2.execute.Result
 
 class ScalaActorSpec extends BenchmarkSpec {
   val customScheduler = new SchedulerAdapter {
@@ -88,7 +87,7 @@ class ScalaActorSpec extends BenchmarkSpec {
     })
   }
 
-  def ping(n: Int, p: Int): Result = {
+  def ping(n: Int, p: Int) {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map(_ => (playerActor(l, n / p / 2), playerActor(l, n / p / 2)))
     timed(n) {

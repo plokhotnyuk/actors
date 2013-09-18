@@ -1,38 +1,34 @@
 package com.github.plokhotnyuk.actors
 
-import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import org.specs2.mutable.Specification
-import org.specs2.execute.Success
-import org.specs2.specification.{Step, Fragments, Example}
-import concurrent.forkjoin.{ForkJoinWorkerThread => ScalaForkJoinWorkerThread, ForkJoinPool => ScalaForkJoinPool}
+import scala.concurrent.forkjoin.{ForkJoinWorkerThread => ScalaForkJoinWorkerThread, ForkJoinPool => ScalaForkJoinPool}
 import java.util.concurrent._
 import com.higherfrequencytrading.affinity.AffinitySupport
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import com.higherfrequencytrading.affinity.impl.{PosixJNAAffinity, WindowsJNAAffinity, NativeAffinity}
 import java.lang.management.ManagementFactory._
 import com.sun.management.OperatingSystemMXBean
+import org.scalatest._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-abstract class BenchmarkSpec extends Specification {
-  sequential
-  xonly
+abstract class BenchmarkSpec extends FreeSpec with BeforeAndAfterAll {
+  def shutdown()
 
-  override def map(fs: => Fragments) = Step(setup()) ^ fs.map {
-    case Example(desc, body, _, _, _) => Example(desc, {
-      println()
-      println(s"$desc:")
-      body()
-    })
-    case other => other
-  } ^ Step(shutdown())
-
-  def setup() {
+  override def beforeAll() {
     println(s"Executor service type: $executorServiceType")
     threadSetup()
   }
 
-  def shutdown()
+  protected override def runTest(testName: String, args: Args): Status = {
+    println()
+    println(s"$testName:")
+    super.runTest(testName, args)
+  }
+
+  override def afterAll() {
+    shutdown()
+  }
 }
 
 object BenchmarkSpec {
@@ -46,8 +42,6 @@ object BenchmarkSpec {
   val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
   val osMBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
   var cpuId: Int = 0
-
-  implicit def anyToSuccess(a: Any) = Success()
 
   def affinityType: String =
     if (NativeAffinity.LOADED) "JNI-based"

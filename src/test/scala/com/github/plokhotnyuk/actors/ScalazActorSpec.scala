@@ -4,7 +4,6 @@ import scalaz.concurrent._
 import scalaz.concurrent.Actor._
 import java.util.concurrent.CountDownLatch
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import org.specs2.execute.Result
 
 class ScalazActorSpec extends BenchmarkSpec {
   val executorService = createExecutorService()
@@ -69,7 +68,7 @@ class ScalazActorSpec extends BenchmarkSpec {
     })
   }
 
-  def ping(n: Int, p: Int): Result = {
+  def ping(n: Int, p: Int) {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>

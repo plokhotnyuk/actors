@@ -1,17 +1,16 @@
 package com.github.plokhotnyuk.actors
 
-import org.specs2.mutable.Specification
-import org.specs2.execute.{Failure, Success, Result}
 import collection.JavaConversions._
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicBoolean
+import org.scalatest._
 
-class FixedThreadPoolExecutorSpec extends Specification {
+class FixedThreadPoolExecutorSpec extends FreeSpec with MustMatchers {
   val NumOfTasks = 1000
   val Timeout = 1000 // in millis
 
   "all submitted before shutdown tasks executes async" in {
-    testWith(new FixedThreadPoolExecutor) {
+    withExecutor(new FixedThreadPoolExecutor) {
       e =>
         val taskRequests = new Semaphore(0)
         val latch = new CountDownLatch(NumOfTasks)
@@ -31,7 +30,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
 
   "errors of tasks are caught and can be handled without interruption of worker threads" in {
     val latch = new CountDownLatch(NumOfTasks)
-    testWith(new FixedThreadPoolExecutor(poolSize = 1, // single thread to check if it wasn't terminated later
+    withExecutor(new FixedThreadPoolExecutor(poolSize = 1, // single thread to check if it wasn't terminated later
       onError = _ => latch.countDown())) {
       e =>
         for (i <- 1 to NumOfTasks) {
@@ -41,13 +40,13 @@ class FixedThreadPoolExecutorSpec extends Specification {
             }
           })
         }
-        e.isTerminated must_== false
+        e.isTerminated must be (false)
         assertCountDown(latch, "Should propagate an exception")
     }
   }
 
   "shutdownNow interrupts threads and returns non-completed tasks in order of submitting" in {
-    testWith(new FixedThreadPoolExecutor(1)) {
+    withExecutor(new FixedThreadPoolExecutor(1)) {
       e =>
         val task1 = new Runnable() {
           def run() {
@@ -65,13 +64,13 @@ class FixedThreadPoolExecutorSpec extends Specification {
         }
         e.execute(task2)
         assertCountDown(latch, "Two new tasks should be submitted during completing a task")
-        e.shutdownNow() must_== new java.util.LinkedList(Seq(task1, task2))
-        e.isShutdown must_== true
+        e.shutdownNow() must be (new java.util.LinkedList(Seq(task1, task2)))
+        e.isShutdown must be (true)
     }
   }
 
   "awaitTermination blocks until all tasks terminates after a shutdown request" in {
-    testWith(new FixedThreadPoolExecutor) {
+    withExecutor(new FixedThreadPoolExecutor) {
       e =>
         val running = new AtomicBoolean(true)
         val semaphore = new Semaphore(0)
@@ -84,22 +83,24 @@ class FixedThreadPoolExecutorSpec extends Specification {
           }
         })
         semaphore.acquire()
-        e.shutdownNow() must beEmpty
-        e.awaitTermination(1, TimeUnit.MILLISECONDS) must_== false
+        e.shutdownNow() must be ('empty)
+        e.awaitTermination(1, TimeUnit.MILLISECONDS) must be (false)
         running.lazySet(false)
-        e.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must_== true
+        e.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must be (true)
     }
   }
 
   "null tasks are not accepted" in {
-    testWith(new FixedThreadPoolExecutor) {
+    withExecutor(new FixedThreadPoolExecutor) {
       e =>
-        e.execute(null) must throwA[NullPointerException]
+        evaluating {
+          e.execute(null)
+        } must produce[NullPointerException]
     }
   }
 
   "terminates safely when shutdownNow called during task execution" in {
-    testWith(new FixedThreadPoolExecutor) {
+    withExecutor(new FixedThreadPoolExecutor) {
       e =>
         val latch = new CountDownLatch(1)
         e.execute(new Runnable() {
@@ -109,38 +110,40 @@ class FixedThreadPoolExecutorSpec extends Specification {
           }
         })
         assertCountDown(latch, "Shutdown should be called")
-        e.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must_== true
-        e.isTerminated must_== true
+        e.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must be (true)
+        e.isTerminated must be (true)
     }
   }
 
   "duplicated shutdownNow/shutdown is allowed" in {
-    testWith(new FixedThreadPoolExecutor) {
+    withExecutor(new FixedThreadPoolExecutor) {
       e =>
         e.shutdownNow()
         e.shutdown()
-        e.shutdownNow() must not(throwA[Throwable])
-        e.shutdown() must not(throwA[Throwable])
+        e.shutdownNow()
+        e.shutdown()
     }
   }
 
   "all tasks which are submitted after shutdown are rejected by default" in {
-    testWith(new FixedThreadPoolExecutor) {
+    withExecutor(new FixedThreadPoolExecutor) {
       e =>
         e.shutdown()
         val executed = new AtomicBoolean(false)
-        e.execute(new Runnable() {
-          def run() {
-            executed.set(true) // should not be executed
-          }
-        }) must throwA[RejectedExecutionException]
-        executed.get must_== false
+        evaluating {
+          e.execute(new Runnable() {
+            def run() {
+              executed.set(true) // should not be executed
+            }
+          })
+        } must produce[RejectedExecutionException]
+        executed.get must be (false)
     }
   }
 
   "all tasks which are submitted after shutdown can be handled by onReject" in {
     val latch = new CountDownLatch(1)
-    testWith(new FixedThreadPoolExecutor(onReject = _ => latch.countDown())) {
+    withExecutor(new FixedThreadPoolExecutor(onReject = _ => latch.countDown())) {
       e =>
         e.shutdown()
         val executed = new AtomicBoolean(false)
@@ -149,13 +152,13 @@ class FixedThreadPoolExecutorSpec extends Specification {
             executed.set(true) // Should not be executed
           }
         })
-        e.shutdownNow() must beEmpty
-        executed.get must_== false
+        e.shutdownNow() must be ('empty)
+        executed.get must be (false)
         assertCountDown(latch, "OnReject should be called")
     }
   }
 
-  def testWith(executor: ExecutorService)(testCode: ExecutorService => Result): Result = {
+  def withExecutor(executor: ExecutorService)(testCode: ExecutorService => Any) {
     try {
       testCode(executor)
     } finally {
@@ -164,8 +167,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
     }
   }
 
-  def assertCountDown(latch: CountDownLatch, hint: String): Result = {
-    if (latch.await(Timeout, TimeUnit.MILLISECONDS)) Success()
-    else Failure("Failed to count down within " + Timeout + " millis: " + hint)
+  def assertCountDown(latch: CountDownLatch, hint: String) {
+    latch.await(Timeout, TimeUnit.MILLISECONDS) must be (true)
   }
 }

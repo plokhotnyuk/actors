@@ -4,7 +4,6 @@ import api.actor._
 import java.util.concurrent._
 import concurrent.ExecutionContext
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import org.specs2.execute.Result
 
 class ProxyActorsActorSpec extends BenchmarkSpec {
   val executorService = createExecutorService()
@@ -58,7 +57,7 @@ class ProxyActorsActorSpec extends BenchmarkSpec {
   }
 */
 
-  def ping(n: Int, p: Int): Result = {
+  def ping(n: Int, p: Int) {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map(_ => (playerActor(l, n / p / 2), playerActor(l, n / p / 2)))
     timed(n) {

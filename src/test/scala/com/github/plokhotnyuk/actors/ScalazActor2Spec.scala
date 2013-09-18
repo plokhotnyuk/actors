@@ -3,7 +3,6 @@ package com.github.plokhotnyuk.actors
 import com.github.plokhotnyuk.actors.Actor2._
 import java.util.concurrent.CountDownLatch
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import org.specs2.execute.Result
 import scalaz.concurrent.Strategy
 
 class ScalazActor2Spec extends BenchmarkSpec {
@@ -69,7 +68,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
     })
   }
 
-  def ping(n: Int, p: Int): Result = {
+  def ping(n: Int, p: Int) {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
