@@ -3,9 +3,9 @@ package com.github.plokhotnyuk.actors
 import collection.JavaConversions._
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicBoolean
-import org.scalatest._
+import org.specs2.mutable.Specification
 
-class FixedThreadPoolExecutorSpec extends FreeSpec with MustMatchers {
+class FixedThreadPoolExecutorSpec extends Specification {
   val NumOfTasks = 1000
   val Timeout = 1000 // in millis
 
@@ -40,7 +40,7 @@ class FixedThreadPoolExecutorSpec extends FreeSpec with MustMatchers {
             }
           })
         }
-        e.isTerminated must be (false)
+        e.isTerminated must_== false
         assertCountDown(latch, "Should propagate an exception")
     }
   }
@@ -64,8 +64,8 @@ class FixedThreadPoolExecutorSpec extends FreeSpec with MustMatchers {
         }
         e.execute(task2)
         assertCountDown(latch, "Two new tasks should be submitted during completing a task")
-        e.shutdownNow() must be (new java.util.LinkedList(Seq(task1, task2)))
-        e.isShutdown must be (true)
+        e.shutdownNow() must_== new java.util.LinkedList(Seq(task1, task2))
+        e.isShutdown must_== true
     }
   }
 
@@ -83,19 +83,17 @@ class FixedThreadPoolExecutorSpec extends FreeSpec with MustMatchers {
           }
         })
         semaphore.acquire()
-        e.shutdownNow() must be ('empty)
-        e.awaitTermination(1, TimeUnit.MILLISECONDS) must be (false)
+        e.shutdownNow() must beEmpty
+        e.awaitTermination(1, TimeUnit.MILLISECONDS) must_== false
         running.lazySet(false)
-        e.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must be (true)
+        e.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must_== true
     }
   }
 
   "null tasks are not accepted" in {
     withExecutor(new FixedThreadPoolExecutor) {
       e =>
-        evaluating {
-          e.execute(null)
-        } must produce[NullPointerException]
+        e.execute(null) must throwA[NullPointerException]
     }
   }
 
@@ -110,8 +108,8 @@ class FixedThreadPoolExecutorSpec extends FreeSpec with MustMatchers {
           }
         })
         assertCountDown(latch, "Shutdown should be called")
-        e.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must be (true)
-        e.isTerminated must be (true)
+        e.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must_== true
+        e.isTerminated must_== true
     }
   }
 
@@ -122,6 +120,7 @@ class FixedThreadPoolExecutorSpec extends FreeSpec with MustMatchers {
         e.shutdown()
         e.shutdownNow()
         e.shutdown()
+        e.shutdownNow() must beEmpty
     }
   }
 
@@ -130,14 +129,12 @@ class FixedThreadPoolExecutorSpec extends FreeSpec with MustMatchers {
       e =>
         e.shutdown()
         val executed = new AtomicBoolean(false)
-        evaluating {
-          e.execute(new Runnable() {
-            def run() {
-              executed.set(true) // should not be executed
-            }
-          })
-        } must produce[RejectedExecutionException]
-        executed.get must be (false)
+        e.execute(new Runnable() {
+          def run() {
+            executed.set(true) // should not be executed
+          }
+        }) must throwA[RejectedExecutionException]
+        executed.get must_== false
     }
   }
 
@@ -152,22 +149,20 @@ class FixedThreadPoolExecutorSpec extends FreeSpec with MustMatchers {
             executed.set(true) // Should not be executed
           }
         })
-        e.shutdownNow() must be ('empty)
-        executed.get must be (false)
+        e.shutdownNow() must beEmpty
+        executed.get must_== false
         assertCountDown(latch, "OnReject should be called")
     }
   }
 
-  def withExecutor(executor: ExecutorService)(testCode: ExecutorService => Any) {
+  private def withExecutor[A](executor: ExecutorService)(testCode: ExecutorService => A) =
     try {
       testCode(executor)
     } finally {
       executor.shutdownNow()
       executor.awaitTermination(Timeout, TimeUnit.MILLISECONDS)
     }
-  }
 
-  def assertCountDown(latch: CountDownLatch, hint: String) {
-    latch.await(Timeout, TimeUnit.MILLISECONDS) must be (true)
-  }
+  private def assertCountDown(latch: CountDownLatch, hint: String) =
+    latch.await(Timeout, TimeUnit.MILLISECONDS) must_== true
 }

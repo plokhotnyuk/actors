@@ -17,7 +17,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-actors" % "2.10.2" % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.1.0-M3" % "test",
   "com.higherfrequencytrading" % "affinity" % "1.7" % "test",
-  "org.scalatest" %% "scalatest" % "2.0.M8" % "test",
+  "org.specs2" %% "specs2" % "2.2.2-scalaz-7.1.0-M3" % "test",
   "junit" % "junit-dep" % "4.11" % "test"
 )
 

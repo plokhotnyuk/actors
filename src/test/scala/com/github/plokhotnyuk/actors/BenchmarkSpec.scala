@@ -7,28 +7,34 @@ import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import com.higherfrequencytrading.affinity.impl.{PosixJNAAffinity, WindowsJNAAffinity, NativeAffinity}
 import java.lang.management.ManagementFactory._
 import com.sun.management.OperatingSystemMXBean
-import org.scalatest._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.specs2.runner.JUnitRunner
+import org.specs2.mutable.Specification
+import org.specs2.specification.{Example, Step, Fragments}
+import org.specs2.execute.Success
 
 @RunWith(classOf[JUnitRunner])
-abstract class BenchmarkSpec extends FreeSpec with BeforeAndAfterAll {
-  def shutdown()
+abstract class BenchmarkSpec extends Specification {
+  sequential
+  xonly
 
-  override def beforeAll() {
+  implicit def anyToSuccess(a: Any) = Success()
+
+  override def map(fs: => Fragments) = Step(setup()) ^ fs.map {
+    case Example(desc, body, _, _, _) => Example(desc, {
+      println()
+      println(s"$desc:")
+      body()
+    })
+    case other => other
+  } ^ Step(shutdown())
+
+  def setup() {
     println(s"Executor service type: $executorServiceType")
     threadSetup()
   }
 
-  protected override def runTest(testName: String, args: Args): Status = {
-    println()
-    println(s"$testName:")
-    super.runTest(testName, args)
-  }
-
-  override def afterAll() {
-    shutdown()
-  }
+  def shutdown()
 }
 
 object BenchmarkSpec {
