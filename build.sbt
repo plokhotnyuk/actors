@@ -14,7 +14,6 @@ resolvers ++= Seq(
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.2.1" % "test",
   "net.liftweb" %% "lift-actor" % "2.5.1" % "test",
-  "com.api-tech" %% "proxyactors" % "0.2.1" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.2" % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.1.0-M3" % "test",
   "com.higherfrequencytrading" % "affinity" % "1.7" % "test",
@@ -36,5 +35,5 @@ testGrouping <<= definedTests in Test map { tests =>
       runPolicy = SubProcess(javaOptions = Seq("-server", "-Xms8g", "-Xmx8g", "-Xss1m", "-XX:NewSize=7g", "-XX:PermSize=128m", "-XX:MaxPermSize=128m",
         "-XX:+TieredCompilation", "-XX:+UseG1GC", "-XX:+UseNUMA", "-XX:+UseCondCardMark", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
         System.getProperties.propertyNames.toSeq.map(key => "-D" + key.toString + "=" + System.getProperty(key.toString))))
-  }.filter(!_.name.contains("ProxyActors")).sortWith(_.name < _.name)
+  }.sortWith(_.name < _.name)
 }
