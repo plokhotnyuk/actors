@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   "junit" % "junit-dep" % "4.11" % "test"
 )
 
-scalacOptions ++= Seq("-deprecation", "-unchecked")
+scalacOptions ++= Seq("-target:jvm-1.7", "-deprecation", "-unchecked")
 
 parallelExecution in test := false
 
