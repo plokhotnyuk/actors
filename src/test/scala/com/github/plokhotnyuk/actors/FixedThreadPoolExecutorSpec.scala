@@ -17,7 +17,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
         for (i <- 1 to NumOfTasks) {
           e.execute(new Runnable() {
             taskRequests.release()
-            def run() {
+            def run(): Unit = {
               latch.countDown()
             }
           })
@@ -35,7 +35,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
       e =>
         for (i <- 1 to NumOfTasks) {
           e.execute(new Runnable() {
-            def run() {
+            def run(): Unit = {
               throw new RuntimeException()
             }
           })
@@ -49,13 +49,13 @@ class FixedThreadPoolExecutorSpec extends Specification {
     withExecutor(new FixedThreadPoolExecutor(1)) {
       e =>
         val task1 = new Runnable() {
-          def run() {
+          def run(): Unit = {
             // do nothing
           }
         }
         val latch = new CountDownLatch(1)
         val task2 = new Runnable() {
-          def run() {
+          def run(): Unit = {
             e.execute(task1)
             e.execute(this)
             latch.countDown()
@@ -75,7 +75,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
         val running = new AtomicBoolean(true)
         val semaphore = new Semaphore(0)
         e.execute(new Runnable() {
-          final def run() {
+          final def run(): Unit = {
             semaphore.release()
             while (running.get) {
               // hard to interrupt loop
@@ -102,7 +102,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
       e =>
         val latch = new CountDownLatch(1)
         e.execute(new Runnable() {
-          def run() {
+          def run(): Unit = {
             e.shutdownNow()
             latch.countDown()
           }
@@ -130,7 +130,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
         e.shutdown()
         val executed = new AtomicBoolean(false)
         e.execute(new Runnable() {
-          def run() {
+          def run(): Unit = {
             executed.set(true) // should not be executed
           }
         }) must throwA[RejectedExecutionException]
@@ -145,7 +145,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
         e.shutdown()
         val executed = new AtomicBoolean(false)
         e.execute(new Runnable() {
-          def run() {
+          def run(): Unit = {
             executed.set(true) // Should not be executed
           }
         })

@@ -12,7 +12,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
 
     def apply[A](a: => A) = {
       e.execute(new Runnable() {
-        def run() {
+        def run(): Unit = {
           a
         }
       })
@@ -68,7 +68,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
     })
   }
 
-  def ping(n: Int, p: Int) {
+  def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
@@ -97,7 +97,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
     }
   }
 
-  def shutdown() {
+  def shutdown(): Unit = {
     fullShutdown(executorService)
   }
 
@@ -109,7 +109,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
       if (i == 0) l.countDown()
   }
 
-  private def sendTicks(a: Actor2[Message], n: Int) {
+  private def sendTicks(a: Actor2[Message], n: Int): Unit = {
     val t = Message()
     var i = n
     while (i > 0) {

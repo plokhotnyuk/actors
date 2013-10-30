@@ -8,23 +8,23 @@ class ScalaActorSpec extends BenchmarkSpec {
   val customScheduler = new SchedulerAdapter {
     val executorService = createExecutorService()
 
-    def execute(fun: => Unit) {
+    def execute(fun: => Unit): Unit = {
       executorService.execute(new Runnable {
-        def run() {
+        def run(): Unit = {
           fun
         }
       })
     }
 
-    override def executeFromActor(task: Runnable) {
+    override def executeFromActor(task: Runnable): Unit = {
       executorService.execute(task)
     }
 
-    override def execute(task: Runnable) {
+    override def execute(task: Runnable): Unit = {
       executorService.execute(task)
     }
 
-    override def shutdown() {
+    override def shutdown(): Unit = {
       fullShutdown(executorService)
     }
 
@@ -75,7 +75,7 @@ class ScalaActorSpec extends BenchmarkSpec {
 
   "Initiation 1M" in {
     footprintedCollect(1000000)(_ => new Actor {
-      def act() {
+      def act(): Unit = {
         loop {
           react {
             case _ =>
@@ -87,7 +87,7 @@ class ScalaActorSpec extends BenchmarkSpec {
     })
   }
 
-  def ping(n: Int, p: Int) {
+  def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map(_ => (playerActor(l, n / p / 2), playerActor(l, n / p / 2)))
     timed(n) {
@@ -98,7 +98,7 @@ class ScalaActorSpec extends BenchmarkSpec {
     }
   }
 
-  def shutdown() {
+  def shutdown(): Unit = {
     customScheduler.shutdown()
   }
 
@@ -106,7 +106,7 @@ class ScalaActorSpec extends BenchmarkSpec {
     new Actor {
       private var i = n
 
-      def act() {
+      def act(): Unit = {
         loop {
           react {
             case _ =>
@@ -122,7 +122,7 @@ class ScalaActorSpec extends BenchmarkSpec {
       override def scheduler = customScheduler
     }.start()
 
-  private def sendTicks(a: Actor, n: Int) {
+  private def sendTicks(a: Actor, n: Int): Unit = {
     val m = Message()
     var i = n
     while (i > 0) {
@@ -135,7 +135,7 @@ class ScalaActorSpec extends BenchmarkSpec {
     new Actor {
       private var i = n
 
-      def act() {
+      def act(): Unit = {
         loop {
           react {
             case m =>

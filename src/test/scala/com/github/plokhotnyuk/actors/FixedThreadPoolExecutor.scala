@@ -51,7 +51,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
     (1 to poolSize).map {
       i =>
         val wt = tf.newThread(new Runnable() {
-          def run() {
+          def run(): Unit = {
             try {
               doWork(0)
             } catch {
@@ -67,7 +67,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
     }
   }
 
-  def shutdown() {
+  def shutdown(): Unit = {
     checkShutdownAccess(threads)
     setState(1)
   }
@@ -90,7 +90,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
     terminations.await(timeout, unit)
   }
 
-  def execute(t: Runnable) {
+  def execute(t: Runnable): Unit = {
     if (t == null) throw new NullPointerException()
     else if (state.get != 0) onReject(t)
     else {
@@ -120,7 +120,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
   }
 
   @annotation.tailrec
-  private def doWork(s: Int) {
+  private def doWork(s: Int): Unit = {
     run(takeLock.synchronized {
       val n = tail.next
       if (n ne null) {
@@ -136,7 +136,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
     if (s != 2) doWork(state.get)
   }
 
-  private def run(t: Runnable) {
+  private def run(t: Runnable): Unit = {
     if (t ne null) try {
       t.run()
     } catch {
@@ -145,7 +145,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
   }
 
   @annotation.tailrec
-  private def setState(newState: Int) {
+  private def setState(newState: Int): Unit = {
     val currState = state.get
     if (newState > currState && !state.compareAndSet(currState, newState)) setState(newState)
   }
@@ -158,7 +158,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
       case 2 => "Stop"
     }
 
-  private def checkShutdownAccess(threads: Seq[Thread]) {
+  private def checkShutdownAccess(threads: Seq[Thread]): Unit = {
     val security = System.getSecurityManager
     if (security != null) {
       security.checkPermission(FixedThreadPoolExecutor.shutdownPerm)

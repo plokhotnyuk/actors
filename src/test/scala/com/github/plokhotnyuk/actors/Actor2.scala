@@ -28,31 +28,31 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def toEffect: Run[A] = Run[A](a => this ! a)
 
   /** Alias for `apply` */
-  def !(a: A) {
+  def !(a: A): Unit = {
     val n = new Node(a)
     head.getAndSet(n).lazySet(n)
     trySchedule()
   }
 
   /** Pass the message `a` to the mailbox of this actor */
-  def apply(a: A) {
+  def apply(a: A): Unit = {
     this ! a
   }
 
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B]((b: B) => this ! f(b), onError)(strategy)
 
-  private def reschedule(t: Node[A]) {
+  private def reschedule(t: Node[A]): Unit = {
     tail = t
     state.set(0)
     if (t.get ne null) trySchedule()
     else t.a = null.asInstanceOf[A]
   }
 
-  private def trySchedule() {
+  private def trySchedule(): Unit = {
     if (state.compareAndSet(0, 1)) strategy(act())
   }
 
-  private def act(t: Node[A] = tail) {
+  private def act(t: Node[A] = tail): Unit = {
     val n = batchHandle(t, 1024)
     if (n ne t) strategy(act(n))
     else reschedule(t)
@@ -71,7 +71,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
     } else t
   }
 
-  private def handleError(t: Node[A], ex: Throwable) {
+  private def handleError(t: Node[A], ex: Throwable): Unit = {
     try {
       onError(ex)
     } catch {

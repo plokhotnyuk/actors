@@ -72,7 +72,7 @@ class AkkaActorSpec extends BenchmarkSpec {
     footprintedCollect(1000000)(_ => actorSystem.actorOf(props))
   }
 
-  def ping(n: Int, p: Int) {
+  def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map(_ => (playerActor(l, n / p / 2), playerActor(l, n / p / 2)))
     timed(n) {
@@ -83,7 +83,7 @@ class AkkaActorSpec extends BenchmarkSpec {
     }
   }
 
-  def shutdown() {
+  def shutdown(): Unit = {
     actorSystem.shutdown()
     actorSystem.awaitTermination()
   }
@@ -91,7 +91,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   private def tickActor(l: CountDownLatch, n: Int): ActorRef =
     actorSystem.actorOf(Props(classOf[TickAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
 
-  private def sendTicks(a: ActorRef, n: Int) {
+  private def sendTicks(a: ActorRef, n: Int): Unit = {
     val m = Message()
     var i = n
     while (i > 0) {

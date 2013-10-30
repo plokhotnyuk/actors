@@ -29,7 +29,7 @@ abstract class BenchmarkSpec extends Specification {
     case other => other
   } ^ Step(shutdown())
 
-  def setup() {
+  def setup(): Unit = {
     println(s"Executor service type: $executorServiceType")
     threadSetup()
   }
@@ -58,7 +58,7 @@ object BenchmarkSpec {
   def createExecutorService(): ExecutorService = {
     def createScalaForkJoinWorkerThreadFactory() = new ScalaForkJoinPool.ForkJoinWorkerThreadFactory {
       def newThread(pool: ScalaForkJoinPool) = new ScalaForkJoinWorkerThread(pool) {
-        override def run() {
+        override def run(): Unit = {
           threadSetup()
           super.run()
         }
@@ -67,7 +67,7 @@ object BenchmarkSpec {
 
     def createJavaForkJoinWorkerThreadFactory() = new ForkJoinPool.ForkJoinWorkerThreadFactory {
       def newThread(pool: ForkJoinPool) = new ForkJoinWorkerThread(pool) {
-        override def run() {
+        override def run(): Unit = {
           threadSetup()
           super.run()
         }
@@ -76,7 +76,7 @@ object BenchmarkSpec {
 
     def createThreadFactory() = new ThreadFactory {
       override def newThread(r: Runnable): Thread = new Thread {
-        override def run() {
+        override def run(): Unit = {
           threadSetup()
           r.run()
         }
@@ -130,17 +130,17 @@ object BenchmarkSpec {
     as
   }
 
-  def fork(code: => Unit) {
+  def fork(code: => Unit): Unit = {
     new Thread {
-      override def run() {
+      override def run(): Unit = {
         threadSetup()
         code
       }
     }.start()
   }
 
-  def threadSetup() {
-    def setThreadPriority(priority: Int) {
+  def threadSetup(): Unit = {
+    def setThreadPriority(priority: Int): Unit = {
       def ancestors(thread: ThreadGroup, acc: List[ThreadGroup] = Nil): List[ThreadGroup] =
         if (thread.getParent != null) ancestors(thread.getParent, thread :: acc) else acc
 
@@ -149,7 +149,7 @@ object BenchmarkSpec {
       thread.setPriority(priority)
     }
 
-    def setThreadAffinity() {
+    def setThreadAffinity(): Unit = {
       synchronized {
         AffinitySupport.setAffinity(1L << cpuId)
         if (printBinding) {
@@ -164,7 +164,7 @@ object BenchmarkSpec {
     if (isAffinityOn) setThreadAffinity()
   }
 
-  def fullShutdown(e: ExecutorService) {
+  def fullShutdown(e: ExecutorService): Unit = {
     e.shutdownNow()
     e.awaitTermination(0, TimeUnit.SECONDS)
   }

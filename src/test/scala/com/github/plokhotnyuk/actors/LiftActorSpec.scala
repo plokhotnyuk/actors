@@ -8,15 +8,15 @@ class LiftActorSpec extends BenchmarkSpec {
   LAScheduler.createExecutor = () => new ILAExecute {
     val executorService = createExecutorService()
 
-    def execute(f: () => Unit) {
+    def execute(f: () => Unit): Unit = {
       executorService.execute(new Runnable {
-        def run() {
+        def run(): Unit = {
           f()
         }
       })
     }
 
-    def shutdown() {
+    def shutdown(): Unit = {
       fullShutdown(executorService)
     }
   }
@@ -71,7 +71,7 @@ class LiftActorSpec extends BenchmarkSpec {
     })
   }
 
-  def ping(n: Int, p: Int) {
+  def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
@@ -104,7 +104,7 @@ class LiftActorSpec extends BenchmarkSpec {
     }
   }
 
-  def shutdown() {
+  def shutdown(): Unit = {
     LAScheduler.shutdown()
   }
 
@@ -119,7 +119,7 @@ class LiftActorSpec extends BenchmarkSpec {
       }
     }
 
-  private def sendTicks(a: LiftActor, n: Int) {
+  private def sendTicks(a: LiftActor, n: Int): Unit = {
     val m = Message()
     var i = n
     while (i > 0) {
