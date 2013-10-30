@@ -12,8 +12,8 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.2.1" % "test",
-  "net.liftweb" %% "lift-actor" % "2.5.1" % "test",
+  "com.typesafe.akka" %% "akka-actor" % "2.3-M1" % "test",
+  "net.liftweb" %% "lift-actor" % "2.6-M1" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.2" % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.1.0-M3" % "test",
   "com.higherfrequencytrading" % "affinity" % "1.7" % "test",
