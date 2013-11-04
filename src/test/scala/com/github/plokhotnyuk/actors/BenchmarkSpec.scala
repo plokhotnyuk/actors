@@ -1,17 +1,15 @@
 package com.github.plokhotnyuk.actors
 
-import scala.concurrent.forkjoin.{ForkJoinWorkerThread => ScalaForkJoinWorkerThread, ForkJoinPool => ScalaForkJoinPool}
-import java.util.concurrent._
-import com.higherfrequencytrading.affinity.AffinitySupport
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import com.higherfrequencytrading.affinity.impl.{PosixJNAAffinity, WindowsJNAAffinity, NativeAffinity}
-import java.lang.management.ManagementFactory._
 import com.sun.management.OperatingSystemMXBean
+import java.util.concurrent._
+import java.lang.management.ManagementFactory._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import org.specs2.mutable.Specification
 import org.specs2.specification.{Example, Step, Fragments}
 import org.specs2.execute.Success
+import scala.concurrent.forkjoin.{ForkJoinWorkerThread => ScalaForkJoinWorkerThread, ForkJoinPool => ScalaForkJoinPool}
 
 @RunWith(classOf[JUnitRunner])
 abstract class BenchmarkSpec extends Specification {
@@ -38,22 +36,13 @@ abstract class BenchmarkSpec extends Specification {
 }
 
 object BenchmarkSpec {
-  val processors = Runtime.getRuntime.availableProcessors
-  val executorServiceType = System.getProperty("benchmark.executorServiceType", "scala-forkjoin-pool")
-  val parallelism = System.getProperty("benchmark.parallelism", processors.toString).toInt
-  val poolSize = System.getProperty("benchmark.poolSize", processors.toString).toInt
-  val threadPriority = System.getProperty("benchmark.threadPriority", Thread.currentThread().getPriority.toString).toInt
-  val isAffinityOn = System.getProperty("benchmark.affinityOn", "false").toBoolean
-  if (isAffinityOn) println(s"Using $affinityType affinity control implementation")
-  val printBinding = System.getProperty("benchmark.printBinding", "false").toBoolean
-  val osMBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
-  var cpuId: Int = 0
-
-  def affinityType: String =
-    if (NativeAffinity.LOADED) "JNI-based"
-    else if (NativeAffinity.isWindows && AffinitySupport.isJNAAvailable && WindowsJNAAffinity.LOADED) "Windows JNA-based"
-    else if (AffinitySupport.isJNAAvailable && PosixJNAAffinity.LOADED) "Posix JNA-based"
-    else "dummy"
+  private val processors = Runtime.getRuntime.availableProcessors
+  private val executorServiceType = System.getProperty("benchmark.executorServiceType", "scala-forkjoin-pool")
+  private val poolSize = System.getProperty("benchmark.poolSize", processors.toString).toInt
+  private val threadPriority = Option(System.getProperty("benchmark.threadPriority")).map(_.toInt)
+  private val osMBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
+  
+  val parallelism: Int = System.getProperty("benchmark.parallelism", processors.toString).toInt
 
   def createExecutorService(): ExecutorService = {
     def createScalaForkJoinWorkerThreadFactory() = new ScalaForkJoinPool.ForkJoinWorkerThreadFactory {
@@ -141,27 +130,16 @@ object BenchmarkSpec {
 
   def threadSetup(): Unit = {
     def setThreadPriority(priority: Int): Unit = {
-      def ancestors(thread: ThreadGroup, acc: List[ThreadGroup] = Nil): List[ThreadGroup] =
-        if (thread.getParent != null) ancestors(thread.getParent, thread :: acc) else acc
+      @annotation.tailrec
+      def ancestors(tg: ThreadGroup, acc: List[ThreadGroup] = Nil): List[ThreadGroup] =
+        if (tg.getParent != null) ancestors(tg.getParent, tg :: acc) else acc
 
       val thread = Thread.currentThread()
       ancestors(thread.getThreadGroup).foreach(_.setMaxPriority(priority))
       thread.setPriority(priority)
     }
 
-    def setThreadAffinity(): Unit = {
-      synchronized {
-        AffinitySupport.setAffinity(1L << cpuId)
-        if (printBinding) {
-          val thread = Thread.currentThread()
-          println(s"CPU[$cpuId]: '${thread.getName}' with priority: ${thread.getPriority}")
-        }
-        cpuId = (cpuId + 1) % Runtime.getRuntime.availableProcessors
-      }
-    }
-
-    setThreadPriority(threadPriority)
-    if (isAffinityOn) setThreadAffinity()
+    threadPriority.foreach(setThreadPriority)
   }
 
   def fullShutdown(e: ExecutorService): Unit = {

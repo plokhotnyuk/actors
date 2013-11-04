@@ -32,7 +32,7 @@ testGrouping <<= definedTests in Test map { tests =>
     new Group(
       name = test.name,
       tests = Seq(test),
-      runPolicy = SubProcess(javaOptions = Seq("-server", "-Xms8g", "-Xmx8g", "-Xss192k", "-XX:NewSize=7g", "-XX:PermSize=64m", "-XX:MaxPermSize=64m",
+      runPolicy = SubProcess(javaOptions = Seq("-server", "-Xms8g", "-Xmx8g", "-Xss160k", "-XX:NewSize=7g", "-XX:PermSize=64m", "-XX:MaxPermSize=64m",
         "-XX:+TieredCompilation", "-XX:+UseG1GC", "-XX:+UseNUMA", "-XX:+UseCondCardMark", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
         System.getProperties.propertyNames.toSeq.map(key => "-D" + key.toString + "=" + System.getProperty(key.toString))))
   }.sortWith(_.name < _.name)
