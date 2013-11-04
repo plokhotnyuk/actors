@@ -18,9 +18,7 @@ import scalaz.Contravariant
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)
-                         (implicit val strategy: Strategy) {
-
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)(implicit val strategy: Strategy) {
   private var tail = new Node[A]()
   private val state = new AtomicInteger() // 0 - suspended, 1 - running
   private val head = new AtomicReference(tail)
@@ -31,26 +29,22 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def !(a: A): Unit = {
     val n = new Node(a)
     head.getAndSet(n).lazySet(n)
-    trySchedule()
+    schedule()
   }
 
   /** Pass the message `a` to the mailbox of this actor */
-  def apply(a: A): Unit = {
-    this ! a
-  }
+  def apply(a: A): Unit = this ! a
 
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B]((b: B) => this ! f(b), onError)(strategy)
 
   private def reschedule(t: Node[A]): Unit = {
     tail = t
     state.set(0)
-    if (t.get ne null) trySchedule()
+    if (t.get ne null) schedule()
     else t.a = null.asInstanceOf[A]
   }
 
-  private def trySchedule(): Unit = {
-    if (state.compareAndSet(0, 1)) strategy(act())
-  }
+  private def schedule(): Unit = if (state.compareAndSet(0, 1)) strategy(act())
 
   private def act(t: Node[A] = tail): Unit = {
     val n = batchHandle(t, 1024)
@@ -71,7 +65,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
     } else t
   }
 
-  private def handleError(t: Node[A], ex: Throwable): Unit = {
+  private def handleError(t: Node[A], ex: Throwable): Unit = 
     try {
       onError(ex)
     } catch {
@@ -79,7 +73,6 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
         reschedule(t)
         throw ex
     }
-  }
 }
 
 private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
