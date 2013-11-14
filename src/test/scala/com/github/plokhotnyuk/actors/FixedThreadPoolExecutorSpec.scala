@@ -17,9 +17,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
         for (i <- 1 to NumOfTasks) {
           e.execute(new Runnable() {
             taskRequests.release()
-            def run(): Unit = {
-              latch.countDown()
-            }
+            def run(): Unit = latch.countDown()
           })
         }
         taskRequests.acquire(NumOfTasks)
@@ -35,9 +33,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
       e =>
         for (i <- 1 to NumOfTasks) {
           e.execute(new Runnable() {
-            def run(): Unit = {
-              throw new RuntimeException()
-            }
+            def run(): Unit = throw new RuntimeException()
           })
         }
         e.isTerminated must_== false
@@ -49,9 +45,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
     withExecutor(new FixedThreadPoolExecutor(1)) {
       e =>
         val task1 = new Runnable() {
-          def run(): Unit = {
-            // do nothing
-          }
+          def run(): Unit = () // do nothing
         }
         val latch = new CountDownLatch(1)
         val task2 = new Runnable() {
@@ -130,9 +124,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
         e.shutdown()
         val executed = new AtomicBoolean(false)
         e.execute(new Runnable() {
-          def run(): Unit = {
-            executed.set(true) // should not be executed
-          }
+          def run(): Unit = executed.set(true) // should not be executed
         }) must throwA[RejectedExecutionException]
         executed.get must_== false
     }
@@ -145,9 +137,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
         e.shutdown()
         val executed = new AtomicBoolean(false)
         e.execute(new Runnable() {
-          def run(): Unit = {
-            executed.set(true) // Should not be executed
-          }
+          def run(): Unit = executed.set(true) // Should not be executed
         })
         e.shutdownNow() must beEmpty
         executed.get must_== false

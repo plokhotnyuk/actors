@@ -8,17 +8,12 @@ class LiftActorSpec extends BenchmarkSpec {
   LAScheduler.createExecutor = () => new ILAExecute {
     val executorService = createExecutorService()
 
-    def execute(f: () => Unit): Unit = {
+    def execute(f: () => Unit): Unit =
       executorService.execute(new Runnable {
-        def run(): Unit = {
-          f()
-        }
+        def run(): Unit = f()
       })
-    }
 
-    def shutdown(): Unit = {
-      fullShutdown(executorService)
-    }
+    def shutdown(): Unit = fullShutdown(executorService)
   }
 
   "Single-producer sending" in {
@@ -104,9 +99,7 @@ class LiftActorSpec extends BenchmarkSpec {
     }
   }
 
-  def shutdown(): Unit = {
-    LAScheduler.shutdown()
-  }
+  def shutdown(): Unit = LAScheduler.shutdown()
 
   private def tickActor(l: CountDownLatch, n: Int): LiftActor =
     new LiftActor {

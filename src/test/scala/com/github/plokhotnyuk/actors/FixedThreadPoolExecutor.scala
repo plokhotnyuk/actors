@@ -30,36 +30,24 @@ import java.util.concurrent.atomic.AtomicInteger
  * @param name           A name of the executor service
  */
 class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProcessors(),
-                              threadFactory: ThreadFactory = new ThreadFactory() {
-                                def newThread(worker: Runnable): Thread = new Thread(worker) {
-                                  setDaemon(true)
-                                }
-                              },
+                              threadFactory: ThreadFactory = FixedThreadPoolExecutor.daemonThreadFactory(),
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = "FixedThreadPool-" + FixedThreadPoolExecutor.poolId.incrementAndGet()
-                               ) extends AbstractExecutorService {
-  private var head = new TaskNode()
-  private val putLock = new Object()
+                              name: String = FixedThreadPoolExecutor.generateName()) extends AbstractExecutorService {
+  private val tasks = new ConcurrentLinkedQueue[Runnable]()
+  private val taskCount = new Semaphore(0)
   private val state = new AtomicInteger() // pool state (0 - running, 1 - shutdown, 2 - stop)
-  private val takeLock = new Object()
   private val terminations = new CountDownLatch(poolSize)
-  private var tail = head
   private val threads = {
     val tf = threadFactory // to avoid creating of fields for a constructor params
     val ts = terminations // to avoid long field name
     (1 to poolSize).map {
       i =>
         val wt = tf.newThread(new Runnable() {
-          def run(): Unit = {
-            try {
-              doWork(0)
-            } catch {
+          def run(): Unit =
+            try doWork(state.get) catch {
               case ex: InterruptedException => // can occurs on shutdownNow when worker is backing off
-            } finally {
-              ts.countDown()
-            }
-          }
+            } finally ts.countDown()
         })
         wt.setName(name + "-worker-" + i)
         wt.start()
@@ -68,17 +56,15 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
   }
 
   def shutdown(): Unit = {
-    checkShutdownAccess(threads)
+    checkShutdownAccess()
     setState(1)
   }
 
   def shutdownNow(): util.List[Runnable] = {
-    checkShutdownAccess(threads)
+    checkShutdownAccess()
     setState(2)
     threads.filter(_ ne Thread.currentThread()).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    takeLock.synchronized {
-      drainTo(new util.LinkedList[Runnable]())
-    }
+    drainTo(new util.LinkedList[Runnable]())
   }
 
   def isShutdown: Boolean = state.get != 0
@@ -86,63 +72,43 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
   def isTerminated: Boolean = terminations.getCount == 0
 
   def awaitTermination(timeout: Long, unit: TimeUnit): Boolean = {
+    taskCount.release(threads.size)
     if (threads.exists(_ eq Thread.currentThread())) terminations.countDown() // don't hang up due call in task
     terminations.await(timeout, unit)
   }
 
-  def execute(t: Runnable): Unit = {
-    if (t == null) throw new NullPointerException()
+  def execute(t: Runnable): Unit =
+    if (t eq null) throw new NullPointerException()
     else if (state.get != 0) onReject(t)
     else {
-      val n = new TaskNode(t)
-      if (null eq putLock.synchronized {
-        val hn = head
-        hn.next = n
-        head = n
-        hn.task
-      }) takeLock.synchronized(takeLock.notifyAll())
+      tasks.offer(t)
+      taskCount.release()
     }
-  }
 
   override def toString: String =
     super.toString + "[" + status + ", pool size = " + threads.size + ", name = " + name + "]"
 
   @annotation.tailrec
   private def drainTo(ts: util.List[Runnable]): util.List[Runnable] = {
-    val n = tail.next
-    if (n eq null) ts
+    val t = tasks.poll()
+    if (t eq null) ts
     else {
-      ts.add(n.task)
-      n.task = null
-      tail = n
+      ts.add(t)
       drainTo(ts)
     }
   }
 
   @annotation.tailrec
   private def doWork(s: Int): Unit = {
-    run(takeLock.synchronized {
-      val n = tail.next
-      if (n ne null) {
-        val t = n.task
-        n.task = null
-        tail = n
-        t
-      } else if (s == 0) {
-        takeLock.wait()
-        null
-      } else return
-    })
+    taskCount.acquire()
+    run(tasks.poll())
     if (s != 2) doWork(state.get)
   }
 
-  private def run(t: Runnable): Unit = {
-    if (t ne null) try {
-      t.run()
-    } catch {
+  private def run(t: Runnable): Unit =
+    if (t ne null) try t.run() catch {
       case ex: Throwable => if (!ex.isInstanceOf[InterruptedException] || state.get != 2) onError(ex)
     }
-  }
 
   @annotation.tailrec
   private def setState(newState: Int): Unit = {
@@ -158,18 +124,23 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
       case 2 => "Stop"
     }
 
-  private def checkShutdownAccess(threads: Seq[Thread]): Unit = {
-    val security = System.getSecurityManager
-    if (security != null) {
-      security.checkPermission(FixedThreadPoolExecutor.shutdownPerm)
-      threads.foreach(security.checkAccess)
+  private def checkShutdownAccess(): Unit =
+    Option(System.getSecurityManager).foreach {
+      sm =>
+        sm.checkPermission(FixedThreadPoolExecutor.shutdownPerm)
+        threads.foreach(sm.checkAccess)
     }
-  }
 }
 
 private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger()
   private val shutdownPerm = new RuntimePermission("modifyThread")
+  
+  def daemonThreadFactory(): ThreadFactory = new ThreadFactory() {
+    def newThread(worker: Runnable): Thread = new Thread(worker) {
+      setDaemon(true)
+    }
+  }
+  
+  def generateName(): String = "FixedThreadPool-" + poolId.incrementAndGet()
 }
-
-private class TaskNode(var task: Runnable = null, var next: TaskNode = null)

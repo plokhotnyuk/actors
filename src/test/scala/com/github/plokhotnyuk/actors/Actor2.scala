@@ -18,7 +18,7 @@ import scalaz.Contravariant
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)(implicit val strategy: Strategy) {
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)(implicit strategy: Strategy) {
   private var tail = new Node[A]()
   private val state = new AtomicInteger() // 0 - suspended, 1 - running
   private val head = new AtomicReference(tail)
@@ -35,44 +35,32 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   /** Pass the message `a` to the mailbox of this actor */
   def apply(a: A): Unit = this ! a
 
-  def contramap[B](f: B => A): Actor2[B] = new Actor2[B]((b: B) => this ! f(b), onError)(strategy)
+  def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
   private def reschedule(t: Node[A]): Unit = {
     tail = t
     state.set(0)
     if (t.get ne null) schedule()
-    else t.a = null.asInstanceOf[A]
   }
 
-  private def schedule(): Unit = if (state.compareAndSet(0, 1)) strategy(act())
+  private def schedule(): Unit = if (state.compareAndSet(0, 1)) strategy(act(tail))
 
-  private def act(t: Node[A] = tail): Unit = {
+  private def act(t: Node[A]): Unit = {
     val n = batchHandle(t, 1024)
     if (n ne t) strategy(act(n))
-    else reschedule(t)
+    else reschedule(n)
   }
 
   @annotation.tailrec
   private def batchHandle(t: Node[A], i: Int): Node[A] = {
     val n = t.get
     if ((n ne null) && i > 0) {
-      try {
-        handler(n.a)
-      } catch {
-        case ex: Throwable => handleError(n, ex)
-      }
+      try handler(n.a) catch {
+        case ex: Throwable => onError(ex)
+      } finally n.a = null.asInstanceOf[A]
       batchHandle(n, i - 1)
     } else t
   }
-
-  private def handleError(t: Node[A], ex: Throwable): Unit = 
-    try {
-      onError(ex)
-    } catch {
-      case ex: Throwable =>
-        reschedule(t)
-        throw ex
-    }
 }
 
 private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
@@ -86,7 +74,8 @@ trait ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  def actor[A](e: A => Unit, err: Throwable => Unit = throw _)(implicit s: Strategy): Actor2[A] = new Actor2[A](e, err)
+  def actor[A](handler: A => Unit, onError: Throwable => Unit = throw _)(implicit s: Strategy): Actor2[A] =
+    new Actor2[A](handler, onError)(s)
 
-  implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
+  implicit def ToFunctionFromActor[A](r: Actor2[A]): A => Unit = a => r ! a
 }

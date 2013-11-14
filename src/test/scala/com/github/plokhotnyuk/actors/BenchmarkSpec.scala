@@ -27,10 +27,7 @@ abstract class BenchmarkSpec extends Specification {
     case other => other
   } ^ Step(shutdown())
 
-  def setup(): Unit = {
-    println(s"Executor service type: $executorServiceType")
-    threadSetup()
-  }
+  def setup(): Unit = withSetup(println(s"Executor service type: $executorServiceType"))
 
   def shutdown()
 }
@@ -47,28 +44,19 @@ object BenchmarkSpec {
   def createExecutorService(): ExecutorService = {
     def createScalaForkJoinWorkerThreadFactory() = new ScalaForkJoinPool.ForkJoinWorkerThreadFactory {
       def newThread(pool: ScalaForkJoinPool) = new ScalaForkJoinWorkerThread(pool) {
-        override def run(): Unit = {
-          threadSetup()
-          super.run()
-        }
+        override def run(): Unit = withSetup(super.run())
       }
     }
 
     def createJavaForkJoinWorkerThreadFactory() = new ForkJoinPool.ForkJoinWorkerThreadFactory {
       def newThread(pool: ForkJoinPool) = new ForkJoinWorkerThread(pool) {
-        override def run(): Unit = {
-          threadSetup()
-          super.run()
-        }
+        override def run(): Unit = withSetup(super.run())
       }
     }
 
     def createThreadFactory() = new ThreadFactory {
       override def newThread(r: Runnable): Thread = new Thread {
-        override def run(): Unit = {
-          threadSetup()
-          r.run()
-        }
+        override def run(): Unit = withSetup(r.run())
       }
     }
 
@@ -119,29 +107,24 @@ object BenchmarkSpec {
     as
   }
 
-  def fork(code: => Unit): Unit = {
+  def fork(code: => Unit): Unit = 
     new Thread {
-      override def run(): Unit = {
-        threadSetup()
-        code
-      }
+      override def run(): Unit = withSetup(code)
     }.start()
+
+  def withSetup[A](a: => A): Unit = {
+    threadPriority.foreach(setThreadPriority(Thread.currentThread(), _))
+    a
   }
 
-  def threadSetup(): Unit = {
-    def setThreadPriority(priority: Int): Unit = {
-      @annotation.tailrec
-      def ancestors(tg: ThreadGroup, acc: List[ThreadGroup] = Nil): List[ThreadGroup] =
-        if (tg.getParent != null) ancestors(tg.getParent, tg :: acc) else acc
+  def setThreadPriority(thread: Thread, priority: Int): Unit = {
+    def ancestors(x: ThreadGroup): List[ThreadGroup] =
+      Option(x.getParent).fold(List[ThreadGroup]())(x :: ancestors(_))
 
-      val thread = Thread.currentThread()
-      ancestors(thread.getThreadGroup).foreach(_.setMaxPriority(priority))
-      thread.setPriority(priority)
-    }
-
-    threadPriority.foreach(setThreadPriority)
+    ancestors(thread.getThreadGroup).reverse.foreach(_.setMaxPriority(priority))
+    thread.setPriority(priority)
   }
-
+  
   def fullShutdown(e: ExecutorService): Unit = {
     e.shutdownNow()
     e.awaitTermination(0, TimeUnit.SECONDS)

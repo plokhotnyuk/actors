@@ -8,25 +8,16 @@ class ScalaActorSpec extends BenchmarkSpec {
   val customScheduler = new SchedulerAdapter {
     val executorService = createExecutorService()
 
-    def execute(fun: => Unit): Unit = {
+    def execute(f: => Unit): Unit =
       executorService.execute(new Runnable {
-        def run(): Unit = {
-          fun
-        }
+        def run(): Unit = f
       })
-    }
 
-    override def executeFromActor(task: Runnable): Unit = {
-      executorService.execute(task)
-    }
+    override def executeFromActor(task: Runnable): Unit = executorService.execute(task)
 
-    override def execute(task: Runnable): Unit = {
-      executorService.execute(task)
-    }
+    override def execute(task: Runnable): Unit = executorService.execute(task)
 
-    override def shutdown(): Unit = {
-      fullShutdown(executorService)
-    }
+    override def shutdown(): Unit = fullShutdown(executorService)
 
     override def isActive: Boolean = !executorService.isShutdown
   }
@@ -75,13 +66,12 @@ class ScalaActorSpec extends BenchmarkSpec {
 
   "Initiation 1M" in {
     footprintedCollect(1000000)(_ => new Actor {
-      def act(): Unit = {
+      def act(): Unit =
         loop {
           react {
             case _ =>
           }
         }
-      }
 
       override def scheduler = customScheduler
     })
@@ -98,15 +88,13 @@ class ScalaActorSpec extends BenchmarkSpec {
     }
   }
 
-  def shutdown(): Unit = {
-    customScheduler.shutdown()
-  }
+  def shutdown(): Unit = customScheduler.shutdown()
 
   private def tickActor(l: CountDownLatch, n: Int): Actor =
     new Actor {
       private var i = n
 
-      def act(): Unit = {
+      def act(): Unit =
         loop {
           react {
             case _ =>
@@ -117,7 +105,6 @@ class ScalaActorSpec extends BenchmarkSpec {
               }
           }
         }
-      }
 
       override def scheduler = customScheduler
     }.start()
@@ -135,7 +122,7 @@ class ScalaActorSpec extends BenchmarkSpec {
     new Actor {
       private var i = n
 
-      def act(): Unit = {
+      def act(): Unit =
         loop {
           react {
             case m =>
@@ -147,7 +134,6 @@ class ScalaActorSpec extends BenchmarkSpec {
               }
           }
         }
-      }
 
       override def scheduler = customScheduler
     }.start()

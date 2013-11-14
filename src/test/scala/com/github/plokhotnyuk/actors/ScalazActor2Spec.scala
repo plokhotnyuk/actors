@@ -10,13 +10,11 @@ class ScalazActor2Spec extends BenchmarkSpec {
   implicit val strategy = new Strategy {
     private val e = executorService
 
-    def apply[A](a: => A) = {
+    def apply[A](a: => A): () => A = {
       e.execute(new Runnable() {
-        def run(): Unit = {
-          a
-        }
+        def run(): Unit = a
       })
-      null.asInstanceOf[() => A]
+      null
     }
   }
 
@@ -97,13 +95,10 @@ class ScalazActor2Spec extends BenchmarkSpec {
     }
   }
 
-  def shutdown(): Unit = {
-    fullShutdown(executorService)
-  }
+  def shutdown(): Unit = fullShutdown(executorService)
 
   private def tickActor(l: CountDownLatch, n: Int): Actor2[Message] = actor[Message] {
     var i = n
-
     (m: Message) =>
       i -= 1
       if (i == 0) l.countDown()
