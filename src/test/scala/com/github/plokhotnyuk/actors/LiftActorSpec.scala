@@ -54,8 +54,8 @@ class LiftActorSpec extends BenchmarkSpec {
     ping(2000000, 1)
   }
 
-  "Ping throughput 10K" in {
-    ping(5000000, 10000)
+  "Ping throughput 1K" in {
+    ping(5000000, 1000)
   }
 
   "Initiation 1M" in {

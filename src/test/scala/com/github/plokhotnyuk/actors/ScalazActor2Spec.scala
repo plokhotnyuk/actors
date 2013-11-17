@@ -56,8 +56,8 @@ class ScalazActor2Spec extends BenchmarkSpec {
     ping(10000000, 1)
   }
 
-  "Ping throughput 10K" in {
-    ping(10000000, 10000)
+  "Ping throughput 1K" in {
+    ping(10000000, 1000)
   }
 
   "Initiation 1M" in {
