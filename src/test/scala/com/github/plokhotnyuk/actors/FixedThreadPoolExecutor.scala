@@ -41,10 +41,11 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = FixedThreadPoolExecutor.generateName()) extends AbstractExecutorService {
+  private val spin = 512 / Math.min(poolSize, Runtime.getRuntime.availableProcessors)
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
-    override protected final def tryAcquireShared(ignore: Int): Int = work()
+    override protected final def tryAcquireShared(ignore: Int): Int = work(spin)
   }
   private val tail = new AtomicReference[TaskNode](new TaskNode)
   private val state = new AtomicInteger // pool state (0 - running, 1 - shutdown, 2 - stop)
@@ -121,15 +122,17 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
   }
 
   @annotation.tailrec
-  private def work(): Int = {
+  private def work(s: Int): Int = {
     val tn = tail.get
     val n = tn.get
-    if ((n ne null) && tail.compareAndSet(tn, n)) {
-      try n.task.run() finally n.task = null
-      if (state.get != 2) work()
-      else throw new InterruptedException
-    } else if (state.get == 0) -1
-    else throw new InterruptedException
+    if (n ne null) {
+      if (tail.compareAndSet(tn, n)) try n.task.run() finally n.task = null
+      if (state.get == 2) throw new InterruptedException
+      if (s > 0) work(s - 1) else 1
+    } else {
+      if (state.get != 0) throw new InterruptedException
+      if (s > 0) work(s - 1) else -1
+    }
   }
 
   @annotation.tailrec
