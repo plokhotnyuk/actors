@@ -113,32 +113,24 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
 
   @annotation.tailrec
   private def loop(): Unit = {
-    sync.acquireSharedInterruptibly(1)
+    try sync.acquireSharedInterruptibly(1) catch {
+      case _: InterruptedException => return
+      case ex: Throwable => onError(ex)
+    }
     loop()
   }
 
+  @annotation.tailrec
   private def work(): Int = {
     val tn = tail.get
     val n = tn.get
-    if (n eq null) sleepOrStop()
-    else {
-      if (tail.compareAndSet(tn, n)) run(n)
-      workOrStop()
-    }
+    if ((n ne null) && tail.compareAndSet(tn, n)) {
+      try n.task.run() finally n.task = null
+      if (state.get != 2) work()
+      else throw new InterruptedException
+    } else if (state.get == 0) -1
+    else throw new InterruptedException
   }
-
-  private def workOrStop(): Int =
-    if (state.get != 2) 1
-    else throw new InterruptedException
-
-  private def sleepOrStop(): Int =
-    if (state.get == 0) -1
-    else throw new InterruptedException
-
-  private def run(n: TaskNode): Unit =
-    try n.task.run() catch {
-      case ex: Throwable => if (!ex.isInstanceOf[InterruptedException] || state.get != 2) onError(ex)
-    } finally n.task = null
 
   @annotation.tailrec
   private def setState(newState: Int): Unit = {
