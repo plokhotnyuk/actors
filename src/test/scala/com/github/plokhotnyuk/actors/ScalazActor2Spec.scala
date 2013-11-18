@@ -56,8 +56,8 @@ class ScalazActor2Spec extends BenchmarkSpec {
     ping(10000000, 1)
   }
 
-  "Ping throughput 1K" in {
-    ping(10000000, 1000)
+  "Ping throughput 10K" in {
+    ping(10000000, 10000)
   }
 
   "Initiation 1M" in {
@@ -73,7 +73,6 @@ class ScalazActor2Spec extends BenchmarkSpec {
         var a1: Actor2[Message] = null
         val a2 = actor[Message] {
           var i = n / p / 2
-
           (m: Message) =>
             if (i > 0) a1 ! m
             i -= 1
@@ -81,7 +80,6 @@ class ScalazActor2Spec extends BenchmarkSpec {
         }
         a1 = actor[Message] {
           var i = n / p / 2
-
           (m: Message) =>
             if (i > 0) a2 ! m
             i -= 1
