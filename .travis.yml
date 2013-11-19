@@ -6,6 +6,8 @@ jdk:
   - oraclejdk7
 install: /bin/true # always succeeds
 script:
+  - sudo cat /proc/cpuinfo
+  - sudo cat /proc/meminfo
   - mvn -B -DskipTests test
   - mvn -B -Dbenchmark.executorServiceType=fixed-thread-pool test -Ptravis
   - mvn -B -Dbenchmark.executorServiceType=scala-forkjoin-pool test -Ptravis
