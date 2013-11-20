@@ -2,7 +2,7 @@ package com.github.plokhotnyuk.actors
 
 import java.util
 import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.AbstractQueuedSynchronizer
 
 /**
@@ -24,10 +24,7 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
  * `java.util.concurrent.RejectedExecutionException` can occurs only after shutdown
  * when pool was initialized with default implementation of `onReject: Runnable => Unit`.
  *
- * Implementation based on non-intrusive MPSC node-based queue, modified for MPMC access:
- * [[http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue]]
- *
- * Idea of using some implementation of 'java.util.concurrent.locks.AbstractQueuedSynchronizer' from
+ * Idea to use some implementation of 'java.util.concurrent.locks.AbstractQueuedSynchronizer' borrowed from
  * [[https://github.com/laforge49/JActor2/blob/master/jactor2-core/src/main/java/org/agilewiki/jactor2/core/facilities/ThreadManager.java]]
  *
  * @param poolSize       A number of worker threads in pool
@@ -47,11 +44,11 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
 
     override protected final def tryAcquireShared(ignore: Int): Int = work(spin)
   }
-  private val tail = new AtomicReference[TaskNode](new TaskNode)
+  private val tasks = new ConcurrentLinkedQueue[Runnable]()
   private val state = new AtomicInteger // pool state (0 - running, 1 - shutdown, 2 - stop)
-  private val head = new AtomicReference[TaskNode](tail.get)
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
+    val nm = name // to avoid creating of fields for a constructor params
     val tf = threadFactory // to avoid creating of fields for a constructor params
     val ts = terminations // to avoid long field name
     (1 to poolSize).map {
@@ -62,7 +59,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
               case _: InterruptedException => // ignore
             } finally ts.countDown()
         })
-        wt.setName(name + "-worker-" + i)
+        wt.setName(s"$nm-worker-$i")
         wt.start()
         wt
     }
@@ -93,8 +90,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
     if (t eq null) throw new NullPointerException
     else if (state.get != 0) onReject(t)
     else {
-      val n = new TaskNode(t)
-      head.getAndSet(n).set(n)
+      tasks.offer(t)
       sync.releaseShared(1)
     }
 
@@ -102,14 +98,12 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
 
   @annotation.tailrec
   private def drainTo(ts: util.List[Runnable]): util.List[Runnable] = {
-    val tn = tail.get
-    val n = tn.get
-    if (n eq null) ts
-    else if (tail.compareAndSet(tn, n)) {
-      ts.add(n.task)
-      n.task = null
+    val t = tasks.poll()
+    if (t eq null) ts
+    else {
+      ts.add(t)
       drainTo(ts)
-    } else drainTo(ts)
+    }
   }
 
   @annotation.tailrec
@@ -123,10 +117,9 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
 
   @annotation.tailrec
   private def work(s: Int): Int = {
-    val tn = tail.get
-    val n = tn.get
-    if (n ne null) {
-      if (tail.compareAndSet(tn, n)) try n.task.run() finally n.task = null
+    val t = tasks.poll()
+    if (t ne null) {
+      t.run()
       if (state.get == 2) throw new InterruptedException
       if (s > 0) work(s - 1) else 1
     } else {
@@ -167,7 +160,5 @@ private object FixedThreadPoolExecutor {
     }
   }
 
-  def generateName(): String = "FixedThreadPool-" + poolId.incrementAndGet()
+  def generateName(): String = s"FixedThreadPool-${poolId.incrementAndGet()}"
 }
-
-private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
