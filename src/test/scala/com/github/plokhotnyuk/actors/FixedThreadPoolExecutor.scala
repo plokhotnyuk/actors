@@ -38,14 +38,14 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = FixedThreadPoolExecutor.generateName()) extends AbstractExecutorService {
-  private val spin = 512 / Math.min(poolSize, Runtime.getRuntime.availableProcessors)
+  private val tasks = new MultiLaneQueue(poolSize)
+  private val state = new AtomicInteger // pool state (0 - running, 1 - shutdown, 2 - stop)
+  private val spin = tasks.capacity << 3
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
     override protected final def tryAcquireShared(ignore: Int): Int = work(spin)
   }
-  private val tasks = new MultiLaneQueue(poolSize)
-  private val state = new AtomicInteger // pool state (0 - running, 1 - shutdown, 2 - stop)
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
     val nm = name // to avoid creating of fields for a constructor params
@@ -164,7 +164,7 @@ private object FixedThreadPoolExecutor {
 }
 
 private class MultiLaneQueue(poolSize: Int) {
-  private val capacity = nextPowerOfTwo(Math.min(poolSize, Runtime.getRuntime.availableProcessors))
+  val capacity = nextPowerOfTwo(Math.min(poolSize, Runtime.getRuntime.availableProcessors))
   private val mask = capacity - 1
   private val polls = new AtomicInteger
   private val (tails, heads) = {
