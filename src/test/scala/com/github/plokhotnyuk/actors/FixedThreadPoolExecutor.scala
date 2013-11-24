@@ -2,7 +2,7 @@ package com.github.plokhotnyuk.actors
 
 import java.util
 import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.AbstractQueuedSynchronizer
 
 /**
@@ -38,14 +38,14 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = FixedThreadPoolExecutor.generateName()) extends AbstractExecutorService {
-  private val tasks = new MultiLaneQueue(poolSize)
-  private val state = new AtomicInteger // pool state (0 - running, 1 - shutdown, 2 - stop)
-  private val spin = tasks.capacity << 3
+  private val spin = 256 / Math.min(poolSize, Runtime.getRuntime.availableProcessors)
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
     override protected final def tryAcquireShared(ignore: Int): Int = work(spin)
   }
+  private val tasks = new ConcurrentLinkedQueue[Runnable]()
+  private val state = new AtomicInteger // pool state (0 - running, 1 - shutdown, 2 - stop)
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
     val nm = name // to avoid creating of fields for a constructor params
@@ -87,8 +87,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
   }
 
   def execute(t: Runnable): Unit =
-    if (t eq null) throw new NullPointerException
-    else if (state.get != 0) onReject(t)
+    if (state.get != 0) onReject(t)
     else {
       tasks.offer(t)
       sync.releaseShared(1)
@@ -162,37 +161,3 @@ private object FixedThreadPoolExecutor {
 
   def generateName(): String = s"FixedThreadPool-${poolId.incrementAndGet()}"
 }
-
-private class MultiLaneQueue(poolSize: Int) {
-  val capacity = nextPowerOfTwo(Math.min(poolSize, Runtime.getRuntime.availableProcessors))
-  private val mask = capacity - 1
-  private val polls = new AtomicInteger
-  private val (tails, heads) = {
-    val dummyNodes = (1 to capacity).map(_ => new TaskNode(null))
-    (dummyNodes.map(n => new AtomicReference[TaskNode](n)).toArray,
-       dummyNodes.map(n => new AtomicReference[TaskNode](n)).toArray)
-  }
-  private val offers = new AtomicInteger
-
-  def offer(t: Runnable): Unit = {
-    val n = new TaskNode(t)
-    heads(mask & offers.getAndIncrement()).getAndSet(n).set(n)
-  }
-
-  @annotation.tailrec
-  final def poll(): Runnable = {
-    val tail = tails(mask & polls.getAndIncrement())
-    val tn = tail.get
-    val n = tn.get
-    if (n eq null) null
-    else if (tail.compareAndSet(tn, n)) {
-      val t = n.task
-      n.task = null
-      t
-    } else poll()
-  }
-
-  private def nextPowerOfTwo(x: Int): Int = 1 << (32 - Integer.numberOfLeadingZeros(x - 1))
-}
-
-private class TaskNode(var task: Runnable) extends AtomicReference[TaskNode]
