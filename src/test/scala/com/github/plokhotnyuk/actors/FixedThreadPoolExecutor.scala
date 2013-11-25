@@ -171,7 +171,7 @@ private class MultiLaneQueue(poolSize: Int) {
   private val mask = capacity - 1
   private val (tails, heads) = {
     val dummyNodes = (1 to capacity).map(_ => new TaskNode(null))
-    (toAtomicReferenceArray(dummyNodes), toAtomicReferenceArray(dummyNodes))
+    (toPaddedAtomicReferenceArray(dummyNodes), toPaddedAtomicReferenceArray(dummyNodes))
   }
 
   def offer(t: Runnable): Unit = {
@@ -203,10 +203,14 @@ private class MultiLaneQueue(poolSize: Int) {
 
   private def isPowerOfTwo(x: Int): Boolean = (x & (x - 1)) == 0
 
-  private def toAtomicReferenceArray(ns: Seq[TaskNode]): Array[AtomicReference[TaskNode]] =
-    ns.map(n => new AtomicReference[TaskNode](n)).toArray
+  private def toPaddedAtomicReferenceArray(ns: Seq[TaskNode]): Array[AtomicReference[TaskNode]] =
+    ns.map(n => new PaddedAtomicReference[TaskNode](n)).toArray
 
   private def currentThreadId: Int = Thread.currentThread().getId.toInt
 }
 
 private class TaskNode(var task: Runnable) extends AtomicReference[TaskNode]
+
+private class PaddedAtomicReference[T](t: T) extends AtomicReference[T](t) {
+  @volatile var p1, p2, p3, p4, p5, p6: T = _
+}
