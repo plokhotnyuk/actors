@@ -45,24 +45,17 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
-    override protected final def tryAcquireShared(ignore: Int): Int = work(spin)
+    override protected final def tryAcquireShared(ignore: Int): Int = work()
   }
   private val terminations = new CountDownLatch(poolSize)
-  private val threads = {
-    val nm = name // to avoid creating of fields for a constructor params
-    val tf = threadFactory // to avoid creating of fields for a constructor params
-    val ts = terminations // to avoid long field name
-    (1 to poolSize).map {
-      i =>
-        val wt = tf.newThread(new Runnable {
-          def run(): Unit =
-            try loop() catch {
-              case _: InterruptedException => // ignore
-            } finally ts.countDown()
-        })
-        wt.setName(s"$nm-worker-$i")
-        wt.start()
-        wt
+  private val threads = createThreads(threadFactory, terminations)
+
+  {
+    val nm = name // to avoid long field name
+    threads.zipWithIndex.foreach {
+      case (t, i) =>
+        t.setName(s"$nm-worker-$i")
+        t.start()
     }
   }
 
@@ -97,6 +90,21 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
+  private def createThreads(threadFactory: ThreadFactory, terminations: CountDownLatch,
+                            maskedIds: Set[Int] = Set(), acc: List[Thread] = List()): List[Thread] = {
+    val t = threadFactory.newThread(new Runnable {
+      def run(): Unit =
+        try loop() catch {
+          case _: InterruptedException => // ignore
+        } finally terminations.countDown()
+    })
+    val maskedId = t.getId.toInt & tasks.mask
+    if (maskedIds.contains(maskedId)) {
+      if (maskedIds.size > tasks.mask) acc
+      else createThreads(threadFactory, terminations, maskedIds, acc)
+    } else createThreads(threadFactory, terminations, maskedIds + maskedId, t :: acc)
+  }
+
   @annotation.tailrec
   private def drainTo(ts: util.List[Runnable]): util.List[Runnable] = {
     val t = tasks.poll()
@@ -117,7 +125,7 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
   }
 
   @annotation.tailrec
-  private def work(s: Int): Int = {
+  private def work(s: Int = spin): Int = {
     val t = tasks.poll()
     if (t ne null) {
       t.run()
@@ -143,12 +151,14 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
       case 2 => "Stop"
     }
 
-  private def checkShutdownAccess(): Unit =
+  private def checkShutdownAccess(): Unit = {
+    val ts = threads // to avoid long field name
     Option(System.getSecurityManager).foreach {
       sm =>
         sm.checkPermission(FixedThreadPoolExecutor.shutdownPerm)
-        threads.foreach(sm.checkAccess)
+        ts.foreach(sm.checkAccess)
     }
+  }
 }
 
 private object FixedThreadPoolExecutor {
@@ -167,16 +177,11 @@ private object FixedThreadPoolExecutor {
   def optimalSpin: Int = 256 / CPUs
 }
 
-private class MultiLaneQueue(poolSize: Int) {
-  val capacity = {
-    val parallelism = Math.min(poolSize, Runtime.getRuntime.availableProcessors)
-    if (isPowerOfTwo(parallelism)) parallelism else nextPowerOfTwo(parallelism) >> 1
-  }
-  private val mask = capacity - 1
-  private val (tails, heads) = {
-    val dummyNodes = (1 to capacity).map(_ => new TaskNode(null))
-    (toPaddedAtomicReferenceArray(dummyNodes), toPaddedAtomicReferenceArray(dummyNodes))
-  }
+private class MultiLaneQueue(initialCapacity: Int) {
+  private val capacity = optimalCapacity(initialCapacity)
+  val mask = capacity - 1
+  private val tails = (1 to capacity).map(_ => new PaddedAtomicReference(new TaskNode(null))).toArray
+  private val heads = tails.map(n => new PaddedAtomicReference(n.get)).toArray
 
   def offer(t: Runnable): Unit = {
     val n = new TaskNode(t)
@@ -203,14 +208,16 @@ private class MultiLaneQueue(poolSize: Int) {
     } else poll(offset, limit)
   }
 
+  private def currentThreadId: Int = Thread.currentThread().getId.toInt
+
+  private def optimalCapacity(initialCapacity: Int): Int = {
+    val parallelism = Math.min(initialCapacity, Runtime.getRuntime.availableProcessors)
+    if (isPowerOfTwo(parallelism)) parallelism else nextPowerOfTwo(parallelism) >> 1
+  }
+
   private def nextPowerOfTwo(x: Int): Int = 1 << (32 - Integer.numberOfLeadingZeros(x - 1))
 
   private def isPowerOfTwo(x: Int): Boolean = (x & (x - 1)) == 0
-
-  private def toPaddedAtomicReferenceArray(ns: Seq[TaskNode]): Array[AtomicReference[TaskNode]] =
-    ns.map(n => new PaddedAtomicReference[TaskNode](n)).toArray
-
-  private def currentThreadId: Int = Thread.currentThread().getId.toInt
 }
 
 private class TaskNode(var task: Runnable) extends AtomicReference[TaskNode]
