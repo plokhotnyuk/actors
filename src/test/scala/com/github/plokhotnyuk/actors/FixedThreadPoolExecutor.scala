@@ -32,15 +32,16 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
  * @param onError        The exception handler for unhandled errors during executing of tasks
  * @param onReject       The handler for rejection of task submission after shutdown
  * @param name           A name of the executor service
+ * @param spin           A number of tries before slowdown of worker thread
  */
-class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProcessors,
+class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
                               threadFactory: ThreadFactory = FixedThreadPoolExecutor.daemonThreadFactory(),
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = FixedThreadPoolExecutor.generateName()) extends AbstractExecutorService {
+                              name: String = FixedThreadPoolExecutor.generateName(),
+                              spin: Int = FixedThreadPoolExecutor.optimalSpin) extends AbstractExecutorService {
   private val tasks = new MultiLaneQueue(poolSize)
   private val state = new AtomicInteger // pool state (0 - running, 1 - shutdown, 2 - stop)
-  private val spin = 256 / tasks.capacity
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
@@ -151,6 +152,7 @@ class FixedThreadPoolExecutor(poolSize: Int = Runtime.getRuntime.availableProces
 }
 
 private object FixedThreadPoolExecutor {
+  private val CPUs = Runtime.getRuntime.availableProcessors
   private val poolId = new AtomicInteger
   private val shutdownPerm = new RuntimePermission("modifyThread")
 
@@ -161,6 +163,8 @@ private object FixedThreadPoolExecutor {
   }
 
   def generateName(): String = s"FixedThreadPool-${poolId.incrementAndGet()}"
+
+  def optimalSpin: Int = 256 / CPUs
 }
 
 private class MultiLaneQueue(poolSize: Int) {
@@ -212,5 +216,7 @@ private class MultiLaneQueue(poolSize: Int) {
 private class TaskNode(var task: Runnable) extends AtomicReference[TaskNode]
 
 private class PaddedAtomicReference[T](t: T) extends AtomicReference[T](t) {
-  @volatile var p1, p2, p3, p4, p5, p6: T = _
+  @volatile var p1, p2, p3, p4, p5, p6: Long = _
+
+  def sumPaddingToPreventOptimization: Long = p1 + p2 + p3 + p4 + p5 + p6
 }
