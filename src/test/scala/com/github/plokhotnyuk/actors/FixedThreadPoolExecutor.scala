@@ -24,9 +24,6 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
  * `java.util.concurrent.RejectedExecutionException` can occurs only after shutdown
  * when pool was initialized with default implementation of `onReject: Runnable => Unit`.
  *
- * Idea to use some implementation of 'java.util.concurrent.locks.AbstractQueuedSynchronizer' borrowed from
- * [[https://github.com/laforge49/JActor2/blob/master/jactor2-core/src/main/java/org/agilewiki/jactor2/core/facilities/ThreadManager.java]]
- *
  * @param poolSize       A number of worker threads in pool
  * @param threadFactory  A factory to be used to build worker threads
  * @param onError        The exception handler for unhandled errors during executing of tasks
@@ -212,7 +209,8 @@ private class MultiLaneQueue(initialCapacity: Int) {
 
   private def optimalCapacity(initialCapacity: Int): Int = {
     val parallelism = Math.min(initialCapacity, Runtime.getRuntime.availableProcessors)
-    if (isPowerOfTwo(parallelism)) parallelism else nextPowerOfTwo(parallelism) >> 1
+    if (isPowerOfTwo(parallelism)) parallelism
+    else nextPowerOfTwo(parallelism) >> 1
   }
 
   private def nextPowerOfTwo(x: Int): Int = 1 << (32 - Integer.numberOfLeadingZeros(x - 1))
