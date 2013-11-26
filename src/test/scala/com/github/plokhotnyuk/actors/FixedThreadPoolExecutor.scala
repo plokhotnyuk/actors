@@ -51,27 +51,7 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
     override protected final def tryAcquireShared(ignore: Int): Int = work()
   }
   private val terminations = new CountDownLatch(poolSize)
-  private val threads = {
-    val tf = threadFactory // to avoid creation of field for constructor param
-    val ts = terminations // to avoid long field name
-
-    @annotation.tailrec
-    def createThreads(maskedIds: Set[Int] = Set(), acc: List[Thread] = List()): List[Thread] = {
-      val t = tf.newThread(new Runnable {
-        def run(): Unit =
-          try loop() catch {
-            case _: InterruptedException => // ignore
-          } finally ts.countDown()
-      })
-      val maskedId = t.getId.toInt & tasks.mask
-      if (maskedIds.contains(maskedId)) {
-        if (maskedIds.size > tasks.mask) acc
-        else createThreads(maskedIds, acc)
-      } else createThreads(maskedIds + maskedId, t :: acc)
-    }
-
-    createThreads()
-  }
+  private val threads = createThreads(threadFactory, terminations)
 
   {
     val nm = name // to avoid long field name
@@ -112,6 +92,22 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
     }
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
+
+  @annotation.tailrec
+  private def createThreads(threadFactory: ThreadFactory, terminations: CountDownLatch,
+                            maskedIds: Set[Int] = Set(), acc: List[Thread] = List()): List[Thread] = {
+    val t = threadFactory.newThread(new Runnable {
+      def run(): Unit =
+        try loop() catch {
+          case _: InterruptedException => // ignore
+        } finally terminations.countDown()
+    })
+    val maskedId = t.getId.toInt & tasks.mask
+    if (maskedIds.contains(maskedId)) {
+      if (maskedIds.size == tasks.capacity) acc
+      else createThreads(threadFactory, terminations, maskedIds, acc)
+    } else createThreads(threadFactory, terminations, maskedIds + maskedId, t :: acc)
+  }
 
   @annotation.tailrec
   private def drainTo(ts: util.List[Runnable]): util.List[Runnable] = {
@@ -186,7 +182,7 @@ private object FixedThreadPoolExecutor {
 }
 
 private class MultiLaneQueue(initialCapacity: Int) {
-  private val capacity = optimalCapacity(initialCapacity)
+  val capacity = optimalCapacity(initialCapacity)
   val mask = capacity - 1
   private val tails = (1 to capacity).map(_ => new PaddedAtomicReference(new TaskNode(null))).toArray
   private val heads = tails.map(n => new PaddedAtomicReference(n.get)).toArray
@@ -202,7 +198,7 @@ private class MultiLaneQueue(initialCapacity: Int) {
   }
 
   @annotation.tailrec
-  private def poll(offset: Int, limit: Int): Runnable = {
+  final def poll(offset: Int, limit: Int): Runnable = {
     val tail = tails(mask & offset)
     val tn = tail.get
     val n = tn.get
