@@ -24,6 +24,12 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
  * `java.util.concurrent.RejectedExecutionException` can occurs only after shutdown
  * when pool was initialized with default implementation of `onReject: Runnable => Unit`.
  *
+ * An implementation of task queue based on MultiLane over MPMC queues described by Dmitriy Vyukov:
+ * [[http://www.1024cores.net/home/scalable-architecture/multilane]]
+ *
+ * Idea to use some implementation of 'java.util.concurrent.locks.AbstractQueuedSynchronizer' borrowed from
+ * [[https://github.com/laforge49/JActor2/blob/master/jactor2-core/src/main/java/org/agilewiki/jactor2/core/facilities/ThreadManager.java]]
+ *
  * @param poolSize       A number of worker threads in pool
  * @param threadFactory  A factory to be used to build worker threads
  * @param onError        The exception handler for unhandled errors during executing of tasks
@@ -87,6 +93,7 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
+  @annotation.tailrec
   private def createThreads(threadFactory: ThreadFactory, terminations: CountDownLatch,
                             maskedIds: Set[Int] = Set(), acc: List[Thread] = List()): List[Thread] = {
     val t = threadFactory.newThread(new Runnable {
@@ -97,7 +104,7 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
     })
     val maskedId = t.getId.toInt & tasks.mask
     if (maskedIds.contains(maskedId)) {
-      if (maskedIds.size > tasks.mask) acc
+      if (maskedIds.size == tasks.capacity) acc
       else createThreads(threadFactory, terminations, maskedIds, acc)
     } else createThreads(threadFactory, terminations, maskedIds + maskedId, t :: acc)
   }
@@ -175,7 +182,7 @@ private object FixedThreadPoolExecutor {
 }
 
 private class MultiLaneQueue(initialCapacity: Int) {
-  private val capacity = optimalCapacity(initialCapacity)
+  val capacity = optimalCapacity(initialCapacity)
   val mask = capacity - 1
   private val tails = (1 to capacity).map(_ => new PaddedAtomicReference(new TaskNode(null))).toArray
   private val heads = tails.map(n => new PaddedAtomicReference(n.get)).toArray
