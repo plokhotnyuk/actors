@@ -51,16 +51,9 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
     override protected final def tryAcquireShared(ignore: Int): Int = work()
   }
   private val terminations = new CountDownLatch(poolSize)
-  private val threads = createThreads(threadFactory, terminations)
+  private val threads = createThreads(threadFactory)
 
-  {
-    val nm = name // to avoid long field name
-    threads.zipWithIndex.foreach {
-      case (t, i) =>
-        t.setName(s"$nm-worker-$i")
-        t.start()
-    }
-  }
+  threads.foreach(_.start())
 
   def shutdown(): Unit = {
     checkShutdownAccess()
@@ -94,19 +87,22 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
   @annotation.tailrec
-  private def createThreads(threadFactory: ThreadFactory, terminations: CountDownLatch,
-                            maskedIds: Set[Int] = Set(), acc: List[Thread] = List()): List[Thread] = {
-    val t = threadFactory.newThread(new Runnable {
+  private def createThreads(tf: ThreadFactory, maskedIds: Set[Int] = Set(), acc: List[Thread] = Nil): List[Thread] = {
+    val ts = terminations // to avoid long field name
+    val t = tf.newThread(new Runnable {
       def run(): Unit =
         try loop() catch {
           case _: InterruptedException => // ignore
-        } finally terminations.countDown()
+        } finally ts.countDown()
     })
     val maskedId = t.getId.toInt & tasks.mask
     if (maskedIds.contains(maskedId)) {
-      if (maskedIds.size == tasks.capacity) acc
-      else createThreads(threadFactory, terminations, maskedIds, acc)
-    } else createThreads(threadFactory, terminations, maskedIds + maskedId, t :: acc)
+      if (maskedIds.size > tasks.mask) acc
+      else createThreads(tf, maskedIds, acc)
+    } else {
+      t.setName(s"$name-worker-${maskedIds.size}")
+      createThreads(tf, maskedIds + maskedId, t :: acc)
+    }
   }
 
   @annotation.tailrec
@@ -134,7 +130,7 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
     if (t ne null) {
       t.run()
       if (state.get == 2) throw new InterruptedException
-      if (s > 0) work(s - 1) else 1
+      if (s > 0) work(s - 1) else 1 // slowdown to allow other worker to catch something
     } else {
       if (state.get != 0) throw new InterruptedException
       if (s > 0) work(s - 1) else -1
