@@ -4,6 +4,7 @@ import java.util
 import java.util.concurrent._
 import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
 import java.util.concurrent.locks.AbstractQueuedSynchronizer
+import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
 
 /**
  * An implementation of an `java.util.concurrent.ExecutorService ExecutorService`
@@ -37,12 +38,12 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer
  * @param name           A name of the executor service
  * @param spin           A number of tries before slowdown of worker thread
  */
-class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
-                              threadFactory: ThreadFactory = FixedThreadPoolExecutor.daemonThreadFactory(),
+class FixedThreadPoolExecutor(poolSize: Int = CPUs,
+                              threadFactory: ThreadFactory = daemonThreadFactory(),
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = FixedThreadPoolExecutor.generateName(),
-                              spin: Int = FixedThreadPoolExecutor.optimalSpin) extends AbstractExecutorService {
+                              name: String = generateName(),
+                              spin: Int = optimalSpin) extends AbstractExecutorService {
   private val tasks = new MultiLaneQueue(poolSize)
   private val state = new AtomicInteger // pool state (0 - running, 1 - shutdown, 2 - stop)
   private val sync = new AbstractQueuedSynchronizer {
@@ -56,12 +57,12 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
   threads.foreach(_.start())
 
   def shutdown(): Unit = {
-    checkShutdownAccess()
+    checkShutdownAccess(threads)
     setState(1)
   }
 
   def shutdownNow(): util.List[Runnable] = {
-    checkShutdownAccess()
+    checkShutdownAccess(threads)
     setState(2)
     threads.filter(_ ne Thread.currentThread).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     drainTo(new util.LinkedList[Runnable])
@@ -150,21 +151,20 @@ class FixedThreadPoolExecutor(poolSize: Int = FixedThreadPoolExecutor.CPUs,
       case 1 => "Shutdown"
       case 2 => "Stop"
     }
-
-  private def checkShutdownAccess(): Unit = {
-    val ts = threads // to avoid long field name
-    Option(System.getSecurityManager).foreach {
-      sm =>
-        sm.checkPermission(FixedThreadPoolExecutor.shutdownPerm)
-        ts.foreach(sm.checkAccess)
-    }
-  }
 }
 
 private object FixedThreadPoolExecutor {
   private val CPUs = Runtime.getRuntime.availableProcessors
   private val poolId = new AtomicInteger
   private val shutdownPerm = new RuntimePermission("modifyThread")
+
+  def checkShutdownAccess(ts: List[Thread]): Unit = {
+    Option(System.getSecurityManager).foreach {
+      sm =>
+        sm.checkPermission(shutdownPerm)
+        ts.foreach(sm.checkAccess)
+    }
+  }
 
   def daemonThreadFactory(): ThreadFactory = new ThreadFactory {
     def newThread(worker: Runnable): Thread = new Thread(worker) {
@@ -194,7 +194,7 @@ private class MultiLaneQueue(initialCapacity: Int) {
   }
 
   @annotation.tailrec
-  final def poll(offset: Int, limit: Int): Runnable = {
+  private def poll(offset: Int, limit: Int): Runnable = {
     val tail = tails(mask & offset)
     val tn = tail.get
     val n = tn.get
