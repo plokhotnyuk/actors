@@ -52,7 +52,22 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     override protected final def tryAcquireShared(ignore: Int): Int = work()
   }
   private val terminations = new CountDownLatch(poolSize)
-  private val threads = createThreads(threadFactory)
+  private val threads = {
+    val nm = name // to avoid long field name
+    val ts = terminations // to avoid long field name
+    val tf = threadFactory // to avoid creation of field for constructor param
+    (1 to poolSize).map {
+      i =>
+        val t = tf.newThread(new Runnable {
+          def run(): Unit =
+            try loop() catch {
+              case _: InterruptedException => // ignore
+            } finally ts.countDown()
+        })
+        t.setName(s"$nm-worker-$i")
+        t
+    }
+  }
 
   threads.foreach(_.start())
 
@@ -86,25 +101,6 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     }
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
-
-  @annotation.tailrec
-  private def createThreads(tf: ThreadFactory, maskedIds: Set[Int] = Set(), acc: List[Thread] = Nil): List[Thread] = {
-    val ts = terminations // to avoid long field name
-    val t = tf.newThread(new Runnable {
-      def run(): Unit =
-        try loop() catch {
-          case _: InterruptedException => // ignore
-        } finally ts.countDown()
-    })
-    val maskedId = t.getId.toInt & tasks.mask
-    if (maskedIds.contains(maskedId)) {
-      if (maskedIds.size > tasks.mask) acc
-      else createThreads(tf, maskedIds, acc)
-    } else {
-      t.setName(s"$name-worker-${maskedIds.size}")
-      createThreads(tf, maskedIds + maskedId, t :: acc)
-    }
-  }
 
   @annotation.tailrec
   private def drainTo(ts: util.List[Runnable]): util.List[Runnable] = {
@@ -158,13 +154,12 @@ private object FixedThreadPoolExecutor {
   private val poolId = new AtomicInteger
   private val shutdownPerm = new RuntimePermission("modifyThread")
 
-  def checkShutdownAccess(ts: List[Thread]): Unit = {
+  def checkShutdownAccess(ts: Seq[Thread]): Unit =
     Option(System.getSecurityManager).foreach {
       sm =>
         sm.checkPermission(shutdownPerm)
         ts.foreach(sm.checkAccess)
     }
-  }
 
   def daemonThreadFactory(): ThreadFactory = new ThreadFactory {
     def newThread(worker: Runnable): Thread = new Thread(worker) {
