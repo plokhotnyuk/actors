@@ -173,37 +173,34 @@ private object FixedThreadPoolExecutor {
 }
 
 private class MultiLaneQueue(initialCapacity: Int) {
-  val capacity = optimalCapacity(initialCapacity)
-  val mask = capacity - 1
+  private val capacity = optimalCapacity(initialCapacity)
+  private val mask = capacity - 1
   private val tails = (1 to capacity).map(_ => new PaddedAtomicReference(new TaskNode(null))).toArray
   private val heads = tails.map(n => new PaddedAtomicReference(n.get)).toArray
 
   def offer(t: Runnable): Unit = {
     val n = new TaskNode(t)
-    heads(mask & currentThreadId).getAndSet(n).set(n)
+    heads(currentThreadPos).getAndSet(n).set(n)
   }
 
-  def poll(): Runnable = {
-    val offset = currentThreadId
-    poll(offset, offset + capacity)
-  }
+  def poll(): Runnable = poll(currentThreadPos, 0)
 
   @annotation.tailrec
-  private def poll(offset: Int, limit: Int): Runnable = {
-    val tail = tails(mask & offset)
+  private def poll(pos: Int, offset: Int): Runnable = {
+    val tail = tails(pos ^ offset)
     val tn = tail.get
     val n = tn.get
     if (n eq null) {
-      if (offset < limit) poll(offset + 1, limit)
+      if (offset < mask) poll(pos, offset + 1)
       else null
     } else if (tail.compareAndSet(tn, n)) {
       val t = n.task
       n.task = null
       t
-    } else poll(offset, limit)
+    } else poll(pos, offset)
   }
 
-  private def currentThreadId: Int = Thread.currentThread().getId.toInt
+  private def currentThreadPos: Int = mask & Thread.currentThread().getId.toInt
 
   private def optimalCapacity(initialCapacity: Int): Int = {
     val parallelism = Math.min(initialCapacity, Runtime.getRuntime.availableProcessors)
