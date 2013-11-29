@@ -25,7 +25,7 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * `java.util.concurrent.RejectedExecutionException` can occurs only after shutdown
  * when pool was initialized with default implementation of `onReject: Runnable => Unit`.
  *
- * An implementation of task queue based on MultiLane over MPMC queues that described here
+ * An implementation of task queue based on MultiLane (over MPMC queues) that described here
  * [[https://blogs.oracle.com/dave/entry/multilane_a_concurrent_blocking_multiset]]
  *
  * Idea to use some implementation of 'java.util.concurrent.locks.AbstractQueuedSynchronizer' borrowed from
@@ -44,13 +44,16 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = generateName(),
                               spin: Int = optimalSpin) extends AbstractExecutorService {
-  private val tasks = new MultiLaneQueue(Math.min(poolSize, CPUs))
+  assert(poolSize > 0, "poolSize should be greater than 0")
+  private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
+  private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
   private val state = new AtomicInteger // pool state (0 - running, 1 - shutdown, 2 - stop)
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
     override protected final def tryAcquireShared(ignore: Int): Int = work()
   }
+  private val heads = tails.map(n => new PaddedAtomicReference(n.get)).toArray
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
     val nm = name // to avoid long field name
@@ -96,15 +99,16 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     if (t eq null) throw new NullPointerException
     else if (state.get != 0) onReject(t)
     else {
-      tasks.offer(t)
+      val n = new TaskNode(t)
+      heads(Thread.currentThread().getId.toInt & mask).getAndSet(n).set(n)
       sync.releaseShared(1)
     }
 
-  override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
+  override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $threads(0)]"
 
   @annotation.tailrec
   private def drainTo(ts: util.List[Runnable]): util.List[Runnable] = {
-    val t = tasks.poll()
+    val t = poll(0, 0)
     if (t eq null) ts
     else {
       ts.add(t)
@@ -123,7 +127,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   @annotation.tailrec
   private def work(s: Int = spin): Int = {
-    val t = tasks.poll()
+    val t = poll(Thread.currentThread().getId.toInt & mask, 0)
     if (t ne null) {
       t.run()
       if (state.get == 2) throw new InterruptedException
@@ -132,6 +136,21 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
       if (state.get != 0) throw new InterruptedException
       if (s > 0) work(s - 1) else -1
     }
+  }
+
+  @annotation.tailrec
+  private def poll(pos: Int, offset: Int): Runnable = {
+    val tail = tails(pos ^ offset)
+    val tn = tail.get
+    val n = tn.get
+    if (n eq null) {
+      if (offset < mask) poll(pos, offset + 1)
+      else null
+    } else if (tail.compareAndSet(tn, n)) {
+      val t = n.task
+      n.task = null
+      t
+    } else poll(pos, offset)
   }
 
   @annotation.tailrec
@@ -172,35 +191,7 @@ private object FixedThreadPoolExecutor {
   def optimalSpin: Int = 256 / CPUs
 }
 
-private class MultiLaneQueue(size: Int) {
-  private val mask = Integer.highestOneBit(size) - 1
-  private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode(null))).toArray
-  private val heads = tails.map(n => new PaddedAtomicReference(n.get)).toArray
-
-  def offer(t: Runnable): Unit = {
-    val n = new TaskNode(t)
-    heads(Thread.currentThread().getId.toInt & mask).getAndSet(n).set(n)
-  }
-
-  def poll(): Runnable = poll(Thread.currentThread().getId.toInt & mask, 0)
-
-  @annotation.tailrec
-  private def poll(pos: Int, offset: Int): Runnable = {
-    val tail = tails(pos ^ offset)
-    val tn = tail.get
-    val n = tn.get
-    if (n eq null) {
-      if (offset < mask) poll(pos, offset + 1)
-      else null
-    } else if (tail.compareAndSet(tn, n)) {
-      val t = n.task
-      n.task = null
-      t
-    } else poll(pos, offset)
-  }
-}
-
-private class TaskNode(var task: Runnable) extends AtomicReference[TaskNode]
+private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
 
 private class PaddedAtomicReference[T](t: T) extends AtomicReference[T](t) {
   var p1, p2, p3, p4, p5, p6: Long = _
