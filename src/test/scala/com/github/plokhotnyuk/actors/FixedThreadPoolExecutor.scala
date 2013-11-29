@@ -25,8 +25,8 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * `java.util.concurrent.RejectedExecutionException` can occurs only after shutdown
  * when pool was initialized with default implementation of `onReject: Runnable => Unit`.
  *
- * An implementation of task queue based on MultiLane over MPMC queues described by Dmitriy Vyukov:
- * [[http://www.1024cores.net/home/scalable-architecture/multilane]]
+ * An implementation of task queue based on MultiLane over MPMC queues that described here
+ * [[https://blogs.oracle.com/dave/entry/multilane_a_concurrent_blocking_multiset]]
  *
  * Idea to use some implementation of 'java.util.concurrent.locks.AbstractQueuedSynchronizer' borrowed from
  * [[https://github.com/laforge49/JActor2/blob/master/jactor2-core/src/main/java/org/agilewiki/jactor2/core/facilities/ThreadManager.java]]
