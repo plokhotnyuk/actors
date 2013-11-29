@@ -169,20 +169,20 @@ private object FixedThreadPoolExecutor {
 
   def generateName(): String = s"FixedThreadPool-${poolId.incrementAndGet()}"
 
-  def optimalSpin: Int = 256 / CPUs
+  def optimalSpin: Int = 0 / CPUs
 }
 
-private class MultiLaneQueue(initialCapacity: Int) {
-  private val mask = optimalCapacity(initialCapacity) - 1
+private class MultiLaneQueue(size: Int) {
+  private val mask = Integer.highestOneBit(size) - 1
   private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode(null))).toArray
   private val heads = tails.map(n => new PaddedAtomicReference(n.get)).toArray
 
   def offer(t: Runnable): Unit = {
     val n = new TaskNode(t)
-    heads(currentThreadPos).getAndSet(n).set(n)
+    heads(Thread.currentThread().getId.toInt & mask).getAndSet(n).set(n)
   }
 
-  def poll(): Runnable = poll(currentThreadPos, 0)
+  def poll(): Runnable = poll(Thread.currentThread().getId.toInt & mask, 0)
 
   @annotation.tailrec
   private def poll(pos: Int, offset: Int): Runnable = {
@@ -198,16 +198,6 @@ private class MultiLaneQueue(initialCapacity: Int) {
       t
     } else poll(pos, offset)
   }
-
-  private def currentThreadPos: Int = Thread.currentThread().getId.toInt & mask
-
-  private def optimalCapacity(initialCapacity: Int): Int =
-    if (isPowerOfTwo(initialCapacity)) initialCapacity
-    else nextPowerOfTwo(initialCapacity) >> 1
-
-  private def nextPowerOfTwo(x: Int): Int = 1 << (32 - Integer.numberOfLeadingZeros(x - 1))
-
-  private def isPowerOfTwo(x: Int): Boolean = (x & (x - 1)) == 0
 }
 
 private class TaskNode(var task: Runnable) extends AtomicReference[TaskNode]
