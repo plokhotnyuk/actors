@@ -213,7 +213,5 @@ private class MultiLaneQueue(initialCapacity: Int) {
 private class TaskNode(var task: Runnable) extends AtomicReference[TaskNode]
 
 private class PaddedAtomicReference[T](t: T) extends AtomicReference[T](t) {
-  @volatile var p1, p2, p3, p4, p5, p6: Long = _
-
-  def sumPaddingToPreventOptimization: Long = p1 + p2 + p3 + p4 + p5 + p6
+  val p1, p2, p3, p4, p5, p6: Long = _
 }
