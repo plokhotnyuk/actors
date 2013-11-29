@@ -169,7 +169,7 @@ private object FixedThreadPoolExecutor {
 
   def generateName(): String = s"FixedThreadPool-${poolId.incrementAndGet()}"
 
-  def optimalSpin: Int = 0 / CPUs
+  def optimalSpin: Int = 256 / CPUs
 }
 
 private class MultiLaneQueue(size: Int) {
