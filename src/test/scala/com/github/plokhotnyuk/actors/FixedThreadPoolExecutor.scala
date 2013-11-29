@@ -44,7 +44,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = generateName(),
                               spin: Int = optimalSpin) extends AbstractExecutorService {
-  private val tasks = new MultiLaneQueue(poolSize)
+  private val tasks = new MultiLaneQueue(Math.min(poolSize, CPUs))
   private val state = new AtomicInteger // pool state (0 - running, 1 - shutdown, 2 - stop)
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
@@ -173,9 +173,8 @@ private object FixedThreadPoolExecutor {
 }
 
 private class MultiLaneQueue(initialCapacity: Int) {
-  private val capacity = optimalCapacity(initialCapacity)
-  private val mask = capacity - 1
-  private val tails = (1 to capacity).map(_ => new PaddedAtomicReference(new TaskNode(null))).toArray
+  private val mask = optimalCapacity(initialCapacity) - 1
+  private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode(null))).toArray
   private val heads = tails.map(n => new PaddedAtomicReference(n.get)).toArray
 
   def offer(t: Runnable): Unit = {
@@ -200,13 +199,11 @@ private class MultiLaneQueue(initialCapacity: Int) {
     } else poll(pos, offset)
   }
 
-  private def currentThreadPos: Int = mask & Thread.currentThread().getId.toInt
+  private def currentThreadPos: Int = Thread.currentThread().getId.toInt & mask
 
-  private def optimalCapacity(initialCapacity: Int): Int = {
-    val parallelism = Math.min(initialCapacity, Runtime.getRuntime.availableProcessors)
-    if (isPowerOfTwo(parallelism)) parallelism
-    else nextPowerOfTwo(parallelism) >> 1
-  }
+  private def optimalCapacity(initialCapacity: Int): Int =
+    if (isPowerOfTwo(initialCapacity)) initialCapacity
+    else nextPowerOfTwo(initialCapacity) >> 1
 
   private def nextPowerOfTwo(x: Int): Int = 1 << (32 - Integer.numberOfLeadingZeros(x - 1))
 
