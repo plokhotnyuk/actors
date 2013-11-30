@@ -51,7 +51,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
-    override protected final def tryAcquireShared(ignore: Int): Int = work()
+    override protected final def tryAcquireShared(ignore: Int): Int = poll()
   }
   private val heads = tails.map(n => new PaddedAtomicReference(n.get)).toArray
   private val terminations = new CountDownLatch(poolSize)
@@ -83,7 +83,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     checkShutdownAccess(threads)
     setState(2)
     threads.filter(_ ne Thread.currentThread).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    drainTo(new util.LinkedList[Runnable])
+    new util.LinkedList[Runnable]
   }
 
   def isShutdown: Boolean = state.get != 0
@@ -107,49 +107,28 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
   @annotation.tailrec
-  private def drainTo(ts: util.List[Runnable]): util.List[Runnable] = {
-    val t = poll()
-    if (t eq null) ts
-    else {
-      ts.add(t)
-      drainTo(ts)
-    }
-  }
-
-  @annotation.tailrec
   private def loop(): Unit = {
-    try sync.acquireSharedInterruptibly(1) catch {
-      case _: InterruptedException => return
-      case ex: Throwable => onError(ex)
-    }
+    sync.acquireSharedInterruptibly(1)
     loop()
   }
 
   @annotation.tailrec
-  private def work(s: Int = spin): Int = {
-    val t = poll()
-    if (t ne null) {
-      t.run()
-      if (state.get == 2) throw new InterruptedException
-      if (s > 0) work(s - 1) else 1 // slowdown to allow other worker to catch something
-    } else {
-      if (state.get != 0) throw new InterruptedException
-      if (s > 0) work(s - 1) else -1
-    }
-  }
-
-  @annotation.tailrec
-  private def poll(pos: Int = Thread.currentThread().getId.toInt & mask, offset: Int = 0): Runnable = {
+  private def poll(pos: Int = Thread.currentThread().getId.toInt & mask, offset: Int = 0, s: Int = spin): Int = {
     val tail = tails(pos ^ offset)
     val tn = tail.get
     val n = tn.get
     if (n eq null) {
       if (offset < mask) poll(pos, offset + 1)
-      else null
+      else if (state.get != 0) throw new InterruptedException
+      else if (s > 0) poll(pos, offset, s - 1)
+      else -1
     } else if (tail.compareAndSet(tn, n)) {
-      val t = n.task
-      n.task = null // to avoid possible memory leak when queue is empty
-      t
+      try n.task.run() catch {
+        case ex: Throwable => onError(ex)
+      } finally n.task = null // to avoid possible memory leak when queue is empty
+      if (state.get == 2) throw new InterruptedException
+      else if (s > 0) poll(pos, offset, s - 1)
+      else 1 // slowdown to allow other worker to catch something
     } else poll(pos, offset)
   }
 
