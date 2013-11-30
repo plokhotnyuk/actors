@@ -8,9 +8,9 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
 
 /**
  * An implementation of an `java.util.concurrent.ExecutorService ExecutorService`
- * with fixed number of pooled threads. It efficiently works at high rate of task submission and/or
- * when number of worker threads greater than available processors without overuse of CPU and
- * increasing latency between submission of tasks and starting of execution of them.
+ * with fixed number of pooled threads. It efficiently works at high rate of task submission
+ * and/or with thousands of worker threads without overuse of CPU and increasing latency
+ * between submission of tasks and starting of execution of them.
  *
  * For applications that require separate or custom pools, a `FixedThreadPoolExecutor`
  * may be constructed with a given pool size, that by default is equal to the number of available processors.
@@ -47,7 +47,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   assert(poolSize > 0, "poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
   private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
-  private val state = new AtomicInteger // pool state (0 - running, 1 - shutdown, 2 - stop)
+  private val state = new AtomicInteger // pool states: 0 - running, 1 - shutdown, 2 - stop
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
@@ -64,7 +64,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
         val t = tf.newThread(new Runnable {
           def run(): Unit =
             try loop() catch {
-              case _: InterruptedException => // ignore
+              case _: InterruptedException => // ignore due usage as control flow exception internally
             } finally ts.countDown()
         })
         t.setName(s"$nm-worker-$i")
@@ -148,7 +148,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
       else null
     } else if (tail.compareAndSet(tn, n)) {
       val t = n.task
-      n.task = null
+      n.task = null // to avoid possible memory leak when queue is empty
       t
     } else poll(pos, offset)
   }
