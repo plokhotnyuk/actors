@@ -145,6 +145,13 @@ class FixedThreadPoolExecutorSpec extends Specification {
     }
   }
 
+  "toString should print pool name, status and size" in {
+    withExecutor(new FixedThreadPoolExecutor(poolSize = 3, name = "Pool")) {
+      e =>
+        e.toString must contain("[Running], pool size = 3, name = Pool")
+    }
+  }
+
   private def withExecutor[A](executor: ExecutorService)(testCode: ExecutorService => A) =
     try {
       testCode(executor)

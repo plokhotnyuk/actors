@@ -104,11 +104,11 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
       sync.releaseShared(1)
     }
 
-  override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $threads(0)]"
+  override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
   @annotation.tailrec
   private def drainTo(ts: util.List[Runnable]): util.List[Runnable] = {
-    val t = poll(0, 0)
+    val t = poll()
     if (t eq null) ts
     else {
       ts.add(t)
@@ -127,7 +127,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   @annotation.tailrec
   private def work(s: Int = spin): Int = {
-    val t = poll(Thread.currentThread().getId.toInt & mask, 0)
+    val t = poll()
     if (t ne null) {
       t.run()
       if (state.get == 2) throw new InterruptedException
@@ -139,7 +139,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   }
 
   @annotation.tailrec
-  private def poll(pos: Int, offset: Int): Runnable = {
+  private def poll(pos: Int = Thread.currentThread().getId.toInt & mask, offset: Int = 0): Runnable = {
     val tail = tails(pos ^ offset)
     val tn = tail.get
     val n = tn.get
