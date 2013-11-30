@@ -36,7 +36,7 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * @param onError        The exception handler for unhandled errors during executing of tasks
  * @param onReject       The handler for rejection of task submission after shutdown
  * @param name           A name of the executor service
- * @param spin           A number of tries before slowdown of worker thread
+ * @param spin           A number of task completion before slowdown of worker thread
  */
 class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               threadFactory: ThreadFactory = daemonThreadFactory(),
@@ -51,7 +51,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
-    override protected final def tryAcquireShared(ignore: Int): Int = poll()
+    override protected final def tryAcquireShared(ignore: Int): Int = pollAndRun()
   }
   private val heads = tails.map(n => new PaddedAtomicReference(n.get)).toArray
   private val terminations = new CountDownLatch(poolSize)
@@ -63,7 +63,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
       i =>
         val t = tf.newThread(new Runnable {
           def run(): Unit =
-            try loop() catch {
+            try work() catch {
               case _: InterruptedException => // ignore due usage as control flow exception internally
             } finally ts.countDown()
         })
@@ -100,37 +100,41 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     else if (state.get != 0) onReject(t)
     else {
       val n = new TaskNode(t)
-      heads(Thread.currentThread().getId.toInt & mask).getAndSet(n).set(n)
+      heads(currentThreadPos).getAndSet(n).set(n)
       sync.releaseShared(1)
     }
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
   @annotation.tailrec
-  private def loop(): Unit = {
+  private def work(): Unit = {
     sync.acquireSharedInterruptibly(1)
-    loop()
+    work()
   }
 
   @annotation.tailrec
-  private def poll(pos: Int = Thread.currentThread().getId.toInt & mask, offset: Int = 0, s: Int = spin): Int = {
+  private def pollAndRun(pos: Int = currentThreadPos, offset: Int = 0, s: Int = spin): Int = {
     val tail = tails(pos ^ offset)
     val tn = tail.get
     val n = tn.get
-    if (n eq null) {
-      if (offset < mask) poll(pos, offset + 1)
-      else if (state.get != 0) throw new InterruptedException
-      else if (s > 0) poll(pos, offset, s - 1)
-      else -1
-    } else if (tail.compareAndSet(tn, n)) {
-      try n.task.run() catch {
-        case ex: Throwable => onError(ex)
-      } finally n.task = null // to avoid possible memory leak when queue is empty
-      if (state.get == 2) throw new InterruptedException
-      else if (s > 0) poll(pos, offset, s - 1)
-      else 1 // slowdown to allow other worker to catch something
-    } else poll(pos, offset)
+    if (n ne null) {
+      if (tail.compareAndSet(tn, n)) {
+        run(n)
+        if (state.get == 2) throw new InterruptedException
+        else if (s > 0) pollAndRun(pos, offset, s - 1)
+        else 1 // slowdown to allow other worker to catch something
+      } else pollAndRun(pos, offset, s)
+    } else if (offset < mask) pollAndRun(pos, offset + 1, s)
+    else if (state.get != 0) throw new InterruptedException
+    else -1
   }
+
+  private def currentThreadPos: Int = Thread.currentThread().getId.toInt & mask
+
+  private def run(n: TaskNode): Unit =
+    try n.task.run() catch {
+      case ex: Throwable => onError(ex)
+    } finally n.task = null // to avoid possible memory leak when queue is empty
 
   @annotation.tailrec
   private def setState(newState: Int): Unit = {
