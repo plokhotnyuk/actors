@@ -21,7 +21,7 @@ import scalaz.Contravariant
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)(implicit strategy: Strategy) {
   private var tail = new Node[A]()
   private val state = new AtomicInteger() // 0 - suspended, 1 - running
-  private val head = new AtomicReference(tail)
+  private val head = new PaddedAtomicReference(tail)
 
   def toEffect: Run[A] = Run[A](a => this ! a)
 

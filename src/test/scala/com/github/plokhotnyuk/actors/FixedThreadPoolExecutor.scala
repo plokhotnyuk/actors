@@ -46,14 +46,14 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               spin: Int = optimalSpin) extends AbstractExecutorService {
   assert(poolSize > 0, "poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
-  private val tails = (0 to mask).map(_ => new AtomicReference(new TaskNode)).toArray
+  private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
   private val state = new AtomicInteger // pool states: 0 - running, 1 - shutdown, 2 - stop
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
     override protected final def tryAcquireShared(ignore: Int): Int = pollAndRun()
   }
-  private val heads = tails.map(n => new AtomicReference(n.get)).toArray
+  private val heads = tails.map(n => new PaddedAtomicReference(n.get)).toArray
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
     val nm = name // to avoid long field name
@@ -177,3 +177,7 @@ private object FixedThreadPoolExecutor {
 }
 
 private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
+
+private class PaddedAtomicReference[T](t: T) extends AtomicReference[T](t) {
+  var p1, p2, p3, p4, p5, p6: Long = _
+}
