@@ -36,14 +36,14 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * @param onError        The exception handler for unhandled errors during executing of tasks
  * @param onReject       The handler for rejection of task submission after shutdown
  * @param name           A name of the executor service
- * @param spin           A number of task completion before slowdown of worker thread
+ * @param batchSize      A number of task completion before slowdown of worker thread
  */
 class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               threadFactory: ThreadFactory = daemonThreadFactory(),
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = generateName(),
-                              spin: Int = optimalSpin) extends AbstractExecutorService {
+                              batchSize: Int = optimalSpin) extends AbstractExecutorService {
   assert(poolSize > 0, "poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
   private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
@@ -100,7 +100,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     else if (state.get != 0) onReject(t)
     else {
       val n = new TaskNode(t)
-      heads(currentThreadPos).getAndSet(n).set(n)
+      heads(Thread.currentThread().getId.toInt & mask).getAndSet(n).set(n)
       sync.releaseShared(1)
     }
 
@@ -112,31 +112,26 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     work()
   }
 
-  private def pollAndRun(): Int = pollAndRun(currentThreadPos, 0, spin)
+  private def pollAndRun(): Int = pollAndRun(Thread.currentThread().getId.toInt & mask, 0, batchSize)
 
   @annotation.tailrec
-  private def pollAndRun(pos: Int, offset: Int, s: Int): Int = {
+  private def pollAndRun(pos: Int, offset: Int, i: Int): Int = {
     val tail = tails(pos ^ offset)
     val tn = tail.get
     val n = tn.get
     if (n ne null) {
       if (tail.compareAndSet(tn, n)) {
-        run(n)
+        try n.task.run() catch {
+          case ex: Throwable => onError(ex)
+        } finally n.task = null // to avoid possible memory leak when queue is empty
         if (state.get == 2) throw new InterruptedException
-        else if (s > 0) pollAndRun(pos, 0, s - 1)
+        else if (i > 0) pollAndRun(pos, 0, i - 1)
         else 1 // slowdown to allow other workers to catch something
-      } else pollAndRun(pos, 0, s)
-    } else if (offset < mask) pollAndRun(pos, offset + 1, spin)
+      } else pollAndRun(pos, 0, i)
+    } else if (offset < mask) pollAndRun(pos, offset + 1, batchSize)
     else if (state.get != 0) throw new InterruptedException
     else -1
   }
-
-  private def currentThreadPos: Int = Thread.currentThread().getId.toInt & mask
-
-  private def run(n: TaskNode): Unit =
-    try n.task.run() catch {
-      case ex: Throwable => onError(ex)
-    } finally n.task = null // to avoid possible memory leak when queue is empty
 
   @annotation.tailrec
   private def setState(newState: Int): Unit = {
