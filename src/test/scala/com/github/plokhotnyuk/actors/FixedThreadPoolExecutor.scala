@@ -118,10 +118,12 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     val tn = tail.get
     val n = tn.get
     if (n ne null) {
-      if (tail.compareAndSet(tn, n)) run(n)
-      if (state.get == 2) throw new InterruptedException
-      else if (s > 0) pollAndRun(pos, 0, s - 1)
-      else 1 // slowdown to allow other worker to catch something
+      if (tail.compareAndSet(tn, n)) {
+        run(n)
+        if (state.get == 2) throw new InterruptedException
+        else if (s > 0) pollAndRun(pos, offset, s - 1)
+        else 1 // slowdown to allow other worker to catch something
+      } else pollAndRun(pos, offset, s)
     } else if (offset < mask) pollAndRun(pos, offset + 1, s)
     else if (state.get != 0) throw new InterruptedException
     else -1
