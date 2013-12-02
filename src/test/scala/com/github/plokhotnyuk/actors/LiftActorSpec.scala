@@ -3,6 +3,7 @@ package com.github.plokhotnyuk.actors
 import java.util.concurrent.CountDownLatch
 import net.liftweb.actor.{ILAExecute, LAScheduler, LiftActor}
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
+import net.liftweb.common.Full
 
 class LiftActorSpec extends BenchmarkSpec {
   LAScheduler.createExecutor = () => new ILAExecute {
@@ -74,22 +75,26 @@ class LiftActorSpec extends BenchmarkSpec {
         val a2 = new LiftActor {
           private var i = n / p / 2
 
-          def messageHandler = {
+          val messageHandler: PartialFunction[Any, Unit] = {
             case m =>
               if (i > 0) a1 ! m
               i -= 1
               if (i == 0) l.countDown()
           }
+
+          override val highPriorityReceive = Full(messageHandler)
         }
         a1 = new LiftActor {
           private var i = n / p / 2
 
-          def messageHandler = {
+          val messageHandler: PartialFunction[Any, Unit] = {
             case m =>
               if (i > 0) a2 ! m
               i -= 1
               if (i == 0) l.countDown()
           }
+
+          override val highPriorityReceive = Full(messageHandler)
         }
         a2
     }
@@ -105,11 +110,13 @@ class LiftActorSpec extends BenchmarkSpec {
     new LiftActor {
       private var i = n
 
-      def messageHandler = {
+      val messageHandler: PartialFunction[Any, Unit] = {
         case _ =>
           i -= 1
           if (i == 0) l.countDown()
       }
+
+      override val highPriorityReceive = Full(messageHandler)
     }
 
   private def sendTicks(a: LiftActor, n: Int): Unit = {
