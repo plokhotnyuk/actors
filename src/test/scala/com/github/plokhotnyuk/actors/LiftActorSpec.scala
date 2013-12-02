@@ -75,26 +75,30 @@ class LiftActorSpec extends BenchmarkSpec {
         val a2 = new LiftActor {
           private var i = n / p / 2
 
-          val messageHandler: PartialFunction[Any, Unit] = {
+          override val highPriorityReceive = Full[PartialFunction[Any, Unit]]({
             case m =>
               if (i > 0) a1 ! m
               i -= 1
               if (i == 0) l.countDown()
-          }
+          })
 
-          override val highPriorityReceive = Full(messageHandler)
+          def messageHandler = {
+            case _ =>
+          }
         }
         a1 = new LiftActor {
           private var i = n / p / 2
 
-          val messageHandler: PartialFunction[Any, Unit] = {
+          override val highPriorityReceive = Full[PartialFunction[Any, Unit]]({
             case m =>
               if (i > 0) a2 ! m
               i -= 1
               if (i == 0) l.countDown()
-          }
+          })
 
-          override val highPriorityReceive = Full(messageHandler)
+          def messageHandler = {
+            case _ =>
+          }
         }
         a2
     }
@@ -110,13 +114,15 @@ class LiftActorSpec extends BenchmarkSpec {
     new LiftActor {
       private var i = n
 
-      val messageHandler: PartialFunction[Any, Unit] = {
+      override val highPriorityReceive = Full[PartialFunction[Any, Unit]]({
         case _ =>
           i -= 1
           if (i == 0) l.countDown()
-      }
+      })
 
-      override val highPriorityReceive = Full(messageHandler)
+      def messageHandler = {
+        case _ =>
+      }
     }
 
   private def sendTicks(a: LiftActor, n: Int): Unit = {
