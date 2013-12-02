@@ -43,7 +43,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = generateName(),
-                              batchSize: Int = optimalSpin) extends AbstractExecutorService {
+                              batchSize: Int = optimalBatchSize) extends AbstractExecutorService {
   assert(poolSize > 0, "poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
   private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
@@ -168,7 +168,7 @@ private object FixedThreadPoolExecutor {
 
   def generateName(): String = s"FixedThreadPool-${poolId.incrementAndGet()}"
 
-  def optimalSpin: Int = 1024 / CPUs
+  def optimalBatchSize: Int = 256 / CPUs
 }
 
 private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
