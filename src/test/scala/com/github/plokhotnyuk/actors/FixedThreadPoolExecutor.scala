@@ -100,7 +100,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     else if (state.get != 0) onReject(t)
     else {
       val n = new TaskNode(t)
-      heads(currentThreadPos).getAndSet(n).set(n)
+      heads(Thread.currentThread().getId.toInt & mask).getAndSet(n).set(n)
       sync.releaseShared(1)
     }
 
@@ -113,36 +113,31 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   }
 
   private def pollAndRun(): Int = {
-    val pos = currentThreadPos
+    val pos = Thread.currentThread().getId.toInt & mask
     val tail = tails(pos)
-    pollAndRun(pos, 0, batchSize, tail, tail, tail.get)
+    pollAndRun(pos, 0, batchSize, tail, tail)
   }
-
-  private def currentThreadPos: Int = Thread.currentThread().getId.toInt & mask
 
   @annotation.tailrec
   private def pollAndRun(pos: Int, offset: Int, i: Int, workerTail: PaddedAtomicReference[TaskNode],
-                         tail: PaddedAtomicReference[TaskNode], tn: TaskNode): Int = {
+                         tail: PaddedAtomicReference[TaskNode]): Int = {
+    val tn = tail.get
     val n = tn.get
     if (n ne null) {
       if (tail.compareAndSet(tn, n)) {
-        run(n)
+        try n.task.run() catch {
+          case ex: Throwable => onError(ex)
+        } finally n.task = null // to avoid possible memory leak when queue is empty
         if (state.get == 2) throw new InterruptedException
-        else if (i > 0) pollAndRun(pos, 0, i - 1, workerTail, workerTail, n)
+        else if (i > 0) pollAndRun(pos, 0, i - 1, workerTail, workerTail)
         else 1 // slowdown to allow other workers to catch something
-      } else pollAndRun(pos, 0, i, workerTail, workerTail, workerTail.get)
+      } else pollAndRun(pos, 0, i, workerTail, workerTail)
     } else if (offset < mask) {
       val newOffset = offset + 1
-      val newTail = tails(pos ^ newOffset)
-      pollAndRun(pos, newOffset, batchSize, workerTail, newTail, newTail.get)
+      pollAndRun(pos, newOffset, batchSize, workerTail, tails(pos ^ newOffset))
     } else if (state.get != 0) throw new InterruptedException
     else -1
   }
-
-  private def run(n: TaskNode): Unit =
-    try n.task.run() catch {
-      case ex: Throwable => onError(ex)
-    } finally n.task = null // to avoid possible memory leak when queue is empty
 
   @annotation.tailrec
   private def setState(newState: Int): Unit = {
