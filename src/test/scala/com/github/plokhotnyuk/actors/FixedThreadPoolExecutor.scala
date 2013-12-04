@@ -179,7 +179,7 @@ private object FixedThreadPoolExecutor {
 
   def generateName(): String = s"FixedThreadPool-${poolId.incrementAndGet()}"
 
-  def optimalBatchSize: Int = 1024 / CPUs
+  def optimalBatchSize: Int = 256 / CPUs
 }
 
 private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
