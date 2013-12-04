@@ -93,7 +93,7 @@ object BenchmarkSpec {
         System.gc()
         Thread.sleep(10)
         val currUsage = usage
-        if (prevUsage == currUsage) forceGC(prevUsage)
+        if (currUsage >= prevUsage) forceGC(prevUsage)
         else currUsage
       }
 
