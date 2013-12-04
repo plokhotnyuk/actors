@@ -84,13 +84,29 @@ object BenchmarkSpec {
     r
   }
 
-  def footprintedCollect[A](n: Int)(construct: Int => A): Seq[A] = {
+  def footprintedCollect[A](n: Int)(construct: () => A): Seq[A] = {
     def usedMemory: Long = {
-      for (i <- 1 to 3) {
+      def usage: Long = Runtime.getRuntime.totalMemory() - Runtime.getRuntime.freeMemory()
+
+      @annotation.tailrec
+      def forceGC(prevUsage: Long = usage): Long = {
         System.gc()
-        Thread.sleep(100)
+        Thread.sleep(10)
+        val currUsage = usage
+        if (prevUsage == currUsage) forceGC(prevUsage)
+        else currUsage
       }
-      Runtime.getRuntime.totalMemory() - Runtime.getRuntime.freeMemory()
+
+      @annotation.tailrec
+      def fullGC(precision: Double, prevUsage: Long = forceGC()): Long = {
+        System.gc()
+        Thread.sleep(10)
+        val currUsage = usage
+        if ((prevUsage - currUsage).toDouble / prevUsage > precision) fullGC(precision, currUsage)
+        else currUsage
+      }
+
+      fullGC(0.001)
     }
 
     val as = Array.ofDim(n).asInstanceOf[Array[A]]
@@ -99,7 +115,7 @@ object BenchmarkSpec {
       var i = n
       while (i > 0) {
         i -= 1
-        as(i) = construct(i)
+        as(i) = construct()
       }
     }
     val m = usedMemory - u

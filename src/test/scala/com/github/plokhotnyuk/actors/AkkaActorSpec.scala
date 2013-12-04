@@ -69,7 +69,7 @@ class AkkaActorSpec extends BenchmarkSpec {
 
   "Initiation 1M" in {
     val props = Props(classOf[MinimalAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher")
-    footprintedCollect(1000000)(_ => actorSystem.actorOf(props))
+    footprintedCollect(1000000)(() => actorSystem.actorOf(props))
   }
 
   def ping(n: Int, p: Int): Unit = {

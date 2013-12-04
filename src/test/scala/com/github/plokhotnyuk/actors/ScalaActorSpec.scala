@@ -65,7 +65,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Initiation 1M" in {
-    footprintedCollect(1000000)(_ => new Actor {
+    footprintedCollect(1000000)(() => new Actor {
       def act(): Unit =
         loop {
           react {

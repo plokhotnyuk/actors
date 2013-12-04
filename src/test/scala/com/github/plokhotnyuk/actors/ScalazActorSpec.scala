@@ -61,7 +61,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Initiation 1M" in {
-    footprintedCollect(1000000)(_ => actor[Message] {
+    footprintedCollect(1000000)(() => actor[Message] {
       (m: Message) =>
     })
   }
