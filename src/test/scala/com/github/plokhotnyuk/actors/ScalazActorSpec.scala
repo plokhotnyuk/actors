@@ -19,7 +19,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Single-producer sending" in {
-    val n = 50000000
+    val n = 30000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -29,7 +29,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = 50000000
+    val n = 24000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -41,7 +41,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = 100000000
+    val n = 80000000
     val l = new CountDownLatch(parallelism)
     val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
     timed(n) {
@@ -57,7 +57,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Ping throughput 10K" in {
-    ping(10000000, 10000)
+    ping(24000000, 10000)
   }
 
   "Initiation 1M" in {

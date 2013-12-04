@@ -26,7 +26,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   val actorSystem = ActorSystem("system", config)
 
   "Single-producer sending" in {
-    val n = 40000000
+    val n = 14000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -36,7 +36,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = 20000000
+    val n = 12000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -48,7 +48,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = 40000000
+    val n = 32000000
     val l = new CountDownLatch(parallelism)
     val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
     timed(n) {
@@ -60,11 +60,11 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(10000000, 1)
+    ping(5000000, 1)
   }
 
   "Ping throughput 10K" in {
-    ping(10000000, 10000)
+    ping(8000000, 10000)
   }
 
   "Initiation 1M" in {
