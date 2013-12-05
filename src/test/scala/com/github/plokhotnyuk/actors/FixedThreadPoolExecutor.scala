@@ -44,6 +44,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               name: String = generateName()) extends AbstractExecutorService {
   assert(poolSize > 0, "poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
+  private val optimalBatch = new ThreadLocal[Int]()
   private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
   private val state = new AtomicInteger // pool states: 0 - running, 1 - shutdown, 2 - stop
   private val sync = new AbstractQueuedSynchronizer {
@@ -111,24 +112,29 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   private def pollAndRun(): Int = {
     val pos = Thread.currentThread().getId.toInt & mask
-    pollAndRun(pos, 1, tails(pos))
+    val batch = optimalBatch.get
+    pollAndRun(pos, 0, batch, batch)
   }
 
   @annotation.tailrec
-  private def pollAndRun(pos: Int, offset: Int, tail: PaddedAtomicReference[TaskNode]): Int = {
+  private def pollAndRun(pos: Int, offset: Int, batch: Int, i: Int): Int = {
+    val tail = tails(pos ^ offset)
     val tn = tail.get
     val n = tn.get
     if (n ne null) {
-      if (tail.compareAndSet(tn, n)) {
+      if (tail.compareAndSet(tn, n))
         try n.task.run() catch {
           case ex: Throwable => onError(ex)
         } finally n.task = null // to avoid possible memory leak when queue is empty
-      }
       if (state.get == 2) throw new InterruptedException
+      else if (i > -15) pollAndRun(pos, 0, batch, i - 1)
       else 1
-    } else if (offset <= mask) pollAndRun(pos, offset + 1, tails(pos ^ offset))
+    } else if (offset < mask) pollAndRun(pos, offset + 1, batch, i)
     else if (state.get != 0) throw new InterruptedException
-    else -1
+    else {
+      optimalBatch.set(batch - (i >> 1))
+      -1
+    }
   }
 
   @annotation.tailrec
