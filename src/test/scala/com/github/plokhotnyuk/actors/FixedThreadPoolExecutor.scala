@@ -105,7 +105,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   @annotation.tailrec
   private def work(): Unit = {
-    sync.acquireShared(1)
+    sync.acquireSharedInterruptibly(1)
     work()
   }
 
