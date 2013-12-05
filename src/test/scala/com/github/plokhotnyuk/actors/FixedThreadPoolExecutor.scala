@@ -105,7 +105,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   @annotation.tailrec
   private def work(): Unit = {
-    sync.acquireSharedInterruptibly(1)
+    sync.acquireShared(1)
     work()
   }
 
@@ -126,7 +126,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
       }
       if (state.get == 2) throw new InterruptedException
       else 1
-    } else if (offset <= mask) pollAndRun(pos, offset + 1, tails(pos ^ offset))
+    } else if (offset <= 1024) pollAndRun(pos, offset + 1, tails((pos ^ offset) & mask))
     else if (state.get != 0) throw new InterruptedException
     else -1
   }
