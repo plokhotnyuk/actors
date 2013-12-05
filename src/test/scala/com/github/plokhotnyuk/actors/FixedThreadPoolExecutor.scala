@@ -127,12 +127,12 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
           case ex: Throwable => onError(ex)
         } finally n.task = null // to avoid possible memory leak when queue is empty
       if (state.get == 2) throw new InterruptedException
-      else if (i > -15) pollAndRun(pos, 0, batch, i - 1)
+      else if (i > -32) pollAndRun(pos, 0, batch, i - 1)
       else 1
     } else if (offset < mask) pollAndRun(pos, offset + 1, batch, i)
     else if (state.get != 0) throw new InterruptedException
     else {
-      optimalBatch.set(batch - (i >> 1))
+      optimalBatch.set(Math.min(batch - (i >> 2), maxBatch))
       -1
     }
   }
@@ -154,6 +154,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
 private object FixedThreadPoolExecutor {
   private val CPUs = Runtime.getRuntime.availableProcessors
+  private val maxBatch = 1024 / CPUs
   private val poolId = new AtomicInteger
   private val shutdownPerm = new RuntimePermission("modifyThread")
 
