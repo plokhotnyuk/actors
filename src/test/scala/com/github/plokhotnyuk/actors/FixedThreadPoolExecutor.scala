@@ -45,7 +45,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   assert(poolSize > 0, "poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
   private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
-  private val state = new AtomicInteger(-1) // pool states: -1 - running, 0 - shutdown, 1 - stop
+  private val state = new AtomicInteger // pool states: 0 - running, 1 - shutdown, 2 - stop
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
@@ -74,12 +74,12 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   def shutdown(): Unit = {
     checkShutdownAccess(threads)
-    setState(0)
+    setState(1)
   }
 
   def shutdownNow(): util.List[Runnable] = {
     checkShutdownAccess(threads)
-    setState(1)
+    setState(2)
     threads.filter(_ ne Thread.currentThread).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     new util.LinkedList[Runnable]
   }
@@ -95,7 +95,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   def execute(t: Runnable): Unit =
     if (t eq null) throw new NullPointerException
-    else if (state.get < 0) {
+    else if (state.get == 0) {
       val n = new TaskNode(t)
       heads(Thread.currentThread().getId.toInt & mask).getAndSet(n).set(n)
       sync.releaseShared(1)
@@ -111,9 +111,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   private def pollAndRun(): Int = {
     val pos = Thread.currentThread().getId.toInt & mask
-    val res = pollAndRun(pos, 1, tails(pos))
-    if (state.get > res) throw new InterruptedException
-    else res
+    pollAndRun(pos, 1, tails(pos))
   }
 
   @annotation.tailrec
@@ -126,8 +124,10 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
           case ex: Throwable => onError(ex)
         } finally n.task = null // to avoid possible memory leak when queue is empty
       }
-      0
+      if (state.get == 2) throw new InterruptedException
+      else 1
     } else if (offset <= mask) pollAndRun(pos, offset + 1, tails(pos ^ offset))
+    else if (state.get != 0) throw new InterruptedException
     else -1
   }
 
@@ -140,9 +140,9 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   private def status: String =
     if (isTerminated) "Terminated"
     else state.get match {
-      case -1 => "Running"
-      case 0 => "Shutdown"
-      case 1 => "Stop"
+      case 0 => "Running"
+      case 1 => "Shutdown"
+      case 2 => "Stop"
     }
 }
 
