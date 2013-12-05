@@ -33,7 +33,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = 450000
+    val n = 400000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
