@@ -36,18 +36,16 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * @param onError        The exception handler for unhandled errors during executing of tasks
  * @param onReject       The handler for rejection of task submission after shutdown
  * @param name           A name of the executor service
- * @param batchSize      A number of task completion before slowdown of worker thread
  */
 class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               threadFactory: ThreadFactory = daemonThreadFactory(),
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = generateName(),
-                              batchSize: Int = optimalBatchSize) extends AbstractExecutorService {
+                              name: String = generateName()) extends AbstractExecutorService {
   assert(poolSize > 0, "poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
   private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
-  private val state = new AtomicInteger // pool states: 0 - running, 1 - shutdown, 2 - stop
+  private val state = new AtomicInteger(-1) // pool states: -1 - running, 0 - shutdown, 1 - stop
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
@@ -76,12 +74,12 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   def shutdown(): Unit = {
     checkShutdownAccess(threads)
-    setState(1)
+    setState(0)
   }
 
   def shutdownNow(): util.List[Runnable] = {
     checkShutdownAccess(threads)
-    setState(2)
+    setState(1)
     threads.filter(_ ne Thread.currentThread).foreach(_.interrupt()) // don't interrupt worker thread due call in task
     new util.LinkedList[Runnable]
   }
@@ -97,30 +95,29 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   def execute(t: Runnable): Unit =
     if (t eq null) throw new NullPointerException
-    else if (state.get != 0) onReject(t)
-    else {
+    else if (state.get < 0) {
       val n = new TaskNode(t)
       heads(Thread.currentThread().getId.toInt & mask).getAndSet(n).set(n)
       sync.releaseShared(1)
-    }
+    } else onReject(t)
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
   @annotation.tailrec
   private def work(): Unit = {
-    sync.acquireSharedInterruptibly(1)
+    sync.acquireShared(1)
     work()
   }
 
   private def pollAndRun(): Int = {
     val pos = Thread.currentThread().getId.toInt & mask
-    val tail = tails(pos)
-    pollAndRun(pos, 0, batchSize, tail, tail)
+    val res = pollAndRun(pos, 1, tails(pos))
+    if (state.get > res) throw new InterruptedException
+    else res
   }
 
   @annotation.tailrec
-  private def pollAndRun(pos: Int, offset: Int, i: Int, workerTail: PaddedAtomicReference[TaskNode],
-                         tail: PaddedAtomicReference[TaskNode]): Int = {
+  private def pollAndRun(pos: Int, offset: Int, tail: PaddedAtomicReference[TaskNode]): Int = {
     val tn = tail.get
     val n = tn.get
     if (n ne null) {
@@ -128,14 +125,9 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
         try n.task.run() catch {
           case ex: Throwable => onError(ex)
         } finally n.task = null // to avoid possible memory leak when queue is empty
-        if (state.get == 2) throw new InterruptedException
-        else if (i > 0) pollAndRun(pos, 0, i - 1, workerTail, workerTail)
-        else 1 // slowdown to allow other workers to catch something
-      } else pollAndRun(pos, 0, i, workerTail, workerTail)
-    } else if (offset < mask) {
-      val newOffset = offset + 1
-      pollAndRun(pos, newOffset, batchSize, workerTail, tails(pos ^ newOffset))
-    } else if (state.get != 0) throw new InterruptedException
+      }
+      0
+    } else if (offset <= mask) pollAndRun(pos, offset + 1, tails(pos ^ offset))
     else -1
   }
 
@@ -148,9 +140,9 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   private def status: String =
     if (isTerminated) "Terminated"
     else state.get match {
-      case 0 => "Running"
-      case 1 => "Shutdown"
-      case 2 => "Stop"
+      case -1 => "Running"
+      case 0 => "Shutdown"
+      case 1 => "Stop"
     }
 }
 
@@ -173,8 +165,6 @@ private object FixedThreadPoolExecutor {
   }
 
   def generateName(): String = s"FixedThreadPool-${poolId.incrementAndGet()}"
-
-  def optimalBatchSize: Int = 256 / CPUs
 }
 
 private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]

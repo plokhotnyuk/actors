@@ -19,7 +19,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
   }
 
   "Single-producer sending" in {
-    val n = 30000000
+    val n = 32000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -53,7 +53,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(10000000, 1)
+    ping(7000000, 1)
   }
 
   "Ping throughput 10K" in {

@@ -18,7 +18,7 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Single-producer sending" in {
-    val n = 10000000
+    val n = 12000000
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -40,7 +40,7 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = 16000000
+    val n = 20000000
     val l = new CountDownLatch(parallelism)
     val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
     timed(n) {
@@ -52,7 +52,7 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(2000000, 1)
+    ping(1200000, 1)
   }
 
   "Ping throughput 10K" in {
