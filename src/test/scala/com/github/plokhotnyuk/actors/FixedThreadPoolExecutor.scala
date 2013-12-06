@@ -36,12 +36,14 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * @param onError        The exception handler for unhandled errors during executing of tasks
  * @param onReject       The handler for rejection of task submission after shutdown
  * @param name           A name of the executor service
+ * @param batchSize      A number of task executions completed by worker before slowdown to avoid starvation
  */
 class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               threadFactory: ThreadFactory = daemonThreadFactory(),
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = generateName()) extends AbstractExecutorService {
+                              name: String = generateName(),
+                              batchSize: Int = optimalBatchSize) extends AbstractExecutorService {
   assert(poolSize > 0, "poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
   private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
@@ -112,7 +114,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   private def pollAndRun(): Int = {
     val pos = Thread.currentThread().getId.toInt & mask
     val tail = tails(pos)
-    pollAndRun(pos, tail, 1, tail, 32)
+    pollAndRun(pos, tail, 1, tail, batchSize)
   }
 
   @annotation.tailrec
@@ -128,7 +130,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
       if (state.get == 2) throw new InterruptedException
       else if (i > 0) pollAndRun(pos, workerTail, 0, workerTail, i - 1)
       else 1 // slowdown to avoid starvation
-    } else if (offset <= mask) pollAndRun(pos, workerTail, offset + 1, tails(pos ^ offset), 32)
+    } else if (offset <= mask) pollAndRun(pos, workerTail, offset + 1, tails(pos ^ offset), batchSize)
     else if (state.get != 0) throw new InterruptedException
     else -1
   }
@@ -150,6 +152,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
 private object FixedThreadPoolExecutor {
   private val CPUs = Runtime.getRuntime.availableProcessors
+  private val optimalBatchSize = 1024 / CPUs
   private val poolId = new AtomicInteger
   private val shutdownPerm = new RuntimePermission("modifyThread")
 
