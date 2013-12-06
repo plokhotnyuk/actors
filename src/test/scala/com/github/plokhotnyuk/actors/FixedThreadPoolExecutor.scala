@@ -132,7 +132,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     } else if (offset < mask) pollAndRun(pos, offset + 1, batch, i)
     else if (state.get != 0) throw new InterruptedException
     else {
-      optimalBatch.set(Math.min(batch - (i >> 2), 1024)) // limit to 1024 to avoid starvation
+      optimalBatch.set(Math.min(batch - (i >> 2), maxBatch)) // limit to maxBatch value to avoid starvation
       -1
     }
   }
@@ -154,6 +154,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
 private object FixedThreadPoolExecutor {
   private val CPUs = Runtime.getRuntime.availableProcessors
+  private val maxBatch = 4096 / CPUs
   private val poolId = new AtomicInteger
   private val shutdownPerm = new RuntimePermission("modifyThread")
 
