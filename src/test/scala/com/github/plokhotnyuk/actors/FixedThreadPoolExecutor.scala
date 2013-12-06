@@ -36,15 +36,16 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * @param onError        The exception handler for unhandled errors during executing of tasks
  * @param onReject       The handler for rejection of task submission after shutdown
  * @param name           A name of the executor service
+ * @param batchSize      A number of task executions completed by worker before slowdown to avoid starvation
  */
 class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               threadFactory: ThreadFactory = daemonThreadFactory(),
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = generateName()) extends AbstractExecutorService {
+                              name: String = generateName(),
+                              batchSize: Int = optimalBatchSize) extends AbstractExecutorService {
   assert(poolSize > 0, "poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
-  private val optimalBatch = new ThreadLocal[Int]()
   private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
   private val state = new AtomicInteger // pool states: 0 - running, 1 - shutdown, 2 - stop
   private val sync = new AbstractQueuedSynchronizer {
@@ -112,13 +113,13 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   private def pollAndRun(): Int = {
     val pos = Thread.currentThread().getId.toInt & mask
-    val batch = optimalBatch.get
-    pollAndRun(pos, 0, batch, batch)
+    val tail = tails(pos)
+    pollAndRun(pos, tail, 1, tail, batchSize)
   }
 
   @annotation.tailrec
-  private def pollAndRun(pos: Int, offset: Int, batch: Int, i: Int): Int = {
-    val tail = tails(pos ^ offset)
+  private def pollAndRun(pos: Int, workerTail: PaddedAtomicReference[TaskNode],
+                         offset: Int, tail: PaddedAtomicReference[TaskNode], i: Int): Int = {
     val tn = tail.get
     val n = tn.get
     if (n ne null) {
@@ -127,14 +128,11 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
           case ex: Throwable => onError(ex)
         } finally n.task = null // to avoid possible memory leak when queue is empty
       if (state.get == 2) throw new InterruptedException
-      else if (i > -32) pollAndRun(pos, 0, batch, i - 1)
-      else 1
-    } else if (offset < mask) pollAndRun(pos, offset + 1, batch, i)
+      else if (i > 0) pollAndRun(pos, workerTail, 0, workerTail, i - 1)
+      else 1 // slowdown to avoid starvation
+    } else if (offset <= mask) pollAndRun(pos, workerTail, offset + 1, tails(pos ^ offset), batchSize)
     else if (state.get != 0) throw new InterruptedException
-    else {
-      optimalBatch.set(Math.min(batch - (i >> 2), maxBatch)) // limit to maxBatch value to avoid starvation
-      -1
-    }
+    else -1
   }
 
   @annotation.tailrec
@@ -154,7 +152,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
 private object FixedThreadPoolExecutor {
   private val CPUs = Runtime.getRuntime.availableProcessors
-  private val maxBatch = 4096 / CPUs
+  private val optimalBatchSize = 1024 / CPUs
   private val poolId = new AtomicInteger
   private val shutdownPerm = new RuntimePermission("modifyThread")
 
