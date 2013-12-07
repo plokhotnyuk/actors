@@ -111,24 +111,25 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   private def pollAndRun(): Int = {
     val pos = Thread.currentThread().getId.toInt & mask
-    val tail = tails(pos)
-    pollAndRun(pos, tail, 1, tail, 32)
+    val workerTail = tails(pos)
+    pollAndRun(workerTail, workerTail, pos, 1, 32)
   }
 
   @annotation.tailrec
-  private def pollAndRun(pos: Int, workerTail: PaddedAtomicReference[TaskNode],
-                         offset: Int, tail: PaddedAtomicReference[TaskNode], i: Int): Int = {
+  private def pollAndRun(workerTail: PaddedAtomicReference[TaskNode], tail: PaddedAtomicReference[TaskNode],
+                         pos: Int, offset: Int, i: Int): Int = {
     val tn = tail.get
     val n = tn.get
     if (n ne null) {
-      if (tail.compareAndSet(tn, n))
+      if (tail.compareAndSet(tn, n)) {
         try n.task.run() catch {
           case ex: Throwable => onError(ex)
         } finally n.task = null // to avoid possible memory leak when queue is empty
-      if (state.get == 2) throw new InterruptedException
-      else if (i > 0) pollAndRun(pos, workerTail, 0, workerTail, i - 1)
-      else 1 // slowdown to avoid starvation
-    } else if (offset <= mask) pollAndRun(pos, workerTail, offset + 1, tails(pos ^ offset), 32)
+        if (state.get == 2) throw new InterruptedException
+        else if (i > 0) pollAndRun(workerTail, workerTail, pos, 1, i - 1)
+        else 1 // slowdown to avoid starvation
+      } else pollAndRun(workerTail, workerTail, pos, 1, 32)
+    } else if (offset <= mask) pollAndRun(workerTail, tails(pos ^ offset), pos, offset + 1, 32)
     else if (state.get != 0) throw new InterruptedException
     else -1
   }
