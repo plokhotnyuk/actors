@@ -75,7 +75,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map(_ => (playerActor(l, n / p / 2), playerActor(l, n / p / 2)))
-    timed(n) {
+    timed(n, printAvgLatency = p == 1) {
       as.foreach {
         case (a1, a2) => a1.tell(Message(), a2)
       }

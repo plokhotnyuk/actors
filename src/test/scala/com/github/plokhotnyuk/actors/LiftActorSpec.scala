@@ -102,7 +102,7 @@ class LiftActorSpec extends BenchmarkSpec {
         }
         a2
     }
-    timed(n) {
+    timed(n, printAvgLatency = p == 1) {
       as.foreach(_ ! Message())
       l.await()
     }

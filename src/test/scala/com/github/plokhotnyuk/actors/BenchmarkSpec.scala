@@ -72,7 +72,7 @@ object BenchmarkSpec {
     }
   }
 
-  def timed[A](n: Int)(benchmark: => A): A = {
+  def timed[A](n: Int, printAvgLatency: Boolean = false)(benchmark: => A): A = {
     val t = System.currentTimeMillis * 1000000L
     val ct = osMBean.getProcessCpuTime
     val r = benchmark
@@ -80,8 +80,7 @@ object BenchmarkSpec {
     val d = System.currentTimeMillis * 1000000L - t
     println(f"$n%,d ops")
     println(f"${d / 1000000L}%,d ms")
-    println(f"${d / n}%,d ns/op")
-    println(f"${(n * 1000000000L) / d}%,d ops/s")
+    println(if (printAvgLatency) f"${d / n}%,d ns/op" else f"${(n * 1000000000L) / d}%,d ops/s")
     println(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
     r
   }
