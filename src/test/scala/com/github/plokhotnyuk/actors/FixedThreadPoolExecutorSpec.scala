@@ -91,6 +91,10 @@ class FixedThreadPoolExecutorSpec extends Specification {
     }
   }
 
+  "poolSize less than 1 is not allowed" in {
+    new FixedThreadPoolExecutor(0) must throwA[IllegalArgumentException]
+  }
+
   "terminates safely when shutdownNow called during task execution" in {
     withExecutor(new FixedThreadPoolExecutor) {
       e =>

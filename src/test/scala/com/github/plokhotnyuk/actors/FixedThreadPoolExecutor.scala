@@ -42,7 +42,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = generateName()) extends AbstractExecutorService {
-  assert(poolSize > 0, "poolSize should be greater than 0")
+  if (poolSize < 1) throw new IllegalArgumentException("poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
   private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
   private val state = new AtomicInteger // pool states: 0 - running, 1 - shutdown, 2 - stop
