@@ -33,7 +33,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = 1200000
+    val n = roundToParallelism(1200000)
     val l = new CountDownLatch(1)
     val a = tickActor(l, n)
     timed(n) {
@@ -45,7 +45,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = 3000000
+    val n = roundToParallelism(3000000)
     val l = new CountDownLatch(parallelism)
     val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
     timed(n) {

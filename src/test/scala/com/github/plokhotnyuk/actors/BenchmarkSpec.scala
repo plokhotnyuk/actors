@@ -41,6 +41,8 @@ object BenchmarkSpec {
   
   val parallelism: Int = System.getProperty("benchmark.parallelism", processors.toString).toInt
 
+  def roundToParallelism(n: Int): Int = (n / parallelism) * parallelism
+
   def createExecutorService(): ExecutorService = {
     def createScalaForkJoinWorkerThreadFactory() = new ScalaForkJoinPool.ForkJoinWorkerThreadFactory {
       def newThread(pool: ScalaForkJoinPool) = new ScalaForkJoinWorkerThread(pool) {
