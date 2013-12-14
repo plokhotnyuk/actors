@@ -36,12 +36,16 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * @param onError        The exception handler for unhandled errors during executing of tasks
  * @param onReject       The handler for rejection of task submission after shutdown
  * @param name           A name of the executor service
+ * @param batch          A number of task completions before slowdown
+ * @param spin           A number of checking if there is any task submitted before parking of worker thread
  */
 class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               threadFactory: ThreadFactory = daemonThreadFactory(),
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
-                              name: String = generateName()) extends AbstractExecutorService {
+                              name: String = generateName(),
+                              batch: Int = 128,
+                              spin: Int = 4) extends AbstractExecutorService {
   if (poolSize < 1) throw new IllegalArgumentException("poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
   private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
@@ -112,12 +116,12 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   private def pollAndRun(): Int = {
     val pos = Thread.currentThread().getId.toInt & mask
     val workerTail = tails(pos)
-    pollAndRun(workerTail, workerTail, pos, 1)
+    pollAndRun(workerTail, workerTail, pos, 1, batch, spin)
   }
 
   @annotation.tailrec
   private def pollAndRun(workerTail: PaddedAtomicReference[TaskNode], tail: PaddedAtomicReference[TaskNode],
-                         pos: Int, offset: Int, i: Int = 32): Int = {
+                         pos: Int, offset: Int, i: Int, j: Int): Int = {
     val tn = tail.get
     val n = tn.get
     if (n ne null) {
@@ -125,12 +129,13 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
         try n.task.run() catch {
           case ex: Throwable => onError(ex)
         } finally n.task = null // to avoid possible memory leak when queue is empty
-        if (state.get == 2) throw new InterruptedException
-        else if (i > 0) pollAndRun(workerTail, workerTail, pos, 1, i - 1)
-        else 1 // slowdown to avoid starvation
-      } else pollAndRun(workerTail, workerTail, pos, 1)
-    } else if (offset <= mask) pollAndRun(workerTail, tails(pos ^ offset), pos, offset + 1)
-    else if (state.get != 0) throw new InterruptedException
+      }
+      if (state.get > 1) throw new InterruptedException
+      else if (i > 0) pollAndRun(workerTail, workerTail, pos, 1, i - 1, spin)
+      else 0 // slowdown to avoid starvation
+    } else if (offset <= mask) pollAndRun(workerTail, tails(pos ^ offset), pos, offset + 1, batch , j)
+    else if (j > 0) pollAndRun(workerTail, workerTail, pos, 1, batch, j - 1)
+    else if (state.get > 0) throw new InterruptedException
     else -1
   }
 
