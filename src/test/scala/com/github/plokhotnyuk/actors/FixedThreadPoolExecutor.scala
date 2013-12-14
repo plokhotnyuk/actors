@@ -134,8 +134,8 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
       else if (i > 0) pollAndRun(workerTail, workerTail, pos, 1, i - 1, spin)
       else 0 // slowdown to avoid starvation
     } else if (offset <= mask) pollAndRun(workerTail, tails(pos ^ offset), pos, offset + 1, batch , j)
-    else if (j > 0) pollAndRun(workerTail, workerTail, pos, 1, batch, j - 1)
     else if (state.get > 0) throw new InterruptedException
+    else if (j > 0) pollAndRun(workerTail, workerTail, pos, 1, batch, j - 1)
     else -1
   }
 
