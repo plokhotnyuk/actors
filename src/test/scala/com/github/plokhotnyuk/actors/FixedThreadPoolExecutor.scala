@@ -44,8 +44,8 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = generateName(),
-                              batch: Int = 256 / CPUs,
-                              spin: Int = 16 / CPUs) extends AbstractExecutorService {
+                              batch: Int = 32,
+                              spin: Int = 0) extends AbstractExecutorService {
   if (poolSize < 1) throw new IllegalArgumentException("poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
   private val tails = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
@@ -129,10 +129,10 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
         try n.task.run() catch {
           case ex: Throwable => onError(ex)
         } finally n.task = null // to avoid possible memory leak when queue is empty
-      }
-      if (state.get > 1) throw new InterruptedException
-      else if (i > 0) pollAndRun(workerTail, workerTail, pos, 1, i - 1, spin)
-      else 0 // slowdown to avoid starvation
+        if (state.get > 1) throw new InterruptedException
+        else if (i > 0) pollAndRun(workerTail, workerTail, pos, 1, i - 1, spin)
+        else 0 // slowdown to avoid starvation
+      } else pollAndRun(workerTail, workerTail, pos, 1, batch, spin)
     } else if (offset <= mask) pollAndRun(workerTail, tails(pos ^ offset), pos, offset + 1, batch, j)
     else if (state.get > 0) throw new InterruptedException
     else if (j > 0) pollAndRun(workerTail, workerTail, pos, 1, batch, j - 1)
