@@ -44,7 +44,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = t => throw new RejectedExecutionException(t.toString),
                               name: String = generateName(),
-                              batch: Int = 32,
+                              batch: Int = 256 / CPUs,
                               spin: Int = 0) extends AbstractExecutorService {
   if (poolSize < 1) throw new IllegalArgumentException("poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
