@@ -53,21 +53,17 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   private val sync = new AbstractQueuedSynchronizer {
     override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
-    override protected final def tryAcquireShared(ignore: Int): Int = pollAndRun()
+    override protected final def tryAcquireShared(pos: Int): Int = pollAndRun(pos)
   }
   private val heads = tails.map(n => new PaddedAtomicReference(n.get)).toArray
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
     val nm = name // to avoid long field name
-    val ts = terminations // to avoid long field name
     val tf = threadFactory // to avoid creation of field for constructor param
     (1 to poolSize).map {
       i =>
         val t = tf.newThread(new Runnable {
-          def run(): Unit =
-            try work() catch {
-              case _: InterruptedException => // ignore due usage as control flow exception internally
-            } finally ts.countDown()
+          def run(): Unit = work()
         })
         t.setName(s"$nm-worker-$i")
         t
@@ -102,19 +98,23 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     else if (state.get == 0) {
       val n = new TaskNode(t)
       heads(Thread.currentThread().getId.toInt & mask).getAndSet(n).set(n)
-      sync.releaseShared(1)
+      sync.releaseShared(0)
     } else onReject(t)
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
+  private def work(): Unit =
+    try work(sync, Thread.currentThread().getId.toInt & mask) catch {
+      case _: InterruptedException => // ignore due usage as control flow exception internally
+    } finally terminations.countDown()
+
   @annotation.tailrec
-  private def work(): Unit = {
-    sync.acquireShared(1)
-    work()
+  private def work(s: AbstractQueuedSynchronizer, pos: Int): Unit = {
+    s.acquireShared(pos)
+    work(s, pos)
   }
 
-  private def pollAndRun(): Int = {
-    val pos = Thread.currentThread().getId.toInt & mask
+  private def pollAndRun(pos: Int): Int = {
     val workerTail = tails(pos)
     pollAndRun(workerTail, workerTail, pos, 1, batch, spin)
   }
