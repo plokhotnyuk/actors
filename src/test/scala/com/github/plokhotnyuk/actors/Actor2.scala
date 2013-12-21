@@ -37,18 +37,16 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
 
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
-  private def reschedule(t: Node[A]): Unit = {
-    tail = t
-    state.set(0)
-    if (t.get ne null) schedule()
-  }
-
   private def schedule(): Unit = if (state.compareAndSet(0, 1)) strategy(act(tail))
 
   private def act(t: Node[A]): Unit = {
     val n = batchHandle(t, 1024)
     if (n ne t) strategy(act(n))
-    else reschedule(n)
+    else {
+      tail = t
+      state.set(0)
+      if (t.get ne null) schedule()
+    }
   }
 
   @annotation.tailrec
