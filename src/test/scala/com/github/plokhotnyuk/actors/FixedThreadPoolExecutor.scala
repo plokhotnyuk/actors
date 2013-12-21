@@ -5,6 +5,7 @@ import java.util.concurrent._
 import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
 import java.util.concurrent.locks.AbstractQueuedSynchronizer
 import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
+import java.lang.ThreadLocal
 
 /**
  * An implementation of an `java.util.concurrent.ExecutorService ExecutorService`
@@ -47,8 +48,13 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               batch: Int = 256 / CPUs,
                               spin: Int = 0) extends AbstractExecutorService {
   if (poolSize < 1) throw new IllegalArgumentException("poolSize should be greater than 0")
-  private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
-  private val heads = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
+  private val heads = (1 to Integer.highestOneBit(Math.min(poolSize, CPUs))).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
+  private val base = new ThreadLocal[Int]() {
+    private val mask = heads.length - 1
+    private val count = new AtomicInteger
+
+    override def initialValue(): Int = count.getAndIncrement & mask
+  }
   private val poller = new Poller(batch, spin, heads.size, heads.map(n => new PaddedAtomicReference(n.get)).toArray, onError)
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
@@ -63,7 +69,6 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
         t
     }.toArray
   }
-
   threads.foreach(_.start())
 
   def shutdown(): Unit = {
@@ -91,21 +96,21 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     if (t eq null) throw new NullPointerException
     else if (poller.state == 0) {
       val n = new TaskNode(t)
-      heads(Thread.currentThread().getId.toInt & mask).getAndSet(n).set(n)
+      heads(base.get).getAndSet(n).set(n)
       poller.releaseShared(0)
     } else onReject(t)
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
   private def work(): Unit =
-    try work(poller, Thread.currentThread().getId.toInt & mask) catch {
+    try work(poller, base.get) catch {
       case _: InterruptedException => // ignore due usage as control flow exception internally
     } finally terminations.countDown()
 
   @annotation.tailrec
-  private def work(p: Poller, pos: Int): Unit = {
-    p.acquireShared(pos)
-    work(p, pos)
+  private def work(poller: Poller, base: Int): Unit = {
+    poller.acquireShared(base)
+    work(poller, base)
   }
 
   private def status: String =
@@ -150,14 +155,14 @@ private class Poller(batch: Int, spin: Int, size: Int, tails: Array[PaddedAtomic
 
   override protected final def tryReleaseShared(ignore: Int): Boolean = true
 
-  override protected final def tryAcquireShared(pos: Int): Int = {
-    val workerTail = tails(pos)
-    pollAndRun(workerTail, workerTail, pos, 1, batch, spin)
+  override protected final def tryAcquireShared(base: Int): Int = {
+    val workerTail = tails(base)
+    pollAndRun(workerTail, workerTail, base, 1, batch, spin)
   }
 
   @annotation.tailrec
   private def pollAndRun(workerTail: PaddedAtomicReference[TaskNode], tail: PaddedAtomicReference[TaskNode],
-                         pos: Int, offset: Int, i: Int, j: Int): Int = {
+                         base: Int, offset: Int, i: Int, j: Int): Int = {
     val tn = tail.get
     val n = tn.get
     if (n ne null) {
@@ -166,12 +171,12 @@ private class Poller(batch: Int, spin: Int, size: Int, tails: Array[PaddedAtomic
           case ex: Throwable => onError(ex)
         } finally n.task = null // to avoid possible memory leak when queue is empty
         if (getState > 1) throw new InterruptedException
-        else if (i != 0) pollAndRun(workerTail, workerTail, pos, 1, i - 1, spin)
+        else if (i != 0) pollAndRun(workerTail, workerTail, base, 1, i - 1, spin)
         else 0 // slowdown to avoid starvation
-      } else pollAndRun(workerTail, workerTail, pos, 1, batch, spin)
-    } else if (offset < size) pollAndRun(workerTail, tails(pos ^ offset), pos, offset + 1, batch, j)
+      } else pollAndRun(workerTail, workerTail, base, 1, batch, spin)
+    } else if (offset < size) pollAndRun(workerTail, tails(base ^ offset), base, offset + 1, batch, j)
     else if (getState > 0) throw new InterruptedException
-    else if (j != 0) pollAndRun(workerTail, workerTail, pos, 1, batch, j - 1)
+    else if (j != 0) pollAndRun(workerTail, workerTail, base, 1, batch, j - 1)
     else -1
   }
 }
