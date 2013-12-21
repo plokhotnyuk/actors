@@ -29,7 +29,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def !(a: A): Unit = {
     val n = new Node(a)
     head.getAndSet(n).lazySet(n)
-    schedule()
+    if (state.compareAndSet(0, 1)) strategy(act(tail))
   }
 
   /** Pass the message `a` to the mailbox of this actor */
@@ -37,15 +37,15 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
 
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
-  private def schedule(): Unit = if (state.compareAndSet(0, 1)) strategy(act(tail))
-
   private def act(t: Node[A]): Unit = {
     val n = batchHandle(t, 1024)
-    if (n ne t) strategy(act(n))
-    else {
+    if (n ne t) {
+      n.a = null.asInstanceOf[A] // to avoid possible memory leak when queue is empty
+      strategy(act(n))
+    } else {
       tail = t
       state.set(0)
-      if (t.get ne null) schedule()
+      if ((t.get ne null) && state.compareAndSet(0, 1)) strategy(act(t))
     }
   }
 
@@ -55,7 +55,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
     if ((n ne null) && i > 0) {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
-      } finally n.a = null.asInstanceOf[A] // to avoid possible memory leak when queue is empty
+      }
       batchHandle(n, i - 1)
     } else t
   }
@@ -75,5 +75,5 @@ trait ActorFunctions2 {
   def actor[A](handler: A => Unit, onError: Throwable => Unit = throw _)(implicit s: Strategy): Actor2[A] =
     new Actor2[A](handler, onError)(s)
 
-  implicit def ToFunctionFromActor[A](r: Actor2[A]): A => Unit = a => r ! a
+  implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
