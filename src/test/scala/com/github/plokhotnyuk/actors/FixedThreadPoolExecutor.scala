@@ -5,7 +5,6 @@ import java.util.concurrent._
 import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
 import java.util.concurrent.locks.AbstractQueuedSynchronizer
 import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
-import java.lang.ThreadLocal
 
 /**
  * An implementation of an `java.util.concurrent.ExecutorService ExecutorService`
@@ -48,13 +47,8 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               batch: Int = 256 / CPUs,
                               spin: Int = 0) extends AbstractExecutorService {
   if (poolSize < 1) throw new IllegalArgumentException("poolSize should be greater than 0")
-  private val heads = (1 to Integer.highestOneBit(Math.min(poolSize, CPUs))).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
-  private val base = new ThreadLocal[Int]() {
-    private val mask = heads.length - 1
-    private val count = new AtomicInteger
-
-    override def initialValue(): Int = count.getAndIncrement & mask
-  }
+  private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
+  private val heads = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
   private val poller = new Poller(batch, spin, heads.size, heads.map(n => new PaddedAtomicReference(n.get)).toArray, onError)
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
@@ -96,14 +90,14 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     if (t eq null) throw new NullPointerException
     else if (poller.state == 0) {
       val n = new TaskNode(t)
-      heads(base.get).getAndSet(n).set(n)
+      heads(Thread.currentThread().getId.toInt & mask).getAndSet(n).set(n)
       poller.releaseShared(0)
     } else onReject(t)
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
   private def work(): Unit =
-    try work(poller, base.get) catch {
+    try work(poller, Thread.currentThread().getId.toInt & mask) catch {
       case _: InterruptedException => // ignore due usage as control flow exception internally
     } finally terminations.countDown()
 
