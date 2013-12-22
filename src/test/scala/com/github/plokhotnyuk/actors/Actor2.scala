@@ -19,8 +19,8 @@ import scalaz.Contravariant
  * @tparam A       The type of messages accepted by this actor.
  */
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)(implicit strategy: Strategy) {
-  private var tail = new Node[A]()
-  private val state = new AtomicInteger() // 0 - suspended, 1 - running
+  private var tail = new Node[A]
+  private val state = new AtomicInteger // 0 - suspended, 1 - running
   private val head = new AtomicReference(tail)
 
   def toEffect: Run[A] = Run[A](a => this ! a)
@@ -52,10 +52,9 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
     if ((n ne null) && i > 0) {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
-      }
+      } finally tail = t
       batchHandle(n, i - 1)
     } else {
-      tail = t
       t.a = null.asInstanceOf[A]
       t
     }
