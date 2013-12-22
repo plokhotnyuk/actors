@@ -52,7 +52,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
     if ((n ne null) && i > 0) {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
-      } finally tail = t
+      } finally tail = n
       batchHandle(n, i - 1)
     } else {
       t.a = null.asInstanceOf[A]
