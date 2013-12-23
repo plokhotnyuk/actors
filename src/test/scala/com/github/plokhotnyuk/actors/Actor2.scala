@@ -1,6 +1,6 @@
 package com.github.plokhotnyuk.actors
 
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 import scalaz.concurrent.{Strategy, Run}
 import scalaz.Contravariant
 
@@ -19,8 +19,9 @@ import scalaz.Contravariant
  * @tparam A       The type of messages accepted by this actor.
  */
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)(implicit strategy: Strategy) {
-  private val tail = new AtomicReference(new Node[A])
-  private val head = new AtomicReference(tail.get)
+  private var tail = new Node[A]
+  private val state = new AtomicInteger // 0 - suspended, 1 - running
+  private val head = new AtomicReference(tail)
 
   def toEffect: Run[A] = Run[A](a => this ! a)
 
@@ -28,8 +29,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def !(a: A): Unit = {
     val n = new Node(a)
     head.getAndSet(n).lazySet(n)
-    val t = tail.getAndSet(null)
-    if (t ne null) strategy(act(t))
+    if (state.compareAndSet(0, 1)) strategy(act(tail))
   }
 
   /** Pass the message `a` to the mailbox of this actor */
@@ -41,8 +41,8 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
     val n = batchHandle(t, 1024)
     if (n.get ne null) strategy(act(n))
     else {
-      tail.set(n)
-      if ((n.get ne null) && (tail.getAndSet(null) ne null)) strategy(act(n))
+      state.set(0)
+      if ((n.get ne null) && state.compareAndSet(0, 1)) strategy(act(n))
     }
   }
 
@@ -52,9 +52,13 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
     if ((n ne null) && i > 0) {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
-      } finally t.a = null.asInstanceOf[A]
+      }
       batchHandle(n, i - 1)
-    } else t
+    } else {
+      tail = t
+      t.a = null.asInstanceOf[A]
+      t
+    }
   }
 }
 
