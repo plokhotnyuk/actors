@@ -28,8 +28,8 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   /** Alias for `apply` */
   def !(a: A): Unit = {
     val n = new Node(a)
-    head.getAndSet(n).set(n)
-    if (state.get == 0 && state.compareAndSet(0, 1)) strategy(act(tail))
+    head.getAndSet(n).lazySet(n)
+    if (state.compareAndSet(0, 1)) strategy(act(tail))
   }
 
   /** Pass the message `a` to the mailbox of this actor */
@@ -42,7 +42,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
     if (n.get ne null) strategy(act(n))
     else {
       state.set(0)
-      if ((n.get ne null) && state.get == 0 && state.compareAndSet(0, 1)) strategy(act(n))
+      if ((n.get ne null) && state.compareAndSet(0, 1)) strategy(act(n))
     }
   }
 
