@@ -38,7 +38,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
   private def act(t: Node[A]): Unit = {
-    val n = batchHandle(t, 1024)
+    val n = batch(t, 256)
     if (n.get ne null) strategy(act(n))
     else {
       state.set(0)
@@ -47,13 +47,13 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   }
 
   @annotation.tailrec
-  private def batchHandle(t: Node[A], i: Int): Node[A] = {
+  private def batch(t: Node[A], i: Int): Node[A] = {
     val n = t.get
     if ((n ne null) && i > 0) {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
       }
-      batchHandle(n, i - 1)
+      batch(n, i - 1)
     } else {
       tail = t
       t.a = null.asInstanceOf[A]
