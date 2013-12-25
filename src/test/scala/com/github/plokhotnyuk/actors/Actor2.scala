@@ -39,7 +39,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
 
   private def act(t: Node[A]): Unit = {
     val n = batch(t, 1024)
-    if (n.get ne null) strategy(act(n))
+    if (n ne t) strategy(act(n))
     else {
       state.set(0)
       if ((n.get ne null) && state.compareAndSet(0, 1)) strategy(act(n))
