@@ -49,7 +49,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   @annotation.tailrec
   private def batch(t: Node[A], i: Int): Node[A] = {
     val n = t.get
-    if ((n ne null) && i > 0) {
+    if ((n ne null) && i != 0) {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
       }
