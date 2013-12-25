@@ -28,7 +28,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   /** Alias for `apply` */
   def !(a: A): Unit = {
     val n = new Node(a)
-    head.getAndSet(n).n = n
+    head.getAndSet(n).lazySet(n)
     if (state.compareAndSet(0, 1)) strategy(act(tail))
   }
 
@@ -39,13 +39,16 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
 
   private def act(t: Node[A]): Unit = {
     val n = batch(t, 1024)
-    state.set(0)
-    if ((n.n ne null) && state.compareAndSet(0, 1)) strategy(act(n))
+    if (n.get ne null) strategy(act(n))
+    else {
+      state.set(0)
+      if ((n.get ne null) && state.compareAndSet(0, 1)) strategy(act(n))
+    }
   }
 
   @annotation.tailrec
   private def batch(t: Node[A], i: Int): Node[A] = {
-    val n = t.n
+    val n = t.get
     if ((n ne null) && i != 0) {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
@@ -59,9 +62,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   }
 }
 
-private class Node[A](var a: A = null.asInstanceOf[A]) {
-  var n: Node[A] = _
-}
+private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
 
 object Actor2 extends ActorFunctions2 with ActorInstances2
 
