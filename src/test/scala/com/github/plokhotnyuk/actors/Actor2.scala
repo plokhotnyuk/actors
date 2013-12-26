@@ -1,6 +1,6 @@
 package com.github.plokhotnyuk.actors
 
-import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
+import java.util.concurrent.atomic.AtomicReference
 import scalaz.concurrent.{Strategy, Run}
 import scalaz.Contravariant
 
@@ -18,18 +18,20 @@ import scalaz.Contravariant
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _)(implicit strategy: Strategy) {
-  private var tail = new Node[A]
-  private val state = new AtomicInteger // 0 - suspended, 1 - running
-  private val head = new AtomicReference(tail)
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _, batch: Int = 1024)
+                          (implicit strategy: Strategy) {
+  if (batch < 1) throw new IllegalArgumentException("batch should be greater than 0")
+  private val tail = new AtomicReference(new Node[A])
+  private val head = new AtomicReference(tail.get)
 
   def toEffect: Run[A] = Run[A](a => this ! a)
 
   /** Alias for `apply` */
   def !(a: A): Unit = {
     val n = new Node(a)
-    head.getAndSet(n).lazySet(n)
-    if (state.compareAndSet(0, 1)) strategy(act(tail))
+    head.getAndSet(n).set(n)
+    val t = tail.get
+    if ((t ne null) && tail.compareAndSet(t, null)) schedule(t)
   }
 
   /** Pass the message `a` to the mailbox of this actor */
@@ -37,27 +39,20 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
 
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
-  private def act(t: Node[A]): Unit = {
-    val n = batch(t, 256)
-    if (n ne t) strategy(act(n))
-    else {
-      state.set(0)
-      if ((n.get ne null) && state.compareAndSet(0, 1)) strategy(act(n))
-    }
-  }
+  private def schedule(t: Node[A]): Unit = strategy(act(t, batch))
 
   @annotation.tailrec
-  private def batch(t: Node[A], i: Int): Node[A] = {
+  private def act(t: Node[A], i: Int): Unit = {
     val n = t.get
     if ((n ne null) && i != 0) {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
       }
-      batch(n, i - 1)
+      act(n, i - 1)
     } else {
-      tail = t
       t.a = null.asInstanceOf[A]
-      t
+      tail.set(t)
+      if ((t.get ne null) && tail.compareAndSet(t, null)) schedule(t)
     }
   }
 }
@@ -73,8 +68,8 @@ trait ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  def actor[A](handler: A => Unit, onError: Throwable => Unit = throw _)(implicit s: Strategy): Actor2[A] =
-    new Actor2[A](handler, onError)(s)
+  def actor[A](handler: A => Unit, onError: Throwable => Unit = throw _, batch: Int = 1024)
+              (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError)(s)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
