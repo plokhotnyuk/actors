@@ -83,7 +83,7 @@ trait ActorInstances2 {
 
 trait ActorFunctions2 {
   def actor[A](handler: A => Unit, onError: Throwable => Unit = throw _, batch: Int = 1024)
-              (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError)(s)
+              (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError, batch)(s)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
