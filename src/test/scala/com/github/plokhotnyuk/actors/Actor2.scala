@@ -29,9 +29,9 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   /** Alias for `apply` */
   def !(a: A): Unit = {
     val n = new Node(a)
-    head.getAndSet(n).set(n)
-    val t = tail.get
-    if ((t ne null) && tail.compareAndSet(t, null)) schedule(t)
+    head.getAndSet(n).lazySet(n)
+    val t = tail.getAndSet(null)
+    if (t ne null) schedule(t)
   }
 
   /** Pass the message `a` to the mailbox of this actor */
@@ -51,8 +51,11 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
       act(n, i - 1)
     } else {
       t.a = null.asInstanceOf[A]
-      tail.set(t)
-      if ((t.get ne null) && tail.compareAndSet(t, null)) schedule(t)
+      if (t.get ne null) schedule(t)
+      else {
+        tail.set(t)
+        if ((t.get ne null) && tail.compareAndSet(t, null)) schedule(t)
+      }
     }
   }
 }
