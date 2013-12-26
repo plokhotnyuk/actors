@@ -1,7 +1,6 @@
 package com.github.plokhotnyuk.actors
 
-import com.github.plokhotnyuk.actors.Actor2.tailOffset
-import scala.concurrent.util.Unsafe.instance
+import scala.concurrent.util.Unsafe
 import java.util.concurrent.atomic.AtomicReference
 import scalaz.concurrent.{Strategy, Run}
 import scalaz.Contravariant
@@ -33,7 +32,7 @@ final class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _, 
     val n = new Node(a)
     head.getAndSet(n).set(n)
     val t = tail
-    if ((t ne null) && instance.compareAndSwapObject(this, tailOffset, t, null)) schedule(t)
+    if ((t ne null) && Actor2.resetTail(this, t)) schedule(t)
   }
 
   /** Pass the message `a` to the mailbox of this actor */
@@ -46,7 +45,7 @@ final class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _, 
     if (n ne t) schedule(n)
     else {
       tail = t
-      if ((t.get ne null) && instance.compareAndSwapObject(this, tailOffset, t, null)) schedule(t)
+      if ((t.get ne null) && Actor2.resetTail(this, t)) schedule(t)
     }
   }
 
@@ -72,7 +71,10 @@ private[actors] class Tail[A] {
 private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
 
 object Actor2 extends ActorFunctions2 with ActorInstances2 {
-  private val tailOffset = instance.objectFieldOffset(classOf[Tail[AnyRef]].getDeclaredField("tail"))
+  private val unsafe = Unsafe.instance
+  private val tailOffset = unsafe.objectFieldOffset(classOf[Tail[AnyRef]].getDeclaredField("tail"))
+
+  def resetTail[A](a: Actor2[A], t: Node[A]): Boolean = unsafe.compareAndSwapObject(a, tailOffset, t, null)
 }
 
 trait ActorInstances2 {
