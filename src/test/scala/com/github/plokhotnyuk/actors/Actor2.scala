@@ -1,5 +1,7 @@
 package com.github.plokhotnyuk.actors
 
+import com.github.plokhotnyuk.actors.Actor2.tailOffset
+import scala.concurrent.util.Unsafe.instance
 import java.util.concurrent.atomic.AtomicReference
 import scalaz.concurrent.{Strategy, Run}
 import scalaz.Contravariant
@@ -18,10 +20,11 @@ import scalaz.Contravariant
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _, batch: Int = 1024)
-                          (implicit strategy: Strategy) {
-  private val tail = new AtomicReference(new Node[A])
-  private val head = new AtomicReference(tail.get)
+final class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _, batch: Int = 1024)
+                          (implicit strategy: Strategy) extends Tail[A] {
+  private val head = new AtomicReference(tail)
+
+  if (batch < 1) throw new IllegalArgumentException("batch should be greater than 0")
 
   def toEffect: Run[A] = Run[A](a => this ! a)
 
@@ -29,8 +32,8 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def !(a: A): Unit = {
     val n = new Node(a)
     head.getAndSet(n).set(n)
-    val t = tail.get
-    if ((t ne null) && tail.compareAndSet(t, null)) schedule(t)
+    val t = tail
+    if ((t ne null) && instance.compareAndSwapObject(this, tailOffset, t, null)) schedule(t)
   }
 
   /** Pass the message `a` to the mailbox of this actor */
@@ -42,8 +45,8 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
     val n = act(t, batch)
     if (n ne t) schedule(n)
     else {
-      tail.set(t)
-      if ((t.get ne null) && tail.compareAndSet(t, null)) schedule(t)
+      tail = t
+      if ((t.get ne null) && instance.compareAndSwapObject(this, tailOffset, t, null)) schedule(t)
     }
   }
 
@@ -62,9 +65,15 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   }
 }
 
+private[actors] class Tail[A] {
+  @volatile protected var tail: Node[A] = new Node[A]
+}
+
 private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
 
-object Actor2 extends ActorFunctions2 with ActorInstances2
+object Actor2 extends ActorFunctions2 with ActorInstances2 {
+  private val tailOffset = instance.objectFieldOffset(classOf[Tail[AnyRef]].getDeclaredField("tail"))
+}
 
 trait ActorInstances2 {
   implicit def actorContravariant: Contravariant[Actor2] = new Contravariant[Actor2] {
