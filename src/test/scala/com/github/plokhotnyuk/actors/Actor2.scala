@@ -38,7 +38,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
   private def act(t: Node[A]): Unit = {
-    val n = batch(t, 1024)
+    val n = batch(t, 256)
     if (n ne t) strategy(act(n))
     else {
       state.set(0)
