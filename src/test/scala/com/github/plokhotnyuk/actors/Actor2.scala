@@ -39,7 +39,7 @@ final class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _, 
   /** Pass the message `a` to the mailbox of this actor */
   def apply(a: A): Unit = this ! a
 
-  def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
+  def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError, batch)(strategy)
 
   private def schedule(t: Node[A]): Unit = strategy {
     val n = act(t, batch)
