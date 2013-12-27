@@ -84,7 +84,7 @@ trait ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  val reThrowError: Throwable => Unit = throw _
+  private[actors] val reThrowError: Throwable => Unit = throw _
 
   def actor[A](handler: A => Unit, onError: Throwable => Unit = reThrowError, batch: Int = 1024)
               (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError, batch)(s)
