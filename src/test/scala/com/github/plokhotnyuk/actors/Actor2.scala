@@ -42,10 +42,8 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
 
   private def act(t: Node[A]): Unit = {
     val n = batchHandle(t, batch)
-    if (n ne t) {
-      n.a = null.asInstanceOf[A] // to avoid possible memory leak when queue is empty or actor waiting for execution
-      strategy(act(n))
-    } else {
+    if (n ne t) strategy(act(n))
+    else {
       tail = n
       if ((n.get ne null) && Actor2.resetTail(this, n)) strategy(act(n))
     }
@@ -57,9 +55,8 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
     if (n ne null) {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
-      }
-      if (i != 0) batchHandle(n, i - 1)
-      else n
+      } finally n.a = null.asInstanceOf[A]
+      if (i != 0) batchHandle(n, i - 1) else n
     } else t
   }
 }
