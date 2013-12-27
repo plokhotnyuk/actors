@@ -19,7 +19,7 @@ import scalaz.Contravariant
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _, batch: Int = 1024)
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _, batch: Int = 1024)
                           (implicit strategy: Strategy) extends Tail[A] {
   private val head = new AtomicReference(tail)
 
@@ -32,7 +32,7 @@ final class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _, 
     val n = new Node(a)
     head.getAndSet(n).set(n)
     val t = tail
-    if ((t ne null) && Actor2.resetTail(this, t)) schedule(t)
+    if ((t ne null) && Actor2.resetTail(this, t)) strategy(act(t))
   }
 
   /** Pass the message `a` to the mailbox of this actor */
@@ -40,23 +40,23 @@ final class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _, 
 
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError, batch)(strategy)
 
-  private def schedule(t: Node[A]): Unit = strategy {
-    val n = act(t, batch)
-    if (n ne t) schedule(n)
+  private def act(t: Node[A]): Unit = {
+    val n = batchHandle(t, batch)
+    if (n ne t) strategy(act(n))
     else {
-      tail = t
-      if ((t.get ne null) && Actor2.resetTail(this, t)) schedule(t)
+      tail = n
+      if ((n.get ne null) && Actor2.resetTail(this, n)) strategy(act(n))
     }
   }
 
   @annotation.tailrec
-  private def act(t: Node[A], i: Int): Node[A] = {
+  private def batchHandle(t: Node[A], i: Int): Node[A] = {
     val n = t.get
     if ((n ne null) && i > 0) {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
       }
-      act(n, i - 1)
+      batchHandle(n, i - 1)
     } else {
       t.a = null.asInstanceOf[A] // to avoid possible memory leak when queue is empty or actor waiting for execution
       t
@@ -72,7 +72,7 @@ private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[N
 
 object Actor2 extends ActorFunctions2 with ActorInstances2 {
   private val unsafe = Unsafe.instance
-  private val tailOffset = unsafe.objectFieldOffset(classOf[Tail[AnyRef]].getDeclaredField("tail"))
+  private val tailOffset = unsafe.objectFieldOffset(classOf[Tail[_]].getDeclaredField("tail"))
 
   def resetTail[A](a: Actor2[A], t: Node[A]): Boolean = unsafe.compareAndSwapObject(a, tailOffset, t, null)
 }
