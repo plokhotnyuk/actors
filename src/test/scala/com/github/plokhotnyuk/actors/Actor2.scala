@@ -42,8 +42,10 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
 
   private def act(t: Node[A]): Unit = {
     val n = batchHandle(t, batch)
-    if (n ne t) strategy(act(n))
-    else {
+    if (n ne t) {
+      n.a = null.asInstanceOf[A] // to avoid possible memory leak when queue is empty or actor waiting for execution
+      strategy(act(n))
+    } else {
       tail = n
       if ((n.get ne null) && Actor2.resetTail(this, n)) strategy(act(n))
     }
@@ -52,15 +54,13 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = thro
   @annotation.tailrec
   private def batchHandle(t: Node[A], i: Int): Node[A] = {
     val n = t.get
-    if ((n ne null) && i > 0) {
+    if (n ne null) {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
       }
-      batchHandle(n, i - 1)
-    } else {
-      t.a = null.asInstanceOf[A] // to avoid possible memory leak when queue is empty or actor waiting for execution
-      t
-    }
+      if (i != 0) batchHandle(n, i - 1)
+      else n
+    } else t
   }
 }
 
