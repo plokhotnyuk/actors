@@ -19,7 +19,7 @@ import scalaz.Contravariant
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = throw _, batch: Int = 1024)
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2.reThrowError, batch: Int = 1024)
                           (implicit strategy: Strategy) extends Tail[A] {
   private val head = new AtomicReference(tail)
 
@@ -84,7 +84,9 @@ trait ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  def actor[A](handler: A => Unit, onError: Throwable => Unit = throw _, batch: Int = 1024)
+  val reThrowError: Throwable => Unit = throw _
+
+  def actor[A](handler: A => Unit, onError: Throwable => Unit = reThrowError, batch: Int = 1024)
               (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError, batch)(s)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
