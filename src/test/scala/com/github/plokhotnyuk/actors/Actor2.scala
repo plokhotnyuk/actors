@@ -21,7 +21,7 @@ import scalaz.Contravariant
  */
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2.reThrowError, batch: Int = 1024)
                           (implicit strategy: Strategy) {
-  @volatile private var tail: Node[A] = new Node[A]
+  @volatile private var tail = new Node[A]
   private val head = new AtomicReference(tail)
 
   if (batch < 1) throw new IllegalArgumentException("batch should be greater than 0")
