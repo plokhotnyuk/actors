@@ -20,7 +20,8 @@ import scalaz.Contravariant
  * @tparam A       The type of messages accepted by this actor.
  */
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2.reThrowError, batch: Int = 1024)
-                          (implicit strategy: Strategy) extends Tail[A] {
+                          (implicit strategy: Strategy) {
+  @volatile private var tail: Node[A] = new Node[A]
   private val head = new AtomicReference(tail)
 
   if (batch < 1) throw new IllegalArgumentException("batch should be greater than 0")
@@ -63,15 +64,11 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   }
 }
 
-private[actors] class Tail[A] {
-  @volatile protected var tail: Node[A] = new Node[A]
-}
-
 private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
 
 object Actor2 extends ActorFunctions2 with ActorInstances2 {
   private val unsafe = Unsafe.instance
-  private val tailOffset = unsafe.objectFieldOffset(classOf[Tail[_]].getDeclaredField("tail"))
+  private val tailOffset = unsafe.objectFieldOffset(classOf[Actor2[_]].getDeclaredField("tail"))
 
   def resetTail[A](a: Actor2[A], t: Node[A]): Boolean = unsafe.compareAndSwapObject(a, tailOffset, t, null)
 }
