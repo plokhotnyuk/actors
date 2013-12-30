@@ -1,6 +1,5 @@
 package com.github.plokhotnyuk.actors
 
-import scala.concurrent.util.Unsafe
 import java.util.concurrent.atomic.AtomicReference
 import scalaz.concurrent.{Strategy, Run}
 import scalaz.Contravariant
@@ -19,7 +18,7 @@ import scalaz.Contravariant
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2.reThrowError, batch: Int = 1024)
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2Utils.rethrowError, batch: Int = 1024)
                           (implicit strategy: Strategy) {
   @volatile private var tail = new Node[A]
   private val head = new AtomicReference(tail)
@@ -33,7 +32,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
     val n = new Node(a)
     head.getAndSet(n).set(n)
     val t = tail
-    if ((t ne null) && Actor2.resetTail(this, t)) strategy(act(t))
+    if ((t ne null) && Actor2Utils.resetTail(this, t)) strategy(act(t))
   }
 
   /** Pass the message `a` to the mailbox of this actor */
@@ -48,7 +47,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
       strategy(act(n))
     } else {
       tail = n
-      if ((n.get ne null) && Actor2.resetTail(this, n)) strategy(act(n))
+      if ((n.get ne null) && Actor2Utils.resetTail(this, n)) strategy(act(n))
     }
   }
 
@@ -66,12 +65,18 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
 
 private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
 
-object Actor2 extends ActorFunctions2 with ActorInstances2 {
+private object Actor2Utils {
+  import scala.concurrent.util.Unsafe
+
   private val unsafe = Unsafe.instance
   private val tailOffset = unsafe.objectFieldOffset(classOf[Actor2[_]].getDeclaredField("tail"))
 
+  val rethrowError: Throwable => Unit = throw _
+
   def resetTail[A](a: Actor2[A], t: Node[A]): Boolean = unsafe.compareAndSwapObject(a, tailOffset, t, null)
 }
+
+object Actor2 extends ActorFunctions2 with ActorInstances2
 
 trait ActorInstances2 {
   implicit def actorContravariant: Contravariant[Actor2] = new Contravariant[Actor2] {
@@ -80,9 +85,7 @@ trait ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  private[actors] val reThrowError: Throwable => Unit = throw _
-
-  def actor[A](handler: A => Unit, onError: Throwable => Unit = reThrowError, batch: Int = 1024)
+  def actor[A](handler: A => Unit, onError: Throwable => Unit = Actor2Utils.rethrowError, batch: Int = 1024)
               (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError, batch)(s)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
