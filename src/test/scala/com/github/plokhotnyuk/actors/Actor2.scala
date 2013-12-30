@@ -18,10 +18,12 @@ import scalaz.Contravariant
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2Utils.rethrowError)
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2Utils.rethrowError, batch: Int = 1024)
                           (implicit strategy: Strategy) {
   @volatile private var tail = new Node[A]
   private val head = new AtomicReference(tail)
+
+  if (batch < 1) throw new IllegalArgumentException("batch should be greater than 0")
 
   def toEffect: Run[A] = Run[A](a => this ! a)
 
@@ -36,10 +38,10 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   /** Pass the message `a` to the mailbox of this actor */
   def apply(a: A): Unit = this ! a
 
-  def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
+  def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError, batch)(strategy)
 
   private def act(t: Node[A]): Unit = {
-    val n = batchHandle(t, 256)
+    val n = batchHandle(t, batch)
     if (n ne t) {
       n.a = null.asInstanceOf[A]
       strategy(act(n))
@@ -83,8 +85,8 @@ trait ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  def actor[A](handler: A => Unit, onError: Throwable => Unit = Actor2Utils.rethrowError)
-              (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError)(s)
+  def actor[A](handler: A => Unit, onError: Throwable => Unit = Actor2Utils.rethrowError, batch: Int = 1024)
+              (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError, batch)(s)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
