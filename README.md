@@ -22,7 +22,7 @@ Evaluation of API and performance of different actor libraries written on Scala:
 
 ## Hardware required
 - CPU: 2 cores or more
-- RAM: 10Gb or greater
+- RAM: 6Gb or greater
 
 ## Software installed required
 - JDK: 1.7.0_x or newer
@@ -58,4 +58,3 @@ Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Wind
 
 #### out2*.txt
 Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, Ubuntu 12.04, JDK 1.7.0_25-b15 64-bit
-
