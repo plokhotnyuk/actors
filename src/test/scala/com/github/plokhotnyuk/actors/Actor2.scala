@@ -28,7 +28,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   /** Alias for `apply` */
   def !(a: A): Unit = {
     val n = new Node(a)
-    head.getAndSet(n).set(n)
+    head.getAndSet(n).n = n
     val t = tail
     if ((t ne null) && Actor2Utils.resetTail(this, t)) strategy(act(t))
   }
@@ -45,13 +45,13 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
       n.a = null.asInstanceOf[A]
     } else {
       tail = t
-      if ((t.get ne null) && Actor2Utils.resetTail(this, t)) strategy(act(t))
+      if ((t.n ne null) && Actor2Utils.resetTail(this, t)) strategy(act(t))
     }
   }
 
   @annotation.tailrec
   private def batch(t: Node[A], i: Int): Node[A] = {
-    val n = t.get
+    val n = t.n
     if ((n eq null) | i == 0) t
     else {
       try handler(n.a) catch {
@@ -62,7 +62,9 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   }
 }
 
-private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
+private class Node[A](var a: A = null.asInstanceOf[A]) {
+  @volatile var n: Node[A] = _
+}
 
 private object Actor2Utils {
   import scala.concurrent.util.Unsafe
