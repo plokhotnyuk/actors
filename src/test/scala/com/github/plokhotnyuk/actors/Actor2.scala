@@ -18,12 +18,10 @@ import scalaz.Contravariant
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2Utils.rethrowError, batch: Int = 1024)
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2Utils.rethrowError)
                           (implicit strategy: Strategy) {
   @volatile private var tail = new Node[A]
   private val head = new AtomicReference(tail)
-
-  if (batch < 1) throw new IllegalArgumentException("batch should be greater than 0")
 
   def toEffect: Run[A] = Run[A](a => this ! a)
 
@@ -38,28 +36,29 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   /** Pass the message `a` to the mailbox of this actor */
   def apply(a: A): Unit = this ! a
 
-  def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError, batch)(strategy)
+  def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
   private def act(t: Node[A]): Unit = {
-    val n = batchHandle(t, batch)
+    val n = batch(t, 128)
     if (n ne t) {
-      n.a = null.asInstanceOf[A]
       strategy(act(n))
+      n.a = null.asInstanceOf[A]
     } else {
-      tail = n
-      if ((n.get ne null) && Actor2Utils.resetTail(this, n)) strategy(act(n))
+      tail = t
+      if ((t.get ne null) && Actor2Utils.resetTail(this, t)) strategy(act(t))
     }
   }
 
   @annotation.tailrec
-  private def batchHandle(t: Node[A], i: Int): Node[A] = {
+  private def batch(t: Node[A], i: Int): Node[A] = {
     val n = t.get
-    if ((n ne null) && i != 0) {
+    if ((n eq null) | i == 0) t
+    else {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
       }
-      batchHandle(n, i - 1)
-    } else t
+      batch(n, i - 1)
+    }
   }
 }
 
@@ -85,8 +84,8 @@ trait ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  def actor[A](handler: A => Unit, onError: Throwable => Unit = Actor2Utils.rethrowError, batch: Int = 1024)
-              (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError, batch)(s)
+  def actor[A](handler: A => Unit, onError: Throwable => Unit = Actor2Utils.rethrowError)
+              (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError)(s)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
