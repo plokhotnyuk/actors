@@ -30,7 +30,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
     val n = new Node(a)
     head.getAndSet(n).n = n
     val t = tail
-    if ((t ne null) && Actor2Utils.resetTail(this, t)) schedule(t)
+    if ((t ne null) && Actor2Utils.resetTail(this, t)) strategy(act(t))
   }
 
   /** Pass the message `a` to the mailbox of this actor */
@@ -38,24 +38,26 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
 
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
-  private def schedule(t: Node[A]): Unit = strategy(act(t, 128))
+  private def act(t: Node[A]): Unit = {
+    val n = batchHandle(t, 128)
+    if (n ne t) {
+      n.a = null.asInstanceOf[A]
+      strategy(act(n))
+    } else {
+      tail = n
+      if ((n.n ne null) && Actor2Utils.resetTail(this, n)) strategy(act(n))
+    }
+  }
 
   @annotation.tailrec
-  private def act(t: Node[A], i: Int): Unit = {
+  private def batchHandle(t: Node[A], i: Int): Node[A] = {
     val n = t.n
     if ((n ne null) & i != 0) {
       try handler(n.a) catch {
         case ex: Throwable => onError(ex)
       }
-      act(n, i - 1)
-    } else {
-      if (n ne null) schedule(t)
-      else {
-        tail = t
-        if ((t.n ne null) && Actor2Utils.resetTail(this, t)) schedule(t)
-      }
-      t.a = null.asInstanceOf[A]
-    }
+      batchHandle(n, i - 1)
+    } else t
   }
 }
 
