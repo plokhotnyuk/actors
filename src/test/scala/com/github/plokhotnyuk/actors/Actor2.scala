@@ -18,19 +18,18 @@ import scalaz.Contravariant
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2Utils.rethrowError)
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2.rethrowError)
                           (implicit strategy: Strategy) {
-  @volatile private var tail = new Node[A]
-  private val head = new AtomicReference(tail)
+  private val head = new AtomicReference[Node[A]]
 
   def toEffect: Run[A] = Run[A](a => this ! a)
 
   /** Alias for `apply` */
   def !(a: A): Unit = {
     val n = new Node(a)
-    head.getAndSet(n).n = n
-    val t = tail
-    if ((t ne null) && Actor2Utils.resetTail(this, t)) strategy(act(t))
+    val h = head.getAndSet(n)
+    if (h ne null) h.n = n
+    else schedule(n)
   }
 
   /** Pass the message `a` to the mailbox of this actor */
@@ -38,42 +37,29 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
 
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
-  private def act(t: Node[A]): Unit = {
-    val n = batchHandle(t, 1024)
-    if (n ne t) {
-      strategy(act(n))
-      n.a = null.asInstanceOf[A]
-    } else {
-      tail = n
-      if ((n.n ne null) && Actor2Utils.resetTail(this, n)) strategy(act(n))
-    }
+  private def schedule(t: Node[A]): Unit = strategy(act(t, 1024))
+
+  @annotation.tailrec
+  private def reschedule(t: Node[A]): Unit = {
+    val n = t.n
+    if (n ne null) schedule(n)
+    else reschedule(t)
   }
 
   @annotation.tailrec
-  private def batchHandle(t: Node[A], i: Int): Node[A] = {
+  private def act(t: Node[A], i: Int): Unit = {
+    try handler(t.a) catch {
+      case ex: Throwable => onError(ex)
+    }
     val n = t.n
-    if ((n ne null) & i != 0) {
-      try handler(n.a) catch {
-        case ex: Throwable => onError(ex)
-      }
-      batchHandle(n, i - 1)
-    } else t
+    if ((n ne null) & i != 0) act(n, i - 1)
+    else if (n ne null) schedule(n)
+    else if (!head.compareAndSet(t, null)) reschedule(t)
   }
 }
 
 private class Node[A](var a: A = null.asInstanceOf[A]) {
   @volatile var n: Node[A] = _
-}
-
-private object Actor2Utils {
-  import scala.concurrent.util.Unsafe
-
-  private val unsafe = Unsafe.instance
-  private val tailOffset = unsafe.objectFieldOffset(classOf[Actor2[_]].getDeclaredField("tail"))
-
-  val rethrowError: Throwable => Unit = throw _
-
-  def resetTail[A](a: Actor2[A], t: Node[A]): Boolean = unsafe.compareAndSwapObject(a, tailOffset, t, null)
 }
 
 object Actor2 extends ActorFunctions2 with ActorInstances2
@@ -85,7 +71,9 @@ trait ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  def actor[A](handler: A => Unit, onError: Throwable => Unit = Actor2Utils.rethrowError)
+  val rethrowError: Throwable => Unit = throw _
+
+  def actor[A](handler: A => Unit, onError: Throwable => Unit = rethrowError)
               (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError)(s)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
