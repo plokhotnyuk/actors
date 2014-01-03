@@ -18,7 +18,7 @@ import scalaz.Contravariant
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2.rethrowError)
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2.rethrowError, batch: Int = 128)
                           (implicit strategy: Strategy) {
   private val head = new AtomicReference[Node[A]]
 
@@ -35,23 +35,23 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   /** Pass the message `a` to the mailbox of this actor */
   def apply(a: A): Unit = this ! a
 
-  def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
+  def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError, batch)(strategy)
 
-  private def schedule(t: Node[A]): Unit = strategy(act(t, 128))
+  private def schedule(t: Node[A]): Unit = strategy(act(t))
 
   @annotation.tailrec
-  private def reschedule(t: Node[A], n: Node[A]): Unit =
+  private def trySchedule(t: Node[A], n: Node[A]): Unit =
     if (n ne null) schedule(n)
-    else if (!head.compareAndSet(t, null)) reschedule(t, t.get)
+    else if (!head.compareAndSet(t, null)) trySchedule(t, t.get)
 
   @annotation.tailrec
-  private def act(t: Node[A], i: Int): Unit = {
+  private def act(t: Node[A], i: Int = batch): Unit = {
     try handler(t.a) catch {
       case ex: Throwable => onError(ex)
     }
     val n = t.get
     if ((n ne null) & i != 0) act(n, i - 1)
-    else reschedule(t, n)
+    else trySchedule(t, n)
   }
 }
 
@@ -68,8 +68,8 @@ trait ActorInstances2 {
 trait ActorFunctions2 {
   val rethrowError: Throwable => Unit = throw _
 
-  def actor[A](handler: A => Unit, onError: Throwable => Unit = rethrowError)
-              (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError)(s)
+  def actor[A](handler: A => Unit, onError: Throwable => Unit = rethrowError, batch: Int = 128)
+              (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError, batch)(s)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
