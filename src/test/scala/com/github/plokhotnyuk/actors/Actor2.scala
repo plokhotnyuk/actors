@@ -39,7 +39,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
   private def act(t: Node[A]): Unit = {
-    val n = batchHandle(t, 128)
+    val n = batchHandle(t, 1024)
     if (n ne t) {
       strategy(act(n))
       n.a = null.asInstanceOf[A]
