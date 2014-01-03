@@ -28,7 +28,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   def !(a: A): Unit = {
     val n = new Node(a)
     val h = head.getAndSet(n)
-    if (h ne null) h.n = n
+    if (h ne null) h.lazySet(n)
     else schedule(n)
   }
 
@@ -40,27 +40,22 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   private def schedule(t: Node[A]): Unit = strategy(act(t, 1024))
 
   @annotation.tailrec
-  private def reschedule(t: Node[A]): Unit = {
-    val n = t.n
+  private def reschedule(t: Node[A], n: Node[A]): Unit =
     if (n ne null) schedule(n)
-    else reschedule(t)
-  }
+    else if (!head.compareAndSet(t, null)) reschedule(t, t.get)
 
   @annotation.tailrec
   private def act(t: Node[A], i: Int): Unit = {
     try handler(t.a) catch {
       case ex: Throwable => onError(ex)
     }
-    val n = t.n
+    val n = t.get
     if ((n ne null) & i != 0) act(n, i - 1)
-    else if (n ne null) schedule(n)
-    else if (!head.compareAndSet(t, null)) reschedule(t)
+    else reschedule(t, n)
   }
 }
 
-private class Node[A](var a: A = null.asInstanceOf[A]) {
-  @volatile var n: Node[A] = _
-}
+private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
 
 object Actor2 extends ActorFunctions2 with ActorInstances2
 
