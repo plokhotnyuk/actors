@@ -37,7 +37,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
 
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
-  private def schedule(t: Node[A]): Unit = strategy(act(t, 1024))
+  private def schedule(t: Node[A]): Unit = strategy(act(t, 128))
 
   @annotation.tailrec
   private def reschedule(t: Node[A], n: Node[A]): Unit =
