@@ -15,6 +15,7 @@ import scalaz.Contravariant
  *
  * @param handler  The message handler
  * @param onError  Exception handler, called if the message handler throws any `Throwable`.
+ * @param batch    Number of messages handled in bulk, for tuning of trade off between fairness and efficiency
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
