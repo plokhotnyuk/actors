@@ -30,7 +30,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
     val n = new Node(a)
     val h = head.getAndSet(n)
     if (h ne null) h.lazySet(n)
-    else schedule(n)
+    else strategy(act(n))
   }
 
   /** Pass the message `a` to the mailbox of this actor */
@@ -38,21 +38,26 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
 
   def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError, batch)(strategy)
 
-  private def schedule(t: Node[A]): Unit = strategy(act(t))
+  private def act(n: Node[A]): Unit = act(n, batch)
 
   @annotation.tailrec
-  private def trySchedule(t: Node[A], n: Node[A]): Unit =
-    if (n ne null) schedule(n)
-    else if (!head.compareAndSet(t, null)) trySchedule(t, t.get)
-
-  @annotation.tailrec
-  private def act(t: Node[A], i: Int = batch): Unit = {
-    try handler(t.a) catch {
+  private def act(n: Node[A], i: Int): Unit = {
+    try handler(n.a) catch {
       case ex: Throwable => onError(ex)
     }
-    val n = t.get
-    if ((n ne null) & i != 0) act(n, i - 1)
-    else trySchedule(t, n)
+    val n2 = n.get
+    if ((n2 ne null) & i != 0) act(n2, i - 1)
+    else if (n2 ne null) strategy(act(n2))
+    else strategy(tryAct(n))
+  }
+
+  private def tryAct(n: Node[A]): Unit = if (!head.compareAndSet(n, null)) act(next(n), batch)
+
+  @annotation.tailrec
+  private def next(n: Node[A]): Node[A] = {
+    val n2 = n.get
+    if (n2 ne null) n2
+    else next(n)
   }
 }
 

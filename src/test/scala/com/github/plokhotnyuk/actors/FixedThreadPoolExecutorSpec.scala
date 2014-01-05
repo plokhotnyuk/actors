@@ -9,6 +9,23 @@ class FixedThreadPoolExecutorSpec extends Specification {
   val NumOfTasks = 1000
   val Timeout = 1000 // in millis
 
+  "can execute tasks in parallel threads" in {
+    val n = Runtime.getRuntime.availableProcessors()
+    withExecutor(new FixedThreadPoolExecutor(n, spin = -1)) { //TODO: fix to pass w/o spin = -1
+      e =>
+        val latch = new CountDownLatch(n)
+        for (i <- 1 to n) {
+          e.execute(new Runnable() {
+            def run(): Unit = {
+              Thread.sleep(Timeout - 100)
+              latch.countDown()
+            }
+          })
+        }
+        assertCountDown(latch)
+    }
+  }
+
   "all submitted before shutdown tasks executes async" in {
     withExecutor(new FixedThreadPoolExecutor) {
       e =>
@@ -22,7 +39,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
         }
         taskRequests.acquire(NumOfTasks)
         e.shutdown()
-        assertCountDown(latch, "Should execute a command")
+        assertCountDown(latch)
     }
   }
 
@@ -37,7 +54,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
           })
         }
         e.isTerminated must_== false
-        assertCountDown(latch, "Should propagate an exception")
+        assertCountDown(latch)
     }
   }
 
@@ -57,7 +74,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
           }
         }
         e.execute(task2)
-        assertCountDown(latch, "Two new tasks should be submitted during completing a task")
+        assertCountDown(latch)
         e.shutdownNow() must_== new java.util.LinkedList
         e.isShutdown must_== true
     }
@@ -105,7 +122,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
             latch.countDown()
           }
         })
-        assertCountDown(latch, "Shutdown should be called")
+        assertCountDown(latch)
         e.awaitTermination(Timeout, TimeUnit.MILLISECONDS) must_== true
         e.isTerminated must_== true
     }
@@ -145,7 +162,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
         })
         e.shutdownNow() must beEmpty
         executed.get must_== false
-        assertCountDown(latch, "OnReject should be called")
+        assertCountDown(latch)
     }
   }
 
@@ -164,6 +181,6 @@ class FixedThreadPoolExecutorSpec extends Specification {
       executor.awaitTermination(Timeout, TimeUnit.MILLISECONDS)
     }
 
-  private def assertCountDown(latch: CountDownLatch, hint: String) =
-    latch.await(Timeout, TimeUnit.MILLISECONDS) must_== true
+  private def assertCountDown(latch: CountDownLatch) =
+    (latch.await(Timeout, TimeUnit.MILLISECONDS) must_== true) and (latch.getCount must_== 0)
 }
