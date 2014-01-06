@@ -61,7 +61,7 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
   }
 }
 
-private class Node[A](var a: A = null.asInstanceOf[A]) extends AtomicReference[Node[A]]
+private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
 object Actor2 extends ActorFunctions2 with ActorInstances2
 
