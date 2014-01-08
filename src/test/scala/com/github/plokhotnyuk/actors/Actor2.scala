@@ -20,7 +20,7 @@ import scalaz.Contravariant
  * @tparam A       The type of messages accepted by this actor.
  */
 final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2.rethrowError, batch: Int = 128)
-                          (implicit strategy: Strategy) {
+                          (implicit val strategy: Strategy) {
   private val head = new AtomicReference[Node[A]]
 
   def toEffect: Run[A] = Run[A](a => this ! a)
