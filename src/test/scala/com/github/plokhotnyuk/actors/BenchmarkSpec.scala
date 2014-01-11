@@ -10,6 +10,7 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.{Example, Step, Fragments}
 import org.specs2.execute.Success
 import scala.concurrent.forkjoin.{ForkJoinWorkerThread => ScalaForkJoinWorkerThread, ForkJoinPool => ScalaForkJoinPool}
+import jsr166e.{ForkJoinWorkerThread => JSR166eForkJoinWorkerThread, ForkJoinPool => JSR166eForkJoinPool}
 
 @RunWith(classOf[JUnitRunner])
 abstract class BenchmarkSpec extends Specification {
@@ -44,6 +45,12 @@ object BenchmarkSpec {
   def roundToParallelism(n: Int): Int = (n / parallelism) * parallelism
 
   def createExecutorService(): ExecutorService = {
+    def createJSR166eForkJoinWorkerThreadFactory() = new JSR166eForkJoinPool.ForkJoinWorkerThreadFactory {
+      def newThread(pool: JSR166eForkJoinPool) = new JSR166eForkJoinWorkerThread(pool) {
+        override def run(): Unit = withSetup(super.run())
+      }
+    }
+
     def createScalaForkJoinWorkerThreadFactory() = new ScalaForkJoinPool.ForkJoinWorkerThreadFactory {
       def newThread(pool: ScalaForkJoinPool) = new ScalaForkJoinWorkerThread(pool) {
         override def run(): Unit = withSetup(super.run())
@@ -63,9 +70,9 @@ object BenchmarkSpec {
     }
 
     executorServiceType match {
+      case "jsr166e-forkjoin-pool" => new JSR166eForkJoinPool(poolSize, createJSR166eForkJoinWorkerThreadFactory(), null, true)
       case "scala-forkjoin-pool" => new ScalaForkJoinPool(poolSize, createScalaForkJoinWorkerThreadFactory(), null, true)
       case "java-forkjoin-pool" => new ForkJoinPool(poolSize, createJavaForkJoinWorkerThreadFactory(), null, true)
-      case "fixed-thread-pool" => new FixedThreadPoolExecutor(poolSize, createThreadFactory(), onReject = _ => ())
       case "thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 60, TimeUnit.SECONDS,
         new LinkedBlockingQueue[Runnable](), createThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
       case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
