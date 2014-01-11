@@ -10,7 +10,7 @@ script:
   - sudo cat /proc/cpuinfo
   - sudo cat /proc/meminfo
   - mvn -B -DskipTests test
-  - mvn -B -Dbenchmark.executorServiceType=fixed-thread-pool test -Ptravis
+  - mvn -B -Dbenchmark.executorServiceType=jsr166e-thread-pool test -Ptravis
   - mvn -B -Dbenchmark.executorServiceType=scala-forkjoin-pool test -Ptravis
   - mvn -B -Dbenchmark.executorServiceType=java-forkjoin-pool test -Ptravis
   - mvn -B -Dbenchmark.executorServiceType=thread-pool test -Ptravis
