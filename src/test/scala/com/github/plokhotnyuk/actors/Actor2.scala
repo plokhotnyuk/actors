@@ -15,30 +15,29 @@ import scalaz.Contravariant
  *
  * @param handler  The message handler
  * @param onError  Exception handler, called if the message handler throws any `Throwable`.
- * @param batch    Number of messages handled in bulk, for tuning of trade off between fairness and efficiency
  * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
  * @tparam A       The type of messages accepted by this actor.
  */
-final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2.rethrowError, batch: Int = 128)
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = ActorUtils.rethrowError)
                           (implicit val strategy: Strategy) {
   private val head = new AtomicReference[Node[A]]
 
-  def toEffect: Run[A] = Run[A](a => this ! a)
+  val toEffect: Run[A] = Run[A](a => this ! a)
 
   /** Alias for `apply` */
   def !(a: A): Unit = {
     val n = new Node(a)
     val h = head.getAndSet(n)
     if (h ne null) h.lazySet(n)
-    else strategy(act(n))
+    else schedule(n)
   }
 
   /** Pass the message `a` to the mailbox of this actor */
   def apply(a: A): Unit = this ! a
 
-  def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError, batch)(strategy)
+  def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
-  private def act(n: Node[A]): Unit = act(n, batch)
+  private def schedule(n: Node[A]): Unit = strategy(act(n, 1024))
 
   @annotation.tailrec
   private def act(n: Node[A], i: Int): Unit = {
@@ -46,12 +45,12 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
-    if ((n2 ne null) & i != 0) act(n2, i - 1)
-    else if (n2 ne null) strategy(act(n2))
-    else strategy(tryAct(n))
+    if (n2 eq null) scheduleLastTry(n)
+    else if (i == 0) schedule(n2)
+    else act(n2, i - 1)
   }
 
-  private def tryAct(n: Node[A]): Unit = if (!head.compareAndSet(n, null)) act(next(n), batch)
+  private def scheduleLastTry(n: Node[A]): Unit = strategy(if (!head.compareAndSet(n, null)) act(next(n), 1024))
 
   @annotation.tailrec
   private def next(n: Node[A]): Node[A] = {
@@ -63,6 +62,10 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
 
 private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
+private object ActorUtils {
+  private[actors] val rethrowError: Throwable => Unit = throw _
+}
+
 object Actor2 extends ActorFunctions2 with ActorInstances2
 
 trait ActorInstances2 {
@@ -72,10 +75,8 @@ trait ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  val rethrowError: Throwable => Unit = throw _
-
-  def actor[A](handler: A => Unit, onError: Throwable => Unit = rethrowError, batch: Int = 128)
-              (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError, batch)(s)
+  def actor[A](handler: A => Unit, onError: Throwable => Unit = ActorUtils.rethrowError)
+              (implicit s: Strategy): Actor2[A] = new Actor2[A](handler, onError)(s)
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
