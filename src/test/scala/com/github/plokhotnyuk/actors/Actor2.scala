@@ -50,7 +50,9 @@ final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Acto
     else act(n2, i - 1)
   }
 
-  private def scheduleLastTry(n: Node[A]): Unit = strategy(if (!head.compareAndSet(n, null)) act(next(n), 1024))
+  private def scheduleLastTry(n: Node[A]): Unit = strategy(lastTry(n))
+
+  private def lastTry(n: Node[A]): Unit = if (!head.compareAndSet(n, null)) act(next(n), 1024)
 
   @annotation.tailrec
   private def next(n: Node[A]): Node[A] = {
