@@ -61,3 +61,9 @@ Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, Ubunt
 
 #### out3*.txt
 Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, Ubuntu 12.04, JDK 1.8.0_ea-b120 64-bit
+
+#### out4.txt
+Intel(R) Xeon(R) CPU E3-1240 V2 @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, CentOS 6.3, JDK 1.7.0_45-b18 64-bit
+
+#### out5.txt
+Intel(R) Xeon(R) CPU E3-1240 V2 @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, CentOS 6.3, 1.8.0-ea-b87 64-bit
