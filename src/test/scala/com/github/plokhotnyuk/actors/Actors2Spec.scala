@@ -3,7 +3,7 @@ package com.github.plokhotnyuk.actors
 import java.util.concurrent._
 import scala.collection.mutable
 import org.specs2.mutable.Specification
-import scalaz.concurrent.Actor
+import com.github.plokhotnyuk.actors.Actor2._
 
 class Actors2Spec extends Specification {
   val NumOfMessages = 1000
@@ -12,54 +12,54 @@ class Actors2Spec extends Specification {
   implicit val executor = Executors.newFixedThreadPool(NumOfThreads)
 
   "code executes async" in {
-    val latch = new CountDownLatch(1)
-    val actor = Actor2[Int]((i: Int) => latch.countDown())
-    actor ! 1
-    assertCountDown(latch)
+    val l = new CountDownLatch(1)
+    val a = actor[Int]((i: Int) => l.countDown())
+    a ! 1
+    assertCountDown(l)
   }
 
   "code errors are caught and can be handled" in {
-    val latch = new CountDownLatch(1)
-    val actor = new Actor[Int]((i: Int) => throw new RuntimeException(), (ex: Throwable) => latch.countDown())
-    actor ! 1
-    assertCountDown(latch)
+    val l = new CountDownLatch(1)
+    val a = actor[Int]((i: Int) => throw new RuntimeException(), (ex: Throwable) => l.countDown())
+    a ! 1
+    assertCountDown(l)
   }
 
   "actors exchange messages without loss" in {
-    val latch = new CountDownLatch(NumOfMessages)
-    var actor1: Actor2[Int] = null
-    val actor2 = Actor2[Int]((i: Int) => actor1 ! i - 1)
-    actor1 = Actor2[Int] {
+    val l = new CountDownLatch(NumOfMessages)
+    var a1: Actor2[Int] = null
+    val a2 = actor[Int]((i: Int) => a1 ! i - 1)
+    a1 = actor[Int] {
       (i: Int) =>
-        if (i == latch.getCount) {
-          if (i != 0) actor2 ! i - 1
-          latch.countDown()
-          latch.countDown()
+        if (i == l.getCount) {
+          if (i != 0) a2 ! i - 1
+          l.countDown()
+          l.countDown()
         }
     }
-    actor1 ! NumOfMessages
-    assertCountDown(latch)
+    a1 ! NumOfMessages
+    assertCountDown(l)
   }
 
   "actor handles messages in order of sending by each thread" in {
-    val latch = new CountDownLatch(NumOfMessages)
-    val actor = countingDownActor(latch)
+    val l = new CountDownLatch(NumOfMessages)
+    val a = countingDownActor(l)
     for (j <- 1 to NumOfThreads) fork {
       for (i <- 1 to NumOfMessagesPerThread) {
-        actor ! (j, i)
+        a ! (j, i)
       }
     }
-    assertCountDown(latch)
+    assertCountDown(l)
   }
 
-  def countingDownActor(latch: CountDownLatch): Actor2[(Int, Int)] = Actor2[(Int, Int)] {
+  def countingDownActor(l: CountDownLatch): Actor2[(Int, Int)] = actor[(Int, Int)] {
     val ms = mutable.Map[Int, Int]()
 
     (m: (Int, Int)) =>
       val (j, i) = m
       if (ms.getOrElse(j, 0) + 1 == i) {
         ms.put(j, i)
-        latch.countDown()
+        l.countDown()
       }
   }
 
