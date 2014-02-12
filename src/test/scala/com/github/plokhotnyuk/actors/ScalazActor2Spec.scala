@@ -66,6 +66,17 @@ class ScalazActor2Spec extends BenchmarkSpec {
     })
   }
 
+  "Enqueueing 10M" in {
+    val l = new CountDownLatch(1)
+    footprinted(10000000) {
+      val t = Message()
+      val a = actor[Message](_ => l.await(), _ => ())
+      a ! t
+      () => a ! t
+    }
+    l.countDown()
+  }
+
   def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {

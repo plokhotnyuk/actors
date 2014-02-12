@@ -77,6 +77,26 @@ class ScalaActorSpec extends BenchmarkSpec {
     })
   }
 
+  "Enqueueing 10M" in {
+    val l = new CountDownLatch(1)
+    footprinted(10000000) {
+      val t = Message()
+      val a = new Actor {
+        def act(): Unit =
+          loop {
+            react {
+              case _ => l.await()
+            }
+          }
+
+        override def scheduler = customScheduler
+      }
+      a ! t
+      () => a ! t
+    }
+    l.countDown()
+  }
+
   def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map(_ => (playerActor(l, n / p / 2), playerActor(l, n / p / 2)))

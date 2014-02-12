@@ -80,43 +80,19 @@ object BenchmarkSpec {
   }
 
   def timed[A](n: Int, printAvgLatency: Boolean = false)(benchmark: => A): A = {
-    val t = System.currentTimeMillis * 1000000L
+    val t = System.nanoTime()
     val ct = osMBean.getProcessCpuTime
     val r = benchmark
     val cd = osMBean.getProcessCpuTime - ct
-    val d = System.currentTimeMillis * 1000000L - t
+    val d = System.nanoTime() - t
     println(f"$n%,d ops")
-    println(f"${d / 1000000L}%,d ms")
+    println(f"$d%,d ns")
     println(if (printAvgLatency) f"${d / n}%,d ns/op" else f"${(n * 1000000000L) / d}%,d ops/s")
     println(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
     r
   }
 
   def footprintedCollect[A](n: Int)(construct: () => A): Seq[A] = {
-    def usedMemory: Long = {
-      def usage: Long = Runtime.getRuntime.totalMemory() - Runtime.getRuntime.freeMemory()
-
-      @annotation.tailrec
-      def forceGC(prevUsage: Long = usage): Long = {
-        System.gc()
-        Thread.sleep(10)
-        val currUsage = usage
-        if (currUsage >= prevUsage) forceGC(prevUsage)
-        else currUsage
-      }
-
-      @annotation.tailrec
-      def fullGC(precision: Double, prevUsage: Long = forceGC()): Long = {
-        System.gc()
-        Thread.sleep(10)
-        val currUsage = usage
-        if ((prevUsage - currUsage).toDouble / prevUsage > precision) fullGC(precision, currUsage)
-        else currUsage
-      }
-
-      fullGC(0.001)
-    }
-
     val as = Array.ofDim(n).asInstanceOf[Array[A]]
     val u = usedMemory
     timed(n) {
@@ -131,7 +107,44 @@ object BenchmarkSpec {
     as
   }
 
-  def fork(code: => Unit): Unit = 
+  def footprinted[A](n: Int)(code: () => Unit): Unit = {
+    val u = usedMemory
+    timed(n) {
+      var i = n
+      while (i > 0) {
+        code()
+        i -= 1
+      }
+    }
+    val m = usedMemory - u
+    println(f"${m / n}%,d bytes per instance")
+  }
+
+  def usedMemory: Long = {
+    def usage: Long = Runtime.getRuntime.totalMemory() - Runtime.getRuntime.freeMemory()
+
+    @annotation.tailrec
+    def forceGC(prevUsage: Long = usage): Long = {
+      System.gc()
+      Thread.sleep(10)
+      val currUsage = usage
+      if (currUsage >= prevUsage) forceGC(prevUsage)
+      else currUsage
+    }
+
+    @annotation.tailrec
+    def fullGC(precision: Double, prevUsage: Long = forceGC()): Long = {
+      System.gc()
+      Thread.sleep(10)
+      val currUsage = usage
+      if ((prevUsage - currUsage).toDouble / prevUsage > precision) fullGC(precision, currUsage)
+      else currUsage
+    }
+
+    fullGC(0.001)
+  }
+
+  def fork(code: => Unit): Unit =
     new Thread {
       override def run(): Unit = withSetup(code)
     }.start()

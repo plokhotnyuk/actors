@@ -72,6 +72,18 @@ class AkkaActorSpec extends BenchmarkSpec {
     footprintedCollect(1000000)(() => actorSystem.actorOf(props))
   }
 
+  "Enqueueing 10M" in {
+    val l = new CountDownLatch(1)
+    val props = Props(classOf[BlockingAkkaActor], l).withDispatcher("akka.actor.benchmark-dispatcher")
+    footprinted(10000000) {
+      val t = Message()
+      val a = actorSystem.actorOf(props)
+      a ! t
+      () => a ! t
+    }
+    l.countDown()
+  }
+
   def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map(_ => (playerActor(l, n / p / 2), playerActor(l, n / p / 2)))
@@ -134,6 +146,12 @@ class PlayerAkkaActor(l: CountDownLatch, n: Int) extends Actor {
 class MinimalAkkaActor extends Actor {
   def receive = {
     case _ =>
+  }
+}
+
+class BlockingAkkaActor(l: CountDownLatch) extends Actor {
+  def receive = {
+    case _ => l.await()
   }
 }
 
