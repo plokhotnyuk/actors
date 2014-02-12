@@ -19,52 +19,30 @@ import scalaz.Contravariant
  * [[http://www.1024cores.net/home/lock-free-algorithms/queues/non-intrusive-mpsc-node-based-queue]]
  *
  * @see scalaz.concurrent.Promise for a use case.
+ *
+ * @param handler  The message handler
+ * @param onError  Exception handler, called if the message handler throws any `Throwable`.
+ * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
+ * @tparam A       The type of messages accepted by this actor.
  */
-trait Actor2[A] {
-  /** Pass the message `a` to the mailbox of this actor */
-  def !(a: A): Unit
-
-  def contramap[B](f: B => A): Actor2[B]
-
-  def apply(a: A): Unit = this ! a
+final case class Actor2[A](handler: A => Unit, onError: Throwable => Unit = Actor2.rethrow)
+                          (implicit val strategy: Strategy) {
+  private val head = new AtomicReference[Node[A]]
 
   def toEffect: Run[A] = Run[A](a => this ! a)
-}
 
-object Actor2 extends ActorInstances2 with ActorFunctions2
-
-sealed abstract class ActorInstances2 {
-  implicit val actorContravariant: Contravariant[Actor2] = new Contravariant[Actor2] {
-    def contramap[A, B](r: Actor2[A])(f: B => A): Actor2[B] = r contramap f
-  }
-}
-
-trait ActorFunctions2 {
-  /**
-   * Create actor
-   *
-   * @param handler  The message handler
-   * @param onError  Exception handler, called if the message handler throws any `Throwable`.
-   * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
-   * @tparam A       The type of messages accepted by this actor.
-   * @return         An instance of actor
-   */
-  def actor[A](handler: A => Unit, onError: Throwable => Unit = ActorUtils.rethrowError)
-              (implicit strategy: Strategy): Actor2[A] = new DefaultActor2[A](handler, onError)(strategy)
-
-  implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
-}
-
-private class DefaultActor2[A](handler: A => Unit, onError: Throwable => Unit)
-                              (implicit val strategy: Strategy) extends AtomicReference[Node[A]] with Actor2[A] {
+  /** Alias for `apply` */
   def !(a: A): Unit = {
     val n = new Node(a)
-    val h = getAndSet(n)
+    val h = head.getAndSet(n)
     if (h ne null) h.lazySet(n)
     else schedule(n)
   }
 
-  def contramap[B](f: B => A): Actor2[B] = new DefaultActor2[B](b => this ! f(b), onError)(strategy)
+  /** Pass the message `a` to the mailbox of this actor */
+  def apply(a: A): Unit = this ! a
+
+  def contramap[B](f: B => A): Actor2[B] = new Actor2[B](b => this ! f(b), onError)(strategy)
 
   private def schedule(n: Node[A]): Unit = strategy(act(n))
 
@@ -81,7 +59,7 @@ private class DefaultActor2[A](handler: A => Unit, onError: Throwable => Unit)
 
   private def scheduleLastTry(n: Node[A]): Unit = strategy(lastTry(n))
 
-  private def lastTry(n: Node[A]): Unit = if (!compareAndSet(n, null)) act(next(n))
+  private def lastTry(n: Node[A]): Unit = if (!head.compareAndSet(n, null)) act(next(n))
 
   @annotation.tailrec
   private def next(n: Node[A]): Node[A] = {
@@ -93,6 +71,19 @@ private class DefaultActor2[A](handler: A => Unit, onError: Throwable => Unit)
 
 private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
-private object ActorUtils {
-  val rethrowError: Throwable => Unit = throw _
+object Actor2 extends Actor2Instances with Actor2Functions
+
+sealed abstract class Actor2Instances {
+  implicit val actorContravariant: Contravariant[Actor2] = new Contravariant[Actor2] {
+    def contramap[A, B](r: Actor2[A])(f: B => A): Actor2[B] = r contramap f
+  }
+}
+
+trait Actor2Functions {
+  val rethrow: Throwable => Unit = throw _
+
+  def actor[A](handler: A => Unit, onError: Throwable => Unit = rethrow)
+              (implicit strategy: Strategy): Actor2[A] = new Actor2[A](handler, onError)(strategy)
+
+  implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
