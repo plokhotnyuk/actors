@@ -19,6 +19,7 @@ Evaluation of API and performance of different actor libraries written on Scala:
 * `Ping latency` - average latency of sending of a ping message between two actors
 * `Ping throughput 10K` - throughput of executor service by sending of a ping message between 10K pairs of actors
 * `Initiation 1M` - memory footprint of 1M minimal actors and initiation time in a single thread 
+* `Enqueueing 10M` - memory footprint of internal actor queue per submitted message
 
 ## Hardware required
 - CPU: 2 cores or more
@@ -55,3 +56,10 @@ Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Wind
 
 #### out1*.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_60-b04 64-bit
+
+#### out2*.txt
+Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, Ubuntu 12.04, JDK 1.8.0_ea-b128 64-bit
+
+#### out3*.txt
+Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, Ubuntu 12.04, JDK 1.7.0_51-b13 64-bit
+
