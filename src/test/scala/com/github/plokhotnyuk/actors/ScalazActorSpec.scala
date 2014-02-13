@@ -22,9 +22,9 @@ class ScalazActorSpec extends BenchmarkSpec {
   "Single-producer sending" in {
     val n = 32000000
     val l = new CountDownLatch(1)
-    val a = tickActor(l, n)
+    val a = countActor(l, n)
     timed(n) {
-      sendTicks(a, n)
+      sendMessages(a, n)
       l.await()
     }
   }
@@ -32,10 +32,10 @@ class ScalazActorSpec extends BenchmarkSpec {
   "Multi-producer sending" in {
     val n = roundToParallelism(28000000)
     val l = new CountDownLatch(1)
-    val a = tickActor(l, n)
+    val a = countActor(l, n)
     timed(n) {
       for (j <- 1 to parallelism) fork {
-        sendTicks(a, n / parallelism)
+        sendMessages(a, n / parallelism)
       }
       l.await()
     }
@@ -44,10 +44,10 @@ class ScalazActorSpec extends BenchmarkSpec {
   "Max throughput" in {
     val n = roundToParallelism(72000000)
     val l = new CountDownLatch(parallelism)
-    val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
+    val as = for (j <- 1 to parallelism) yield countActor(l, n / parallelism)
     timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / parallelism)
+        sendMessages(a, n / parallelism)
       }
       l.await()
     }
@@ -61,24 +61,37 @@ class ScalazActorSpec extends BenchmarkSpec {
     ping(28000000, 10000)
   }
 
-  "Initiation 1M" in {
-    footprintedCollect(1000000)(() => actor[Message] {
-      (m: Message) =>
-    })
+  "Initiation" in {
+    footprintedAndTimedCollect(10000000)(() => actor[Message](_ => ()))
   }
 
-  "Enqueueing 10M" in {
-    val l = new CountDownLatch(1)
-    footprinted(10000000) {
-      val t = Message()
-      val a = actor[Message](_ => l.await(), _ => ())
-      a ! t
-      () => a ! t
+  "Enqueueing" in {
+    val n = 50000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    footprintedAndTimed(n) {
+      sendMessages(a, n)
     }
-    l.countDown()
+    l1.countDown()
+    l2.await()
   }
 
-  def ping(n: Int, p: Int): Unit = {
+  "Dequeueing" in {
+    val n = 50000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    sendMessages(a, n)
+    timed(n) {
+      l1.countDown()
+      l2.await()
+    }
+  }
+
+  def shutdown(): Unit = fullShutdown(executorService)
+
+  private def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
@@ -105,16 +118,29 @@ class ScalazActorSpec extends BenchmarkSpec {
     }
   }
 
-  def shutdown(): Unit = fullShutdown(executorService)
+  private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Actor[Message] =
+    actor[Message] {
+      var blocked = true
+      var i = n - 1
+      (m: Message) =>
+        if (blocked) {
+          l1.await()
+          blocked = false
+        } else {
+          i -= 1
+          if (i == 0) l2.countDown()
+        }
+    }
 
-  private def tickActor(l: CountDownLatch, n: Int): Actor[Message] = actor[Message] {
-    var i = n
-    (m: Message) =>
-      i -= 1
-      if (i == 0) l.countDown()
-  }
+  private def countActor(l: CountDownLatch, n: Int): Actor[Message] =
+    actor[Message] {
+      var i = n
+      (m: Message) =>
+        i -= 1
+        if (i == 0) l.countDown()
+    }
 
-  private def sendTicks(a: Actor[Message], n: Int): Unit = {
+  private def sendMessages(a: Actor[Message], n: Int): Unit = {
     val t = Message()
     var i = n
     while (i > 0) {

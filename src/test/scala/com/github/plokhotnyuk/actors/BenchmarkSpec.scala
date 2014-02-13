@@ -87,15 +87,26 @@ object BenchmarkSpec {
     val d = System.nanoTime() - t
     println(f"$n%,d ops")
     println(f"$d%,d ns")
-    println(if (printAvgLatency) f"${d / n}%,d ns/op" else f"${(n * 1000000000L) / d}%,d ops/s")
+    if (printAvgLatency) println(f"${d / n}%,d ns/op")
+    else println(f"${(n * 1000000000L) / d}%,d ops/s")
     println(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
     r
   }
 
-  def footprintedCollect[A](n: Int)(construct: () => A): Seq[A] = {
-    val as = Array.ofDim(n).asInstanceOf[Array[A]]
+  def footprintedAndTimed[A](n: Int)(benchmark: => A): A = {
     val u = usedMemory
-    timed(n) {
+    val r = timed(n)(benchmark)
+    val m = usedMemory - u
+    val b = bytesPerInstance(m, n)
+    println(f"$b%,d bytes per instance")
+    r
+  }
+
+  def footprintedAndTimedCollect[A](n: Int)(construct: () => A): Seq[A] = {
+    val r = Array.ofDim(n).asInstanceOf[Array[A]]
+    val u = usedMemory
+    timed(n, printAvgLatency = true) {
+      val as = r
       var i = n
       while (i > 0) {
         i -= 1
@@ -103,22 +114,12 @@ object BenchmarkSpec {
       }
     }
     val m = usedMemory - u
-    println(f"${m / n}%,d bytes per instance")
-    as
+    val b = bytesPerInstance(m, n)
+    println(f"$b%,d bytes per instance")
+    r
   }
 
-  def footprinted[A](n: Int)(code: () => Unit): Unit = {
-    val u = usedMemory
-    timed(n) {
-      var i = n
-      while (i > 0) {
-        code()
-        i -= 1
-      }
-    }
-    val m = usedMemory - u
-    println(f"${m / n}%,d bytes per instance")
-  }
+  def bytesPerInstance(m: Long, n: Int): Int = Math.round(m.toDouble / n / 4).toInt * 4
 
   def usedMemory: Long = {
     def usage: Long = Runtime.getRuntime.totalMemory() - Runtime.getRuntime.freeMemory()

@@ -20,9 +20,9 @@ class LiftActorSpec extends BenchmarkSpec {
   "Single-producer sending" in {
     val n = 12000000
     val l = new CountDownLatch(1)
-    val a = tickActor(l, n)
+    val a = countActor(l, n)
     timed(n) {
-      sendTicks(a, n)
+      sendMessages(a, n)
       l.await()
     }
   }
@@ -30,10 +30,10 @@ class LiftActorSpec extends BenchmarkSpec {
   "Multi-producer sending" in {
     val n = roundToParallelism(10000000)
     val l = new CountDownLatch(1)
-    val a = tickActor(l, n)
+    val a = countActor(l, n)
     timed(n) {
       for (j <- 1 to parallelism) fork {
-        sendTicks(a, n / parallelism)
+        sendMessages(a, n / parallelism)
       }
       l.await()
     }
@@ -42,10 +42,10 @@ class LiftActorSpec extends BenchmarkSpec {
   "Max throughput" in {
     val n = roundToParallelism(20000000)
     val l = new CountDownLatch(parallelism)
-    val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
+    val as = for (j <- 1 to parallelism) yield countActor(l, n / parallelism)
     timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / parallelism)
+        sendMessages(a, n / parallelism)
       }
       l.await()
     }
@@ -59,30 +59,41 @@ class LiftActorSpec extends BenchmarkSpec {
     ping(5000000, 10000)
   }
 
-  "Initiation 1M" in {
-    footprintedCollect(1000000)(() => new LiftActor {
+  "Initiation" in {
+    footprintedAndTimedCollect(10000000)(() => new LiftActor {
       def messageHandler = {
         case _ =>
       }
     })
   }
 
-  "Enqueueing 10M" in {
-    val l = new CountDownLatch(1)
-    footprinted(10000000) {
-      val t = Message()
-      val a = new LiftActor {
-        def messageHandler = {
-          case _ => l.await()
-        }
-      }
-      a ! t
-      () => a ! t
+  "Enqueueing" in {
+    val n = 10000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    footprintedAndTimed(n) {
+      sendMessages(a, n)
     }
-    l.countDown()
+    l1.countDown()
+    l2.await()
   }
 
-  def ping(n: Int, p: Int): Unit = {
+  "Dequeueing" in {
+    val n = 10000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    sendMessages(a, n)
+    timed(n) {
+      l1.countDown()
+      l2.await()
+    }
+  }
+
+  def shutdown(): Unit = LAScheduler.shutdown()
+
+  private def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
@@ -123,9 +134,28 @@ class LiftActorSpec extends BenchmarkSpec {
     }
   }
 
-  def shutdown(): Unit = LAScheduler.shutdown()
+  private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): LiftActor =
+    new LiftActor {
+      private var blocked = true
+      private var i = n - 1
 
-  private def tickActor(l: CountDownLatch, n: Int): LiftActor =
+      override val highPriorityReceive = Full[PartialFunction[Any, Unit]]({
+        case _ =>
+          if (blocked) {
+            l1.await()
+            blocked = false
+          } else {
+            i -= 1
+            if (i == 0) l2.countDown()
+          }
+      })
+
+      def messageHandler = {
+        case _ =>
+      }
+    }
+
+  private def countActor(l: CountDownLatch, n: Int): LiftActor =
     new LiftActor {
       private var i = n
 
@@ -140,7 +170,7 @@ class LiftActorSpec extends BenchmarkSpec {
       }
     }
 
-  private def sendTicks(a: LiftActor, n: Int): Unit = {
+  private def sendMessages(a: LiftActor, n: Int): Unit = {
     val m = Message()
     var i = n
     while (i > 0) {

@@ -28,9 +28,9 @@ class AkkaActorSpec extends BenchmarkSpec {
   "Single-producer sending" in {
     val n = 12000000
     val l = new CountDownLatch(1)
-    val a = tickActor(l, n)
+    val a = countActor(l, n)
     timed(n) {
-      sendTicks(a, n)
+      sendMessages(a, n)
       l.await()
     }
   }
@@ -38,10 +38,10 @@ class AkkaActorSpec extends BenchmarkSpec {
   "Multi-producer sending" in {
     val n = roundToParallelism(12000000)
     val l = new CountDownLatch(1)
-    val a = tickActor(l, n)
+    val a = countActor(l, n)
     timed(n) {
       for (j <- 1 to parallelism) fork {
-        sendTicks(a, n / parallelism)
+        sendMessages(a, n / parallelism)
       }
       l.await()
     }
@@ -50,10 +50,10 @@ class AkkaActorSpec extends BenchmarkSpec {
   "Max throughput" in {
     val n = roundToParallelism(32000000)
     val l = new CountDownLatch(parallelism)
-    val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
+    val as = for (j <- 1 to parallelism) yield countActor(l, n / parallelism)
     timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / parallelism)
+        sendMessages(a, n / parallelism)
       }
       l.await()
     }
@@ -67,31 +67,32 @@ class AkkaActorSpec extends BenchmarkSpec {
     ping(7000000, 10000)
   }
 
-  "Initiation 1M" in {
+  "Initiation" in {
     val props = Props(classOf[MinimalAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher")
-    footprintedCollect(1000000)(() => actorSystem.actorOf(props))
+    footprintedAndTimedCollect(500000)(() => actorSystem.actorOf(props))
   }
 
-  "Enqueueing 10M" in {
-    val l = new CountDownLatch(1)
-    val props = Props(classOf[BlockingAkkaActor], l).withDispatcher("akka.actor.benchmark-dispatcher")
-    footprinted(10000000) {
-      val t = Message()
-      val a = actorSystem.actorOf(props)
-      a ! t
-      () => a ! t
+  "Enqueueing" in {
+    val n = 10000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    footprintedAndTimed(n) {
+      sendMessages(a, n)
     }
-    l.countDown()
+    l1.countDown()
+    l2.await()
   }
 
-  def ping(n: Int, p: Int): Unit = {
-    val l = new CountDownLatch(p * 2)
-    val as = (1 to p).map(_ => (playerActor(l, n / p / 2), playerActor(l, n / p / 2)))
-    timed(n, printAvgLatency = p == 1) {
-      as.foreach {
-        case (a1, a2) => a1.tell(Message(), a2)
-      }
-      l.await()
+  "Dequeueing" in {
+    val n = 10000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    sendMessages(a, n)
+    timed(n) {
+      l1.countDown()
+      l2.await()
     }
   }
 
@@ -100,10 +101,28 @@ class AkkaActorSpec extends BenchmarkSpec {
     actorSystem.awaitTermination()
   }
 
-  private def tickActor(l: CountDownLatch, n: Int): ActorRef =
-    actorSystem.actorOf(Props(classOf[TickAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
+  private def ping(n: Int, p: Int): Unit = {
+    val l = new CountDownLatch(p * 2)
+    val as = (1 to p).map(_ => (replayAndCountActor(l, n / p / 2), replayAndCountActor(l, n / p / 2)))
+    timed(n, printAvgLatency = p == 1) {
+      as.foreach {
+        case (a1, a2) => a1.tell(Message(), a2)
+      }
+      l.await()
+    }
+  }
 
-  private def sendTicks(a: ActorRef, n: Int): Unit = {
+  private def replayAndCountActor(l: CountDownLatch, n: Int): ActorRef =
+    actorSystem.actorOf(Props(classOf[ReplayAndCountAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
+
+
+  private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): ActorRef =
+    actorSystem.actorOf(Props(classOf[BlockableCountAkkaActor], l1, l2, n).withDispatcher("akka.actor.benchmark-dispatcher"))
+
+  private def countActor(l: CountDownLatch, n: Int): ActorRef =
+    actorSystem.actorOf(Props(classOf[CountAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
+
+  private def sendMessages(a: ActorRef, n: Int): Unit = {
     val m = Message()
     var i = n
     while (i > 0) {
@@ -111,25 +130,9 @@ class AkkaActorSpec extends BenchmarkSpec {
       i -= 1
     }
   }
-
-  private def playerActor(l: CountDownLatch, n: Int): ActorRef =
-    actorSystem.actorOf(Props(classOf[PlayerAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
 }
 
-class TickAkkaActor(l: CountDownLatch, n: Int) extends Actor {
-  private var i = n
-
-  def receive = {
-    case _ =>
-      i -= 1
-      if (i == 0) {
-        l.countDown()
-        context.stop(self)
-      }
-  }
-}
-
-class PlayerAkkaActor(l: CountDownLatch, n: Int) extends Actor {
+class ReplayAndCountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
   private var i = n
 
   def receive = {
@@ -143,15 +146,41 @@ class PlayerAkkaActor(l: CountDownLatch, n: Int) extends Actor {
   }
 }
 
-class MinimalAkkaActor extends Actor {
+class CountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
+  private var i = n
+
   def receive = {
     case _ =>
+      i -= 1
+      if (i == 0) {
+        l.countDown()
+        context.stop(self)
+      }
   }
 }
 
-class BlockingAkkaActor(l: CountDownLatch) extends Actor {
+class BlockableCountAkkaActor(l1: CountDownLatch, l2: CountDownLatch, n: Int) extends Actor {
+  private var blocked = true
+  private var i = n - 1
+
   def receive = {
-    case _ => l.await()
+    case _ =>
+      if (blocked) {
+        l1.await()
+        blocked = false
+      } else {
+        i -= 1
+        if (i == 0) {
+          l2.countDown()
+          context.stop(self)
+        }
+      }
+  }
+}
+
+class MinimalAkkaActor extends Actor {
+  def receive = {
+    case _ =>
   }
 }
 

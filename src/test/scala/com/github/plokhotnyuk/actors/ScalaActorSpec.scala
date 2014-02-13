@@ -25,9 +25,9 @@ class ScalaActorSpec extends BenchmarkSpec {
   "Single-producer sending" in {
     val n = 800000
     val l = new CountDownLatch(1)
-    val a = tickActor(l, n)
+    val a = countActor(l, n)
     timed(n) {
-      sendTicks(a, n)
+      sendMessages(a, n)
       l.await()
     }
   }
@@ -35,10 +35,10 @@ class ScalaActorSpec extends BenchmarkSpec {
   "Multi-producer sending" in {
     val n = roundToParallelism(800000)
     val l = new CountDownLatch(1)
-    val a = tickActor(l, n)
+    val a = countActor(l, n)
     timed(n) {
       for (j <- 1 to parallelism) fork {
-        sendTicks(a, n / parallelism)
+        sendMessages(a, n / parallelism)
       }
       l.await()
     }
@@ -47,10 +47,10 @@ class ScalaActorSpec extends BenchmarkSpec {
   "Max throughput" in {
     val n = roundToParallelism(2000000)
     val l = new CountDownLatch(parallelism)
-    val as = for (j <- 1 to parallelism) yield tickActor(l, n / parallelism)
+    val as = for (j <- 1 to parallelism) yield countActor(l, n / parallelism)
     timed(n) {
       for (a <- as) fork {
-        sendTicks(a, n / parallelism)
+        sendMessages(a, n / parallelism)
       }
       l.await()
     }
@@ -64,42 +64,47 @@ class ScalaActorSpec extends BenchmarkSpec {
     ping(1200000, 10000)
   }
 
-  "Initiation 1M" in {
-    footprintedCollect(1000000)(() => new Actor {
-      def act(): Unit =
-        loop {
-          react {
-            case _ =>
-          }
+  "Initiation" in {
+    footprintedAndTimedCollect(500000)(() => new Actor {
+      def act(): Unit = loop {
+        react {
+          case _ =>
         }
+      }
 
       override def scheduler = customScheduler
-    })
+    }.start())
   }
 
-  "Enqueueing 10M" in {
-    val l = new CountDownLatch(1)
-    footprinted(10000000) {
-      val t = Message()
-      val a = new Actor {
-        def act(): Unit =
-          loop {
-            react {
-              case _ => l.await()
-            }
-          }
-
-        override def scheduler = customScheduler
-      }
-      a ! t
-      () => a ! t
+  "Enqueueing" in {
+    val n = 1000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    footprintedAndTimed(n) {
+      sendMessages(a, n)
     }
-    l.countDown()
+    l1.countDown()
+    l2.await()
   }
 
-  def ping(n: Int, p: Int): Unit = {
+  "Dequeueing" in {
+    val n = 1000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    sendMessages(a, n)
+    timed(n) {
+      l1.countDown()
+      l2.await()
+    }
+  }
+
+  def shutdown(): Unit = customScheduler.shutdown()
+
+  private def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
-    val as = (1 to p).map(_ => (playerActor(l, n / p / 2), playerActor(l, n / p / 2)))
+    val as = (1 to p).map(_ => (replayAndCountActor(l, n / p / 2), replayAndCountActor(l, n / p / 2)))
     timed(n, printAvgLatency = p == 1) {
       as.foreach {
         case (a1, a2) => a1.send(Message(), a2)
@@ -108,28 +113,62 @@ class ScalaActorSpec extends BenchmarkSpec {
     }
   }
 
-  def shutdown(): Unit = customScheduler.shutdown()
-
-  private def tickActor(l: CountDownLatch, n: Int): Actor =
+  private def replayAndCountActor(l: CountDownLatch, n: Int): Actor =
     new Actor {
       private var i = n
 
       def act(): Unit =
-        loop {
-          react {
-            case _ =>
-              i -= 1
-              if (i == 0) {
-                l.countDown()
-                exit()
-              }
-          }
-        }
+        loop(react {
+          case m =>
+            if (i > 0) sender ! m
+            i -= 1
+            if (i == 0) {
+              l.countDown()
+              exit()
+            }
+        })
 
       override def scheduler = customScheduler
     }.start()
 
-  private def sendTicks(a: Actor, n: Int): Unit = {
+  private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Actor =
+    new Actor {
+      private var blocked = true
+      private var i = n - 1
+
+      def act(): Unit =
+        loop(react {
+          case _ =>
+            if (blocked) {
+              l1.await()
+              blocked = false
+            } else {
+              i -= 1
+              if (i == 0) l2.countDown()
+            }
+        })
+
+      override def scheduler = customScheduler
+    }.start()
+
+  private def countActor(l: CountDownLatch, n: Int): Actor =
+    new Actor {
+      private var i = n
+
+      def act(): Unit =
+        loop(react {
+          case _ =>
+            i -= 1
+            if (i == 0) {
+              l.countDown()
+              exit()
+            }
+        })
+
+      override def scheduler = customScheduler
+    }.start()
+
+  private def sendMessages(a: Actor, n: Int): Unit = {
     val m = Message()
     var i = n
     while (i > 0) {
@@ -137,24 +176,4 @@ class ScalaActorSpec extends BenchmarkSpec {
       i -= 1
     }
   }
-
-  private def playerActor(l: CountDownLatch, n: Int): Actor =
-    new Actor {
-      private var i = n
-
-      def act(): Unit =
-        loop {
-          react {
-            case m =>
-              if (i > 0) sender ! m
-              i -= 1
-              if (i == 0) {
-                l.countDown()
-                exit()
-              }
-          }
-        }
-
-      override def scheduler = customScheduler
-    }.start()
 }
