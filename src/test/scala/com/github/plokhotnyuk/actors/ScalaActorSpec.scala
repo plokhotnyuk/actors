@@ -144,7 +144,10 @@ class ScalaActorSpec extends BenchmarkSpec {
               blocked = false
             } else {
               i -= 1
-              if (i == 0) l2.countDown()
+              if (i == 0) {
+                l2.countDown()
+                exit()
+              }
             }
         })
 
