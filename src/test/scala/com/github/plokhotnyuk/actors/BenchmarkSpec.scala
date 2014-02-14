@@ -138,7 +138,7 @@ object BenchmarkSpec {
       System.gc()
       Thread.sleep(10)
       val currUsage = usage
-      if ((prevUsage - currUsage).toDouble / prevUsage > precision) fullGC(precision, currUsage)
+      if (Math.abs(prevUsage - currUsage).toDouble / prevUsage > precision) fullGC(precision, currUsage)
       else currUsage
     }
 

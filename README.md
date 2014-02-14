@@ -18,8 +18,9 @@ Evaluation of API and performance of different actor libraries written on Scala:
 * `Max throughput` - throughput of message sending from several external threads to several actors
 * `Ping latency` - average latency of sending of a ping message between two actors
 * `Ping throughput 10K` - throughput of executor service by sending of a ping message between 10K pairs of actors
-* `Initiation 1M` - memory footprint of 1M minimal actors and initiation time in a single thread 
-* `Enqueueing 10M` - memory footprint of internal actor queue per submitted message
+* `Initiation` - memory footprint of minimal actors and initiation time in a single thread 
+* `Enqueueing` - memory footprint of internal actor queue per submitted message and submition throughput in a single thread
+* `Dequeueing` - message handling throughput in a single thread
 
 ## Hardware required
 - CPU: 2 cores or more
@@ -52,14 +53,7 @@ Results of running mvnAll.bat or mvnAll.sh scripts on different environments wit
 pool size set to default (number of available processors), 1, 10 or 100 values accordingly:
 
 #### out0*.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.8.0-ea-b128 64-bit
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.8.0-ea-b129 64-bit
 
 #### out1*.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_60-b04 64-bit
-
-#### out2*.txt
-Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, Ubuntu 12.04, JDK 1.8.0_ea-b128 64-bit
-
-#### out3*.txt
-Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, Ubuntu 12.04, JDK 1.7.0_51-b13 64-bit
-
