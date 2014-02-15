@@ -22,6 +22,42 @@ class ScalaActorSpec extends BenchmarkSpec {
     override def isActive: Boolean = !executorService.isShutdown
   }
 
+  "Enqueueing" in {
+    val n = 1000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    footprintedAndTimed(n) {
+      sendMessages(a, n)
+    }
+    l1.countDown()
+    l2.await()
+  }
+
+  "Dequeueing" in {
+    val n = 1000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    sendMessages(a, n)
+    timed(n) {
+      l1.countDown()
+      l2.await()
+    }
+  }
+
+  "Initiation" in {
+    footprintedAndTimedCollect(500000)(() => new Actor {
+      def act(): Unit = loop {
+        react {
+          case _ =>
+        }
+      }
+
+      override def scheduler = customScheduler
+    }.start())
+  }
+
   "Single-producer sending" in {
     val n = 800000
     val l = new CountDownLatch(1)
@@ -62,42 +98,6 @@ class ScalaActorSpec extends BenchmarkSpec {
 
   "Ping throughput 10K" in {
     ping(1200000, 10000)
-  }
-
-  "Initiation" in {
-    footprintedAndTimedCollect(500000)(() => new Actor {
-      def act(): Unit = loop {
-        react {
-          case _ =>
-        }
-      }
-
-      override def scheduler = customScheduler
-    }.start())
-  }
-
-  "Enqueueing" in {
-    val n = 1000000
-    val l1 = new CountDownLatch(1)
-    val l2 = new CountDownLatch(1)
-    val a = blockableCountActor(l1, l2, n)
-    footprintedAndTimed(n) {
-      sendMessages(a, n)
-    }
-    l1.countDown()
-    l2.await()
-  }
-
-  "Dequeueing" in {
-    val n = 1000000
-    val l1 = new CountDownLatch(1)
-    val l2 = new CountDownLatch(1)
-    val a = blockableCountActor(l1, l2, n)
-    sendMessages(a, n)
-    timed(n) {
-      l1.countDown()
-      l2.await()
-    }
   }
 
   def shutdown(): Unit = customScheduler.shutdown()

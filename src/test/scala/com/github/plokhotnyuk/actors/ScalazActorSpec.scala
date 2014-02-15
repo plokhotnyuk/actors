@@ -19,6 +19,34 @@ class ScalazActorSpec extends BenchmarkSpec {
     }
   }
 
+  "Enqueueing" in {
+    val n = 50000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    footprintedAndTimed(n) {
+      sendMessages(a, n)
+    }
+    l1.countDown()
+    l2.await()
+  }
+
+  "Dequeueing" in {
+    val n = 50000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    sendMessages(a, n)
+    timed(n) {
+      l1.countDown()
+      l2.await()
+    }
+  }
+
+  "Initiation" in {
+    footprintedAndTimedCollect(10000000)(() => actor[Message](_ => ()))
+  }
+
   "Single-producer sending" in {
     val n = 32000000
     val l = new CountDownLatch(1)
@@ -59,34 +87,6 @@ class ScalazActorSpec extends BenchmarkSpec {
 
   "Ping throughput 10K" in {
     ping(28000000, 10000)
-  }
-
-  "Initiation" in {
-    footprintedAndTimedCollect(10000000)(() => actor[Message](_ => ()))
-  }
-
-  "Enqueueing" in {
-    val n = 50000000
-    val l1 = new CountDownLatch(1)
-    val l2 = new CountDownLatch(1)
-    val a = blockableCountActor(l1, l2, n)
-    footprintedAndTimed(n) {
-      sendMessages(a, n)
-    }
-    l1.countDown()
-    l2.await()
-  }
-
-  "Dequeueing" in {
-    val n = 50000000
-    val l1 = new CountDownLatch(1)
-    val l2 = new CountDownLatch(1)
-    val a = blockableCountActor(l1, l2, n)
-    sendMessages(a, n)
-    timed(n) {
-      l1.countDown()
-      l2.await()
-    }
   }
 
   def shutdown(): Unit = fullShutdown(executorService)

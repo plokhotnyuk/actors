@@ -17,6 +17,38 @@ class LiftActorSpec extends BenchmarkSpec {
     def shutdown(): Unit = fullShutdown(executorService)
   }
 
+  "Enqueueing" in {
+    val n = 10000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    footprintedAndTimed(n) {
+      sendMessages(a, n)
+    }
+    l1.countDown()
+    l2.await()
+  }
+
+  "Dequeueing" in {
+    val n = 10000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    sendMessages(a, n)
+    timed(n) {
+      l1.countDown()
+      l2.await()
+    }
+  }
+
+  "Initiation" in {
+    footprintedAndTimedCollect(10000000)(() => new LiftActor {
+      def messageHandler = {
+        case _ =>
+      }
+    })
+  }
+
   "Single-producer sending" in {
     val n = 12000000
     val l = new CountDownLatch(1)
@@ -57,38 +89,6 @@ class LiftActorSpec extends BenchmarkSpec {
 
   "Ping throughput 10K" in {
     ping(5000000, 10000)
-  }
-
-  "Initiation" in {
-    footprintedAndTimedCollect(10000000)(() => new LiftActor {
-      def messageHandler = {
-        case _ =>
-      }
-    })
-  }
-
-  "Enqueueing" in {
-    val n = 10000000
-    val l1 = new CountDownLatch(1)
-    val l2 = new CountDownLatch(1)
-    val a = blockableCountActor(l1, l2, n)
-    footprintedAndTimed(n) {
-      sendMessages(a, n)
-    }
-    l1.countDown()
-    l2.await()
-  }
-
-  "Dequeueing" in {
-    val n = 10000000
-    val l1 = new CountDownLatch(1)
-    val l2 = new CountDownLatch(1)
-    val a = blockableCountActor(l1, l2, n)
-    sendMessages(a, n)
-    timed(n) {
-      l1.countDown()
-      l2.await()
-    }
   }
 
   def shutdown(): Unit = LAScheduler.shutdown()

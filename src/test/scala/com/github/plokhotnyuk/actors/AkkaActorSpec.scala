@@ -25,6 +25,35 @@ class AkkaActorSpec extends BenchmarkSpec {
     """))
   val actorSystem = ActorSystem("system", config)
 
+  "Enqueueing" in {
+    val n = 10000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    footprintedAndTimed(n) {
+      sendMessages(a, n)
+    }
+    l1.countDown()
+    l2.await()
+  }
+
+  "Dequeueing" in {
+    val n = 10000000
+    val l1 = new CountDownLatch(1)
+    val l2 = new CountDownLatch(1)
+    val a = blockableCountActor(l1, l2, n)
+    sendMessages(a, n)
+    timed(n) {
+      l1.countDown()
+      l2.await()
+    }
+  }
+
+  "Initiation" in {
+    val props = Props(classOf[MinimalAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher")
+    footprintedAndTimedCollect(500000)(() => actorSystem.actorOf(props))
+  }
+
   "Single-producer sending" in {
     val n = 12000000
     val l = new CountDownLatch(1)
@@ -65,35 +94,6 @@ class AkkaActorSpec extends BenchmarkSpec {
 
   "Ping throughput 10K" in {
     ping(7000000, 10000)
-  }
-
-  "Initiation" in {
-    val props = Props(classOf[MinimalAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher")
-    footprintedAndTimedCollect(500000)(() => actorSystem.actorOf(props))
-  }
-
-  "Enqueueing" in {
-    val n = 10000000
-    val l1 = new CountDownLatch(1)
-    val l2 = new CountDownLatch(1)
-    val a = blockableCountActor(l1, l2, n)
-    footprintedAndTimed(n) {
-      sendMessages(a, n)
-    }
-    l1.countDown()
-    l2.await()
-  }
-
-  "Dequeueing" in {
-    val n = 10000000
-    val l1 = new CountDownLatch(1)
-    val l2 = new CountDownLatch(1)
-    val a = blockableCountActor(l1, l2, n)
-    sendMessages(a, n)
-    timed(n) {
-      l1.countDown()
-      l2.await()
-    }
   }
 
   def shutdown(): Unit = {
