@@ -28,10 +28,7 @@ abstract class BenchmarkSpec extends Specification {
     case other => other
   } ^ Step(shutdown())
 
-  def setup(): Unit = {
-    usedMemory
-    println(s"Executor service type: $executorServiceType")
-  }
+  def setup(): Unit = println(s"Executor service type: $executorServiceType")
 
   def shutdown()
 }
@@ -104,7 +101,7 @@ object BenchmarkSpec {
     @annotation.tailrec
     def forceGC(prevUsage: Long = usage): Long = {
       System.gc()
-      Thread.sleep(50)
+      Thread.sleep(10)
       val currUsage = usage
       if (currUsage >= prevUsage) forceGC(prevUsage)
       else currUsage
@@ -113,13 +110,13 @@ object BenchmarkSpec {
     @annotation.tailrec
     def fullGC(precision: Double, prevUsage: Long = forceGC()): Long = {
       System.gc()
-      Thread.sleep(50)
+      Thread.sleep(10)
       val currUsage = usage
       if (Math.abs(prevUsage - currUsage).toDouble / prevUsage > precision) fullGC(precision, currUsage)
       else currUsage
     }
 
-    fullGC(0.005)
+    fullGC(0.01)
   }
 
   def fullShutdown(e: ExecutorService): Unit = {
