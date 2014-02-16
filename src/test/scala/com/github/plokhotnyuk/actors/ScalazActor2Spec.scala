@@ -71,9 +71,10 @@ class ScalazActor2Spec extends BenchmarkSpec {
   "Max throughput" in {
     val n = roundToParallelism(72000000)
     val l = new CountDownLatch(parallelism)
+    val as = for (j <- 1 to parallelism) yield countActor(l, n / parallelism)
     timed(n) {
-      for (j <- 1 to parallelism) fork {
-        sendMessages(countActor(l, n / parallelism), n / parallelism)
+      for (a <- as) fork {
+        sendMessages(a, n / parallelism)
       }
       l.await()
     }
