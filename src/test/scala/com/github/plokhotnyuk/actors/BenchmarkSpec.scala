@@ -28,7 +28,10 @@ abstract class BenchmarkSpec extends Specification {
     case other => other
   } ^ Step(shutdown())
 
-  def setup(): Unit = println(s"Executor service type: $executorServiceType")
+  def setup(): Unit = {
+    usedMemory
+    println(s"Executor service type: $executorServiceType")
+  }
 
   def shutdown()
 }
