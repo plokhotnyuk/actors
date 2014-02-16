@@ -104,7 +104,7 @@ object BenchmarkSpec {
     @annotation.tailrec
     def forceGC(prevUsage: Long = usage): Long = {
       System.gc()
-      Thread.sleep(50)
+      Thread.sleep(100)
       val currUsage = usage
       if (currUsage >= prevUsage) forceGC(prevUsage)
       else currUsage
@@ -113,13 +113,13 @@ object BenchmarkSpec {
     @annotation.tailrec
     def fullGC(precision: Double, prevUsage: Long = forceGC()): Long = {
       System.gc()
-      Thread.sleep(50)
+      Thread.sleep(100)
       val currUsage = usage
       if (Math.abs(prevUsage - currUsage).toDouble / prevUsage > precision) fullGC(precision, currUsage)
       else currUsage
     }
 
-    fullGC(0.001)
+    fullGC(0.005)
   }
 
   def fullShutdown(e: ExecutorService): Unit = {
