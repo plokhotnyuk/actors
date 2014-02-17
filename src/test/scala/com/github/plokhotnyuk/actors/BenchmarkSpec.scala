@@ -116,7 +116,7 @@ object BenchmarkSpec {
       else currUsage
     }
 
-    fullGC(0.01)
+    fullGC(0.001)
   }
 
   def fullShutdown(e: ExecutorService): Unit = {
