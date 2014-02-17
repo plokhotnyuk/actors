@@ -13,14 +13,14 @@ Evaluation of API and performance of different actor libraries written on Scala:
 [![Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
 
 ## Benchmarks and their goals
+* `Enqueueing` - memory footprint of internal actor queue per submitted message and submition throughput in a single thread
+* `Dequeueing` - message handling throughput in a single thread
+* `Initiation` - memory footprint of minimal actors and initiation time in a single thread
 * `Single-producer sending` - throughput of message sending from external thread to an actor
 * `Multi-producer sending` - throughput of message sending from several external threads to an actor
 * `Max throughput` - throughput of message sending from several external threads to several actors
 * `Ping latency` - average latency of sending of a ping message between two actors
 * `Ping throughput 10K` - throughput of executor service by sending of a ping message between 10K pairs of actors
-* `Initiation` - memory footprint of minimal actors and initiation time in a single thread 
-* `Enqueueing` - memory footprint of internal actor queue per submitted message and submition throughput in a single thread
-* `Dequeueing` - message handling throughput in a single thread
 
 ## Hardware required
 - CPU: 2 cores or more
