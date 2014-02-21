@@ -189,11 +189,12 @@ class RootAkkaActor extends Actor {
     case p: Props =>
       sender ! context.actorOf(p)
     case "Initiation" =>
-      sender ! footprintedAndTimedCollect(500000){
+      footprintedAndTimedCollect(500000){
         val p = Props(classOf[MinimalAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher")
         val c = context
         () => c.actorOf(p)
       }
+      sender ! "Done"
   }
 }
 
