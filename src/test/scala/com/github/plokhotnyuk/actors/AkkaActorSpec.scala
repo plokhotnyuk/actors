@@ -1,7 +1,7 @@
 package com.github.plokhotnyuk.actors
 
 import akka.actor._
-import java.util.concurrent.{ExecutorService, ThreadFactory, CountDownLatch}
+import java.util.concurrent.{TimeUnit, ExecutorService, ThreadFactory, CountDownLatch}
 import com.typesafe.config.ConfigFactory._
 import com.typesafe.config.Config
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
@@ -28,7 +28,7 @@ class AkkaActorSpec extends BenchmarkSpec {
     """))
   val actorSystem = ActorSystem("system", config)
   val root = actorSystem.actorOf(Props(classOf[RootAkkaActor]))
-  implicit val timeout = Timeout(1000000)
+  implicit val timeout = Timeout(1000, TimeUnit.SECONDS)
 
   "Enqueueing" in {
     val n = 10000000
