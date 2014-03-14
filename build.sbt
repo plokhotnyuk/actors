@@ -15,9 +15,9 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.3.0" % "test",
   "net.liftweb" %% "lift-actor" % "2.6-M2" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.4-RC3" % "test",
-  "org.scalaz" %% "scalaz-concurrent" % "7.1.0-M5" % "test",
-  "io.gatling" %% "jsr166e" % "1.0" % "test",
-  "org.specs2" %% "specs2" % "2.3.4-scalaz-7.1.0-M3" % "test",
+  "org.scalaz" %% "scalaz-concurrent" % "7.1.0-M6" % "test",
+  "io.gatling" % "jsr166e" % "1.0" % "test",
+  "org.specs2" %% "specs2" % "2.3.10-scalaz-7.1.0-M6" % "test",
   "junit" % "junit-dep" % "4.11" % "test"
 )
 
