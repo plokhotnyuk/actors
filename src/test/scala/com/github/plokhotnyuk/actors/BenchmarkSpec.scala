@@ -10,7 +10,7 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.{Example, Step, Fragments}
 import org.specs2.execute.Success
 import scala.concurrent.forkjoin.{ForkJoinPool => ScalaForkJoinPool}
-import jsr166e.{ForkJoinPool => JSR166eForkJoinPool}
+import com.twitter.jsr166e.{ForkJoinPool => JSR166eForkJoinPool}
 
 @RunWith(classOf[JUnitRunner])
 abstract class BenchmarkSpec extends Specification {
