@@ -25,9 +25,6 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * `java.util.concurrent.RejectedExecutionException` can occurs only after shutdown
  * when pool was initialized with default implementation of `onReject: Runnable => Unit`.
  *
- * An implementation of task queue based on MultiLane (over MPMC queues) that described here
- * [[https://blogs.oracle.com/dave/entry/multilane_a_concurrent_blocking_multiset]]
- *
  * Idea to use some implementation of 'java.util.concurrent.locks.AbstractQueuedSynchronizer' borrowed from
  * [[https://github.com/laforge49/JActor2/blob/master/jactor2-core/src/main/java/org/agilewiki/jactor2/core/facilities/ThreadManager.java]]
  *
@@ -47,9 +44,8 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               batch: Int = 256 / CPUs,
                               spin: Int = 0) extends AbstractExecutorService {
   if (poolSize < 1) throw new IllegalArgumentException("poolSize should be greater than 0")
-  private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
-  private val heads = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
-  private val poller = new Poller(onError, heads.map(n => new PaddedAtomicReference(n.get)).toArray, batch, spin)
+  private val head = new AtomicReference(new TaskNode)
+  private val poller = new Poller(head.get, onError, batch, spin)
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
     val nm = name // to avoid long field name
@@ -74,7 +70,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     checkShutdownAccess(threads)
     poller.updateState(2)
     threads.filter(_ ne Thread.currentThread).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    new util.LinkedList[Runnable]
+    poller.drain()
   }
 
   def isShutdown: Boolean = poller.state != 0
@@ -88,23 +84,24 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   def execute(t: Runnable): Unit =
     if (t eq null) throw new NullPointerException
-    else if (poller.state == 0) {
+    else if (poller.state != 0) onReject(t)
+    else {
       val n = new TaskNode(t)
-      heads(Thread.currentThread().getId.toInt & mask).getAndSet(n).set(n)
-      poller.releaseShared(0)
-    } else onReject(t)
+      head.getAndSet(n).set(n)
+      poller.releaseShared(1)
+    }
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
   private def work(): Unit =
-    try work(poller, Thread.currentThread().getId.toInt & mask) catch {
+    try work(poller) catch {
       case _: InterruptedException => // ignore due usage as control flow exception internally
     } finally terminations.countDown()
 
   @annotation.tailrec
-  private def work(poller: Poller, base: Int): Unit = {
-    poller.acquireShared(base)
-    work(poller, base)
+  private def work(poller: Poller): Unit = {
+    poller.acquireShared(1)
+    work(poller)
   }
 
   private def status: String =
@@ -137,9 +134,9 @@ private object FixedThreadPoolExecutor {
   def generateName(): String = s"FixedThreadPool-${poolId.incrementAndGet()}"
 }
 
-private final class Poller(onError: Throwable => Unit, tails: Array[PaddedAtomicReference[TaskNode]],
+private final class Poller(tn: TaskNode, onError: Throwable => Unit,
                            batch: Int, spin: Int) extends AbstractQueuedSynchronizer {
-  private val size = tails.length
+  private val tail = new AtomicReference(tn)
 
   def state = getState
 
@@ -149,16 +146,25 @@ private final class Poller(onError: Throwable => Unit, tails: Array[PaddedAtomic
     if (newState > currState && !compareAndSetState(currState, newState)) updateState(newState)
   }
 
-  override protected def tryReleaseShared(ignore: Int): Boolean = true
-
-  override protected def tryAcquireShared(base: Int): Int = {
-    val workerTail = tails(base)
-    pollAndRun(workerTail, workerTail, base, 1, batch, spin)
+  @annotation.tailrec
+  def drain(ts: util.List[Runnable] = new util.LinkedList[Runnable](), tn: TaskNode = tail.get): util.List[Runnable] = {
+    val n = tn.get
+    if (n eq null) {
+      tn.task = null
+      tail.set(tn)
+      ts
+    } else {
+      ts.add(n.task)
+      drain(ts, n)
+    }
   }
 
+  override protected def tryReleaseShared(ignore: Int): Boolean = true
+
+  override protected def tryAcquireShared(ignore: Int): Int = pollAndRun(batch, spin)
+
   @annotation.tailrec
-  private def pollAndRun(workerTail: PaddedAtomicReference[TaskNode], tail: PaddedAtomicReference[TaskNode],
-                         base: Int, offset: Int, b: Int, s: Int): Int = {
+  private def pollAndRun(i: Int, j: Int): Int = {
     val tn = tail.get
     val n = tn.get
     if (n ne null) {
@@ -167,18 +173,13 @@ private final class Poller(onError: Throwable => Unit, tails: Array[PaddedAtomic
           case ex: Throwable => onError(ex)
         } finally n.task = null // to avoid possible memory leak when queue is empty
         if (getState > 1) throw new InterruptedException
-        else if (b != 0) pollAndRun(workerTail, workerTail, base, 1, b - 1, spin)
+        else if (i != 0) pollAndRun(i - 1, spin)
         else 0 // slowdown to avoid starvation
-      } else pollAndRun(workerTail, workerTail, base, 1, batch, spin)
-    } else if (offset < size) pollAndRun(workerTail, tails(base ^ offset), base, offset + 1, batch, s)
-    else if (getState > 0) throw new InterruptedException
-    else if (s != 0) pollAndRun(workerTail, workerTail, base, 1, batch, s - 1)
+      } else pollAndRun(batch, spin)
+    } else if (getState > 0) throw new InterruptedException
+    else if (j != 0) pollAndRun(batch, j - 1)
     else -1
   }
 }
 
 private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
-
-private class PaddedAtomicReference[T](t: T) extends AtomicReference[T](t) {
-  var p1, p2, p3, p4, p5, p6: Long = _
-}

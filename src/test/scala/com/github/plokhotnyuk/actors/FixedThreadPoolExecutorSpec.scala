@@ -58,7 +58,7 @@ class FixedThreadPoolExecutorSpec extends Specification {
     }
   }
 
-  "shutdownNow interrupts threads and doesn't return non-completed tasks" in {
+  "shutdownNow interrupts threads and returns non-completed tasks in order of submitting" in {
     withExecutor(new FixedThreadPoolExecutor(1, onError = { case _: InterruptedException => })) {
       e =>
         val task1 = new Runnable() {
@@ -75,8 +75,9 @@ class FixedThreadPoolExecutorSpec extends Specification {
         }
         e.execute(task2)
         assertCountDown(latch)
-        e.shutdownNow() must_== new java.util.LinkedList
+        e.shutdownNow() must_== new java.util.LinkedList(Seq(task1, task2))
         e.isShutdown must_== true
+        e.shutdownNow() must_== new java.util.LinkedList
     }
   }
 
