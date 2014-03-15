@@ -49,7 +49,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   if (poolSize < 1) throw new IllegalArgumentException("poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
   private val heads = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
-  private val poller = new Poller(batch, spin, heads.size, heads.map(n => new PaddedAtomicReference(n.get)).toArray, onError)
+  private val poller = new Poller(onError, heads.map(n => new PaddedAtomicReference(n.get)).toArray, batch, spin)
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
     val nm = name // to avoid long field name
@@ -137,8 +137,10 @@ private object FixedThreadPoolExecutor {
   def generateName(): String = s"FixedThreadPool-${poolId.incrementAndGet()}"
 }
 
-private final class Poller(batch: Int, spin: Int, size: Int, tails: Array[PaddedAtomicReference[TaskNode]],
-                           onError: Throwable => Unit) extends AbstractQueuedSynchronizer {
+private final class Poller(onError: Throwable => Unit, tails: Array[PaddedAtomicReference[TaskNode]],
+                           batch: Int, spin: Int) extends AbstractQueuedSynchronizer {
+  private val size = tails.length
+
   def state = getState
 
   @annotation.tailrec
