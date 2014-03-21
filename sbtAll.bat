@@ -1,5 +1,6 @@
 @echo off
 call sbt clean test:compile exit >outX.txt
+call sbt -Dbenchmark.executorServiceType=fixed-thread-pool test >>outX.txt
 call sbt -Dbenchmark.executorServiceType=scala-forkjoin-pool test >>outX.txt
 call sbt -Dbenchmark.executorServiceType=java-forkjoin-pool test >>outX.txt
 call sbt -Dbenchmark.executorServiceType=jsr166e-forkjoin-pool test >>outX.txt
