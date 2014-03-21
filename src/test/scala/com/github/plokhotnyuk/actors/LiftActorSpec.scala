@@ -18,7 +18,7 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Enqueueing" in {
-    val n = 20000000
+    val n = 10000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -30,7 +30,7 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Dequeueing" in {
-    val n = 20000000
+    val n = 10000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -42,7 +42,7 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(20000000)(() => new LiftActor {
+    footprintedAndTimedCollect(10000000)(() => new LiftActor {
       def messageHandler = {
         case _ =>
       }
@@ -50,7 +50,7 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Single-producer sending" in {
-    val n = 12000000
+    val n = 6000000
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     timed(n) {
@@ -60,7 +60,7 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = roundToParallelism(10000000)
+    val n = roundToParallelism(6000000)
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     val r = new ParRunner((1 to parallelism).map(_ => () => sendMessages(a, n / parallelism)))
@@ -71,7 +71,7 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = roundToParallelism(20000000)
+    val n = roundToParallelism(12000000)
     val l = new CountDownLatch(parallelism)
     val r = new ParRunner((1 to parallelism).map {
       _ =>
@@ -85,11 +85,11 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(1600000, 1)
+    ping(1500000, 1)
   }
 
   "Ping throughput 10K" in {
-    ping(3600000, 10000)
+    ping(1800000, 10000)
   }
 
   def shutdown(): Unit = LAScheduler.shutdown()

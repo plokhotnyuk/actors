@@ -23,7 +23,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Enqueueing" in {
-    val n = 1200000
+    val n = 600000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -35,7 +35,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Dequeueing" in {
-    val n = 1200000
+    val n = 600000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -47,7 +47,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(1200000)(() => new Actor {
+    footprintedAndTimedCollect(600000)(() => new Actor {
       def act(): Unit = loop {
         react {
           case _ =>
@@ -59,7 +59,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Single-producer sending" in {
-    val n = 600000
+    val n = 300000
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     timed(n) {
@@ -69,7 +69,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = roundToParallelism(600000)
+    val n = roundToParallelism(300000)
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     val r = new ParRunner((1 to parallelism).map(_ => () => sendMessages(a, n / parallelism)))
@@ -80,7 +80,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = roundToParallelism(1200000)
+    val n = roundToParallelism(600000)
     val l = new CountDownLatch(parallelism)
     val r = new ParRunner((1 to parallelism).map {
       _ =>
@@ -94,11 +94,11 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(500000, 1)
+    ping(250000, 1)
   }
 
   "Ping throughput 10K" in {
-    ping(800000, 10000)
+    ping(400000, 10000)
   }
 
   def shutdown(): Unit = customScheduler.shutdown()

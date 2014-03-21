@@ -20,7 +20,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Enqueueing" in {
-    val n = 80000000
+    val n = 40000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -32,7 +32,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Dequeueing" in {
-    val n = 80000000
+    val n = 40000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -44,11 +44,11 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(20000000)(() => actor[Message](_ => ()))
+    footprintedAndTimedCollect(10000000)(() => actor[Message](_ => ()))
   }
 
   "Single-producer sending" in {
-    val n = 32000000
+    val n = 16000000
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     timed(n) {
@@ -58,7 +58,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = roundToParallelism(32000000)
+    val n = roundToParallelism(16000000)
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     val r = new ParRunner((1 to parallelism).map(_ => () => sendMessages(a, n / parallelism)))
@@ -69,7 +69,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = roundToParallelism(72000000)
+    val n = roundToParallelism(40000000)
     val l = new CountDownLatch(parallelism)
     val r = new ParRunner((1 to parallelism).map {
       _ =>
@@ -83,11 +83,11 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(6400000, 1)
+    ping(3200000, 1)
   }
 
   "Ping throughput 10K" in {
-    ping(8000000, 10000)
+    ping(4000000, 10000)
   }
 
   def shutdown(): Unit = fullShutdown(executorService)

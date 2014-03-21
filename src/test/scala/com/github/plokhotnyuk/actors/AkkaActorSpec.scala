@@ -31,7 +31,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   implicit val timeout = Timeout(1000, TimeUnit.SECONDS)
 
   "Enqueueing" in {
-    val n = 20000000
+    val n = 10000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -43,7 +43,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Dequeueing" in {
-    val n = 20000000
+    val n = 10000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -59,7 +59,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Single-producer sending" in {
-    val n = 12000000
+    val n = 6000000
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     timed(n) {
@@ -69,7 +69,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = roundToParallelism(12000000)
+    val n = roundToParallelism(6000000)
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     val r = new ParRunner((1 to parallelism).map(_ => () => sendMessages(a, n / parallelism)))
@@ -80,7 +80,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = roundToParallelism(25000000)
+    val n = roundToParallelism(12000000)
     val l = new CountDownLatch(parallelism)
     val r = new ParRunner((1 to parallelism).map {
       _ =>
@@ -94,11 +94,11 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(3200000, 1)
+    ping(1500000, 1)
   }
 
   "Ping throughput 10K" in {
-    ping(3600000, 10000)
+    ping(1800000, 10000)
   }
 
   def shutdown(): Unit = {
@@ -189,7 +189,7 @@ class RootAkkaActor extends Actor {
     case p: Props =>
       sender ! context.actorOf(p)
     case "Initiation" =>
-      footprintedAndTimedCollect(200000){
+      footprintedAndTimedCollect(100000){
         val p = Props(classOf[MinimalAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher")
         val c = context
         () => c.actorOf(p)
