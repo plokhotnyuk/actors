@@ -18,7 +18,7 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Enqueueing" in {
-    val n = 10000000
+    val n = 20000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -30,7 +30,7 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Dequeueing" in {
-    val n = 10000000
+    val n = 20000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -42,7 +42,7 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(10000000)(() => new LiftActor {
+    footprintedAndTimedCollect(20000000)(() => new LiftActor {
       def messageHandler = {
         case _ =>
       }
@@ -85,11 +85,11 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(2000000, 1)
+    ping(1600000, 1)
   }
 
   "Ping throughput 10K" in {
-    ping(5000000, 10000)
+    ping(3600000, 10000)
   }
 
   def shutdown(): Unit = LAScheduler.shutdown()
