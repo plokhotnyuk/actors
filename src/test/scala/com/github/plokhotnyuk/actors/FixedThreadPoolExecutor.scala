@@ -36,18 +36,16 @@ import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
  * @param onError        The exception handler for unhandled errors during executing of tasks
  * @param onReject       The handler for rejection of task submission after shutdown
  * @param name           A name of the executor service
- * @param batch          A number of task completions before slowdown
  */
 class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               threadFactory: ThreadFactory = daemonThreadFactory(),
                               onError: Throwable => Unit = _.printStackTrace(),
                               onReject: Runnable => Unit = _ => throw new RejectedExecutionException,
-                              name: String = generateName(),
-                              batch: Int = 256 / CPUs) extends AbstractExecutorService {
+                              name: String = generateName()) extends AbstractExecutorService {
   if (poolSize < 1) throw new IllegalArgumentException("poolSize should be greater than 0")
   private val mask = Integer.highestOneBit(Math.min(poolSize, CPUs)) - 1
   private val heads = (0 to mask).map(_ => new PaddedAtomicReference(new TaskNode)).toArray
-  private val poller = new Poller(onError, heads.map(n => new PaddedAtomicReference(n.get)).toArray, batch)
+  private val poller = new Poller(onError, heads.map(n => new PaddedAtomicReference(n.get)).toArray)
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
     val nm = name // to avoid long field name
@@ -135,9 +133,10 @@ private object FixedThreadPoolExecutor {
   def generateName(): String = s"FixedThreadPool-${poolId.incrementAndGet()}"
 }
 
-private final class Poller(onError: Throwable => Unit, tails: Array[PaddedAtomicReference[TaskNode]],
-                           batch: Int) extends AbstractQueuedSynchronizer {
+private final class Poller(onError: Throwable => Unit,
+                           tails: Array[PaddedAtomicReference[TaskNode]]) extends AbstractQueuedSynchronizer {
   private val size = tails.length
+  private val batch = 256 / size
   private val emptyCheck = new Array[Boolean](size)
 
   def state = getState
