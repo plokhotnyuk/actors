@@ -68,7 +68,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = roundToParallelism(40000000)
+    val n = roundToParallelism(32000000)
     val l = new CountDownLatch(parallelism)
     val r = new ParRunner((1 to parallelism).map {
       _ =>
