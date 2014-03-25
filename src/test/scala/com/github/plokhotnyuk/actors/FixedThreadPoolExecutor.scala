@@ -37,7 +37,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               name: String = generateName()) extends AbstractExecutorService {
   if (poolSize < 1) throw new IllegalArgumentException("poolSize should be greater than 0")
   private val state = new AtomicInteger
-  private val queue = new ConcurrentLinkedQueue[Runnable]
+  private val queue = new LinkedBlockingQueue[Runnable]
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
     val nm = name // to avoid long field name
@@ -62,7 +62,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     checkShutdownAccess(threads)
     updateState(2)
     threads.filter(_ ne Thread.currentThread).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    new util.ArrayList[Runnable](queue)
+    new util.LinkedList[Runnable](queue)
   }
 
   def isShutdown: Boolean = state.get != 0
@@ -77,11 +77,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   def execute(t: Runnable): Unit =
     if (t eq null) throw new NullPointerException
     else if (state.get != 0) onReject(t)
-    else {
-      val q = queue
-      q.offer(t)
-      q.synchronized(q.notify())
-    }
+    else queue.offer(t)
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
@@ -96,12 +92,10 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
       val q = queue
       val s = state
       while (s.get <= 1) {
-        val t = q.poll()
-        if (t ne null) {
-          try t.run() catch {
-            case ex: Throwable => onError(ex)
-          }
-        } else q.synchronized(q.wait())
+        val t = q.take()
+        try t.run() catch {
+          case ex: Throwable => onError(ex)
+        }
       }
     } catch {
       case _: InterruptedException => // ignore due usage as control flow exception internally
