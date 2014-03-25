@@ -38,7 +38,6 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
   if (poolSize < 1) throw new IllegalArgumentException("poolSize should be greater than 0")
   private val state = new AtomicInteger
   private val queue = new ConcurrentLinkedQueue[Runnable]
-  private val requests = new Semaphore(0)
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
     val nm = name // to avoid long field name
@@ -79,8 +78,9 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     if (t eq null) throw new NullPointerException
     else if (state.get != 0) onReject(t)
     else {
-      queue.offer(t)
-      requests.release()
+      val q = queue
+      q.offer(t)
+      q.synchronized(q.notify())
     }
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
@@ -93,11 +93,15 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   private def work(): Unit =
     try {
-      while (state.get <= 1) {
-        requests.acquire()
-        try queue.poll().run() catch {
-          case ex: Throwable => onError(ex)
-        }
+      val q = queue
+      val s = state
+      while (s.get <= 1) {
+        val t = q.poll()
+        if (t ne null) {
+          try t.run() catch {
+            case ex: Throwable => onError(ex)
+          }
+        } else q.synchronized(q.wait())
       }
     } catch {
       case _: InterruptedException => // ignore due usage as control flow exception internally
