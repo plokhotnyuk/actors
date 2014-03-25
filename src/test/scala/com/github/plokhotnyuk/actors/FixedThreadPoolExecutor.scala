@@ -2,7 +2,7 @@ package com.github.plokhotnyuk.actors
 
 import java.util
 import java.util.concurrent._
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.{AtomicReference, AtomicInteger}
 import com.github.plokhotnyuk.actors.FixedThreadPoolExecutor._
 
 /**
@@ -36,8 +36,9 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
                               onReject: Runnable => Unit = _ => throw new RejectedExecutionException,
                               name: String = generateName()) extends AbstractExecutorService {
   if (poolSize < 1) throw new IllegalArgumentException("poolSize should be greater than 0")
+  private val head = new AtomicReference[TaskNode](new TaskNode)
   private val state = new AtomicInteger
-  private val queue = new LinkedBlockingQueue[Runnable]
+  private val tail = new AtomicReference[TaskNode](head.get)
   private val terminations = new CountDownLatch(poolSize)
   private val threads = {
     val nm = name // to avoid long field name
@@ -62,7 +63,7 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     checkShutdownAccess(threads)
     updateState(2)
     threads.filter(_ ne Thread.currentThread).foreach(_.interrupt()) // don't interrupt worker thread due call in task
-    new util.LinkedList[Runnable](queue)
+    drainTo(new util.LinkedList[Runnable])
   }
 
   def isShutdown: Boolean = state.get != 0
@@ -74,10 +75,16 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
     terminations.await(timeout, unit)
   }
 
-  def execute(t: Runnable): Unit =
+  def execute(t: Runnable): Unit = {
     if (t eq null) throw new NullPointerException
-    else if (state.get != 0) onReject(t)
-    else queue.offer(t)
+    val s = state
+    if (s.get != 0) onReject(t)
+    else {
+      val n = new TaskNode(t)
+      head.getAndSet(n).set(n)
+      s.synchronized(s.notify())
+    }
+  }
 
   override def toString: String = s"${super.toString}[$status], pool size = ${threads.size}, name = $name]"
 
@@ -89,12 +96,16 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
 
   private def work(): Unit =
     try {
-      val q = queue
+      val t = tail
       val s = state
       while (s.get <= 1) {
-        val t = q.take()
-        try t.run() catch {
-          case ex: Throwable => onError(ex)
+        val tn = t.get
+        val n = tn.get
+        if (n eq null) s.synchronized(s.wait())
+        else if (t.compareAndSet(tn, n)) {
+          try n.task.run() catch {
+            case ex: Throwable => onError(ex)
+          } finally n.task = null
         }
       }
     } catch {
@@ -108,6 +119,17 @@ class FixedThreadPoolExecutor(poolSize: Int = CPUs,
       case 1 => "Shutdown"
       case 2 => "Stop"
     }
+
+  @annotation.tailrec
+  private def drainTo(ts: util.List[Runnable]): util.List[Runnable] = {
+    val tn = tail.get
+    val n = tn.get
+    if (n eq null) ts
+    else {
+      if (tail.compareAndSet(tn, n)) ts.add(n.task)
+      drainTo(ts)
+    }
+  }
 }
 
 private object FixedThreadPoolExecutor {
@@ -130,3 +152,5 @@ private object FixedThreadPoolExecutor {
 
   def generateName(): String = s"FixedThreadPool-${poolId.incrementAndGet()}"
 }
+
+private class TaskNode(var task: Runnable = null) extends AtomicReference[TaskNode]
