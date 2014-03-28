@@ -14,7 +14,7 @@
 [INFO] --- scala-maven-plugin:3.1.6:compile (compile) @ actors ---
 [WARNING]  Expected all dependencies to require Scala version: 2.10.4
 [WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.0 requires scala version: 2.10.3
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.1 requires scala version: 2.10.3
 [WARNING] Multiple versions of scala libraries detected!
 [INFO] No sources to compile
 [INFO] 
@@ -25,21 +25,21 @@
 [INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
 [WARNING]  Expected all dependencies to require Scala version: 2.10.4
 [WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.0 requires scala version: 2.10.3
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.1 requires scala version: 2.10.3
 [WARNING] Multiple versions of scala libraries detected!
 [INFO] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala:-1: info: compiling
-[INFO] Compiling 9 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\test-classes at 1395314232075
+[INFO] Compiling 9 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\test-classes at 1395993207636
 [WARNING] warning: there were 1 feature warning(s); re-run with -feature for details
 [WARNING] one warning found
 [WARNING] Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=128m; support was removed in 8.0
 [WARNING] Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=128m; support was removed in 8.0
 [INFO] prepare-compile in 0 s
-[INFO] compile in 13 s
+[INFO] compile in 12 s
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 14.321s
-[INFO] Finished at: Thu Mar 20 13:17:25 EET 2014
+[INFO] Total time: 14.071s
+[INFO] Finished at: Fri Mar 28 09:53:40 EET 2014
 [INFO] Final Memory: 16M/1024M
 [INFO] ------------------------------------------------------------------------
 [INFO] Scanning for projects...
@@ -55,7 +55,7 @@
 [INFO] --- scala-maven-plugin:3.1.6:compile (compile) @ actors ---
 [WARNING]  Expected all dependencies to require Scala version: 2.10.4
 [WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.0 requires scala version: 2.10.3
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.1 requires scala version: 2.10.3
 [WARNING] Multiple versions of scala libraries detected!
 [INFO] No sources to compile
 [INFO] 
@@ -66,7 +66,7 @@
 [INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
 [WARNING]  Expected all dependencies to require Scala version: 2.10.4
 [WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.0 requires scala version: 2.10.3
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.1 requires scala version: 2.10.3
 [WARNING] Multiple versions of scala libraries detected!
 [INFO] Nothing to compile - all classes are up to date
 [INFO] 
@@ -81,383 +81,58 @@
  T E S T S
 -------------------------------------------------------
 Running com.github.plokhotnyuk.actors.AkkaActorSpec
-Executor service type: jsr166e-forkjoin-pool
+Executor service type: scala-forkjoin-pool
 
 Enqueueing:
 10,000,000 ops
-307,169,258 ns
-32,555,341 ops/s
-41.9 % of CPU usage
+325,407,283 ns
+30,730,719 ops/s
+40.7 % of CPU usage
 48 bytes per instance
 
 Dequeueing:
 10,000,000 ops
-590,729,820 ns
-16,928,212 ops/s
+577,692,530 ns
+17,310,246 ops/s
 29.0 % of CPU usage
 
 Initiation:
-500,000 ops
-2,712,284,366 ns
-5,424 ns/op
-42.8 % of CPU usage
-428 bytes per instance
+100,000 ops
+859,528,103 ns
+8,595 ns/op
+68.1 % of CPU usage
+424 bytes per instance
 
 Single-producer sending:
+6,000,000 ops
+549,978,540 ns
+10,909,516 ops/s
+47.5 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+573,191,861 ns
+10,467,699 ops/s
+49.7 % of CPU usage
+
+Max throughput:
 12,000,000 ops
-1,060,495,221 ns
-11,315,468 ops/s
-43.8 % of CPU usage
-
-Multi-producer sending:
-12,000,000 ops
-1,159,865,436 ns
-10,346,027 ops/s
-58.5 % of CPU usage
-
-Max throughput:
-32,000,000 ops
-1,390,780,183 ns
-23,008,668 ops/s
-96.5 % of CPU usage
-
-Ping latency:
-5,000,000 ops
-2,502,271,434 ns
-500 ns/op
-84.0 % of CPU usage
-
-Ping throughput 10K:
-7,000,000 ops
-1,844,428,553 ns
-3,795,213 ops/s
-99.4 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.588 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
-Running com.github.plokhotnyuk.actors.LiftActorSpec
-Executor service type: jsr166e-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-333,848,441 ns
-29,953,711 ops/s
-26.9 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-403,357,193 ns
-24,791,921 ops/s
-27.1 % of CPU usage
-
-Initiation:
-10,000,000 ops
-361,534,136 ns
-36 ns/op
-41.0 % of CPU usage
-72 bytes per instance
-
-Single-producer sending:
-12,000,000 ops
-1,188,148,589 ns
-10,099,746 ops/s
-49.6 % of CPU usage
-
-Multi-producer sending:
-10,000,000 ops
-1,173,496,609 ns
-8,521,541 ops/s
-74.4 % of CPU usage
-
-Max throughput:
-20,000,000 ops
-741,837,571 ns
-26,960,079 ops/s
-97.8 % of CPU usage
-
-Ping latency:
-2,000,000 ops
-1,539,603,670 ns
-769 ns/op
-51.7 % of CPU usage
-
-Ping throughput 10K:
-5,000,000 ops
-1,338,171,021 ns
-3,736,443 ops/s
-97.1 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 14.711 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
-Running com.github.plokhotnyuk.actors.ScalaActorSpec
-Executor service type: jsr166e-forkjoin-pool
-
-Enqueueing:
-1,000,000 ops
-51,053,209 ns
-19,587,407 ops/s
-38.2 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-1,000,000 ops
-2,182,851,019 ns
-458,116 ops/s
-75.2 % of CPU usage
-
-Initiation:
-500,000 ops
-871,796,093 ns
-1,743 ns/op
-91.7 % of CPU usage
-224 bytes per instance
-
-Single-producer sending:
-800,000 ops
-2,902,124,893 ns
-275,660 ops/s
-66.7 % of CPU usage
-
-Multi-producer sending:
-800,000 ops
-2,437,436,039 ns
-328,213 ops/s
-69.6 % of CPU usage
-
-Max throughput:
-2,000,000 ops
-1,730,988,420 ns
-1,155,409 ops/s
-98.0 % of CPU usage
-
-Ping latency:
-400,000 ops
-1,119,939,580 ns
-2,799 ns/op
-98.2 % of CPU usage
-
-Ping throughput 10K:
-1,200,000 ops
-1,546,501,544 ns
-775,944 ops/s
-98.9 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.096 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
-Running com.github.plokhotnyuk.actors.ScalazActor2Spec
-Executor service type: jsr166e-forkjoin-pool
-
-Enqueueing:
-50,000,000 ops
-803,420,677 ns
-62,233,897 ops/s
-24.8 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-50,000,000 ops
-212,783,957 ns
-234,980,121 ops/s
-31.2 % of CPU usage
-
-Initiation:
-10,000,000 ops
-239,009,366 ns
-23 ns/op
-52.2 % of CPU usage
-48 bytes per instance
-
-Single-producer sending:
-32,000,000 ops
-1,066,493,612 ns
-30,004,867 ops/s
-66.9 % of CPU usage
-
-Multi-producer sending:
-28,000,000 ops
-596,946,301 ns
-46,905,391 ops/s
-98.0 % of CPU usage
-
-Max throughput:
-72,000,000 ops
-1,069,845,966 ns
-67,299,407 ops/s
-94.1 % of CPU usage
-
-Ping latency:
-10,000,000 ops
-2,095,467,688 ns
-209 ns/op
-99.4 % of CPU usage
-
-Ping throughput 10K:
-28,000,000 ops
-4,029,467,069 ns
-6,948,809 ops/s
-99.8 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 21.809 sec - in com.github.plokhotnyuk.actors.ScalazActor2Spec
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
-Running com.github.plokhotnyuk.actors.ScalazActorSpec
-Executor service type: jsr166e-forkjoin-pool
-
-Enqueueing:
-50,000,000 ops
-797,984,555 ns
-62,657,854 ops/s
-24.9 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-50,000,000 ops
-233,585,707 ns
-214,054,192 ops/s
-28.4 % of CPU usage
-
-Initiation:
-10,000,000 ops
-350,138,844 ns
-35 ns/op
-51.2 % of CPU usage
-104 bytes per instance
-
-Single-producer sending:
-32,000,000 ops
-707,613,576 ns
-45,222,422 ops/s
-80.5 % of CPU usage
-
-Multi-producer sending:
-28,000,000 ops
-849,931,750 ns
-32,943,821 ops/s
-93.6 % of CPU usage
-
-Max throughput:
-72,000,000 ops
-1,093,788,211 ns
-65,826,271 ops/s
+561,044,563 ns
+21,388,675 ops/s
 95.2 % of CPU usage
 
 Ping latency:
-10,000,000 ops
-2,067,824,144 ns
-206 ns/op
-99.2 % of CPU usage
+1,500,000 ops
+623,958,265 ns
+415 ns/op
+100.0 % of CPU usage
 
 Ping throughput 10K:
-28,000,000 ops
-4,181,228,723 ns
-6,696,596 ops/s
-99.8 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 25.647 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
-
-Results :
-
-Tests run: 40, Failures: 0, Errors: 0, Skipped: 0
-
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 1:57.359s
-[INFO] Finished at: Thu Mar 20 13:19:23 EET 2014
-[INFO] Final Memory: 20M/1024M
-[INFO] ------------------------------------------------------------------------
-[INFO] Scanning for projects...
-[INFO]                                                                         
-[INFO] ------------------------------------------------------------------------
-[INFO] Building Actors 1.0-SNAPSHOT
-[INFO] ------------------------------------------------------------------------
-[INFO] 
-[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ actors ---
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.6:compile (compile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.10.4
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.0 requires scala version: 2.10.3
-[WARNING] Multiple versions of scala libraries detected!
-[INFO] No sources to compile
-[INFO] 
-[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ actors ---
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.10.4
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.0 requires scala version: 2.10.3
-[WARNING] Multiple versions of scala libraries detected!
-[INFO] Nothing to compile - all classes are up to date
-[INFO] 
-[INFO] --- maven-surefire-plugin:2.16:test (default-test) @ actors ---
-[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-Running com.github.plokhotnyuk.actors.AkkaActorSpec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-294,634,767 ns
-33,940,325 ops/s
-35.7 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-578,960,660 ns
-17,272,330 ops/s
-29.0 % of CPU usage
-
-Initiation:
-500,000 ops
-2,859,273,331 ns
-5,718 ns/op
-58.4 % of CPU usage
-428 bytes per instance
-
-Single-producer sending:
-12,000,000 ops
-1,074,356,213 ns
-11,169,479 ops/s
-42.5 % of CPU usage
-
-Multi-producer sending:
-12,000,000 ops
-1,125,889,954 ns
-10,658,235 ops/s
-51.6 % of CPU usage
-
-Max throughput:
-32,000,000 ops
-1,209,478,153 ns
-26,457,691 ops/s
-92.5 % of CPU usage
-
-Ping latency:
-5,000,000 ops
-1,993,561,031 ns
-398 ns/op
-100.2 % of CPU usage
-
-Ping throughput 10K:
-7,000,000 ops
-1,670,643,479 ns
-4,190,002 ops/s
-98.5 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.587 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
+1,800,000 ops
+823,022,797 ns
+2,187,059 ops/s
+98.6 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.714 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
 Running com.github.plokhotnyuk.actors.LiftActorSpec
@@ -465,544 +140,219 @@ Executor service type: scala-forkjoin-pool
 
 Enqueueing:
 10,000,000 ops
-331,758,443 ns
-30,142,412 ops/s
-27.0 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-442,824,144 ns
-22,582,327 ops/s
-26.4 % of CPU usage
-
-Initiation:
-10,000,000 ops
-346,913,313 ns
-34 ns/op
-42.7 % of CPU usage
-72 bytes per instance
-
-Single-producer sending:
-12,000,000 ops
-1,032,290,509 ns
-11,624,634 ops/s
-48.0 % of CPU usage
-
-Multi-producer sending:
-10,000,000 ops
-1,286,504,227 ns
-7,773,002 ops/s
-79.4 % of CPU usage
-
-Max throughput:
-20,000,000 ops
-882,423,855 ns
-22,664,845 ops/s
-95.5 % of CPU usage
-
-Ping latency:
-2,000,000 ops
-1,383,693,542 ns
-691 ns/op
-98.4 % of CPU usage
-
-Ping throughput 10K:
-5,000,000 ops
-1,364,315,425 ns
-3,664,841 ops/s
-98.6 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 14.992 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
-Running com.github.plokhotnyuk.actors.ScalaActorSpec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-1,000,000 ops
-45,739,145 ns
-21,863,110 ops/s
-34.1 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-1,000,000 ops
-1,260,475,283 ns
-793,351 ops/s
-99.3 % of CPU usage
-
-Initiation:
-500,000 ops
-593,218,245 ns
-1,186 ns/op
-91.4 % of CPU usage
-224 bytes per instance
-
-Single-producer sending:
-800,000 ops
-1,440,820,283 ns
-555,239 ops/s
-97.7 % of CPU usage
-
-Multi-producer sending:
-800,000 ops
-1,376,342,628 ns
-581,250 ops/s
-98.6 % of CPU usage
-
-Max throughput:
-2,000,000 ops
-1,713,757,847 ns
-1,167,026 ops/s
-99.9 % of CPU usage
-
-Ping latency:
-400,000 ops
-741,689,490 ns
-1,854 ns/op
-98.9 % of CPU usage
-
-Ping throughput 10K:
-1,200,000 ops
-1,602,039,709 ns
-749,045 ops/s
-100.3 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.042 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
-Running com.github.plokhotnyuk.actors.ScalazActor2Spec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-50,000,000 ops
-826,149,316 ns
-60,521,747 ops/s
-24.5 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-50,000,000 ops
-323,974,648 ns
-154,333,063 ops/s
-34.9 % of CPU usage
-
-Initiation:
-10,000,000 ops
-198,131,244 ns
-19 ns/op
-53.1 % of CPU usage
-48 bytes per instance
-
-Single-producer sending:
-32,000,000 ops
-1,134,415,988 ns
-28,208,347 ops/s
-72.2 % of CPU usage
-
-Multi-producer sending:
-28,000,000 ops
-739,125,558 ns
-37,882,602 ops/s
-95.0 % of CPU usage
-
-Max throughput:
-72,000,000 ops
-1,006,287,221 ns
-71,550,148 ops/s
-96.9 % of CPU usage
-
-Ping latency:
-10,000,000 ops
-2,214,779,755 ns
-221 ns/op
-99.8 % of CPU usage
-
-Ping throughput 10K:
-28,000,000 ops
-4,042,722,173 ns
-6,926,026 ops/s
-99.5 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.246 sec - in com.github.plokhotnyuk.actors.ScalazActor2Spec
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
-Running com.github.plokhotnyuk.actors.ScalazActorSpec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-50,000,000 ops
-796,132,074 ns
-62,803,649 ops/s
-25.0 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-50,000,000 ops
-238,901,237 ns
-209,291,507 ops/s
-37.5 % of CPU usage
-
-Initiation:
-10,000,000 ops
-425,895,232 ns
-42 ns/op
-44.9 % of CPU usage
-104 bytes per instance
-
-Single-producer sending:
-32,000,000 ops
-1,628,623,958 ns
-19,648,489 ops/s
-92.0 % of CPU usage
-
-Multi-producer sending:
-28,000,000 ops
-831,750,013 ns
-33,663,961 ops/s
-96.1 % of CPU usage
-
-Max throughput:
-72,000,000 ops
-1,252,523,246 ns
-57,483,963 ops/s
-89.4 % of CPU usage
-
-Ping latency:
-10,000,000 ops
-2,297,639,644 ns
-229 ns/op
-100.3 % of CPU usage
-
-Ping throughput 10K:
-28,000,000 ops
-4,050,396,007 ns
-6,912,904 ops/s
-99.8 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 26.692 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
-
-Results :
-
-Tests run: 40, Failures: 0, Errors: 0, Skipped: 0
-
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 1:53.880s
-[INFO] Finished at: Thu Mar 20 13:21:19 EET 2014
-[INFO] Final Memory: 20M/1024M
-[INFO] ------------------------------------------------------------------------
-[INFO] Scanning for projects...
-[INFO]                                                                         
-[INFO] ------------------------------------------------------------------------
-[INFO] Building Actors 1.0-SNAPSHOT
-[INFO] ------------------------------------------------------------------------
-[INFO] 
-[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ actors ---
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.6:compile (compile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.10.4
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.0 requires scala version: 2.10.3
-[WARNING] Multiple versions of scala libraries detected!
-[INFO] No sources to compile
-[INFO] 
-[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ actors ---
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.10.4
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.0 requires scala version: 2.10.3
-[WARNING] Multiple versions of scala libraries detected!
-[INFO] Nothing to compile - all classes are up to date
-[INFO] 
-[INFO] --- maven-surefire-plugin:2.16:test (default-test) @ actors ---
-[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-Running com.github.plokhotnyuk.actors.AkkaActorSpec
-Executor service type: java-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-289,275,253 ns
-34,569,151 ops/s
-36.4 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-585,075,610 ns
-17,091,808 ops/s
-27.3 % of CPU usage
-
-Initiation:
-500,000 ops
-2,675,747,150 ns
-5,351 ns/op
-45.8 % of CPU usage
-428 bytes per instance
-
-Single-producer sending:
-12,000,000 ops
-1,057,939,721 ns
-11,342,801 ops/s
-43.9 % of CPU usage
-
-Multi-producer sending:
-12,000,000 ops
-1,102,107,885 ns
-10,888,226 ops/s
-53.8 % of CPU usage
-
-Max throughput:
-32,000,000 ops
-1,300,025,437 ns
-24,614,902 ops/s
-92.4 % of CPU usage
-
-Ping latency:
-5,000,000 ops
-2,285,526,671 ns
-457 ns/op
-96.2 % of CPU usage
-
-Ping throughput 10K:
-7,000,000 ops
-1,836,959,247 ns
-3,810,645 ops/s
-99.1 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.26 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
-Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
-Running com.github.plokhotnyuk.actors.LiftActorSpec
-Executor service type: java-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-371,661,574 ns
-26,906,198 ops/s
+342,205,896 ns
+29,222,173 ops/s
 26.2 % of CPU usage
 24 bytes per instance
 
 Dequeueing:
 10,000,000 ops
-439,950,855 ns
-22,729,811 ops/s
-26.6 % of CPU usage
+442,586,688 ns
+22,594,443 ops/s
+25.6 % of CPU usage
 
 Initiation:
 10,000,000 ops
-349,394,407 ns
-34 ns/op
-39.1 % of CPU usage
+333,578,789 ns
+33 ns/op
+51.4 % of CPU usage
 72 bytes per instance
 
 Single-producer sending:
-12,000,000 ops
-1,050,037,900 ns
-11,428,158 ops/s
-47.9 % of CPU usage
+6,000,000 ops
+541,849,552 ns
+11,073,184 ops/s
+45.3 % of CPU usage
 
 Multi-producer sending:
-10,000,000 ops
-1,095,508,740 ns
-9,128,179 ops/s
-69.8 % of CPU usage
+6,000,000 ops
+671,065,195 ns
+8,941,009 ops/s
+78.5 % of CPU usage
 
 Max throughput:
-20,000,000 ops
-895,121,823 ns
-22,343,327 ops/s
-96.3 % of CPU usage
+10,000,000 ops
+378,254,866 ns
+26,437,201 ops/s
+93.8 % of CPU usage
 
 Ping latency:
-2,000,000 ops
-1,497,720,869 ns
-748 ns/op
-47.7 % of CPU usage
+1,500,000 ops
+1,100,265,334 ns
+733 ns/op
+91.8 % of CPU usage
 
 Ping throughput 10K:
-5,000,000 ops
-1,301,454,568 ns
-3,841,855 ops/s
-99.2 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 14.867 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
+1,800,000 ops
+552,392,165 ns
+3,258,554 ops/s
+96.0 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.247 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
 Running com.github.plokhotnyuk.actors.ScalaActorSpec
-Executor service type: java-forkjoin-pool
+Executor service type: scala-forkjoin-pool
 
 Enqueueing:
-1,000,000 ops
-50,504,502 ns
-19,800,215 ops/s
-38.6 % of CPU usage
+600,000 ops
+36,192,285 ns
+16,578,118 ops/s
+43.1 % of CPU usage
 24 bytes per instance
 
 Dequeueing:
-1,000,000 ops
-2,386,613,748 ns
-419,003 ops/s
-73.2 % of CPU usage
+600,000 ops
+751,849,255 ns
+798,032 ops/s
+99.1 % of CPU usage
 
 Initiation:
-500,000 ops
-878,590,604 ns
-1,757 ns/op
-86.6 % of CPU usage
+600,000 ops
+835,332,836 ns
+1,392 ns/op
+94.3 % of CPU usage
 224 bytes per instance
 
 Single-producer sending:
-800,000 ops
-2,567,492,427 ns
-311,588 ops/s
-72.5 % of CPU usage
-
-Multi-producer sending:
-800,000 ops
-2,634,163,444 ns
-303,701 ops/s
-71.7 % of CPU usage
-
-Max throughput:
-2,000,000 ops
-1,821,606,813 ns
-1,097,931 ops/s
-95.5 % of CPU usage
-
-Ping latency:
-400,000 ops
-1,071,905,175 ns
-2,679 ns/op
+300,000 ops
+624,094,615 ns
+480,696 ops/s
 97.5 % of CPU usage
 
+Multi-producer sending:
+300,000 ops
+507,462,446 ns
+591,176 ops/s
+99.9 % of CPU usage
+
+Max throughput:
+600,000 ops
+618,754,950 ns
+969,689 ops/s
+98.3 % of CPU usage
+
+Ping latency:
+250,000 ops
+598,231,988 ns
+2,392 ns/op
+97.1 % of CPU usage
+
 Ping throughput 10K:
-1,200,000 ops
-1,692,659,935 ns
-708,943 ops/s
-99.3 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.705 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
+400,000 ops
+566,082,937 ns
+706,610 ops/s
+99.2 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.096 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
 Running com.github.plokhotnyuk.actors.ScalazActor2Spec
-Executor service type: java-forkjoin-pool
+Executor service type: scala-forkjoin-pool
 
 Enqueueing:
-50,000,000 ops
-869,306,935 ns
-57,517,083 ops/s
-25.1 % of CPU usage
+40,000,000 ops
+663,924,749 ns
+60,247,791 ops/s
+24.7 % of CPU usage
 24 bytes per instance
 
 Dequeueing:
-50,000,000 ops
-217,153,087 ns
-230,252,310 ops/s
-32.3 % of CPU usage
+40,000,000 ops
+184,828,357 ns
+216,417,007 ops/s
+40.1 % of CPU usage
 
 Initiation:
 10,000,000 ops
-208,091,541 ns
-20 ns/op
-52.5 % of CPU usage
+229,480,977 ns
+22 ns/op
+57.8 % of CPU usage
 48 bytes per instance
 
 Single-producer sending:
-32,000,000 ops
-1,030,919,658 ns
-31,040,246 ops/s
-67.0 % of CPU usage
+16,000,000 ops
+475,079,914 ns
+33,678,544 ops/s
+87.8 % of CPU usage
 
 Multi-producer sending:
-28,000,000 ops
-554,168,414 ns
-50,526,156 ops/s
-99.2 % of CPU usage
+16,000,000 ops
+453,424,361 ns
+35,287,032 ops/s
+98.1 % of CPU usage
 
 Max throughput:
-72,000,000 ops
-1,172,936,172 ns
-61,384,414 ops/s
-97.4 % of CPU usage
+32,000,000 ops
+523,560,612 ns
+61,119,953 ops/s
+96.8 % of CPU usage
 
 Ping latency:
-10,000,000 ops
-2,385,083,454 ns
-238 ns/op
-98.9 % of CPU usage
+3,200,000 ops
+734,982,467 ns
+229 ns/op
+101.9 % of CPU usage
 
 Ping throughput 10K:
-28,000,000 ops
-4,465,979,799 ns
-6,269,620 ops/s
+4,000,000 ops
+547,168,691 ns
+7,310,359 ops/s
 99.8 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.62 sec - in com.github.plokhotnyuk.actors.ScalazActor2Spec
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.931 sec - in com.github.plokhotnyuk.actors.ScalazActor2Spec
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
 Running com.github.plokhotnyuk.actors.ScalazActorSpec
-Executor service type: java-forkjoin-pool
+Executor service type: scala-forkjoin-pool
 
 Enqueueing:
-50,000,000 ops
-871,507,628 ns
-57,371,844 ops/s
-25.1 % of CPU usage
+40,000,000 ops
+641,713,165 ns
+62,333,145 ops/s
+24.9 % of CPU usage
 24 bytes per instance
 
 Dequeueing:
-50,000,000 ops
-228,859,569 ns
-218,474,587 ops/s
-32.4 % of CPU usage
+40,000,000 ops
+211,914,842 ns
+188,755,066 ops/s
+31.3 % of CPU usage
 
 Initiation:
 10,000,000 ops
-408,779,386 ns
-40 ns/op
-40.1 % of CPU usage
+368,327,297 ns
+36 ns/op
+46.6 % of CPU usage
 104 bytes per instance
 
 Single-producer sending:
-32,000,000 ops
-817,669,831 ns
-39,135,600 ops/s
-81.1 % of CPU usage
+16,000,000 ops
+377,593,639 ns
+42,373,595 ops/s
+90.9 % of CPU usage
 
 Multi-producer sending:
-28,000,000 ops
-677,907,891 ns
-41,303,546 ops/s
-100.1 % of CPU usage
+16,000,000 ops
+486,720,296 ns
+32,873,089 ops/s
+91.3 % of CPU usage
 
 Max throughput:
-72,000,000 ops
-1,050,938,117 ns
-68,510,218 ops/s
-96.1 % of CPU usage
+32,000,000 ops
+578,641,119 ns
+55,301,980 ops/s
+98.4 % of CPU usage
 
 Ping latency:
-10,000,000 ops
-2,157,109,806 ns
-215 ns/op
-99.1 % of CPU usage
+3,200,000 ops
+841,765,506 ns
+263 ns/op
+100.1 % of CPU usage
 
 Ping throughput 10K:
-28,000,000 ops
-4,452,014,345 ns
-6,289,287 ops/s
-100.2 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 25.849 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
+4,000,000 ops
+570,154,028 ns
+7,015,648 ops/s
+101.2 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.815 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
 
@@ -1013,8 +363,8 @@ Tests run: 40, Failures: 0, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 1:58.670s
-[INFO] Finished at: Thu Mar 20 13:23:19 EET 2014
+[INFO] Total time: 1:13.757s
+[INFO] Finished at: Fri Mar 28 09:54:55 EET 2014
 [INFO] Final Memory: 20M/1024M
 [INFO] ------------------------------------------------------------------------
 [INFO] Scanning for projects...
@@ -1030,7 +380,7 @@ Tests run: 40, Failures: 0, Errors: 0, Skipped: 0
 [INFO] --- scala-maven-plugin:3.1.6:compile (compile) @ actors ---
 [WARNING]  Expected all dependencies to require Scala version: 2.10.4
 [WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.0 requires scala version: 2.10.3
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.1 requires scala version: 2.10.3
 [WARNING] Multiple versions of scala libraries detected!
 [INFO] No sources to compile
 [INFO] 
@@ -1041,7 +391,657 @@ Tests run: 40, Failures: 0, Errors: 0, Skipped: 0
 [INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
 [WARNING]  Expected all dependencies to require Scala version: 2.10.4
 [WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
-[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.0 requires scala version: 2.10.3
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.1 requires scala version: 2.10.3
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.16:test (default-test) @ actors ---
+[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running com.github.plokhotnyuk.actors.AkkaActorSpec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+320,228,160 ns
+31,227,734 ops/s
+39.0 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+577,787,096 ns
+17,307,413 ops/s
+27.0 % of CPU usage
+
+Initiation:
+100,000 ops
+845,549,234 ns
+8,455 ns/op
+70.1 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+485,722,957 ns
+12,352,720 ops/s
+42.6 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+592,292,307 ns
+10,130,133 ops/s
+54.7 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+514,232,326 ns
+23,335,755 ops/s
+93.3 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+699,823,074 ns
+466 ns/op
+97.5 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+690,772,987 ns
+2,605,776 ops/s
+101.1 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.604 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
+Running com.github.plokhotnyuk.actors.LiftActorSpec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+406,444,618 ns
+24,603,598 ops/s
+27.8 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+388,763,026 ns
+25,722,610 ops/s
+26.1 % of CPU usage
+
+Initiation:
+10,000,000 ops
+350,831,537 ns
+35 ns/op
+45.6 % of CPU usage
+72 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+533,917,760 ns
+11,237,685 ops/s
+46.7 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+718,658,515 ns
+8,348,888 ops/s
+68.9 % of CPU usage
+
+Max throughput:
+10,000,000 ops
+398,689,128 ns
+25,082,198 ops/s
+92.9 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+1,359,858,166 ns
+906 ns/op
+53.9 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+531,481,775 ns
+3,386,757 ops/s
+99.1 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.324 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
+Running com.github.plokhotnyuk.actors.ScalaActorSpec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+600,000 ops
+35,862,038 ns
+16,730,783 ops/s
+43.5 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+600,000 ops
+1,335,841,769 ns
+449,154 ops/s
+80.3 % of CPU usage
+
+Initiation:
+600,000 ops
+966,928,384 ns
+1,611 ns/op
+79.5 % of CPU usage
+224 bytes per instance
+
+Single-producer sending:
+300,000 ops
+1,127,053,460 ns
+266,180 ops/s
+74.7 % of CPU usage
+
+Multi-producer sending:
+300,000 ops
+1,007,649,928 ns
+297,722 ops/s
+72.4 % of CPU usage
+
+Max throughput:
+600,000 ops
+583,036,594 ns
+1,029,094 ops/s
+94.3 % of CPU usage
+
+Ping latency:
+250,000 ops
+686,046,533 ns
+2,744 ns/op
+98.3 % of CPU usage
+
+Ping throughput 10K:
+400,000 ops
+562,763,607 ns
+710,778 ops/s
+99.8 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.561 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
+Running com.github.plokhotnyuk.actors.ScalazActor2Spec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+40,000,000 ops
+704,103,090 ns
+56,809,862 ops/s
+24.9 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+171,722,573 ns
+232,933,849 ops/s
+27.3 % of CPU usage
+
+Initiation:
+10,000,000 ops
+213,852,707 ns
+21 ns/op
+52.9 % of CPU usage
+48 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+395,618,674 ns
+40,442,984 ops/s
+81.8 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+418,643,231 ns
+38,218,699 ops/s
+91.3 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+489,168,009 ns
+65,417,196 ops/s
+94.1 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+813,112,089 ns
+254 ns/op
+99.8 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+725,805,926 ns
+5,511,115 ops/s
+98.3 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.947 sec - in com.github.plokhotnyuk.actors.ScalazActor2Spec
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
+Running com.github.plokhotnyuk.actors.ScalazActorSpec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+40,000,000 ops
+709,698,229 ns
+56,361,983 ops/s
+25.3 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+183,734,621 ns
+217,705,295 ops/s
+29.7 % of CPU usage
+
+Initiation:
+10,000,000 ops
+410,528,905 ns
+41 ns/op
+57.0 % of CPU usage
+104 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+353,856,541 ns
+45,216,063 ops/s
+77.2 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+449,106,959 ns
+35,626,257 ops/s
+89.4 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+415,501,302 ns
+77,015,402 ops/s
+88.2 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+756,939,311 ns
+236 ns/op
+100.0 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+635,891,141 ns
+6,290,384 ops/s
+100.6 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.317 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
+
+Results :
+
+Tests run: 40, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 1:14.865s
+[INFO] Finished at: Fri Mar 28 09:56:11 EET 2014
+[INFO] Final Memory: 20M/1024M
+[INFO] ------------------------------------------------------------------------
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Actors 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ actors ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.6:compile (compile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.4
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.1 requires scala version: 2.10.3
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ actors ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.4
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.1 requires scala version: 2.10.3
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.16:test (default-test) @ actors ---
+[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running com.github.plokhotnyuk.actors.AkkaActorSpec
+Executor service type: jsr166e-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+308,052,639 ns
+32,461,984 ops/s
+49.4 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+581,347,973 ns
+17,201,401 ops/s
+26.8 % of CPU usage
+
+Initiation:
+100,000 ops
+821,091,164 ns
+8,210 ns/op
+66.0 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+499,173,650 ns
+12,019,865 ops/s
+42.2 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+572,163,367 ns
+10,486,515 ops/s
+55.9 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+552,800,483 ns
+21,707,651 ops/s
+89.6 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+717,912,985 ns
+478 ns/op
+86.4 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+567,103,734 ns
+3,174,022 ops/s
+94.2 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.324 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
+Running com.github.plokhotnyuk.actors.LiftActorSpec
+Executor service type: jsr166e-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+353,023,043 ns
+28,326,762 ops/s
+26.5 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+430,256,856 ns
+23,241,930 ops/s
+27.2 % of CPU usage
+
+Initiation:
+10,000,000 ops
+335,808,781 ns
+33 ns/op
+48.8 % of CPU usage
+72 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+575,447,511 ns
+10,426,667 ops/s
+42.7 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+796,524,965 ns
+7,532,720 ops/s
+78.3 % of CPU usage
+
+Max throughput:
+10,000,000 ops
+1,153,363,993 ns
+8,670,289 ops/s
+66.3 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+1,345,939,410 ns
+897 ns/op
+54.2 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+535,815,672 ns
+3,359,364 ops/s
+99.7 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.041 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
+Running com.github.plokhotnyuk.actors.ScalaActorSpec
+Executor service type: jsr166e-forkjoin-pool
+
+Enqueueing:
+600,000 ops
+39,182,102 ns
+15,313,114 ops/s
+49.8 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+600,000 ops
+1,539,321,934 ns
+389,782 ops/s
+74.2 % of CPU usage
+
+Initiation:
+600,000 ops
+854,341,648 ns
+1,423 ns/op
+79.9 % of CPU usage
+224 bytes per instance
+
+Single-producer sending:
+300,000 ops
+1,089,310,003 ns
+275,403 ops/s
+70.9 % of CPU usage
+
+Multi-producer sending:
+300,000 ops
+1,011,345,689 ns
+296,634 ops/s
+64.4 % of CPU usage
+
+Max throughput:
+600,000 ops
+488,806,240 ns
+1,227,480 ops/s
+95.7 % of CPU usage
+
+Ping latency:
+250,000 ops
+768,010,832 ns
+3,072 ns/op
+100.0 % of CPU usage
+
+Ping throughput 10K:
+400,000 ops
+536,045,488 ns
+746,205 ops/s
+98.2 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.546 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
+Running com.github.plokhotnyuk.actors.ScalazActor2Spec
+Executor service type: jsr166e-forkjoin-pool
+
+Enqueueing:
+40,000,000 ops
+656,756,080 ns
+60,905,412 ops/s
+24.9 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+170,123,386 ns
+235,123,465 ops/s
+27.5 % of CPU usage
+
+Initiation:
+10,000,000 ops
+209,325,281 ns
+20 ns/op
+59.6 % of CPU usage
+48 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+403,124,555 ns
+39,689,966 ops/s
+87.1 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+403,549,367 ns
+39,648,185 ops/s
+93.7 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+642,162,535 ns
+49,831,620 ops/s
+91.1 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+665,653,323 ns
+208 ns/op
+100.2 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+517,262,461 ns
+7,733,018 ops/s
+100.3 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.775 sec - in com.github.plokhotnyuk.actors.ScalazActor2Spec
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
+Running com.github.plokhotnyuk.actors.ScalazActorSpec
+Executor service type: jsr166e-forkjoin-pool
+
+Enqueueing:
+40,000,000 ops
+660,866,390 ns
+60,526,606 ops/s
+24.8 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+190,882,764 ns
+209,552,707 ops/s
+30.6 % of CPU usage
+
+Initiation:
+10,000,000 ops
+404,380,300 ns
+40 ns/op
+28.9 % of CPU usage
+104 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+374,199,902 ns
+42,757,894 ops/s
+83.4 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+408,622,563 ns
+39,155,938 ops/s
+99.3 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+501,174,924 ns
+63,849,962 ops/s
+100.4 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+733,752,013 ns
+229 ns/op
+98.3 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+581,439,239 ns
+6,879,480 ops/s
+99.3 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.488 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
+
+Results :
+
+Tests run: 40, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 1:15.207s
+[INFO] Finished at: Fri Mar 28 09:57:28 EET 2014
+[INFO] Final Memory: 20M/1024M
+[INFO] ------------------------------------------------------------------------
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Actors 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ actors ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.6:compile (compile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.4
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.1 requires scala version: 2.10.3
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ actors ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.10.4
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.10.4
+[WARNING]  com.typesafe.akka:akka-actor_2.10:2.3.1 requires scala version: 2.10.3
 [WARNING] Multiple versions of scala libraries detected!
 [INFO] Nothing to compile - all classes are up to date
 [INFO] 
@@ -1060,54 +1060,54 @@ Executor service type: thread-pool
 
 Enqueueing:
 10,000,000 ops
-354,520,436 ns
-28,207,118 ops/s
-42.9 % of CPU usage
+305,154,822 ns
+32,770,250 ops/s
+40.9 % of CPU usage
 48 bytes per instance
 
 Dequeueing:
 10,000,000 ops
-647,356,970 ns
-15,447,427 ops/s
-28.9 % of CPU usage
+577,957,534 ns
+17,302,309 ops/s
+27.7 % of CPU usage
 
 Initiation:
-500,000 ops
-2,905,888,869 ns
-5,811 ns/op
-45.2 % of CPU usage
-428 bytes per instance
+100,000 ops
+853,094,334 ns
+8,530 ns/op
+67.2 % of CPU usage
+424 bytes per instance
 
 Single-producer sending:
-12,000,000 ops
-1,112,103,370 ns
-10,790,363 ops/s
-42.4 % of CPU usage
+6,000,000 ops
+545,855,034 ns
+10,991,929 ops/s
+45.7 % of CPU usage
 
 Multi-producer sending:
-12,000,000 ops
-1,182,899,402 ns
-10,144,565 ops/s
-51.4 % of CPU usage
+6,000,000 ops
+587,250,633 ns
+10,217,102 ops/s
+49.8 % of CPU usage
 
 Max throughput:
-32,000,000 ops
-1,246,084,644 ns
-25,680,438 ops/s
-97.0 % of CPU usage
+12,000,000 ops
+460,925,843 ns
+26,034,556 ops/s
+91.4 % of CPU usage
 
 Ping latency:
-5,000,000 ops
-9,877,296,726 ns
-1,975 ns/op
-28.7 % of CPU usage
+1,500,000 ops
+3,295,263,906 ns
+2,196 ns/op
+30.8 % of CPU usage
 
 Ping throughput 10K:
-7,000,000 ops
-4,319,070,372 ns
-1,620,719 ops/s
-77.0 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 34.117 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
+1,800,000 ops
+1,267,673,437 ns
+1,419,924 ops/s
+86.8 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.616 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
 Running com.github.plokhotnyuk.actors.LiftActorSpec
@@ -1115,219 +1115,219 @@ Executor service type: thread-pool
 
 Enqueueing:
 10,000,000 ops
-337,149,847 ns
-29,660,402 ops/s
-24.3 % of CPU usage
+356,862,119 ns
+28,022,027 ops/s
+27.3 % of CPU usage
 24 bytes per instance
 
 Dequeueing:
 10,000,000 ops
-451,637,544 ns
-22,141,649 ops/s
-26.8 % of CPU usage
+403,272,634 ns
+24,797,120 ops/s
+28.0 % of CPU usage
 
 Initiation:
 10,000,000 ops
-354,652,023 ns
-35 ns/op
-44.0 % of CPU usage
+338,642,454 ns
+33 ns/op
+36.9 % of CPU usage
 72 bytes per instance
 
 Single-producer sending:
-12,000,000 ops
-1,034,762,073 ns
-11,596,868 ops/s
-44.9 % of CPU usage
+6,000,000 ops
+543,873,918 ns
+11,031,968 ops/s
+50.2 % of CPU usage
 
 Multi-producer sending:
-10,000,000 ops
-1,227,130,610 ns
-8,149,091 ops/s
-75.0 % of CPU usage
+6,000,000 ops
+794,650,512 ns
+7,550,489 ops/s
+76.1 % of CPU usage
 
 Max throughput:
-20,000,000 ops
-898,370,813 ns
-22,262,522 ops/s
-95.9 % of CPU usage
+10,000,000 ops
+416,381,717 ns
+24,016,424 ops/s
+99.3 % of CPU usage
 
 Ping latency:
-2,000,000 ops
-4,915,400,889 ns
-2,457 ns/op
-35.1 % of CPU usage
+1,500,000 ops
+3,629,312,591 ns
+2,419 ns/op
+38.9 % of CPU usage
 
 Ping throughput 10K:
-5,000,000 ops
-2,674,870,759 ns
-1,869,249 ops/s
-79.0 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.828 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
+1,800,000 ops
+984,939,857 ns
+1,827,522 ops/s
+82.0 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 14.992 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
 Running com.github.plokhotnyuk.actors.ScalaActorSpec
 Executor service type: thread-pool
 
 Enqueueing:
-1,000,000 ops
-47,543,611 ns
-21,033,320 ops/s
-41.0 % of CPU usage
+600,000 ops
+37,016,987 ns
+16,208,774 ops/s
+42.1 % of CPU usage
 24 bytes per instance
 
 Dequeueing:
-1,000,000 ops
-3,477,279,792 ns
-287,581 ops/s
-48.6 % of CPU usage
+600,000 ops
+2,195,714,046 ns
+273,259 ops/s
+46.9 % of CPU usage
 
 Initiation:
-500,000 ops
-609,686,419 ns
-1,219 ns/op
-83.2 % of CPU usage
+600,000 ops
+708,630,516 ns
+1,181 ns/op
+86.4 % of CPU usage
 224 bytes per instance
 
 Single-producer sending:
-800,000 ops
-3,995,629,404 ns
-200,218 ops/s
-52.1 % of CPU usage
+300,000 ops
+1,521,116,931 ns
+197,223 ops/s
+56.7 % of CPU usage
 
 Multi-producer sending:
-800,000 ops
-3,964,512,548 ns
-201,790 ops/s
-49.3 % of CPU usage
+300,000 ops
+1,448,107,788 ns
+207,166 ops/s
+49.8 % of CPU usage
 
 Max throughput:
-2,000,000 ops
-2,885,439,361 ns
-693,135 ops/s
-93.3 % of CPU usage
+600,000 ops
+867,867,480 ns
+691,349 ops/s
+84.9 % of CPU usage
 
 Ping latency:
-400,000 ops
-1,893,137,020 ns
-4,732 ns/op
-67.4 % of CPU usage
+250,000 ops
+1,237,332,132 ns
+4,949 ns/op
+64.9 % of CPU usage
 
 Ping throughput 10K:
-1,200,000 ops
-2,356,187,084 ns
-509,297 ops/s
-93.4 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 25.069 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
+400,000 ops
+813,048,312 ns
+491,975 ops/s
+93.1 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.743 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
 Running com.github.plokhotnyuk.actors.ScalazActor2Spec
 Executor service type: thread-pool
 
 Enqueueing:
-50,000,000 ops
-836,884,473 ns
-59,745,402 ops/s
-24.7 % of CPU usage
+40,000,000 ops
+652,181,371 ns
+61,332,631 ops/s
+24.5 % of CPU usage
 24 bytes per instance
 
 Dequeueing:
-50,000,000 ops
-228,918,949 ns
-218,417,916 ops/s
-32.4 % of CPU usage
+40,000,000 ops
+184,884,071 ns
+216,351,791 ops/s
+33.8 % of CPU usage
 
 Initiation:
 10,000,000 ops
-222,378,448 ns
-22 ns/op
-52.6 % of CPU usage
+212,664,404 ns
+21 ns/op
+60.5 % of CPU usage
 48 bytes per instance
 
 Single-producer sending:
-32,000,000 ops
-1,009,518,619 ns
-31,698,276 ops/s
-59.5 % of CPU usage
+16,000,000 ops
+301,449,532 ns
+53,076,877 ops/s
+69.9 % of CPU usage
 
 Multi-producer sending:
-28,000,000 ops
-735,148,257 ns
-38,087,555 ops/s
-90.7 % of CPU usage
+16,000,000 ops
+432,581,780 ns
+36,987,225 ops/s
+86.6 % of CPU usage
 
 Max throughput:
-72,000,000 ops
-575,499,077 ns
-125,108,801 ops/s
-93.5 % of CPU usage
+32,000,000 ops
+318,927,331 ns
+100,336,336 ops/s
+91.7 % of CPU usage
 
 Ping latency:
-10,000,000 ops
-3,186,671,441 ns
-318 ns/op
-40.6 % of CPU usage
+3,200,000 ops
+1,188,215,497 ns
+371 ns/op
+42.0 % of CPU usage
 
 Ping throughput 10K:
-28,000,000 ops
-11,505,229,394 ns
-2,433,675 ops/s
-53.4 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 30.747 sec - in com.github.plokhotnyuk.actors.ScalazActor2Spec
+4,000,000 ops
+1,923,373,900 ns
+2,079,678 ops/s
+47.2 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.943 sec - in com.github.plokhotnyuk.actors.ScalazActor2Spec
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
 Running com.github.plokhotnyuk.actors.ScalazActorSpec
 Executor service type: thread-pool
 
 Enqueueing:
-50,000,000 ops
-801,666,427 ns
-62,370,081 ops/s
-24.8 % of CPU usage
+40,000,000 ops
+648,504,670 ns
+61,680,357 ops/s
+24.7 % of CPU usage
 24 bytes per instance
 
 Dequeueing:
-50,000,000 ops
-246,201,936 ns
-203,085,324 ops/s
-30.1 % of CPU usage
+40,000,000 ops
+200,418,875 ns
+199,582,000 ops/s
+31.1 % of CPU usage
 
 Initiation:
 10,000,000 ops
-436,364,649 ns
-43 ns/op
-44.7 % of CPU usage
+407,987,726 ns
+40 ns/op
+41.1 % of CPU usage
 104 bytes per instance
 
 Single-producer sending:
-32,000,000 ops
-438,417,260 ns
-72,989,827 ops/s
-52.5 % of CPU usage
+16,000,000 ops
+287,618,377 ns
+55,629,268 ops/s
+80.0 % of CPU usage
 
 Multi-producer sending:
-28,000,000 ops
-838,416,601 ns
-33,396,285 ops/s
-93.0 % of CPU usage
+16,000,000 ops
+454,872,169 ns
+35,174,717 ops/s
+101.2 % of CPU usage
 
 Max throughput:
-72,000,000 ops
-649,898,542 ns
-110,786,523 ops/s
-94.8 % of CPU usage
+32,000,000 ops
+317,202,790 ns
+100,881,836 ops/s
+92.2 % of CPU usage
 
 Ping latency:
-10,000,000 ops
-3,134,475,734 ns
-313 ns/op
-43.9 % of CPU usage
+3,200,000 ops
+1,116,519,644 ns
+348 ns/op
+47.5 % of CPU usage
 
 Ping throughput 10K:
-28,000,000 ops
-12,682,485,580 ns
-2,207,769 ops/s
-48.6 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 35.068 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
+4,000,000 ops
+1,845,611,179 ns
+2,167,303 ops/s
+50.5 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.641 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=64m; support was removed in 8.0
 Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=64m; support was removed in 8.0
 
@@ -1338,7 +1338,7 @@ Tests run: 40, Failures: 0, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 2:38.481s
-[INFO] Finished at: Thu Mar 20 13:25:59 EET 2014
+[INFO] Total time: 1:28.093s
+[INFO] Finished at: Fri Mar 28 09:58:58 EET 2014
 [INFO] Final Memory: 20M/1024M
 [INFO] ------------------------------------------------------------------------
