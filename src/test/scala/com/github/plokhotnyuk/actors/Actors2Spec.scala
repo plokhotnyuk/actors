@@ -6,7 +6,7 @@ import org.specs2.mutable.Specification
 import com.github.plokhotnyuk.actors.Actor2._
 
 class Actors2Spec extends Specification {
-  val NumOfMessages = 1000
+  val NumOfMessages = 100000
   val NumOfThreads = 4
   val NumOfMessagesPerThread = NumOfMessages / NumOfThreads
   implicit val executor = Executors.newFixedThreadPool(NumOfThreads)
