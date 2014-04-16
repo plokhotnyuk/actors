@@ -130,10 +130,10 @@ private class BoundedActor2[A](handler: A => Unit, onError: Throwable => Unit, s
   @annotation.tailrec
   private def getAndSetHead(n: Node2[A]): Node2[A] = {
     val h = get
-    n.count = 1 +
-      (if (h eq null) count
-      else if (h.count - count < bound) h.count
-      else throw new IllegalArgumentException)
+    n.count =
+      if (h eq null) count + 1
+      else if (h.count - count < bound) h.count + 1
+      else throw new IllegalArgumentException
     if (compareAndSet(h, n)) h
     else getAndSetHead(n)
   }
