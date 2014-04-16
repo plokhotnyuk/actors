@@ -64,7 +64,7 @@ class UnboundedActors2Spec extends Specification {
         }
     }
 
-  private def assertCountDown(latch: CountDownLatch, timeout: Long = 1000): Unit =
+  private def assertCountDown(latch: CountDownLatch, timeout: Long = 1000): Boolean =
     latch.await(timeout, TimeUnit.MILLISECONDS) must_== true
 
   private def fork(f: => Unit): Unit = {
