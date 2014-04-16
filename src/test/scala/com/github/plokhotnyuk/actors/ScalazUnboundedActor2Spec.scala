@@ -5,7 +5,7 @@ import java.util.concurrent.CountDownLatch
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import scalaz.concurrent.Strategy
 
-class ScalazActor2Spec extends BenchmarkSpec {
+class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   val executorService = createExecutorService()
   implicit val strategy = new Strategy {
     private val e = executorService
@@ -43,7 +43,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(10000000)(() => actor[Message](_ => ()))
+    footprintedAndTimedCollect(10000000)(() => unboundedActor[Message](_ => ()))
   }
 
   "Single-producer sending" in {
@@ -96,14 +96,14 @@ class ScalazActor2Spec extends BenchmarkSpec {
     val as = (1 to p).map {
       _ =>
         var a1: Actor2[Message] = null
-        val a2 = actor[Message] {
+        val a2 = unboundedActor[Message] {
           var i = n / p / 2
           (m: Message) =>
             if (i > 0) a1 ! m
             i -= 1
             if (i == 0) l.countDown()
         }
-        a1 = actor[Message] {
+        a1 = unboundedActor[Message] {
           var i = n / p / 2
           (m: Message) =>
             if (i > 0) a2 ! m
@@ -119,7 +119,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
   }
 
   private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Actor2[Message] =
-    actor[Message] {
+    unboundedActor[Message] {
       var blocked = true
       var i = n - 1
       (m: Message) =>
@@ -133,7 +133,7 @@ class ScalazActor2Spec extends BenchmarkSpec {
     }
 
   private def countActor(l: CountDownLatch, n: Int): Actor2[Message] =
-    actor[Message] {
+    unboundedActor[Message] {
       var i = n
       (m: Message) =>
         i -= 1

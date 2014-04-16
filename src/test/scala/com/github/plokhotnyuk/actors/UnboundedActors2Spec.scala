@@ -5,7 +5,7 @@ import scala.collection.mutable
 import org.specs2.mutable.Specification
 import com.github.plokhotnyuk.actors.Actor2._
 
-class Actors2Spec extends Specification {
+class UnboundedActors2Spec extends Specification {
   val NumOfMessages = 100000
   val NumOfThreads = 4
   val NumOfMessagesPerThread = NumOfMessages / NumOfThreads
@@ -13,14 +13,14 @@ class Actors2Spec extends Specification {
 
   "code executes async" in {
     val l = new CountDownLatch(1)
-    val a = actor[Int]((i: Int) => l.countDown())
+    val a = unboundedActor[Int]((i: Int) => l.countDown())
     a ! 1
     assertCountDown(l)
   }
 
   "code errors are caught and can be handled" in {
     val l = new CountDownLatch(1)
-    val a = actor[Int]((i: Int) => throw new RuntimeException(), (ex: Throwable) => l.countDown())
+    val a = unboundedActor[Int]((i: Int) => throw new RuntimeException(), (ex: Throwable) => l.countDown())
     a ! 1
     assertCountDown(l)
   }
@@ -28,8 +28,8 @@ class Actors2Spec extends Specification {
   "actors exchange messages without loss" in {
     val l = new CountDownLatch(NumOfMessages)
     var a1: Actor2[Int] = null
-    val a2 = actor[Int]((i: Int) => a1 ! i - 1)
-    a1 = actor[Int] {
+    val a2 = unboundedActor[Int]((i: Int) => a1 ! i - 1)
+    a1 = unboundedActor[Int] {
       (i: Int) =>
         if (i == l.getCount) {
           if (i != 0) a2 ! i - 1
@@ -52,21 +52,22 @@ class Actors2Spec extends Specification {
     assertCountDown(l)
   }
 
-  def countingDownActor(l: CountDownLatch): Actor2[(Int, Int)] = actor[(Int, Int)] {
-    val ms = mutable.Map[Int, Int]()
+  private def countingDownActor(l: CountDownLatch): Actor2[(Int, Int)] =
+    unboundedActor[(Int, Int)] {
+      val ms = mutable.Map[Int, Int]()
 
-    (m: (Int, Int)) =>
-      val (j, i) = m
-      if (ms.getOrElse(j, 0) + 1 == i) {
-        ms.put(j, i)
-        l.countDown()
-      }
-  }
+      (m: (Int, Int)) =>
+        val (j, i) = m
+        if (ms.getOrElse(j, 0) + 1 == i) {
+          ms.put(j, i)
+          l.countDown()
+        }
+    }
 
-  def assertCountDown(latch: CountDownLatch, timeout: Long = 1000) =
+  private def assertCountDown(latch: CountDownLatch, timeout: Long = 1000): Unit =
     latch.await(timeout, TimeUnit.MILLISECONDS) must_== true
 
-  def fork(f: => Unit) {
+  private def fork(f: => Unit): Unit = {
     new Thread {
       override def run() {
         f
