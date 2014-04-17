@@ -120,23 +120,22 @@ private class BoundedActor[A](handler: A => Unit, onError: Throwable => Unit, st
                               bound: Int) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
   private var count: Int = _
 
-  def !(a: A): Unit = {
-    val n = new NodeWithCount(a)
-    val h = getAndSetHead(n)
-    if (h ne null) h.lazySet(n)
-    else schedule(n)
-  }
+  def !(a: A): Unit = checkAndAdd(new NodeWithCount(a))
 
   def contramap[B](f: B => A): Actor2[B] = new BoundedActor[B](b => this ! f(b), onError, strategy, bound)
 
   @annotation.tailrec
-  private def getAndSetHead(n: NodeWithCount[A]): NodeWithCount[A] = {
+  private def checkAndAdd(n: NodeWithCount[A]): Unit = {
     val h = get
-    if (h eq null) n.count = count + 1
-    else if (h.count - count < bound) n.count = h.count + 1
-    else throw new OutOfMessageQueueBoundsException
-    if (compareAndSet(h, n)) h
-    else getAndSetHead(n)
+    if (h eq null) {
+      n.count = count + 1
+      if (compareAndSet(h, n)) schedule(n)
+      else checkAndAdd(n)
+    } else if (h.count - count < bound) {
+      n.count = h.count + 1
+      if (compareAndSet(h, n)) h.lazySet(n)
+      else checkAndAdd(n)
+    } else throw new OutOfMessageQueueBoundsException
   }
 
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
