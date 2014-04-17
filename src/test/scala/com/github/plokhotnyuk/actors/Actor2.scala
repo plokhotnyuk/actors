@@ -3,6 +3,7 @@ package com.github.plokhotnyuk.actors
 import java.util.concurrent.atomic.AtomicReference
 import scalaz.concurrent.{Strategy, Run}
 import scalaz.Contravariant
+import scala.util.control.NoStackTrace
 
 /**
  * Processes messages of type `A`, one at a time. Messages are submitted to
@@ -53,7 +54,7 @@ trait ActorFunctions2 {
    */
   def unboundedActor[A](handler: A => Unit, onError: Throwable => Unit = rethrow)
                        (implicit strategy: Strategy): Actor2[A] =
-    new UnboundedActor2[A](handler, onError, strategy)
+    new UnboundedActor[A](handler, onError, strategy)
 
   /**
    * Create actor with bounded message queue
@@ -67,15 +68,17 @@ trait ActorFunctions2 {
    */
   def boundedActor[A](handler: A => Unit, bound: Int, onError: Throwable => Unit = rethrow)
                      (implicit strategy: Strategy): Actor2[A] = {
-    if (bound < 1) throw new IllegalArgumentException
-    new BoundedActor2[A](handler, onError, strategy, bound)
+    if (bound <= 0) throw new IllegalArgumentException
+    new BoundedActor[A](handler, onError, strategy, bound)
   }
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
 
-private class UnboundedActor2[A](handler: A => Unit, onError: Throwable => Unit, strategy: Strategy)
-  extends AtomicReference[Node[A]] with Actor2[A] {
+class OutOfMessageQueueBoundsException extends RuntimeException with NoStackTrace
+
+private class UnboundedActor[A](handler: A => Unit, onError: Throwable => Unit,
+                                strategy: Strategy) extends AtomicReference[Node[A]] with Actor2[A] {
 
   def !(a: A): Unit = {
     val n = new Node(a)
@@ -84,7 +87,7 @@ private class UnboundedActor2[A](handler: A => Unit, onError: Throwable => Unit,
     else schedule(n)
   }
 
-  def contramap[B](f: B => A): Actor2[B] = new UnboundedActor2[B](b => this ! f(b), onError, strategy)
+  def contramap[B](f: B => A): Actor2[B] = new UnboundedActor[B](b => this ! f(b), onError, strategy)
 
   private def schedule(n: Node[A]): Unit = strategy(act(n))
 
@@ -113,35 +116,33 @@ private class UnboundedActor2[A](handler: A => Unit, onError: Throwable => Unit,
 
 private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
-private class BoundedActor2[A](handler: A => Unit, onError: Throwable => Unit, strategy: Strategy, bound: Int)
-  extends AtomicReference[Node2[A]] with Actor2[A] {
-
+private class BoundedActor[A](handler: A => Unit, onError: Throwable => Unit, strategy: Strategy,
+                              bound: Int) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
   private var count: Int = _
 
   def !(a: A): Unit = {
-    val n = new Node2(a)
+    val n = new NodeWithCount(a)
     val h = getAndSetHead(n)
     if (h ne null) h.lazySet(n)
     else schedule(n)
   }
 
-  def contramap[B](f: B => A): Actor2[B] = new BoundedActor2[B](b => this ! f(b), onError, strategy, bound)
+  def contramap[B](f: B => A): Actor2[B] = new BoundedActor[B](b => this ! f(b), onError, strategy, bound)
 
   @annotation.tailrec
-  private def getAndSetHead(n: Node2[A]): Node2[A] = {
+  private def getAndSetHead(n: NodeWithCount[A]): NodeWithCount[A] = {
     val h = get
-    n.count =
-      if (h eq null) count + 1
-      else if (h.count - count < bound) h.count + 1
-      else throw new IllegalArgumentException
+    if (h eq null) n.count = count + 1
+    else if (h.count - count < bound) n.count = h.count + 1
+    else throw new OutOfMessageQueueBoundsException
     if (compareAndSet(h, n)) h
     else getAndSetHead(n)
   }
 
-  private def schedule(n: Node2[A]): Unit = strategy(act(n))
+  private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: Node2[A], i: Int = 1024, f: A => Unit = handler): Unit = {
+  private def act(n: NodeWithCount[A], i: Int = 1024, f: A => Unit = handler): Unit = {
     count = n.count
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
@@ -152,18 +153,18 @@ private class BoundedActor2[A](handler: A => Unit, onError: Throwable => Unit, s
     else act(n2, i - 1, f)
   }
 
-  private def scheduleLastTry(n: Node2[A]): Unit = strategy(lastTry(n))
+  private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
 
-  private def lastTry(n: Node2[A]): Unit = if (!compareAndSet(n, null)) act(next(n))
+  private def lastTry(n: NodeWithCount[A]): Unit = if (!compareAndSet(n, null)) act(next(n))
 
   @annotation.tailrec
-  private def next(n: Node2[A]): Node2[A] = {
+  private def next(n: NodeWithCount[A]): NodeWithCount[A] = {
     val n2 = n.get
     if (n2 ne null) n2
     else next(n)
   }
 }
 
-private class Node2[A](val a: A) extends AtomicReference[Node2[A]] {
+private class NodeWithCount[A](val a: A) extends AtomicReference[NodeWithCount[A]] {
   var count: Int = _
 }

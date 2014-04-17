@@ -103,7 +103,7 @@ class Actor2Spec extends Specification {
     "throw exception on overflow" in {
       val l = new CountDownLatch(1)
       val a = boundedActor[Int]((i: Int) => l.countDown(), 1)
-      (1 to 1000).foreach(_ => a ! 1) must throwA[IllegalArgumentException]
+      (1 to 1000).foreach(_ => a ! 1) must throwA[OutOfMessageQueueBoundsException]
       assertCountDown(l)
     }
   }
