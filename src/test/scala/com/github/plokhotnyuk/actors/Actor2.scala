@@ -67,7 +67,7 @@ trait ActorFunctions2 {
    */
   def boundedActor[A](handler: A => Unit, bound: Int, onError: Throwable => Unit = rethrow)
                      (implicit strategy: Strategy): Actor2[A] = {
-    if (bound < 0) throw new IllegalArgumentException
+    if (bound < 1) throw new IllegalArgumentException
     new BoundedActor2[A](handler, onError, strategy, bound)
   }
 
