@@ -64,6 +64,9 @@ Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, Ubunt
 #### out3*.txt
 Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, Ubuntu 12.04, JDK 1.7.0_51-b13 64-bit
 
+#### out4.txt
+Intel(R) Core(TM) i7-3740QM CPU @ 2.70GHz (max 3.70GHz), RAM 16Gb DDR3-1600, Mac OS X 10.9.2, JDK 1.8.0_05-b13 64-bit
+
 
 
 
