@@ -59,14 +59,14 @@ trait ActorFunctions2 {
   /**
    * Create actor with bounded message queue
    *
+   * @param bound    An allowed maximum number of messages in queue
    * @param handler  The message handler
    * @param onError  Exception handler, called if the message handler throws any `Throwable`
    * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
-   * @param bound    An allowed maximum number of messages in queue
    * @tparam A       The type of messages accepted by this actor
    * @return         An instance of actor
    */
-  def boundedActor[A](handler: A => Unit, bound: Int, onError: Throwable => Unit = rethrow)
+  def boundedActor[A](bound: Int)(handler: A => Unit, onError: Throwable => Unit = rethrow)
                      (implicit strategy: Strategy): Actor2[A] = {
     if (bound <= 0) throw new IllegalArgumentException
     new BoundedActor[A](handler, onError, strategy, bound)
