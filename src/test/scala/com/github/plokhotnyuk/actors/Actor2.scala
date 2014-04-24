@@ -79,7 +79,6 @@ class OutOfMessageQueueBoundsException extends RuntimeException with NoStackTrac
 
 private class UnboundedActor[A](handler: A => Unit, onError: Throwable => Unit,
                                 strategy: Strategy) extends AtomicReference[Node[A]] with Actor2[A] {
-
   def !(a: A): Unit = {
     val n = new Node(a)
     val h = getAndSet(n)
