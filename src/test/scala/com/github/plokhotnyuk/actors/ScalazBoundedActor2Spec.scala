@@ -89,6 +89,21 @@ class ScalazBoundedActor2Spec extends BenchmarkSpec {
     ping(4000000, 10000)
   }
 
+  "Overflow throughput" in {
+    val n = 16000000
+    timed(n) {
+      val a = boundedActor[Message](1)(_ => ())
+      val t = Message()
+      var i = n
+      while (i > 0) {
+        try a ! t catch {
+          case ex: Throwable => // ignore
+        }
+        i -= 1
+      }
+    }
+  }
+
   def shutdown(): Unit = fullShutdown(executorService)
 
   private def ping(n: Int, p: Int): Unit = {
