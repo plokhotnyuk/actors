@@ -32,9 +32,9 @@ private final class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with 
 
   @annotation.tailrec
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
-    val env = dequeue()
-    if (env ne null) {
-      deadLetters.enqueue(owner, env)
+    val e = dequeue()
+    if (e ne null) {
+      deadLetters.enqueue(owner, e)
       cleanUp(owner, deadLetters)
     }
   }
@@ -43,12 +43,11 @@ private final class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with 
   private def offer(n: NBBQNode): Unit = {
     val h = get
     val hc = h.count
-    if (hc - count >= bound) throw new OutOfMailboxBoundsException("Mailbox boundary exceeded")
-    else {
+    if (hc - count < bound) {
       n.count = hc + 1
       if (compareAndSet(h, n)) h.lazySet(n)
       else offer(n)
-    }
+    } else throw new OutOfMailboxBoundsException("Mailbox boundary exceeded")
   }
 
   @annotation.tailrec
