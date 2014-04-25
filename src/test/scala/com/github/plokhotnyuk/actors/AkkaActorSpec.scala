@@ -11,7 +11,7 @@ import akka.pattern.ask
 import scala.concurrent.Await
 
 class AkkaActorSpec extends BenchmarkSpec {
-  val config = load(parseString(
+  def config: Config = load(parseString(
     """
       akka {
         log-dead-letters = 0
@@ -21,12 +21,11 @@ class AkkaActorSpec extends BenchmarkSpec {
           benchmark-dispatcher {
             executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
-            mailbox-type = "com.github.plokhotnyuk.actors.NonBlockingBoundedMailbox"
-            mailbox-bound = 10000000
           }
         }
       }
     """))
+
   val actorSystem = ActorSystem("system", config)
   val root = actorSystem.actorOf(Props(classOf[RootAkkaActor]))
   implicit val timeout = Timeout(1000, TimeUnit.SECONDS)
@@ -139,7 +138,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   private def actorOf(p: Props): ActorRef = Await.result(root ? p, timeout.duration).asInstanceOf[ActorRef]
 }
 
-class ReplayAndCountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
+private class ReplayAndCountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
   private var i = n
 
   def receive = {
@@ -153,7 +152,7 @@ class ReplayAndCountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
   }
 }
 
-class CountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
+private class CountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
   private var i = n
 
   def receive = {
@@ -166,7 +165,7 @@ class CountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
   }
 }
 
-class BlockableCountAkkaActor(l1: CountDownLatch, l2: CountDownLatch, n: Int) extends Actor {
+private class BlockableCountAkkaActor(l1: CountDownLatch, l2: CountDownLatch, n: Int) extends Actor {
   private var blocked = true
   private var i = n - 1
 
@@ -185,7 +184,7 @@ class BlockableCountAkkaActor(l1: CountDownLatch, l2: CountDownLatch, n: Int) ex
   }
 }
 
-class RootAkkaActor extends Actor {
+private class RootAkkaActor extends Actor {
   def receive = {
     case p: Props =>
       sender ! context.actorOf(p)
@@ -199,13 +198,13 @@ class RootAkkaActor extends Actor {
   }
 }
 
-class MinimalAkkaActor extends Actor {
+private class MinimalAkkaActor extends Actor {
   def receive = {
     case _ =>
   }
 }
 
-class CustomExecutorServiceConfigurator(config: Config, prerequisites: DispatcherPrerequisites) extends ExecutorServiceConfigurator(config, prerequisites) {
+private class CustomExecutorServiceConfigurator(config: Config, prerequisites: DispatcherPrerequisites) extends ExecutorServiceConfigurator(config, prerequisites) {
   def createExecutorServiceFactory(id: String, threadFactory: ThreadFactory): ExecutorServiceFactory = new ExecutorServiceFactory {
     def createExecutorService: ExecutorService = BenchmarkSpec.createExecutorService()
   }
