@@ -19,16 +19,15 @@ class NonBlockingBoundedMailbox(bound: Int = Int.MaxValue) extends MailboxType w
 case class OutOfMailboxBoundException(message: String) extends AkkaException(message) with NoStackTrace
 
 private final class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with MessageQueue {
-  private var count = 0
   private val tail = new AtomicReference(get)
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit = offer(new NBBQNode(handle))
 
   override def dequeue(): Envelope = poll(tail)
 
-  override def numberOfMessages: Int = get.count - count
+  override def numberOfMessages: Int = get.count - tail.get.count
 
-  override def hasMessages: Boolean = get.count != count
+  override def hasMessages: Boolean = get ne tail.get
 
   @annotation.tailrec
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
@@ -41,9 +40,10 @@ private final class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with 
 
   @annotation.tailrec
   private def offer(n: NBBQNode): Unit = {
+    val tc = tail.get.count
     val h = get
     val hc = h.count
-    if (hc - count < bound) {
+    if (hc - tc < bound) {
       n.count = hc + 1
       if (compareAndSet(h, n)) h.lazySet(n)
       else offer(n)
@@ -55,7 +55,6 @@ private final class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with 
     val tn = t.get
     val n = tn.get
     if (n ne null) {
-      count = n.count
       if (t.compareAndSet(tn, n)) {
         val e = n.env
         n.env = null // to avoid possible memory leak when queue is empty
