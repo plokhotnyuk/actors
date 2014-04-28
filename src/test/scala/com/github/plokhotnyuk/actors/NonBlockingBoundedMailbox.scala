@@ -16,7 +16,7 @@ class NonBlockingBoundedMailbox(bound: Int = Int.MaxValue) extends MailboxType w
 }
 
 @SerialVersionUID(1L)
-case class OutOfMailboxBoundsException(message: String) extends AkkaException(message) with NoStackTrace
+case class OutOfMailboxBoundException(message: String) extends AkkaException(message) with NoStackTrace
 
 private final class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with MessageQueue {
   private var count = 0
@@ -47,7 +47,7 @@ private final class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with 
       n.count = hc + 1
       if (compareAndSet(h, n)) h.lazySet(n)
       else offer(n)
-    } else throw new OutOfMailboxBoundsException("Mailbox bound exceeded")
+    } else throw new OutOfMailboxBoundException("Mailbox bound exceeded")
   }
 
   @annotation.tailrec

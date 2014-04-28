@@ -14,14 +14,14 @@ class Actor2Spec extends Specification {
   "unbounded actor" should {
     "execute code async" in {
       val l = new CountDownLatch(1)
-      val a = unboundedActor[Int](_ => l.countDown())
+      val a = unboundedActor((_: Int) => l.countDown())
       a ! 1
       assertCountDown(l)
     }
 
     "caught code errors to be handled" in {
       val l = new CountDownLatch(1)
-      val a = unboundedActor[Int](_ => throw new RuntimeException(), (ex: Throwable) => l.countDown())
+      val a = unboundedActor((_: Int) => throw new RuntimeException(), (ex: Throwable) => l.countDown())
       a ! 1
       assertCountDown(l)
     }
@@ -29,8 +29,8 @@ class Actor2Spec extends Specification {
     "exchange messages without loss" in {
       val l = new CountDownLatch(NumOfMessages)
       var a1: Actor2[Int] = null
-      val a2 = unboundedActor[Int]((i: Int) => a1 ! i - 1)
-      a1 = unboundedActor[Int] {
+      val a2 = unboundedActor((i: Int) => a1 ! i - 1)
+      a1 = unboundedActor {
         (i: Int) =>
           if (i == l.getCount) {
             if (i != 0) a2 ! i - 1
@@ -57,14 +57,14 @@ class Actor2Spec extends Specification {
   "bounded actor" should {
     "execute code async" in {
       val l = new CountDownLatch(1)
-      val a = boundedActor[Int](1)(_ => l.countDown())
+      val a = boundedActor(1, (_: Int) => l.countDown())
       a ! 1
       assertCountDown(l)
     }
 
     "caught code errors to be handled" in {
       val l = new CountDownLatch(1)
-      val a = boundedActor[Int](1)(_ => throw new RuntimeException(), (ex: Throwable) => l.countDown())
+      val a = boundedActor(1, (_: Int) => throw new RuntimeException(), (ex: Throwable) => l.countDown())
       a ! 1
       assertCountDown(l)
     }
@@ -72,15 +72,15 @@ class Actor2Spec extends Specification {
     "exchange messages without loss" in {
       val l = new CountDownLatch(NumOfMessages)
       var a1: Actor2[Int] = null
-      val a2 = boundedActor[Int](1)((i: Int) => a1 ! i - 1)
-      a1 = unboundedActor[Int] {
+      val a2 = boundedActor(1, (i: Int) => a1 ! i - 1)
+      a1 = boundedActor(1, {
         (i: Int) =>
           if (i == l.getCount) {
             if (i != 0) a2 ! i - 1
             l.countDown()
             l.countDown()
           }
-      }
+      })
       a1 ! NumOfMessages
       assertCountDown(l)
     }
@@ -97,17 +97,17 @@ class Actor2Spec extends Specification {
     }
 
     "be bounded by positive number" in {
-      boundedActor[Int](0)(_ => ()) must throwA[IllegalArgumentException]
+      boundedActor(0, (_: Int) => ()) must throwA[IllegalArgumentException]
     }
 
     "throw exception on overflow" in {
-      val a = boundedActor[Int](1)(_ => ())
-      (1 to 1000).foreach(a ! _) must throwA[OutOfMessageQueueBoundsException]
+      val a = boundedActor(1, (_: Int) => ())
+      (1 to 1000).foreach(a ! _) must throwA[OutOfMessageQueueBoundException]
     }
   }
 
   private def countingDownUnboundedActor(l: CountDownLatch): Actor2[(Int, Int)] =
-    unboundedActor[(Int, Int)] {
+    unboundedActor {
       val ms = mutable.Map[Int, Int]()
       (m: (Int, Int)) =>
         val (j, i) = m
@@ -118,7 +118,7 @@ class Actor2Spec extends Specification {
     }
 
   private def countingDownBoundedActor(l: CountDownLatch): Actor2[(Int, Int)] =
-    boundedActor[(Int, Int)](Int.MaxValue) {
+    boundedActor(Int.MaxValue, {
       val ms = mutable.Map[Int, Int]()
       (m: (Int, Int)) =>
         val (j, i) = m
@@ -126,7 +126,7 @@ class Actor2Spec extends Specification {
           ms.put(j, i)
           l.countDown()
         }
-    }
+    })
 
   private def assertCountDown(latch: CountDownLatch, timeout: Long = 1000): Boolean =
     latch.await(timeout, TimeUnit.MILLISECONDS) must_== true

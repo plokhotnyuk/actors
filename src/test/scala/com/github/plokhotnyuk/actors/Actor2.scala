@@ -66,16 +66,16 @@ trait ActorFunctions2 {
    * @tparam A       The type of messages accepted by this actor
    * @return         An instance of actor
    */
-  def boundedActor[A](bound: Int)(handler: A => Unit, onError: Throwable => Unit = rethrow)
+  def boundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit = rethrow)
                      (implicit strategy: Strategy): Actor2[A] = {
     if (bound <= 0) throw new IllegalArgumentException
-    new BoundedActor[A](handler, onError, strategy, bound)
+    new BoundedActor[A](bound, handler, onError, strategy)
   }
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
 
-class OutOfMessageQueueBoundsException extends RuntimeException with NoStackTrace
+class OutOfMessageQueueBoundException extends RuntimeException with NoStackTrace
 
 private class UnboundedActor[A](handler: A => Unit, onError: Throwable => Unit,
                                 strategy: Strategy) extends AtomicReference[Node[A]] with Actor2[A] {
@@ -115,13 +115,13 @@ private class UnboundedActor[A](handler: A => Unit, onError: Throwable => Unit,
 
 private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
-private class BoundedActor[A](handler: A => Unit, onError: Throwable => Unit, strategy: Strategy,
-                              bound: Int) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
+private class BoundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit, 
+                              strategy: Strategy) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
   private var count: Int = _
 
   def !(a: A): Unit = checkAndAdd(new NodeWithCount(a))
 
-  def contramap[B](f: B => A): Actor2[B] = new BoundedActor[B](b => this ! f(b), onError, strategy, bound)
+  def contramap[B](f: B => A): Actor2[B] = new BoundedActor[B](bound, b => this ! f(b), onError, strategy)
 
   @annotation.tailrec
   private def checkAndAdd(n: NodeWithCount[A]): Unit = {
@@ -134,7 +134,7 @@ private class BoundedActor[A](handler: A => Unit, onError: Throwable => Unit, st
       n.count = h.count + 1
       if (compareAndSet(h, n)) h.lazySet(n)
       else checkAndAdd(n)
-    } else throw new OutOfMessageQueueBoundsException
+    } else throw new OutOfMessageQueueBoundException
   }
 
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))

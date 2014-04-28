@@ -43,7 +43,7 @@ class ScalazBoundedActor2Spec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(10000000)(() => boundedActor[Message](1)(_ => ()))
+    footprintedAndTimedCollect(10000000)(() => boundedActor(1, (_: Int) => ()))
   }
 
   "Single-producer sending" in {
@@ -92,7 +92,7 @@ class ScalazBoundedActor2Spec extends BenchmarkSpec {
   "Overflow throughput" in {
     val n = 16000000
     timed(n) {
-      val a = boundedActor[Message](1)(_ => ())
+      val a = boundedActor(1, (_: Message) => ())
       val t = Message()
       var i = n
       while (i > 0) {
@@ -111,20 +111,20 @@ class ScalazBoundedActor2Spec extends BenchmarkSpec {
     val as = (1 to p).map {
       _ =>
         var a1: Actor2[Message] = null
-        val a2 = boundedActor[Message](1) {
+        val a2 = boundedActor(1, {
           var i = n / p / 2
           (m: Message) =>
             if (i > 0) a1 ! m
             i -= 1
             if (i == 0) l.countDown()
-        }
-        a1 = boundedActor[Message](1) {
+        })
+        a1 = boundedActor(1, {
           var i = n / p / 2
           (m: Message) =>
             if (i > 0) a2 ! m
             i -= 1
             if (i == 0) l.countDown()
-        }
+        })
         a2
     }
     timed(n, printAvgLatency = p == 1) {
@@ -134,7 +134,7 @@ class ScalazBoundedActor2Spec extends BenchmarkSpec {
   }
 
   private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Actor2[Message] =
-    boundedActor[Message](n) {
+    boundedActor(n, {
       var blocked = true
       var i = n - 1
       (m: Message) =>
@@ -145,15 +145,15 @@ class ScalazBoundedActor2Spec extends BenchmarkSpec {
           i -= 1
           if (i == 0) l2.countDown()
         }
-    }
+    })
 
   private def countActor(l: CountDownLatch, n: Int): Actor2[Message] =
-    boundedActor[Message](n) {
+    boundedActor(n, {
       var i = n
       (m: Message) =>
         i -= 1
         if (i == 0) l.countDown()
-    }
+    })
 
   private def sendMessages(a: Actor2[Message], n: Int): Unit = {
     val t = Message()
