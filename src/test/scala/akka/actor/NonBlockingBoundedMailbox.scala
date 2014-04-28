@@ -16,9 +16,9 @@ private class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with Messag
   private val tail = new AtomicReference(get)
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
-    if (!offer(new NBBQNode(handle))) {
-      val deadLetter = DeadLetter(handle.message, handle.sender, receiver)
-      receiver.asInstanceOf[InternalActorRef].provider.deadLetters.tell(deadLetter, handle.sender)
+    if (offer(new NBBQNode(handle))) {
+      receiver.asInstanceOf[InternalActorRef].provider.deadLetters
+        .tell(DeadLetter(handle.message, handle.sender, receiver), handle.sender)
     }
 
   override def dequeue(): Envelope = poll(tail)
@@ -27,11 +27,11 @@ private class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with Messag
 
   override def hasMessages: Boolean = get ne tail.get
 
-  override def cleanUp(o: ActorRef, dl: MessageQueue): Unit = {
-    var envelope = dequeue()
-    while (envelope ne null) {
-      dl.enqueue(o, envelope)
-      envelope = dequeue()
+  override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
+    var e = dequeue()
+    while (e ne null) {
+      deadLetters.enqueue(owner, e)
+      e = dequeue()
     }
   }
 
@@ -44,9 +44,9 @@ private class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with Messag
       n.count = hc + 1
       if (compareAndSet(h, n)) {
         h.lazySet(n)
-        true
+        false
       } else offer(n)
-    } else false
+    } else true
   }
 
   @annotation.tailrec
