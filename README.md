@@ -57,9 +57,3 @@ Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Wind
 
 #### out1*.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_60-ea-b15 64-bit
-
-#### out2*.txt
-Intel(R) Core(TM) i7-3740QM CPU @ 2.70GHz (max 3.70GHz), RAM 16Gb DDR3-1600, Mac OS X 10.9.2, JDK 1.8.0_05-b13 64-bit
-
-#### out3*.txt
-Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz (max 3.90GHz) overclocked to 4.30GHz, RAM 32Gb DDR3-1666, Linux Mint 14, Oracle JDK 1.7.0_55-b13 64-bit
