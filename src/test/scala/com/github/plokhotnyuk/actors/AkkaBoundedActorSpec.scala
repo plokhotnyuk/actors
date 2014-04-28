@@ -14,7 +14,7 @@ class AkkaBoundedActorSpec extends AkkaActorSpec {
           benchmark-dispatcher {
             executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
-            mailbox-type = "com.github.plokhotnyuk.actors.NonBlockingBoundedMailbox"
+            mailbox-type = "akka.actor.NonBlockingBoundedMailbox"
             mailbox-bound = 10000000
           }
         }
