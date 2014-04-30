@@ -43,7 +43,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(10000000)(() => unboundedActor((_: Message) => ()))
+    footprintedAndTimedCollect(10000000)(() => actor((_: Message) => ()))
   }
 
   "Single-producer sending" in {
@@ -91,19 +91,21 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
 
   def shutdown(): Unit = fullShutdown(executorService)
 
+  def actor[A](handler: A => Unit): Actor2[A] = unboundedActor(handler)
+
   private def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
         var a1: Actor2[Message] = null
-        val a2 = unboundedActor {
+        val a2 = actor {
           var i = n / p / 2
           (m: Message) =>
             if (i > 0) a1 ! m
             i -= 1
             if (i == 0) l.countDown()
         }
-        a1 = unboundedActor {
+        a1 = actor {
           var i = n / p / 2
           (m: Message) =>
             if (i > 0) a2 ! m
@@ -119,7 +121,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   }
 
   private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Actor2[Message] =
-    unboundedActor {
+    actor {
       var blocked = true
       var i = n - 1
       (m: Message) =>
@@ -133,7 +135,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
     }
 
   private def countActor(l: CountDownLatch, n: Int): Actor2[Message] =
-    unboundedActor {
+    actor {
       var i = n
       (m: Message) =>
         i -= 1

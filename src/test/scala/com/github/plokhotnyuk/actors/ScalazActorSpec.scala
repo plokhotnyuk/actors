@@ -44,7 +44,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(10000000)(() => actor[Message](_ => ()))
+    footprintedAndTimedCollect(10000000)(() => actor((_: Message) => ()))
   }
 
   "Single-producer sending" in {
@@ -97,14 +97,14 @@ class ScalazActorSpec extends BenchmarkSpec {
     val as = (1 to p).map {
       _ =>
         var a1: Actor[Message] = null
-        val a2 = actor[Message] {
+        val a2 = actor {
           var i = n / p / 2
           (m: Message) =>
             if (i > 0) a1 ! m
             i -= 1
             if (i == 0) l.countDown()
         }
-        a1 = actor[Message] {
+        a1 = actor {
           var i = n / p / 2
           (m: Message) =>
             if (i > 0) a2 ! m
@@ -120,7 +120,7 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Actor[Message] =
-    actor[Message] {
+    actor {
       var blocked = true
       var i = n - 1
       (m: Message) =>
@@ -134,7 +134,7 @@ class ScalazActorSpec extends BenchmarkSpec {
     }
 
   private def countActor(l: CountDownLatch, n: Int): Actor[Message] =
-    actor[Message] {
+    actor {
       var i = n
       (m: Message) =>
         i -= 1
