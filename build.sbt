@@ -4,16 +4,9 @@ version := "1.0-SNAPSHOT"
 
 scalaVersion := "2.10.4"
 
-resolvers ++= Seq(
-  "OSS Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases",
-  "OSS Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-  "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases",
-  "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots"
-)
-
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.3.2" % "test",
-  "net.liftweb" %% "lift-actor" % "2.6-M2" % "test",
+  "net.liftweb" %% "lift-actor" % "2.6-M3" % "test",
   "org.scala-lang" % "scala-actors" % "2.10.4" % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.1.0-M6" % "test",
   "com.twitter" % "jsr166e" % "1.1.0" % "test",
