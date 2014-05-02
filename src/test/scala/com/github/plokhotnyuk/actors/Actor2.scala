@@ -115,26 +115,37 @@ private class UnboundedActor[A](handler: A => Unit, onError: Throwable => Unit,
 
 private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
-private class BoundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit, 
+private class BoundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit,
                               strategy: Strategy) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
   private var count: Int = _
 
-  def !(a: A): Unit = checkAndAdd(new NodeWithCount(a))
+  def !(a: A): Unit = checkAndAdd(new NodeWithCount(a), 0)
 
   def contramap[B](f: B => A): Actor2[B] = new BoundedActor[B](bound, b => this ! f(b), onError, strategy)
 
   @annotation.tailrec
-  private def checkAndAdd(n: NodeWithCount[A]): Unit = {
+  private def checkAndAdd(n: NodeWithCount[A], i: Int): Unit = {
     val h = get
     if (h eq null) {
       n.count = count + 1
       if (compareAndSet(h, n)) schedule(n)
-      else checkAndAdd(n)
+      else {
+        backOff(i)
+        checkAndAdd(n, i + 1)
+      }
     } else if (h.count - count < bound) {
       n.count = h.count + 1
       if (compareAndSet(h, n)) h.lazySet(n)
-      else checkAndAdd(n)
+      else {
+        backOff(i)
+        checkAndAdd(n, i + 1)
+      }
     } else throw new OutOfMessageQueueBoundException
+  }
+
+  private def backOff(i: Int): Unit = {
+    val mask = BoundedActor.mask
+    if ((i & mask) == mask) Thread.`yield`()
   }
 
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
@@ -161,6 +172,10 @@ private class BoundedActor[A](bound: Int, handler: A => Unit, onError: Throwable
     if (n2 ne null) n2
     else next(n)
   }
+}
+
+private object BoundedActor {
+  val mask = Integer.highestOneBit(Runtime.getRuntime.availableProcessors()) - 1
 }
 
 private class NodeWithCount[A](val a: A) extends AtomicReference[NodeWithCount[A]] {
