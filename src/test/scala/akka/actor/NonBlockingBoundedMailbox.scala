@@ -16,12 +16,12 @@ private class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with Messag
   private val tail = new AtomicReference(get)
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
-    if (!offer(new NBBQNode(handle), 0)) {
+    if (!offer(new NBBQNode(handle))) {
       receiver.asInstanceOf[InternalActorRef].provider.deadLetters
         .tell(DeadLetter(handle.message, handle.sender, receiver), handle.sender)
     }
 
-  override def dequeue(): Envelope = poll(tail, 0)
+  override def dequeue(): Envelope = poll(tail)
 
   override def numberOfMessages: Int = get.count - tail.get.count
 
@@ -36,7 +36,7 @@ private class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with Messag
   }
 
   @annotation.tailrec
-  private def offer(n: NBBQNode, i: Int): Boolean = {
+  private def offer(n: NBBQNode): Boolean = {
     val tc = tail.get.count
     val h = get
     val hc = h.count
@@ -45,20 +45,12 @@ private class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with Messag
       if (compareAndSet(h, n)) {
         h.lazySet(n)
         true
-      } else {
-        backOff(i)
-        offer(n, i + 1)
-      }
+      } else offer(n)
     } else false
   }
 
-  private def backOff(i: Int): Unit = {
-    val mask = NBBQ.mask
-    if ((i & mask) == mask) Thread.`yield`()
-  }
-
   @annotation.tailrec
-  private def poll(t: AtomicReference[NBBQNode], i: Int): Envelope = {
+  private def poll(t: AtomicReference[NBBQNode]): Envelope = {
     val tn = t.get
     val n = tn.get
     if (n ne null) {
@@ -66,16 +58,9 @@ private class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with Messag
         val e = n.handle
         n.handle = null // to avoid possible memory leak when queue is empty
         e
-      } else {
-        backOff(i)
-        poll(t, i + 1)
-      }
+      } else poll(t)
     } else null
   }
-}
-
-private object NBBQ {
-  val mask = Integer.highestOneBit(Runtime.getRuntime.availableProcessors()) - 1
 }
 
 private class NBBQNode(var handle: Envelope = null) extends AtomicReference[NBBQNode] {
