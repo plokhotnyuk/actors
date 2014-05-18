@@ -68,9 +68,9 @@ object BenchmarkSpec {
   }
 
   def footprintedAndTimed[A](n: Int)(benchmark: => A): A = {
-    val u = usedMemory
+    val u = usedMemory()
     val r = timed(n)(benchmark)
-    val m = usedMemory - u
+    val m = usedMemory() - u
     val b = bytesPerInstance(m, n)
     println(f"$b%,d bytes per instance")
     r
@@ -78,7 +78,7 @@ object BenchmarkSpec {
 
   def footprintedAndTimedCollect[A](n: Int)(construct: () => A): Seq[A] = {
     val r = Array.ofDim(n).asInstanceOf[Array[A]]
-    val u = usedMemory
+    val u = usedMemory()
     timed(n, printAvgLatency = true) {
       val as = r
       var i = n
@@ -87,7 +87,7 @@ object BenchmarkSpec {
         as(i) = construct()
       }
     }
-    val m = usedMemory - u
+    val m = usedMemory() - u
     val b = bytesPerInstance(m, n)
     println(f"$b%,d bytes per instance")
     r
@@ -95,28 +95,13 @@ object BenchmarkSpec {
 
   def bytesPerInstance(m: Long, n: Int): Int = Math.round(m.toDouble / n / 4).toInt * 4
 
-  def usedMemory: Long = {
-    def usage: Long = Runtime.getRuntime.totalMemory() - Runtime.getRuntime.freeMemory()
-
-    @annotation.tailrec
-    def forceGC(prevUsage: Long = usage): Long = {
-      System.gc()
-      Thread.sleep(10)
-      val currUsage = usage
-      if (currUsage >= prevUsage) forceGC(prevUsage)
-      else currUsage
-    }
-
-    @annotation.tailrec
-    def fullGC(precision: Double, prevUsage: Long = forceGC()): Long = {
-      System.gc()
-      Thread.sleep(10)
-      val currUsage = usage
-      if (Math.abs(prevUsage - currUsage).toDouble / prevUsage > precision) fullGC(precision, currUsage)
-      else currUsage
-    }
-
-    fullGC(0.001)
+  @annotation.tailrec
+  def usedMemory(precision: Double = 0.001, prevUsage: Long = 0): Long = {
+    System.gc()
+    Thread.sleep(10)
+    val usage = Runtime.getRuntime.totalMemory() - Runtime.getRuntime.freeMemory()
+    if (Math.abs(prevUsage - usage).toDouble / prevUsage > precision) usedMemory(precision, usage)
+    else usage
   }
 
   def fullShutdown(e: ExecutorService): Unit = {
