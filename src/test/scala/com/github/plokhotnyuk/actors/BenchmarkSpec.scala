@@ -98,13 +98,18 @@ object BenchmarkSpec {
 
   def collectGarbage(): Unit = usedMemory()
 
-  @annotation.tailrec
-  def usedMemory(precision: Double = 0.001, prevUsage: Long = 0): Long = {
+  def usedMemory(precision: Double = 0.001): Long = {
+    @annotation.tailrec
+    def waitAndGetUsage(precision: Double, prevUsage: Long): Long = {
+      Thread.sleep(30)
+      val runtime = Runtime.getRuntime
+      val usage = runtime.totalMemory() - runtime.freeMemory()
+      if (Math.abs(prevUsage - usage).toDouble / prevUsage > precision) waitAndGetUsage(precision, usage)
+      else usage
+    }
+
     System.gc()
-    Thread.sleep(10)
-    val usage = Runtime.getRuntime.totalMemory() - Runtime.getRuntime.freeMemory()
-    if (Math.abs(prevUsage - usage).toDouble / prevUsage > precision) usedMemory(precision, usage)
-    else usage
+    waitAndGetUsage(precision, 0)
   }
 
   def fullShutdown(e: ExecutorService): Unit = {
