@@ -21,7 +21,7 @@ import scala.util.control.NoStackTrace
  *
  * @see scalaz.concurrent.Promise for a use case.
  */
-trait Actor2[A] {
+sealed trait Actor2[A] {
   /** Pass the message `a` to the mailbox of this actor */
   def !(a: A): Unit
 
@@ -77,8 +77,8 @@ trait ActorFunctions2 {
 
 class OutOfMessageQueueBoundException extends RuntimeException with NoStackTrace
 
-private class UnboundedActor[A](handler: A => Unit, onError: Throwable => Unit,
-                                strategy: Strategy) extends AtomicReference[Node[A]] with Actor2[A] {
+private case class UnboundedActor[A](handler: A => Unit, onError: Throwable => Unit,
+                                     strategy: Strategy) extends AtomicReference[Node[A]] with Actor2[A] {
   def !(a: A): Unit = {
     val n = new Node(a)
     val h = getAndSet(n)
@@ -115,8 +115,8 @@ private class UnboundedActor[A](handler: A => Unit, onError: Throwable => Unit,
 
 private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
-private class BoundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit, 
-                              strategy: Strategy) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
+private case class BoundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit,
+                                   strategy: Strategy) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
   private var count: Int = _
 
   def !(a: A): Unit = checkAndAdd(new NodeWithCount(a))

@@ -21,6 +21,7 @@ abstract class BenchmarkSpec extends Specification {
 
   override def map(fs: => Fragments) = Step(setup()) ^ fs.map {
     case Example(desc, body, _, _, _) => Example(desc, {
+      collectGarbage()
       println()
       println(s"$desc:")
       body()
@@ -95,6 +96,8 @@ object BenchmarkSpec {
 
   def bytesPerInstance(m: Long, n: Int): Int = Math.round(m.toDouble / n / 4).toInt * 4
 
+  def collectGarbage(): Unit = usedMemory()
+
   @annotation.tailrec
   def usedMemory(precision: Double = 0.001, prevUsage: Long = 0): Long = {
     System.gc()
@@ -119,7 +122,5 @@ class ParRunner(fs: Seq[() => Unit]) {
     }
   }).foreach(_.start())
 
-  def start() {
-    barrier.await()
-  }
+  def start(): Unit = barrier.await()
 }
