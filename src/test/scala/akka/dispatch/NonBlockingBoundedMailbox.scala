@@ -1,18 +1,19 @@
-package akka.actor
+package akka.dispatch
 
 import java.util.concurrent.atomic.AtomicReference
 import com.typesafe.config.Config
-import akka.dispatch._
+import akka.actor.{InternalActorRef, ActorRef, ActorSystem}
+import akka.actor.DeadLetter
 
-class NonBlockingBoundedMailbox(bound: Int = Int.MaxValue) extends MailboxType with ProducesMessageQueue[MessageQueue] {
-  if (bound <= 0) throw new IllegalArgumentException("Mailbox bound should be greater than 0")
+class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxType with ProducesMessageQueue[MessageQueue] {
+  if (capacity <= 0) throw new IllegalArgumentException("Mailbox capacity should be greater than 0")
 
-  def this(settings: ActorSystem.Settings, config: Config) = this(config.getInt("mailbox-bound"))
+  def this(settings: ActorSystem.Settings, config: Config) = this(config.getInt("mailbox-capacity"))
 
-  override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new NBBQ(bound)
+  override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new NBBQ(capacity)
 }
 
-private class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with MessageQueue with MultipleConsumerSemantics {
+private class NBBQ(capacity: Int) extends AtomicReference(new NBBQNode) with MessageQueue with MultipleConsumerSemantics {
   private val tail = new AtomicReference(get)
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
@@ -40,7 +41,7 @@ private class NBBQ(bound: Int) extends AtomicReference(new NBBQNode) with Messag
     val tc = tail.get.count
     val h = get
     val hc = h.count
-    if (hc - tc < bound) {
+    if (hc - tc < capacity) {
       n.count = hc + 1
       if (compareAndSet(h, n)) {
         h.lazySet(n)

@@ -3,7 +3,7 @@ package com.github.plokhotnyuk.actors
 import com.typesafe.config.ConfigFactory._
 import com.typesafe.config.Config
 
-class AkkaBoundedActorSpec extends AkkaActorSpec {
+class AkkaNonBlockingBoundedActorSpec extends AkkaActorSpec {
   override def config: Config = load(parseString(
     """
       akka {
@@ -14,9 +14,8 @@ class AkkaBoundedActorSpec extends AkkaActorSpec {
           benchmark-dispatcher {
             executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
-            mailbox-type = "akka.dispatch.BoundedMailbox"
+            mailbox-type = "akka.dispatch.NonBlockingBoundedMailbox"
             mailbox-capacity = 10000000
-            mailbox-push-timeout-time = 0
           }
         }
       }
