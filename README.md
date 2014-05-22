@@ -21,6 +21,7 @@ Evaluation of API and performance of different actor libraries written on Scala:
 * `Max throughput` - throughput of message sending from several external threads to several actors
 * `Ping latency` - average latency of sending of a ping message between two actors
 * `Ping throughput 10K` - throughput of executor service by sending of a ping message between 10K pairs of actors
+* `Overflow throughput` - throughput of overflow handing of bounded version of actors
 
 ## Hardware required
 - CPU: 2 cores or more

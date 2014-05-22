@@ -7,7 +7,7 @@ class ScalazBoundedActor2Spec extends ScalazUnboundedActor2Spec {
   "Overflow throughput" in {
     val n = 16000000
     timed(n) {
-      val a = actor((_: Message) => ())
+      val a = boundedActor(1, (_: Message) => ())
       val t = Message()
       var i = n
       while (i > 0) {

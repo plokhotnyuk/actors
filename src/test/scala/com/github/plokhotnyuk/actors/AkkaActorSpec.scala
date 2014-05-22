@@ -126,7 +126,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   private def countActor(l: CountDownLatch, n: Int): ActorRef =
     actorOf(Props(classOf[CountAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
 
-  private def sendMessages(a: ActorRef, n: Int): Unit = {
+  protected def sendMessages(a: ActorRef, n: Int): Unit = {
     val m = Message()
     var i = n
     while (i > 0) {
@@ -135,7 +135,7 @@ class AkkaActorSpec extends BenchmarkSpec {
     }
   }
 
-  private def actorOf(p: Props): ActorRef = Await.result(root ? p, timeout.duration).asInstanceOf[ActorRef]
+  protected def actorOf(p: Props): ActorRef = Await.result(root ? p, timeout.duration).asInstanceOf[ActorRef]
 }
 
 private class ReplayAndCountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
