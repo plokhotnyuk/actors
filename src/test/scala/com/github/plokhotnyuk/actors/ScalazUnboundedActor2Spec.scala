@@ -142,7 +142,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
         if (i == 0) l.countDown()
     }
 
-  private def sendMessages(a: Actor2[Message], n: Int): Unit = {
+  protected def sendMessages(a: Actor2[Message], n: Int): Unit = {
     val t = Message()
     var i = n
     while (i > 0) {
