@@ -13,9 +13,7 @@ class ScalazBoundedActor2Spec extends ScalazUnboundedActor2Spec {
       val t = Message()
       var i = n
       while (i > 0) {
-        try a ! t catch {
-          case ex: Throwable => // ignore
-        }
+        a ! t
         i -= 1
       }
     }
