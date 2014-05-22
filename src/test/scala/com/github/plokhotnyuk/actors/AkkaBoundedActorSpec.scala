@@ -3,7 +3,8 @@ package com.github.plokhotnyuk.actors
 import com.typesafe.config.ConfigFactory._
 import com.typesafe.config.Config
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import akka.actor.Props
+import akka.actor.{Actor, ActorRef, Props}
+import java.util.concurrent.CountDownLatch
 
 class AkkaBoundedActorSpec extends AkkaActorSpec {
   override def config: Config = load(parseString(
@@ -33,9 +34,22 @@ class AkkaBoundedActorSpec extends AkkaActorSpec {
 
   "Overflow throughput" in {
     val n = 5000000
-    val a = actorOf(Props(classOf[MinimalAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher-2"))
+    val l = new CountDownLatch(1)
+    val a = blockableCountActor2(l)
     timed(n) {
       sendMessages(a, n)
     }
+    l.countDown()
+  }
+
+  private def blockableCountActor2(l: CountDownLatch): ActorRef =
+    actorOf(Props(classOf[BlockableCountAkkaActor2], l).withDispatcher("akka.actor.benchmark-dispatcher-2"))
+}
+
+private class BlockableCountAkkaActor2(l: CountDownLatch) extends Actor {
+  def receive = {
+    case _ =>
+      l.await()
+      context.stop(self)
   }
 }

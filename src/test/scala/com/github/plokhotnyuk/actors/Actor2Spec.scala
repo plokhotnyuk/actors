@@ -4,6 +4,7 @@ import java.util.concurrent._
 import scala.collection.mutable
 import org.specs2.mutable.Specification
 import com.github.plokhotnyuk.actors.Actor2._
+import java.util.concurrent.atomic.AtomicInteger
 
 class Actor2Spec extends Specification {
   val NumOfMessages = 100000
@@ -100,9 +101,11 @@ class Actor2Spec extends Specification {
       boundedActor(0, (_: Int) => ()) must throwA[IllegalArgumentException]
     }
 
-    "throw exception on overflow" in {
-      val a = boundedActor(1, (_: Int) => ())
-      (1 to 1000).foreach(a ! _) must throwA[OutOfMessageQueueBoundException]
+    "handle overflow" in {
+      val i = new AtomicInteger
+      val a = boundedActor(1, (_: Int) => (), onOverflow = (_: Int) => i.incrementAndGet())
+      (1 to NumOfMessages).foreach(a ! _)
+      i.get must be greaterThan 0
     }
   }
 

@@ -3,7 +3,6 @@ package com.github.plokhotnyuk.actors
 import java.util.concurrent.atomic.AtomicReference
 import scalaz.concurrent.{Strategy, Run}
 import scalaz.Contravariant
-import scala.util.control.NoStackTrace
 
 /**
  * Processes messages of type `A`, one at a time. Messages are submitted to
@@ -42,6 +41,7 @@ sealed abstract class ActorInstances2 {
 
 trait ActorFunctions2 {
   private val rethrow: Throwable => Unit = throw _
+  private val ignore: Any => Unit = _ => ()
 
   /**
    * Create actor with unbounded message queue
@@ -59,23 +59,22 @@ trait ActorFunctions2 {
   /**
    * Create actor with bounded message queue
    *
-   * @param bound    An allowed maximum number of messages in queue
-   * @param handler  The message handler
-   * @param onError  Exception handler, called if the message handler throws any `Throwable`
-   * @param strategy Execution strategy, for example, a strategy that is backed by an `ExecutorService`
-   * @tparam A       The type of messages accepted by this actor
-   * @return         An instance of actor
+   * @param bound      An allowed maximum number of messages in queue
+   * @param handler    The message handler
+   * @param onError    Exception handler, called if the message handler throws any `Throwable`
+   * @param onOverflow Overflow handler, called if the queue of non-handled incoming messages is full
+   * @param strategy   Execution strategy, for example, a strategy that is backed by an `ExecutorService`
+   * @tparam A         The type of messages accepted by this actor
+   * @return           An instance of actor
    */
-  def boundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit = rethrow)
+  def boundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit = rethrow, onOverflow: A => Unit = ignore)
                      (implicit strategy: Strategy): Actor2[A] = {
     if (bound <= 0) throw new IllegalArgumentException
-    new BoundedActor[A](bound, handler, onError, strategy)
+    new BoundedActor[A](bound, handler, onError, onOverflow, strategy)
   }
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
-
-class OutOfMessageQueueBoundException extends RuntimeException with NoStackTrace
 
 private case class UnboundedActor[A](handler: A => Unit, onError: Throwable => Unit,
                                      strategy: Strategy) extends AtomicReference[Node[A]] with Actor2[A] {
@@ -115,13 +114,13 @@ private case class UnboundedActor[A](handler: A => Unit, onError: Throwable => U
 
 private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
-private case class BoundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit,
+private case class BoundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit, onOverflow: A => Unit,
                                    strategy: Strategy) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
   private var count: Int = _
 
   def !(a: A): Unit = checkAndAdd(new NodeWithCount(a))
 
-  def contramap[B](f: B => A): Actor2[B] = new BoundedActor[B](bound, b => this ! f(b), onError, strategy)
+  def contramap[B](f: B => A): Actor2[B] = new BoundedActor[B](bound, b => this ! f(b), onError, b => onOverflow(f(b)), strategy)
 
   @annotation.tailrec
   private def checkAndAdd(n: NodeWithCount[A]): Unit = {
@@ -134,7 +133,7 @@ private case class BoundedActor[A](bound: Int, handler: A => Unit, onError: Thro
       n.count = h.count + 1
       if (compareAndSet(h, n)) h.lazySet(n)
       else checkAndAdd(n)
-    } else throw new OutOfMessageQueueBoundException
+    } else onOverflow(n.a)
   }
 
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
