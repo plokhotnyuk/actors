@@ -54,10 +54,10 @@ Results of running mvnAll.bat or mvnAll.sh scripts on different environments wit
 pool size set to default (number of available processors), 1, 10 or 100 values accordingly:
 
 #### out0*.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.8.0_20-ea-b11 64-bit
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.8.0_05-b13 64-bit
 
 #### out1*.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_60-ea-b15 64-bit
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_55-b13 64-bit
 
 #### out2*.txt
 Intel(R) Xeon(R) CPU E3-1240 V2 @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, CentOS 6.3, 1.8.0_05-b13 64-bit
