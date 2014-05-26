@@ -23,10 +23,10 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Enqueueing" in {
-    val n = 600000
+    val n = 40000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
-    val a = blockableCountActor(l1, l2, n)
+    val a = blockableCountActor(l1, l2, 2) // hack to exit without dequeueing
     footprintedAndTimed(n) {
       sendMessages(a, n)
     }
