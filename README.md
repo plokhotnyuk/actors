@@ -60,5 +60,9 @@ Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Wind
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_55-b13 64-bit
 
 #### out2*.txt
-Intel(R) Xeon(R) CPU E3-1240 V2 @ 3.40GHz (max 3.80GHz), RAM 16Gb DDR3-1600, CentOS 6.3, 1.8.0_05-b13 64-bit
+Intel(R) Core(TM) i7-4850MQ CPU @ 2.30GHz (max 3.50GHz), RAM 12Gb DDR3-1600, Mac OS X 10.9.3, Oracle JDK 1.8.0_05-b13 64-bit
+
+#### out3*.txt
+Intel(R) Core(TM) i7-4850MQ CPU @ 2.30GHz (max 3.50GHz), RAM 12Gb DDR3-1600, Mac OS X 10.9.3, Oracle JDK 1.7.0_55-b13 64-bit
+
 
