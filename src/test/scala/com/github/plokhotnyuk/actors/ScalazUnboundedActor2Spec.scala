@@ -3,6 +3,7 @@ package com.github.plokhotnyuk.actors
 import com.github.plokhotnyuk.actors.Actor2._
 import java.util.concurrent.CountDownLatch
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
+import org.specs2.execute.Success
 import scalaz.concurrent.Strategy
 
 class ScalazUnboundedActor2Spec extends BenchmarkSpec {
@@ -28,6 +29,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
     }
     l1.countDown()
     l2.await()
+    Success()
   }
 
   "Dequeueing" in {
@@ -40,10 +42,12 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
       l1.countDown()
       l2.await()
     }
+    Success()
   }
 
   "Initiation" in {
     footprintedAndTimedCollect(10000000)(() => actor((_: Message) => ()))
+    Success()
   }
 
   "Single-producer sending" in {
@@ -54,6 +58,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
       sendMessages(a, n)
       l.await()
     }
+    Success()
   }
 
   "Multi-producer sending" in {
@@ -65,6 +70,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
       r.start()
       l.await()
     }
+    Success()
   }
 
   "Max throughput" in {
@@ -79,14 +85,17 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
       r.start()
       l.await()
     }
+    Success()
   }
 
   "Ping latency" in {
     ping(3200000, 1)
+    Success()
   }
 
   "Ping throughput 10K" in {
     ping(4000000, 10000)
+    Success()
   }
 
   def shutdown(): Unit = fullShutdown(executorService)

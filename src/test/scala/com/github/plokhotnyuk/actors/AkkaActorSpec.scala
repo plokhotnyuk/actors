@@ -8,6 +8,7 @@ import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import akka.dispatch.{ExecutorServiceFactory, ExecutorServiceConfigurator, DispatcherPrerequisites}
 import akka.util.Timeout
 import akka.pattern.ask
+import org.specs2.execute.Success
 import scala.concurrent.Await
 
 class AkkaActorSpec extends BenchmarkSpec {
@@ -40,6 +41,7 @@ class AkkaActorSpec extends BenchmarkSpec {
     }
     l1.countDown()
     l2.await()
+    Success()
   }
 
   "Dequeueing" in {
@@ -52,10 +54,12 @@ class AkkaActorSpec extends BenchmarkSpec {
       l1.countDown()
       l2.await()
     }
+    Success()
   }
 
   "Initiation" in {
     Await.result(root ? "Initiation", timeout.duration)
+    Success()
   }
 
   "Single-producer sending" in {
@@ -66,6 +70,7 @@ class AkkaActorSpec extends BenchmarkSpec {
       sendMessages(a, n)
       l.await()
     }
+    Success()
   }
 
   "Multi-producer sending" in {
@@ -77,6 +82,7 @@ class AkkaActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
+    Success()
   }
 
   "Max throughput" in {
@@ -91,14 +97,17 @@ class AkkaActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
+    Success()
   }
 
   "Ping latency" in {
     ping(1500000, 1)
+    Success()
   }
 
   "Ping throughput 10K" in {
     ping(1800000, 10000)
+    Success()
   }
 
   def shutdown(): Unit = {

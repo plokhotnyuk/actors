@@ -4,6 +4,7 @@ import java.util.concurrent.CountDownLatch
 import net.liftweb.actor.{ILAExecute, LAScheduler, LiftActor}
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import net.liftweb.common.Full
+import org.specs2.execute.Success
 
 class LiftActorSpec extends BenchmarkSpec {
   LAScheduler.createExecutor = () => new ILAExecute {
@@ -27,6 +28,7 @@ class LiftActorSpec extends BenchmarkSpec {
     }
     l1.countDown()
     l2.await()
+    Success()
   }
 
   "Dequeueing" in {
@@ -39,6 +41,7 @@ class LiftActorSpec extends BenchmarkSpec {
       l1.countDown()
       l2.await()
     }
+    Success()
   }
 
   "Initiation" in {
@@ -47,6 +50,7 @@ class LiftActorSpec extends BenchmarkSpec {
         case _ =>
       }
     })
+    Success()
   }
 
   "Single-producer sending" in {
@@ -57,6 +61,7 @@ class LiftActorSpec extends BenchmarkSpec {
       sendMessages(a, n)
       l.await()
     }
+    Success()
   }
 
   "Multi-producer sending" in {
@@ -68,6 +73,7 @@ class LiftActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
+    Success()
   }
 
   "Max throughput" in {
@@ -82,14 +88,17 @@ class LiftActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
+    Success()
   }
 
   "Ping latency" in {
     ping(1500000, 1)
+    Success()
   }
 
   "Ping throughput 10K" in {
     ping(1800000, 10000)
+    Success()
   }
 
   def shutdown(): Unit = LAScheduler.shutdown()

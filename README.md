@@ -21,7 +21,7 @@ Evaluation of API and performance of different actor libraries written on Scala:
 * `Max throughput` - throughput of message sending from several external threads to several actors
 * `Ping latency` - average latency of sending of a ping message between two actors
 * `Ping throughput 10K` - throughput of executor service by sending of a ping message between 10K pairs of actors
-* `Overflow throughput` - throughput of overflow handing of bounded version of actors
+* `Overflow throughput` - throughput of overflow handing for bounded version of actors
 
 ## Hardware required
 - CPU: 2 cores or more
@@ -29,7 +29,7 @@ Evaluation of API and performance of different actor libraries written on Scala:
 
 ## Software installed required
 - JDK: 1.7.0_x or newer
-- Maven: 3.x or sbt: 0.12.x
+- Maven: 3.x or sbt: 0.13.x
 
 ## Building & running benchmarks
 Use following command-line instructions to build from sources and run benchmarks with Scala's ForkJoinPool in FIFO mode:
@@ -57,12 +57,4 @@ pool size set to default (number of available processors), 1, 10 or 100 values a
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.8.0_05-b13 64-bit
 
 #### out1*.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_55-b13 64-bit
-
-#### out2*.txt
-Intel(R) Core(TM) i7-4850MQ CPU @ 2.30GHz (max 3.50GHz), RAM 12Gb DDR3-1600, Mac OS X 10.9.3, Oracle JDK 1.8.0_05-b13 64-bit
-
-#### out3*.txt
-Intel(R) Core(TM) i7-4850MQ CPU @ 2.30GHz (max 3.50GHz), RAM 12Gb DDR3-1600, Mac OS X 10.9.3, Oracle JDK 1.7.0_55-b13 64-bit
-
-
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_60-b19 64-bit

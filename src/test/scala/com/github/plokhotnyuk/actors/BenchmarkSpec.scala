@@ -17,8 +17,6 @@ abstract class BenchmarkSpec extends Specification {
   sequential
   xonly
 
-  implicit def anyToSuccess(a: Any) = Success()
-
   override def map(fs: => Fragments) = Step(setup()) ^ fs.map {
     case Example(desc, body, _, _, _) => Example(desc, {
       println()

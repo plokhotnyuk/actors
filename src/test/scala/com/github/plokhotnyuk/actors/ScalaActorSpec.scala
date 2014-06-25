@@ -1,6 +1,8 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent.CountDownLatch
+import org.specs2.execute.Success
+
 import scala.actors.{SchedulerAdapter, Actor}
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
@@ -32,6 +34,7 @@ class ScalaActorSpec extends BenchmarkSpec {
     }
     l1.countDown()
     l2.await()
+    Success()
   }
 
   "Dequeueing" in {
@@ -44,6 +47,7 @@ class ScalaActorSpec extends BenchmarkSpec {
       l1.countDown()
       l2.await()
     }
+    Success()
   }
 
   "Initiation" in {
@@ -56,6 +60,7 @@ class ScalaActorSpec extends BenchmarkSpec {
 
       override def scheduler = customScheduler
     }.start())
+    Success()
   }
 
   "Single-producer sending" in {
@@ -66,6 +71,7 @@ class ScalaActorSpec extends BenchmarkSpec {
       sendMessages(a, n)
       l.await()
     }
+    Success()
   }
 
   "Multi-producer sending" in {
@@ -77,6 +83,7 @@ class ScalaActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
+    Success()
   }
 
   "Max throughput" in {
@@ -91,14 +98,17 @@ class ScalaActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
+    Success()
   }
 
   "Ping latency" in {
     ping(250000, 1)
+    Success()
   }
 
   "Ping throughput 10K" in {
     ping(400000, 10000)
+    Success()
   }
 
   def shutdown(): Unit = customScheduler.shutdown()
