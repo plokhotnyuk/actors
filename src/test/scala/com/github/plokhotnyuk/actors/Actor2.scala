@@ -54,7 +54,7 @@ trait ActorFunctions2 {
    */
   def unboundedActor[A](handler: A => Unit, onError: Throwable => Unit = rethrow)
                        (implicit strategy: Strategy): Actor2[A] =
-    new UnboundedActor[A](handler, onError, strategy)
+    new UnboundedActor[A](strategy, onError, handler)
 
   /**
    * Create actor with bounded message queue
@@ -70,24 +70,22 @@ trait ActorFunctions2 {
   def boundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit = rethrow, onOverflow: A => Unit = ignore)
                      (implicit strategy: Strategy): Actor2[A] = {
     if (bound <= 0) throw new IllegalArgumentException
-    new BoundedActor[A](bound, handler, onError, onOverflow, strategy)
+    new BoundedActor[A](bound, strategy, onError, onOverflow, handler)
   }
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
 
-private case class UnboundedActor[A](handler: A => Unit, onError: Throwable => Unit,
-                                     strategy: Strategy) extends Actor2[A] {
-  private lazy val head = new AtomicReference[Node[A]]
-
+private case class UnboundedActor[A](strategy: Strategy, onError: Throwable => Unit,
+                                     handler: A => Unit) extends AtomicReference[Node[A]] with Actor2[A] {
   def !(a: A): Unit = {
     val n = new Node(a)
-    val h = head.getAndSet(n)
+    val h = getAndSet(n)
     if (h ne null) h.lazySet(n)
     else schedule(n)
   }
 
-  def contramap[B](f: B => A): Actor2[B] = new UnboundedActor[B](b => this ! f(b), onError, strategy)
+  def contramap[B](f: B => A): Actor2[B] = new UnboundedActor[B](strategy, onError, b => this ! f(b))
 
   private def schedule(n: Node[A]): Unit = strategy(act(n))
 
@@ -104,7 +102,7 @@ private case class UnboundedActor[A](handler: A => Unit, onError: Throwable => U
 
   private def scheduleLastTry(n: Node[A]): Unit = strategy(lastTry(n))
 
-  private def lastTry(n: Node[A]): Unit = if (!head.compareAndSet(n, null)) act(next(n))
+  private def lastTry(n: Node[A]): Unit = if (!compareAndSet(n, null)) act(next(n))
 
   @annotation.tailrec
   private def next(n: Node[A]): Node[A] = {
@@ -116,26 +114,25 @@ private case class UnboundedActor[A](handler: A => Unit, onError: Throwable => U
 
 private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
-private case class BoundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit, onOverflow: A => Unit,
-                                   strategy: Strategy) extends Actor2[A] {
+private case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Throwable => Unit, onOverflow: A => Unit,
+                                   handler: A => Unit) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
   private var count: Int = _
-  private lazy val head = new AtomicReference[NodeWithCount[A]]
 
-  def !(a: A): Unit = checkAndAdd(new NodeWithCount(a), head)
+  def !(a: A): Unit = checkAndAdd(new NodeWithCount(a))
 
-  def contramap[B](f: B => A): Actor2[B] = new BoundedActor[B](bound, b => this ! f(b), onError, b => onOverflow(f(b)), strategy)
+  def contramap[B](f: B => A): Actor2[B] = new BoundedActor[B](bound, strategy, onError, b => onOverflow(f(b)), b => this ! f(b))
 
   @annotation.tailrec
-  private def checkAndAdd(n: NodeWithCount[A], hr: AtomicReference[NodeWithCount[A]]): Unit = {
-    val h = hr.get
+  private def checkAndAdd(n: NodeWithCount[A]): Unit = {
+    val h = get
     if (h eq null) {
       n.count = count + 1
-      if (hr.compareAndSet(h, n)) schedule(n)
-      else checkAndAdd(n, hr)
+      if (compareAndSet(h, n)) schedule(n)
+      else checkAndAdd(n)
     } else if (h.count - count < bound) {
       n.count = h.count + 1
-      if (hr.compareAndSet(h, n)) h.lazySet(n)
-      else checkAndAdd(n, hr)
+      if (compareAndSet(h, n)) h.lazySet(n)
+      else checkAndAdd(n)
     } else onOverflow(n.a)
   }
 
@@ -155,7 +152,7 @@ private case class BoundedActor[A](bound: Int, handler: A => Unit, onError: Thro
 
   private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
 
-  private def lastTry(n: NodeWithCount[A]): Unit = if (!head.compareAndSet(n, null)) act(next(n))
+  private def lastTry(n: NodeWithCount[A]): Unit = if (!compareAndSet(n, null)) act(next(n))
 
   @annotation.tailrec
   private def next(n: NodeWithCount[A]): NodeWithCount[A] = {
