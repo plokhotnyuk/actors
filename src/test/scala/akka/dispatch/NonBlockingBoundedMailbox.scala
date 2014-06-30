@@ -43,7 +43,7 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NBBQNode) with Mes
     if (hc - tc < capacity) {
       n.count = hc + 1
       if (compareAndSet(h, n)) {
-        h.lazySet(n)
+        h.set(n)
         true
       } else offer(n, tc)
     } else {
