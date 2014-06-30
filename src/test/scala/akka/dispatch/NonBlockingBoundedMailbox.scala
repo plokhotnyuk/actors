@@ -12,19 +12,18 @@ class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxTyp
   override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new NBBQ(capacity)
 }
 
-private class NBBQ(capacity: Int) extends AtomicInteger with MessageQueue with MultipleConsumerSemantics {
+private final class NBBQ(capacity: Int) extends AtomicInteger with MessageQueue with MultipleConsumerSemantics {
   private val head = new AtomicReference(new QNode)
   private val tail = new AtomicReference(head.get)
 
-  override def enqueue(receiver: ActorRef, handle: Envelope): Unit = {
-    val n = new QNode(handle)
-    val h = head
-    if (capacity > getAndIncrement()) h.getAndSet(n).set(n)
-    else {
+  override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
+    if (capacity > getAndIncrement()) {
+      val n = new QNode(handle)
+      head.getAndSet(n).set(n)
+    } else {
       getAndDecrement()
       overflow(receiver, handle)
     }
-  }
 
   override def dequeue(): Envelope = poll(tail)
 
@@ -64,7 +63,7 @@ class UnboundedMailbox2 extends MailboxType with ProducesMessageQueue[MessageQue
   override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new UQ
 }
 
-private class UQ extends AtomicReference(new QNode) with MessageQueue with MultipleConsumerSemantics {
+private final class UQ extends AtomicReference(new QNode) with MessageQueue with MultipleConsumerSemantics {
   private val tail = new AtomicReference(get)
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit = {
