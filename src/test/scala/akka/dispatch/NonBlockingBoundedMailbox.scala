@@ -1,9 +1,8 @@
 package akka.dispatch
 
-import java.util.concurrent.atomic.AtomicReference
+import akka.actor.{InternalActorRef, ActorRef, ActorSystem, DeadLetter}
 import com.typesafe.config.Config
-import akka.actor.{InternalActorRef, ActorRef, ActorSystem}
-import akka.actor.DeadLetter
+import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 
 class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxType with ProducesMessageQueue[MessageQueue] {
   if (capacity <= 0) throw new IllegalArgumentException("Mailbox capacity should be greater than 0")
@@ -13,20 +12,25 @@ class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxTyp
   override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new NBBQ(capacity)
 }
 
-private class NBBQ(capacity: Int) extends AtomicReference(new NBBQNode) with MessageQueue with MultipleConsumerSemantics {
-  private val tail = new AtomicReference(get)
+private class NBBQ(capacity: Int) extends AtomicInteger with MessageQueue with MultipleConsumerSemantics {
+  private val head = new AtomicReference(new NBBQNode)
+  private val tail = new AtomicReference(head.get)
 
-  override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
-    if (!offer(new NBBQNode(handle), tail.get.count)) {
-      receiver.asInstanceOf[InternalActorRef].provider.deadLetters
-        .tell(DeadLetter(handle.message, handle.sender, receiver), handle.sender)
+  override def enqueue(receiver: ActorRef, handle: Envelope): Unit = {
+    val n = new NBBQNode(handle)
+    val h = head
+    if (capacity > getAndIncrement()) h.getAndSet(n).set(n)
+    else {
+      getAndDecrement()
+      overflow(receiver, handle)
     }
+  }
 
   override def dequeue(): Envelope = poll(tail)
 
-  override def numberOfMessages: Int = get.count - tail.get.count
+  override def numberOfMessages: Int = get
 
-  override def hasMessages: Boolean = get ne tail.get
+  override def hasMessages: Boolean = get > 0
 
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
     var e = dequeue()
@@ -36,22 +40,8 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NBBQNode) with Mes
     }
   }
 
-  @annotation.tailrec
-  private def offer(n: NBBQNode, tc: Int): Boolean = {
-    val h = get
-    val hc = h.count
-    if (hc - tc < capacity) {
-      n.count = hc + 1
-      if (compareAndSet(h, n)) {
-        h.set(n)
-        true
-      } else offer(n, tc)
-    } else {
-      val ntc = tail.get.count
-      if (tc == ntc) false
-      else offer(n, ntc)
-    }
-  }
+  private def overflow(a: ActorRef, e: Envelope): Unit =
+    a.asInstanceOf[InternalActorRef].provider.deadLetters.tell(DeadLetter(e.message, e.sender, a), e.sender)
 
   @annotation.tailrec
   private def poll(t: AtomicReference[NBBQNode]): Envelope = {
@@ -59,6 +49,7 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NBBQNode) with Mes
     val n = tn.get
     if (n ne null) {
       if (t.compareAndSet(tn, n)) {
+        getAndDecrement()
         val e = n.handle
         n.handle = null // to avoid possible memory leak when queue is empty
         e
@@ -67,6 +58,4 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NBBQNode) with Mes
   }
 }
 
-private class NBBQNode(var handle: Envelope = null) extends AtomicReference[NBBQNode] {
-  var count: Int = _
-}
+private class NBBQNode(var handle: Envelope = null) extends AtomicReference[NBBQNode]
