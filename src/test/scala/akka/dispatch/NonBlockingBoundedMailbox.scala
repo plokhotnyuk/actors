@@ -17,7 +17,7 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NBBQNode) with Mes
   private val tail = new AtomicReference(get)
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
-    if (!offer(new NBBQNode(handle))) {
+    if (!offer(new NBBQNode(handle), tail.get.count)) {
       receiver.asInstanceOf[InternalActorRef].provider.deadLetters
         .tell(DeadLetter(handle.message, handle.sender, receiver), handle.sender)
     }
@@ -37,8 +37,7 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NBBQNode) with Mes
   }
 
   @annotation.tailrec
-  private def offer(n: NBBQNode): Boolean = {
-    val tc = tail.get.count
+  private def offer(n: NBBQNode, tc: Int): Boolean = {
     val h = get
     val hc = h.count
     if (hc - tc < capacity) {
@@ -46,8 +45,12 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NBBQNode) with Mes
       if (compareAndSet(h, n)) {
         h.lazySet(n)
         true
-      } else offer(n)
-    } else false
+      } else offer(n, tc)
+    } else {
+      val ntc = tail.get.count
+      if (tc == ntc) false
+      else offer(n, ntc)
+    }
   }
 
   @annotation.tailrec
