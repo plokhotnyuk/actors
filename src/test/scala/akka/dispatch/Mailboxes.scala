@@ -25,7 +25,7 @@ private class NBBQ(capacity: Int) extends AtomicReference(new QNodeWithCount) wi
 
   override def numberOfMessages: Int = get.count - tail.get.count
 
-  override def hasMessages: Boolean = get ne tail.get
+  override def hasMessages: Boolean = tail.get.get ne null
 
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
     var e = dequeue()
