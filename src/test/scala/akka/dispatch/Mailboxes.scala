@@ -88,7 +88,7 @@ private class UQ extends AtomicReference(new QNode) with MessageQueue with Multi
 
   override def numberOfMessages: Int = count(tail.get, 0)
 
-  override def hasMessages: Boolean = get ne tail.get
+  override def hasMessages: Boolean = tail.get.get ne null
 
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
     var e = dequeue()
