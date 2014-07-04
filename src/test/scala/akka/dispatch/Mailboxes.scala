@@ -1,8 +1,9 @@
 package akka.dispatch
 
+import akka.actor.{InternalActorRef, ActorRef, ActorSystem, DeadLetter}
+import akka.util.Unsafe
 import java.util.concurrent.atomic.AtomicReference
 import com.typesafe.config.Config
-import akka.actor.{InternalActorRef, ActorRef, ActorSystem, DeadLetter}
 
 class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxType with ProducesMessageQueue[MessageQueue] {
   if (capacity <= 0) throw new IllegalArgumentException("Mailbox capacity should be greater than 0")
@@ -13,21 +14,38 @@ class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxTyp
 }
 
 private final class NBBQ(capacity: Int) extends AtomicReference(new QNodeWithCount) with MessageQueue with MultipleConsumerSemantics {
-  private val tail = new TailWithCount(get)
+  @volatile private var tail = get
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
-    if (!offer(new QNodeWithCount(handle), tail.get.count)) {
+    if (!offer(new QNodeWithCount(handle), tail.count)) {
       receiver.asInstanceOf[InternalActorRef].provider.deadLetters
         .tell(DeadLetter(handle.message, handle.sender, receiver), handle.sender)
     }
 
-  override def dequeue(): Envelope = tail.poll()
+  @annotation.tailrec
+  override def dequeue(): Envelope = {
+    val tn = tail
+    val n = tn.get
+    if (n ne null) {
+      if (NBBQ.compareAndSetTail(this, tn, n)) {
+        val e = n.handle
+        n.handle = null // to avoid possible memory leak when queue is empty
+        e
+      } else dequeue()
+    } else null
+  }
 
-  override def numberOfMessages: Int = get.count - tail.get.count
+  override def numberOfMessages: Int = get.count - tail.count
 
-  override def hasMessages: Boolean = tail.hasMessages
+  override def hasMessages: Boolean = tail.get ne null
 
-  override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = tail.cleanUp(owner, deadLetters)
+  override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
+    var e = dequeue()
+    while (e ne null) {
+      deadLetters.enqueue(owner, e)
+      e = dequeue()
+    }
+  }
 
   @annotation.tailrec
   private def offer(n: QNodeWithCount, tc: Int): Boolean = {
@@ -40,36 +58,18 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new QNodeWithCou
         true
       } else offer(n, tc)
     } else {
-      val ntc = tail.get.count
+      val ntc = tail.count
       if (tc == ntc) false
       else offer(n, ntc)
     }
   }
 }
 
-private final class TailWithCount(tn: QNodeWithCount) extends AtomicReference(tn) {
-  @annotation.tailrec
-  def poll(): Envelope = {
-    val tn = get
-    val n = tn.get
-    if (n ne null) {
-      if (compareAndSet(tn, n)) {
-        val e = n.handle
-        n.handle = null // to avoid possible memory leak when queue is empty
-        e
-      } else poll()
-    } else null
-  }
+private object NBBQ {
+  private val tailOffset = Unsafe.instance.objectFieldOffset(classOf[NBBQ].getDeclaredField("tail"))
 
-  def hasMessages: Boolean = get.get ne null
-
-  def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
-    var e = poll()
-    while (e ne null) {
-      deadLetters.enqueue(owner, e)
-      e = poll()
-    }
-  }
+  def compareAndSetTail(q: NBBQ, tn: QNodeWithCount, n: QNodeWithCount): Boolean =
+    Unsafe.instance.compareAndSwapObject(q, tailOffset, tn, n)
 }
 
 private final class QNodeWithCount(var handle: Envelope = null) extends AtomicReference[QNodeWithCount] {
@@ -83,20 +83,37 @@ class UnboundedMailbox2 extends MailboxType with ProducesMessageQueue[MessageQue
 }
 
 private final class UQ extends AtomicReference(new QNode) with MessageQueue with MultipleConsumerSemantics {
-  private val tail = new Tail(get)
+  @volatile private var tail = get
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit = {
     val n = new QNode(handle)
     getAndSet(n).set(n)
   }
 
-  override def dequeue(): Envelope = tail.poll()
+  @annotation.tailrec
+  override def dequeue(): Envelope = {
+    val tn = tail
+    val n = tn.get
+    if (n ne null) {
+      if (UQ.compareAndSetTail(this, tn, n)) {
+        val e = n.handle
+        n.handle = null // to avoid possible memory leak when queue is empty
+        e
+      } else dequeue()
+    } else null
+  }
 
-  override def numberOfMessages: Int = count(tail.get, 0)
+  override def numberOfMessages: Int = count(tail, 0)
 
-  override def hasMessages: Boolean = tail.hasMessages
+  override def hasMessages: Boolean = tail.get ne null
 
-  override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = tail.cleanUp(owner, deadLetters)
+  override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
+    var e = dequeue()
+    while (e ne null) {
+      deadLetters.enqueue(owner, e)
+      e = dequeue()
+    }
+  }
 
   @annotation.tailrec
   private def count(tn: AtomicReference[QNode], i: Int): Int = {
@@ -106,29 +123,11 @@ private final class UQ extends AtomicReference(new QNode) with MessageQueue with
   }
 }
 
-private final class QNode(var handle: Envelope = null) extends AtomicReference[QNode]
+private object UQ {
+  private val tailOffset = Unsafe.instance.objectFieldOffset(classOf[UQ].getDeclaredField("tail"))
 
-private final class Tail(tn: QNode) extends AtomicReference(tn) {
-  @annotation.tailrec
-  def poll(): Envelope = {
-    val tn = get
-    val n = tn.get
-    if (n ne null) {
-      if (compareAndSet(tn, n)) {
-        val e = n.handle
-        n.handle = null // to avoid possible memory leak when queue is empty
-        e
-      } else poll()
-    } else null
-  }
-
-  def hasMessages: Boolean = get.get ne null
-
-  def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
-    var e = poll()
-    while (e ne null) {
-      deadLetters.enqueue(owner, e)
-      e = poll()
-    }
-  }
+  def compareAndSetTail(q: UQ, tn: QNode, n: QNode): Boolean =
+    Unsafe.instance.compareAndSwapObject(q, tailOffset, tn, n)
 }
+
+private final class QNode(var handle: Envelope = null) extends AtomicReference[QNode]
