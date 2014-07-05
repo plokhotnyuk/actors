@@ -1,8 +1,10 @@
 package com.github.plokhotnyuk.actors
 
 import java.util.concurrent.atomic.AtomicReference
+import scala.concurrent.util.Unsafe._
 import scalaz.concurrent.{Strategy, Run}
 import scalaz.Contravariant
+import sun.misc.Unsafe
 
 /**
  * Processes messages of type `A`, one at a time. Messages are submitted to
@@ -116,7 +118,7 @@ private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
 private case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Throwable => Unit, onOverflow: A => Unit,
                                    handler: A => Unit) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
-  private var count: Int = _
+  @volatile private var count: Int = _
 
   def !(a: A): Unit = checkAndAdd(new NodeWithCount(a))
 
