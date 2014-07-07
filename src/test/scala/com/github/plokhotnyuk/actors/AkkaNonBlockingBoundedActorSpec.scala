@@ -11,13 +11,13 @@ class AkkaNonBlockingBoundedActorSpec extends AkkaBoundedActorSpec {
         log-dead-letters-during-shutdown = off
         actor {
           unstarted-push-timeout = 100s
-          benchmark-dispatcher {
+          default-dispatcher {
             executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
             mailbox-type = "akka.dispatch.NonBlockingBoundedMailbox"
             mailbox-capacity = 10000000
           }
-          benchmark-dispatcher-2 {
+          default-dispatcher-2 {
             executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
             mailbox-type = "akka.dispatch.NonBlockingBoundedMailbox"

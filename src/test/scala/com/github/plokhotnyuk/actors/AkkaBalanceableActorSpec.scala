@@ -11,7 +11,7 @@ class AkkaBalanceableActorSpec extends AkkaActorSpec {
         log-dead-letters-during-shutdown = off
         actor {
           unstarted-push-timeout = 100s
-          benchmark-dispatcher {
+          default-dispatcher {
             executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
             mailbox-type = "akka.dispatch.UnboundedMailbox2"
