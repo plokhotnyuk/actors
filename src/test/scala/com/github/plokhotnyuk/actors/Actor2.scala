@@ -1,8 +1,10 @@
 package com.github.plokhotnyuk.actors
 
-import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
+import java.util.concurrent.atomic.AtomicReference
+import scala.concurrent.util.Unsafe._
 import scalaz.concurrent.{Strategy, Run}
 import scalaz.Contravariant
+import sun.misc.Unsafe
 
 /**
  * Processes messages of type `A`, one at a time. Messages are submitted to
@@ -116,7 +118,7 @@ private final class Node[A](val a: A) extends AtomicReference[Node[A]]
 
 private final case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Throwable => Unit, onOverflow: A => Unit,
                                          handler: A => Unit) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
-  private val count = new AtomicInteger
+  @volatile private var count = 0
 
   def !(a: A): Unit = checkAndAdd(new NodeWithCount(a))
 
@@ -126,10 +128,10 @@ private final case class BoundedActor[A](bound: Int, strategy: Strategy, onError
   private def checkAndAdd(n: NodeWithCount[A]): Unit = {
     val h = get
     if (h eq null) {
-      n.count = count.get + 1
+      n.count = count + 1
       if (compareAndSet(h, n)) schedule(n)
       else checkAndAdd(n)
-    } else if (h.count - count.get < bound) {
+    } else if (h.count - count < bound) {
       n.count = h.count + 1
       if (compareAndSet(h, n)) h.lazySet(n)
       else checkAndAdd(n)
@@ -139,15 +141,15 @@ private final case class BoundedActor[A](bound: Int, strategy: Strategy, onError
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: NodeWithCount[A], i: Int = 1024, f: A => Unit = handler, c: AtomicInteger = count): Unit = {
-    c.lazySet(n.count)
-    try f(n.a) catch {
+  private def act(n: NodeWithCount[A], i: Int = 1024, u: Unsafe = instance, o: Long = BoundedActor.countOffset): Unit = {
+    u.putOrderedInt(this, o, n.count)
+    try handler(n.a) catch {
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
     if (n2 eq null) scheduleLastTry(n)
     else if (i == 0) schedule(n2)
-    else act(n2, i - 1, f, c)
+    else act(n2, i - 1, u, o)
   }
 
   private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
@@ -160,6 +162,10 @@ private final case class BoundedActor[A](bound: Int, strategy: Strategy, onError
     if (n2 ne null) n2
     else next(n)
   }
+}
+
+private object BoundedActor {
+  private val countOffset = instance.objectFieldOffset(classOf[BoundedActor[_]].getDeclaredField("count"))
 }
 
 private final class NodeWithCount[A](val a: A) extends AtomicReference[NodeWithCount[A]] {
