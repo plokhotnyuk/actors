@@ -9,7 +9,6 @@ import org.specs2.runner.JUnitRunner
 import org.specs2.mutable.Specification
 import org.specs2.specification.{Example, Step, Fragments}
 import scala.concurrent.forkjoin.{ForkJoinPool => ScalaForkJoinPool}
-import com.twitter.jsr166e.{ForkJoinPool => JSR166eForkJoinPool}
 
 @RunWith(classOf[JUnitRunner])
 abstract class BenchmarkSpec extends Specification {
@@ -42,7 +41,6 @@ object BenchmarkSpec {
 
   def createExecutorService(): ExecutorService =
     executorServiceType match {
-      case "jsr166e-forkjoin-pool" => new JSR166eForkJoinPool(poolSize, JSR166eForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "scala-forkjoin-pool" => new ScalaForkJoinPool(poolSize, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "java-forkjoin-pool" => new ForkJoinPool(poolSize, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 60, TimeUnit.SECONDS,
