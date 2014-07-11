@@ -118,7 +118,7 @@ private final class Node[A](val a: A) extends AtomicReference[Node[A]]
 
 private final case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Throwable => Unit, onOverflow: A => Unit,
                                          handler: A => Unit) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
-  @volatile private var count = 0
+  @volatile private var count: Int = _
 
   def !(a: A): Unit = checkAndAdd(new NodeWithCount(a))
 
