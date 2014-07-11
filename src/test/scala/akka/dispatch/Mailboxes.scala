@@ -14,14 +14,11 @@ class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxTyp
   override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new NBBQ(capacity)
 }
 
-private final class NBBQ(capacity: Int) extends AtomicReference(new QNodeWithCount) with MessageQueue with MultipleConsumerSemantics {
+private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) with MessageQueue with MultipleConsumerSemantics {
   @volatile private var tail = get
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
-    if (!offer(new QNodeWithCount(handle), tail.count)) {
-      receiver.asInstanceOf[InternalActorRef].provider.deadLetters
-        .tell(DeadLetter(handle.message, handle.sender, receiver), handle.sender)
-    }
+    if (!offer(new NodeWithCount(handle), tail.count)) onOverflow(receiver, handle)
 
   override def dequeue(): Envelope = poll(instance, NBBQ.tailOffset)
 
@@ -29,16 +26,17 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new QNodeWithCou
 
   override def hasMessages: Boolean = tail.get ne null
 
+  @annotation.tailrec
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
-    var e = dequeue()
-    while (e ne null) {
+    val e = dequeue()
+    if (e ne null) {
       deadLetters.enqueue(owner, e)
-      e = dequeue()
+      cleanUp(owner, deadLetters)
     }
   }
 
   @annotation.tailrec
-  private def offer(n: QNodeWithCount, tc: Int): Boolean = {
+  private def offer(n: NodeWithCount, tc: Int): Boolean = {
     val h = get
     val hc = h.count
     if (hc - tc < capacity) {
@@ -53,6 +51,9 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new QNodeWithCou
       else offer(n, ntc)
     }
   }
+
+  private def onOverflow(a: ActorRef, e: Envelope): Unit =
+    a.asInstanceOf[InternalActorRef].provider.deadLetters.tell(DeadLetter(e.message, e.sender, a), e.sender)
 
   @annotation.tailrec
   private def poll(u: Unsafe, o: Long): Envelope = {
@@ -72,7 +73,7 @@ private object NBBQ {
   private val tailOffset = instance.objectFieldOffset(classOf[NBBQ].getDeclaredField("tail"))
 }
 
-private final class QNodeWithCount(var handle: Envelope = null) extends AtomicReference[QNodeWithCount] {
+private final class NodeWithCount(var handle: Envelope = null) extends AtomicReference[NodeWithCount] {
   var count: Int = _
 }
 
@@ -82,11 +83,11 @@ class UnboundedMailbox2 extends MailboxType with ProducesMessageQueue[MessageQue
   override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new UQ
 }
 
-private final class UQ extends AtomicReference(new QNode) with MessageQueue with MultipleConsumerSemantics {
+private final class UQ extends AtomicReference(new Node) with MessageQueue with MultipleConsumerSemantics {
   @volatile private var tail = get
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit = {
-    val n = new QNode(handle)
+    val n = new Node(handle)
     getAndSet(n).set(n)
   }
 
@@ -96,11 +97,12 @@ private final class UQ extends AtomicReference(new QNode) with MessageQueue with
 
   override def hasMessages: Boolean = tail.get ne null
 
+  @annotation.tailrec
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
-    var e = dequeue()
-    while (e ne null) {
+    val e = dequeue()
+    if (e ne null) {
       deadLetters.enqueue(owner, e)
-      e = dequeue()
+      cleanUp(owner, deadLetters)
     }
   }
 
@@ -118,7 +120,7 @@ private final class UQ extends AtomicReference(new QNode) with MessageQueue with
   }
 
   @annotation.tailrec
-  private def count(tn: AtomicReference[QNode], i: Int): Int = {
+  private def count(tn: AtomicReference[Node], i: Int): Int = {
     val n = tn.get
     if (n eq null) i
     else count(n, i + 1)
@@ -129,4 +131,4 @@ private object UQ {
   private val tailOffset = instance.objectFieldOffset(classOf[UQ].getDeclaredField("tail"))
 }
 
-private final class QNode(var handle: Envelope = null) extends AtomicReference[QNode]
+private final class Node(var handle: Envelope = null) extends AtomicReference[Node]
