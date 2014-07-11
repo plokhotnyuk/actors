@@ -22,7 +22,7 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
 
   override def dequeue(): Envelope = poll(instance, NBBQ.tailOffset)
 
-  override def numberOfMessages: Int = get.count - tail.count
+  override def numberOfMessages: Int = Math.min(capacity, Math.max(0, get.count - tail.count))
 
   override def hasMessages: Boolean = tail.get ne null
 
