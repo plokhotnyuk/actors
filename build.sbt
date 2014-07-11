@@ -17,7 +17,7 @@ scalacOptions ++= Seq("-target:jvm-1.7", "-optimize", "-deprecation", "-unchecke
 
 parallelExecution in test := false
 
-testGrouping <<= definedTests in Test map { tests =>
+testGrouping in Test <<= definedTests in Test map { tests =>
   tests.map { test =>
     import Tests._
     import scala.collection.JavaConversions._
@@ -27,6 +27,8 @@ testGrouping <<= definedTests in Test map { tests =>
       runPolicy = SubProcess(javaOptions = Seq(
         "-server", "-Xms4096m", "-Xms4096m", "-XX:NewSize=3584m", "-Xss256k", "-XX:+UseG1GC", "-XX:+TieredCompilation",
         "-XX:+UseNUMA", "-XX:+UseCondCardMark", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
-        System.getProperties.propertyNames.toSeq.map(key => "-D" + key.toString + "=" + System.getProperty(key.toString))))
+        System.getProperties.toMap.map {
+          case (k, v)  => s"-D$k=$v"
+        }))
   }.sortWith(_.name < _.name)
 }
