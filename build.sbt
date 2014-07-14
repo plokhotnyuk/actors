@@ -28,7 +28,7 @@ testGrouping in Test <<= definedTests in Test map { tests =>
         "-server", "-Xms4096m", "-Xms4096m", "-XX:NewSize=3584m", "-Xss256k", "-XX:+UseG1GC", "-XX:+TieredCompilation",
         "-XX:+UseNUMA", "-XX:+UseCondCardMark", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
         System.getProperties.toMap.map {
-          case (k, v)  => s"-D$k=$v"
+          case (k, v)  => "-D" + k + "=" + v
         }))
   }.sortWith(_.name < _.name)
 }
