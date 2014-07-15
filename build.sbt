@@ -10,7 +10,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-actors" % "2.11.1" % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.1.0-RC1" % "test",
   "org.specs2" %% "specs2" % "2.3.13-scalaz-7.1.0-RC1" % "test",
-  "junit" % "junit-dep" % "4.11" % "test"
+  "junit" % "junit" % "4.11" % "test"
 )
 
 scalacOptions ++= Seq("-target:jvm-1.7", "-optimize", "-deprecation", "-unchecked")
