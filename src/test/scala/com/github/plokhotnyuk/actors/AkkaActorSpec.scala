@@ -17,6 +17,11 @@ class AkkaActorSpec extends BenchmarkSpec {
       akka {
         log-dead-letters = 0
         log-dead-letters-during-shutdown = off
+        deployment {
+          default {
+            dispatcher = "akka.actor.default-dispatcher"
+          }
+        }
         actor {
           unstarted-push-timeout = 100s
           default-dispatcher {
@@ -28,7 +33,7 @@ class AkkaActorSpec extends BenchmarkSpec {
     """))
 
   val actorSystem = ActorSystem("system", config)
-  val root = actorSystem.actorOf(Props(classOf[RootAkkaActor]))
+  val root = actorSystem.actorOf(Props(classOf[RootAkkaActor]).withDispatcher("akka.actor.default-dispatcher"))
   implicit val timeout = Timeout(1000, TimeUnit.SECONDS)
 
   "Enqueueing" in {
@@ -215,6 +220,6 @@ private class MinimalAkkaActor extends Actor {
 
 private class CustomExecutorServiceConfigurator(config: Config, prerequisites: DispatcherPrerequisites) extends ExecutorServiceConfigurator(config, prerequisites) {
   def createExecutorServiceFactory(id: String, threadFactory: ThreadFactory): ExecutorServiceFactory = new ExecutorServiceFactory {
-    def createExecutorService: ExecutorService = BenchmarkSpec.createExecutorService()
+    def createExecutorService: ExecutorService = BenchmarkSpec.executorService
   }
 }

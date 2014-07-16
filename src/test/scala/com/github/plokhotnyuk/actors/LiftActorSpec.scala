@@ -8,14 +8,14 @@ import org.specs2.execute.Success
 
 class LiftActorSpec extends BenchmarkSpec {
   LAScheduler.createExecutor = () => new ILAExecute {
-    val executorService = createExecutorService()
+    val es = executorService
 
     def execute(f: () => Unit): Unit =
-      executorService.execute(new Runnable {
+      es.execute(new Runnable {
         def run(): Unit = f()
       })
 
-    def shutdown(): Unit = fullShutdown(executorService)
+    def shutdown(): Unit = fullShutdown(es)
   }
 
   "Enqueueing" in {
