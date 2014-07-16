@@ -7,6 +7,7 @@ import org.specs2.execute.Success
 import scalaz.concurrent.Strategy
 
 class ScalazUnboundedActor2Spec extends BenchmarkSpec {
+  val executorService = createExecutorService()
   implicit val strategy = new Strategy {
     private val e = executorService
 

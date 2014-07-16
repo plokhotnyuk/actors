@@ -9,11 +9,12 @@ import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import scalaz.concurrent.Strategy
 
 class ScalazActorSpec extends BenchmarkSpec {
+  val executorService = createExecutorService()
   implicit val strategy = new Strategy {
-    private val es = executorService
+    private val e = executorService
 
     def apply[A](a: => A): () => A = {
-      es.execute(new Runnable() {
+      e.execute(new Runnable() {
         def run(): Unit = a
       })
       null

@@ -39,7 +39,7 @@ object BenchmarkSpec {
 
   def roundToParallelism(n: Int): Int = (n / parallelism) * parallelism
 
-  val executorService: ExecutorService =
+  def createExecutorService(): ExecutorService =
     executorServiceType match {
       case "scala-forkjoin-pool" => new ScalaForkJoinPool(poolSize, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "java-forkjoin-pool" => new ForkJoinPool(poolSize, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)

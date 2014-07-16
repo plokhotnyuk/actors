@@ -14,11 +14,6 @@ class AkkaBoundedActorSpec extends AkkaActorSpec {
       akka {
         log-dead-letters = 0
         log-dead-letters-during-shutdown = off
-        deployment {
-          default {
-            dispatcher = "akka.actor.default-dispatcher"
-          }
-        }
         actor {
           unstarted-push-timeout = 100s
           default-dispatcher {

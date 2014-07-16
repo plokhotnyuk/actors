@@ -8,20 +8,20 @@ import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ScalaActorSpec extends BenchmarkSpec {
   val customScheduler = new SchedulerAdapter {
-    val es = executorService
+    val executorService = createExecutorService()
 
     def execute(f: => Unit): Unit =
-      es.execute(new Runnable {
+      executorService.execute(new Runnable {
         def run(): Unit = f
       })
 
-    override def executeFromActor(task: Runnable): Unit = es.execute(task)
+    override def executeFromActor(task: Runnable): Unit = executorService.execute(task)
 
-    override def execute(task: Runnable): Unit = es.execute(task)
+    override def execute(task: Runnable): Unit = executorService.execute(task)
 
-    override def shutdown(): Unit = fullShutdown(es)
+    override def shutdown(): Unit = fullShutdown(executorService)
 
-    override def isActive: Boolean = !es.isShutdown
+    override def isActive: Boolean = !executorService.isShutdown
   }
 
   "Enqueueing" in {
