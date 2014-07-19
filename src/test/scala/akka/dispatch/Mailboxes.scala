@@ -42,7 +42,7 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
     if (hc - tc < capacity) {
       n.count = hc + 1
       if (compareAndSet(h, n)) {
-        h.set(n)
+        h.lazySet(n)
         true
       } else offer(n, tc)
     } else {
@@ -88,7 +88,7 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit = {
     val n = new Node(handle)
-    getAndSet(n).set(n)
+    getAndSet(n).lazySet(n)
   }
 
   override def dequeue(): Envelope = poll(instance, UQ.tailOffset)
