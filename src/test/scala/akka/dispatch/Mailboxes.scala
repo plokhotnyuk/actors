@@ -24,7 +24,7 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
 
   override def numberOfMessages: Int = Math.min(capacity, Math.max(0, get.count - tail.count))
 
-  override def hasMessages: Boolean = tail ne get
+  override def hasMessages: Boolean = tail.get ne null
 
   @annotation.tailrec
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
@@ -42,7 +42,7 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
     if (hc - tc < capacity) {
       n.count = hc + 1
       if (compareAndSet(h, n)) {
-        h.lazySet(n)
+        h.set(n)
         true
       } else offer(n, tc)
     } else {
@@ -88,14 +88,14 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit = {
     val n = new Node(handle)
-    getAndSet(n).lazySet(n)
+    getAndSet(n).set(n)
   }
 
   override def dequeue(): Envelope = poll(instance, UQ.tailOffset)
 
   override def numberOfMessages: Int = count(tail, 0)
 
-  override def hasMessages: Boolean = tail ne get
+  override def hasMessages: Boolean = tail.get ne null
 
   @annotation.tailrec
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
@@ -120,9 +120,11 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
   }
 
   @annotation.tailrec
-  private def count(n: AtomicReference[Node], i: Int): Int =
-    if (n eq get) i
-    else count(n.get, i + 1)
+  private def count(tn: AtomicReference[Node], i: Int): Int = {
+    val n = tn.get
+    if (n eq null) i
+    else count(n, i + 1)
+  }
 }
 
 private object UQ {
