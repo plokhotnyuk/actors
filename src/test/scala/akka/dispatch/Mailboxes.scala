@@ -24,7 +24,7 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
 
   override def numberOfMessages: Int = Math.min(capacity, Math.max(0, get.count - tail.count))
 
-  override def hasMessages: Boolean = tail.get ne null
+  override def hasMessages: Boolean = tail ne get
 
   @annotation.tailrec
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
@@ -95,7 +95,7 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
 
   override def numberOfMessages: Int = count(tail, 0)
 
-  override def hasMessages: Boolean = tail.get ne null
+  override def hasMessages: Boolean = tail ne get
 
   @annotation.tailrec
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
