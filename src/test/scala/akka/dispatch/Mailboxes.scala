@@ -120,11 +120,9 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
   }
 
   @annotation.tailrec
-  private def count(tn: AtomicReference[Node], i: Int): Int = {
-    val n = tn.get
-    if (n eq null) i
-    else count(n, i + 1)
-  }
+  private def count(n: AtomicReference[Node], i: Int): Int =
+    if (n eq get) i
+    else count(n.get, i + 1)
 }
 
 private object UQ {
