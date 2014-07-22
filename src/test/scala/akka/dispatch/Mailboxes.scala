@@ -15,7 +15,7 @@ class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxTyp
 }
 
 private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) with MessageQueue with MultipleConsumerSemantics {
-  @volatile private var tail = get
+  @volatile private var tail: NodeWithCount = get
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
     if (!offer(new NodeWithCount(handle), tail.count)) onOverflow(receiver, handle)
@@ -24,7 +24,7 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
 
   override def numberOfMessages: Int = Math.min(capacity, Math.max(0, get.count - tail.count))
 
-  override def hasMessages: Boolean = tail.get ne null
+  override def hasMessages: Boolean = tail ne get
 
   @annotation.tailrec
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
@@ -42,7 +42,7 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
     if (hc - tc < capacity) {
       n.count = hc + 1
       if (compareAndSet(h, n)) {
-        h.set(n)
+        h.lazySet(n)
         true
       } else offer(n, tc)
     } else {
@@ -59,13 +59,12 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
   private def poll(u: Unsafe, o: Long): Envelope = {
     val tn = tail
     val n = tn.get
-    if (n ne null) {
-      if (u.compareAndSwapObject(this, o, tn, n)) {
-        val e = n.handle
-        n.handle = null // to avoid possible memory leak when queue is empty
-        e
-      } else poll(u, o)
-    } else null
+    if ((n ne null) && u.compareAndSwapObject(this, o, tn, n)) {
+      val e = n.handle
+      n.handle = null // to avoid possible memory leak when queue is empty
+      e
+    } else if (tail ne get) poll(u, o)
+    else null
   }
 }
 
@@ -84,18 +83,18 @@ class UnboundedMailbox2 extends MailboxType with ProducesMessageQueue[MessageQue
 }
 
 private final class UQ extends AtomicReference(new Node) with MessageQueue with MultipleConsumerSemantics {
-  @volatile private var tail = get
+  @volatile private var tail: Node = get
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit = {
     val n = new Node(handle)
-    getAndSet(n).set(n)
+    getAndSet(n).lazySet(n)
   }
 
   override def dequeue(): Envelope = poll(instance, UQ.tailOffset)
 
   override def numberOfMessages: Int = count(tail, 0)
 
-  override def hasMessages: Boolean = tail.get ne null
+  override def hasMessages: Boolean = tail ne get
 
   @annotation.tailrec
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
@@ -110,19 +109,18 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
   private def poll(u: Unsafe, o: Long): Envelope = {
     val tn = tail
     val n = tn.get
-    if (n ne null) {
-      if (u.compareAndSwapObject(this, o, tn, n)) {
-        val e = n.handle
-        n.handle = null // to avoid possible memory leak when queue is empty
-        e
-      } else poll(u, o)
-    } else null
+    if ((n ne null) && u.compareAndSwapObject(this, o, tn, n)) {
+      val e = n.handle
+      n.handle = null // to avoid possible memory leak when queue is empty
+      e
+    } else if (tail ne get) poll(u, o)
+    else null
   }
 
   @annotation.tailrec
-  private def count(tn: AtomicReference[Node], i: Int): Int = {
+  private def count(tn: Node, i: Int): Int = {
     val n = tn.get
-    if (n eq null) i
+    if ((n eq null) && (tn eq get)) i
     else count(n, i + 1)
   }
 }
