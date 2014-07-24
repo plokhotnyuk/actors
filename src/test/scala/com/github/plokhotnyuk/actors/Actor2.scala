@@ -71,7 +71,7 @@ trait ActorFunctions2 {
    */
   def boundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit = rethrow, onOverflow: A => Unit = ignore)
                      (implicit strategy: Strategy): Actor2[A] = {
-    if (bound <= 0) throw new IllegalArgumentException
+    require(bound > 0, "Bound should be greater than 0")
     new BoundedActor[A](bound, strategy, onError, onOverflow, handler)
   }
 

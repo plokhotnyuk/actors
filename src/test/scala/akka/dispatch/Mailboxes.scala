@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 import sun.misc.Unsafe
 
 class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxType with ProducesMessageQueue[MessageQueue] {
-  if (capacity <= 0) throw new IllegalArgumentException("Mailbox capacity should be greater than 0")
+  require(capacity > 0, "Mailbox capacity should be greater than 0")
 
   def this(settings: ActorSystem.Settings, config: Config) = this(config.getInt("mailbox-capacity"))
 
