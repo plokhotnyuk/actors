@@ -18,6 +18,7 @@ abstract class BenchmarkSpec extends Specification {
   override def map(fs: => Fragments) = Step(setup()) ^ fs.map {
     case Example(desc, body, _, _, _) => Example(desc, {
       println()
+      usedMemory() // GC
       println(s"$desc:")
       body()
     })
@@ -90,19 +91,15 @@ object BenchmarkSpec {
 
   def bytesPerInstance(m: Long, n: Int): Int = Math.round(m.toDouble / n / 4).toInt * 4
 
-  def usedMemory(precision: Double = 0.001): Long = {
+  def usedMemory(precision: Double = 0.01): Long = {
     @annotation.tailrec
     def gcAndGetUsage(prevUsage: Long = 0): Long = {
+      System.gc()
+      Thread.sleep(30)
       val usage = Runtime.getRuntime.totalMemory() - Runtime.getRuntime.freeMemory()
-      val diff = (prevUsage - usage).toDouble
-      if (diff < 0) {
-        System.gc()
-        Thread.sleep(30)
-        gcAndGetUsage(usage)
-      } else if (diff / prevUsage > precision) {
-        Thread.sleep(30)
-        gcAndGetUsage(usage)
-      } else usage
+      val diff = prevUsage - usage
+      if (diff < 0 || diff.toDouble / prevUsage > precision) gcAndGetUsage(usage)
+      else usage
     }
 
     gcAndGetUsage()
