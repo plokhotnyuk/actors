@@ -18,7 +18,7 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
   @volatile private var tail: NodeWithCount = get
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
-    if (!offer(new NodeWithCount(handle), tail.count)) onOverflow(receiver, handle)
+    if (!offer(new NodeWithCount(handle))) onOverflow(receiver, handle)
 
   override def dequeue(): Envelope = poll(instance, NBBQ.tailOffset)
 
@@ -36,7 +36,8 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
   }
 
   @annotation.tailrec
-  private def offer(n: NodeWithCount, tc: Int): Boolean = {
+  private def offer(n: NodeWithCount): Boolean = {
+    val tc = tail.count
     val h = get
     val hc = h.count
     if (hc - tc < capacity) {
@@ -44,12 +45,8 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
       if (compareAndSet(h, n)) {
         h.lazySet(n)
         true
-      } else offer(n, tc)
-    } else {
-      val ntc = tail.count
-      if (tc == ntc) false
-      else offer(n, ntc)
-    }
+      } else offer(n)
+    } else false
   }
 
   private def onOverflow(a: ActorRef, e: Envelope): Unit =
@@ -63,7 +60,7 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
       val e = n.handle
       n.handle = null // to avoid possible memory leak when queue is empty
       e
-    } else if (tail ne get) poll(u, o)
+    } else if (tn ne get) poll(u, o)
     else null
   }
 }
@@ -113,7 +110,7 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
       val e = n.handle
       n.handle = null // to avoid possible memory leak when queue is empty
       e
-    } else if (tail ne get) poll(u, o)
+    } else if (tn ne get) poll(u, o)
     else null
   }
 
