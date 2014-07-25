@@ -126,16 +126,20 @@ private final case class BoundedActor[A](bound: Int, strategy: Strategy, onError
 
   @annotation.tailrec
   private def checkAndAdd(n: NodeWithCount[A]): Unit = {
+    val tc = count
     val h = get
     if (h eq null) {
-      n.count = count + 1
+      n.count = tc + 1
       if (compareAndSet(h, n)) schedule(n)
       else checkAndAdd(n)
-    } else if (h.count - count < bound) {
-      n.count = h.count + 1
-      if (compareAndSet(h, n)) h.lazySet(n)
-      else checkAndAdd(n)
-    } else onOverflow(n.a)
+    } else {
+      val hc = h.count
+      if (hc - tc < bound) {
+        n.count = hc + 1
+        if (compareAndSet(h, n)) h.lazySet(n)
+        else checkAndAdd(n)
+      } else onOverflow(n.a)
+    }
   }
 
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
