@@ -26,8 +26,7 @@ testGrouping in Test <<= definedTests in Test map { tests =>
       tests = Seq(test),
       runPolicy = SubProcess(javaOptions = Seq(
         "-server", "-Xms4096m", "-Xms4096m", "-XX:NewSize=3584m", "-Xss256k", "-XX:+TieredCompilation",
-        "-XX:+UseParNewGC", "-XX:+UseConcMarkSweepGC", "-XX:CMSInitiatingOccupancyFraction=75", "-XX:+UseCMSInitiatingOccupancyOnly",
-        "-XX:+UseNUMA", "-XX:+UseCondCardMark", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
+        "-XX:+UseG1GC", "-XX:+UseNUMA", "-XX:+UseCondCardMark", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
         System.getProperties.toMap.map {
           case (k, v)  => "-D" + k + "=" + v
         }))
