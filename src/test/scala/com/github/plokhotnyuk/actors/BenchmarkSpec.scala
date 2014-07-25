@@ -92,16 +92,20 @@ object BenchmarkSpec {
 
   def usedMemory(precision: Double = 0.001): Long = {
     @annotation.tailrec
-    def waitAndGetUsage(precision: Double, prevUsage: Long): Long = {
-      Thread.sleep(30)
-      val runtime = Runtime.getRuntime
-      val usage = runtime.totalMemory() - runtime.freeMemory()
-      if (Math.abs(prevUsage - usage).toDouble / prevUsage > precision) waitAndGetUsage(precision, usage)
-      else usage
+    def gcAndGetUsage(prevUsage: Long = 0): Long = {
+      val usage = Runtime.getRuntime.totalMemory() - Runtime.getRuntime.freeMemory()
+      val diff = (prevUsage - usage).toDouble
+      if (diff < 0) {
+        System.gc()
+        Thread.sleep(30)
+        gcAndGetUsage(usage)
+      } else if (diff / prevUsage > precision) {
+        Thread.sleep(30)
+        gcAndGetUsage(usage)
+      } else usage
     }
 
-    System.gc()
-    waitAndGetUsage(precision, 0)
+    gcAndGetUsage()
   }
 
   def fullShutdown(e: ExecutorService): Unit = {

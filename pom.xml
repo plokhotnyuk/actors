@@ -117,7 +117,7 @@
                         <includes>
                             <include>**/*Spec.class</include>
                         </includes>
-                        <argLine>-server -Xms4096m -Xmx4096m -XX:NewSize=3584m -Xss256k -XX:+UseG1GC -XX:+TieredCompilation -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
+                        <argLine>-server -Xms4096m -Xmx4096m -XX:NewSize=3584m -Xss256k -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly -XX:+TieredCompilation -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
                     </configuration>
                 </plugin>
             </plugins>
@@ -139,7 +139,7 @@
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-surefire-plugin</artifactId>
                             <configuration>
-                                <argLine>-server -Xms2560m -Xmx2560m -XX:NewSize=2240m -Xss256k -XX:+UseG1GC -XX:+TieredCompilation -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
+                                <argLine>-server -Xms2560m -Xmx2560m -XX:NewSize=2240m -Xss256k -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly -XX:+TieredCompilation -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
                                 <useFile>false</useFile>
                             </configuration>
                         </plugin>
