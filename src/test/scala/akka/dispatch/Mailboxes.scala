@@ -56,10 +56,12 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
   private def poll(u: Unsafe, o: Long): Envelope = {
     val tn = tail
     val n = tn.get
-    if ((n ne null) && u.compareAndSwapObject(this, o, tn, n)) {
-      val e = n.handle
-      n.handle = null // to avoid possible memory leak when queue is empty
-      e
+    if (n ne null) {
+      if (u.compareAndSwapObject(this, o, tn, n)) {
+        val e = n.handle
+        n.handle = null // to avoid possible memory leak when queue is empty
+        e
+      } else poll(u, o)
     } else if (tn ne get) poll(u, o)
     else null
   }
@@ -106,10 +108,12 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
   private def poll(u: Unsafe, o: Long): Envelope = {
     val tn = tail
     val n = tn.get
-    if ((n ne null) && u.compareAndSwapObject(this, o, tn, n)) {
-      val e = n.handle
-      n.handle = null // to avoid possible memory leak when queue is empty
-      e
+    if (n ne null) {
+      if (u.compareAndSwapObject(this, o, tn, n)) {
+        val e = n.handle
+        n.handle = null // to avoid possible memory leak when queue is empty
+        e
+      } else poll(u, o)
     } else if (tn ne get) poll(u, o)
     else null
   }
