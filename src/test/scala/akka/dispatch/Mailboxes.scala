@@ -62,8 +62,7 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
         n.handle = null // to avoid possible memory leak when queue is empty
         e
       } else poll(u, o)
-    } else if (tn ne get) poll(u, o)
-    else null
+    } else null
   }
 }
 
@@ -114,8 +113,7 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
         n.handle = null // to avoid possible memory leak when queue is empty
         e
       } else poll(u, o)
-    } else if (tn ne get) poll(u, o)
-    else null
+    } else null
   }
 
   @annotation.tailrec
