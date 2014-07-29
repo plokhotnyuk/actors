@@ -145,15 +145,16 @@ private final case class BoundedActor[A](bound: Int, strategy: Strategy, onError
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: NodeWithCount[A], i: Int = 1024, u: Unsafe = instance, o: Long = BoundedActor.countOffset): Unit = {
+  private def act(n: NodeWithCount[A], i: Int = 1024, f: A => Unit = handler,
+                  u: Unsafe = instance, o: Long = BoundedActor.countOffset): Unit = {
     u.putOrderedInt(this, o, n.count)
-    try handler(n.a) catch {
+    try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
     if (n2 eq null) scheduleLastTry(n)
     else if (i == 0) schedule(n2)
-    else act(n2, i - 1, u, o)
+    else act(n2, i - 1, f, u, o)
   }
 
   private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
