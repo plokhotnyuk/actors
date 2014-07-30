@@ -21,10 +21,8 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
     if (!offer(new NodeWithCount(handle))) onOverflow(receiver, handle)
 
   override def dequeue(): Envelope = {
-    val u = instance
-    val o = NBBQ.tailOffset
     val tn = tail
-    poll(u, o, tn, tn.get)
+    poll(tn, tn.get, instance, NBBQ.tailOffset)
   }
 
   override def numberOfMessages: Int = Math.min(capacity, Math.max(0, get.count - tail.count))
@@ -61,7 +59,7 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
     a.asInstanceOf[InternalActorRef].provider.deadLetters.tell(DeadLetter(e.message, e.sender, a), e.sender)
 
   @annotation.tailrec
-  private def poll(u: Unsafe, o: Long, tn: NodeWithCount, n: NodeWithCount): Envelope =
+  private def poll(tn: NodeWithCount, n: NodeWithCount, u: Unsafe, o: Long): Envelope =
     if (n ne null) {
       if (u.compareAndSwapObject(this, o, tn, n)) {
         val e = n.handle
@@ -69,9 +67,9 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
         e
       } else {
         val tn2 = tail
-        poll(u, o, tn2, tn2.get)
+        poll(tn2, tn2.get, u, o)
       }
-    } else if (tn ne get) poll(u, o, tn, next(tn))
+    } else if (tn ne get) poll(tn, next(tn), u, o)
     else null
 
   @annotation.tailrec
@@ -105,10 +103,8 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
   }
 
   override def dequeue(): Envelope = {
-    val u = instance
-    val o = UQ.tailOffset
     val tn = tail
-    poll(u, o, tn, tn.get)
+    poll(tn, tn.get, instance, UQ.tailOffset)
   }
 
   override def numberOfMessages: Int = count(tail, 0)
@@ -128,7 +124,7 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
   }
 
   @annotation.tailrec
-  private def poll(u: Unsafe, o: Long, tn: Node, n: Node): Envelope =
+  private def poll(tn: Node, n: Node, u: Unsafe, o: Long): Envelope =
     if (n ne null) {
       if (u.compareAndSwapObject(this, o, tn, n)) {
         val e = n.handle
@@ -136,9 +132,9 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
         e
       } else {
         val tn2 = tail
-        poll(u, o, tn2, tn2.get)
+        poll(tn2, tn2.get, u, o)
       }
-    } else if (tn ne get) poll(u, o, tn, next(tn))
+    } else if (tn ne get) poll(tn, next(tn), u, o)
     else null
 
   @annotation.tailrec
