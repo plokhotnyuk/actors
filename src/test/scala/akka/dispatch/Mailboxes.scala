@@ -148,7 +148,7 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
     val n = tn.get
     if (i == l) i
     else if (n ne null) count(n, i + 1, l)
-    else if (tn ne get) count(n, i, l)
+    else if (tn ne get) count(tn, i, l)
     else i
   }
 }
