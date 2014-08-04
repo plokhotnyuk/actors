@@ -106,7 +106,7 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
     poll(tn, tn.get)
   }
 
-  override def numberOfMessages: Int = count(tail, 0)
+  override def numberOfMessages: Int = count(tail, 0, Int.MaxValue)
 
   override def hasMessages: Boolean = {
     val tn = tail
@@ -144,10 +144,12 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
   }
 
   @annotation.tailrec
-  private def count(tn: Node, i: Int): Int = {
+  private def count(tn: Node, i: Int, l: Int): Int = {
     val n = tn.get
-    if ((n eq null) && (tn eq get)) i
-    else count(n, i + 1)
+    if (i == l) i
+    else if (n ne null) count(n, i + 1, l)
+    else if (tn ne get) count(n, i, l)
+    else i
   }
 }
 
