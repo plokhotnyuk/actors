@@ -13,7 +13,7 @@ class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxTyp
   override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new NBBQ(capacity)
 }
 
-private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) with MessageQueue with MultipleConsumerSemantics {
+private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) with MessageQueue with MultipleConsumerSemantics {
   @volatile private var tail: NodeWithCount = get
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
@@ -31,14 +31,7 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
     (tn.get ne null) || (tn ne get)
   }
 
-  @annotation.tailrec
-  override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
-    val e = dequeue()
-    if (e ne null) {
-      deadLetters.enqueue(owner, e)
-      cleanUp(owner, deadLetters)
-    }
-  }
+  override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = drain(owner, deadLetters)
 
   @annotation.tailrec
   private def offer(n: NodeWithCount): Boolean = {
@@ -77,13 +70,22 @@ private final class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
     if (n ne null) n
     else next(tn)
   }
+
+  @annotation.tailrec
+  private def drain(owner: ActorRef, deadLetters: MessageQueue): Unit = {
+    val e = dequeue()
+    if (e ne null) {
+      deadLetters.enqueue(owner, e)
+      drain(owner, deadLetters)
+    }
+  }
 }
 
 private object NBBQ {
   private val tailOffset = Unsafe.instance.objectFieldOffset(classOf[NBBQ].getDeclaredField("tail"))
 }
 
-private final class NodeWithCount(var handle: Envelope = null) extends AtomicReference[NodeWithCount] {
+private class NodeWithCount(var handle: Envelope = null) extends AtomicReference[NodeWithCount] {
   var count: Int = _
 }
 
@@ -93,7 +95,7 @@ class UnboundedMailbox2 extends MailboxType with ProducesMessageQueue[MessageQue
   override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new UQ
 }
 
-private final class UQ extends AtomicReference(new Node) with MessageQueue with MultipleConsumerSemantics {
+private class UQ extends AtomicReference(new Node) with MessageQueue with MultipleConsumerSemantics {
   @volatile private var tail: Node = get
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit = {
@@ -113,14 +115,7 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
     (tn.get ne null) || (tn ne get)
   }
 
-  @annotation.tailrec
-  override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = {
-    val e = dequeue()
-    if (e ne null) {
-      deadLetters.enqueue(owner, e)
-      cleanUp(owner, deadLetters)
-    }
-  }
+  override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = drain(owner, deadLetters)
 
   @annotation.tailrec
   private def poll(tn: Node, n: Node): Envelope =
@@ -151,10 +146,19 @@ private final class UQ extends AtomicReference(new Node) with MessageQueue with 
     else if (tn ne get) count(tn, i, l)
     else i
   }
+
+  @annotation.tailrec
+  private def drain(owner: ActorRef, deadLetters: MessageQueue): Unit = {
+    val e = dequeue()
+    if (e ne null) {
+      deadLetters.enqueue(owner, e)
+      drain(owner, deadLetters)
+    }
+  }
 }
 
 private object UQ {
   private val tailOffset = Unsafe.instance.objectFieldOffset(classOf[UQ].getDeclaredField("tail"))
 }
 
-private final class Node(var handle: Envelope = null) extends AtomicReference[Node]
+private class Node(var handle: Envelope = null) extends AtomicReference[Node]

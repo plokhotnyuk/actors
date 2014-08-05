@@ -78,8 +78,8 @@ trait ActorFunctions2 {
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
 
-private final case class UnboundedActor[A](strategy: Strategy, onError: Throwable => Unit,
-                                           handler: A => Unit) extends AtomicReference[Node[A]] with Actor2[A] {
+private case class UnboundedActor[A](strategy: Strategy, onError: Throwable => Unit,
+                                     handler: A => Unit) extends AtomicReference[Node[A]] with Actor2[A] {
   def !(a: A): Unit = {
     val n = new Node(a)
     val h = getAndSet(n)
@@ -114,10 +114,10 @@ private final case class UnboundedActor[A](strategy: Strategy, onError: Throwabl
   }
 }
 
-private final class Node[A](val a: A) extends AtomicReference[Node[A]]
+private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
-private final case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Throwable => Unit, onOverflow: A => Unit,
-                                         handler: A => Unit) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
+private case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Throwable => Unit, onOverflow: A => Unit,
+                                   handler: A => Unit) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
   @volatile private var count: Int = _
 
   def !(a: A): Unit = checkAndAdd(new NodeWithCount(a))
@@ -173,6 +173,6 @@ private object BoundedActor {
   private val countOffset = instance.objectFieldOffset(classOf[BoundedActor[_]].getDeclaredField("count"))
 }
 
-private final class NodeWithCount[A](val a: A) extends AtomicReference[NodeWithCount[A]] {
+private class NodeWithCount[A](val a: A) extends AtomicReference[NodeWithCount[A]] {
   var count: Int = _
 }

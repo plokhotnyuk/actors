@@ -16,14 +16,14 @@ class AkkaBoundedActorSpec extends AkkaActorSpec {
         log-dead-letters-during-shutdown = off
         actor {
           unstarted-push-timeout = 100s
-          default-dispatcher {
+          benchmark-dispatcher {
             executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
             mailbox-type = "akka.dispatch.BoundedMailbox"
             mailbox-capacity = 10000000
             mailbox-push-timeout-time = 0
           }
-          default-dispatcher-2 {
+          benchmark-dispatcher-2 {
             executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
             mailbox-type = "akka.dispatch.BoundedMailbox"
@@ -46,11 +46,11 @@ class AkkaBoundedActorSpec extends AkkaActorSpec {
   }
 
   private def blockableCountActor2(l: CountDownLatch): ActorRef =
-    actorOf(Props(classOf[BlockableCountAkkaActor2], l).withDispatcher("akka.actor.default-dispatcher-2"))
+    actorOf(Props(classOf[BlockableCountAkkaActor2], l).withDispatcher("akka.actor.benchmark-dispatcher-2"))
 }
 
 private class BlockableCountAkkaActor2(l: CountDownLatch) extends Actor {
-  def receive = {
+  def receive: Actor.Receive = {
     case _ =>
       l.await()
       context.stop(self)

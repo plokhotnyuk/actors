@@ -118,7 +118,7 @@ class LiftActorSpec extends BenchmarkSpec {
               if (i == 0) l.countDown()
           })
 
-          def messageHandler = {
+          def messageHandler: PartialFunction[Any, Unit] = {
             case _ =>
           }
         }
@@ -132,7 +132,7 @@ class LiftActorSpec extends BenchmarkSpec {
               if (i == 0) l.countDown()
           })
 
-          def messageHandler = {
+          def messageHandler: PartialFunction[Any, Unit] = {
             case _ =>
           }
         }
@@ -160,7 +160,7 @@ class LiftActorSpec extends BenchmarkSpec {
           }
       })
 
-      def messageHandler = {
+      def messageHandler: PartialFunction[Any, Unit] = {
         case _ =>
       }
     }
@@ -175,7 +175,7 @@ class LiftActorSpec extends BenchmarkSpec {
           if (i == 0) l.countDown()
       })
 
-      def messageHandler = {
+      def messageHandler: PartialFunction[Any, Unit] = {
         case _ =>
       }
     }

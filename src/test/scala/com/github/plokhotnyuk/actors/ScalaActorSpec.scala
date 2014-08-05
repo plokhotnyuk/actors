@@ -3,7 +3,7 @@ package com.github.plokhotnyuk.actors
 import java.util.concurrent.CountDownLatch
 import org.specs2.execute.Success
 
-import scala.actors.{SchedulerAdapter, Actor}
+import scala.actors.{IScheduler, SchedulerAdapter, Actor}
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 
 class ScalaActorSpec extends BenchmarkSpec {
@@ -139,7 +139,7 @@ class ScalaActorSpec extends BenchmarkSpec {
             }
         })
 
-      override def scheduler = customScheduler
+      override def scheduler: IScheduler = customScheduler
     }.start()
 
   private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Actor =
@@ -162,7 +162,7 @@ class ScalaActorSpec extends BenchmarkSpec {
             }
         })
 
-      override def scheduler = customScheduler
+      override def scheduler: IScheduler = customScheduler
     }.start()
 
   private def countActor(l: CountDownLatch, n: Int): Actor =
@@ -179,7 +179,7 @@ class ScalaActorSpec extends BenchmarkSpec {
             }
         })
 
-      override def scheduler = customScheduler
+      override def scheduler: IScheduler = customScheduler
     }.start()
 
   private def sendMessages(a: Actor, n: Int): Unit = {

@@ -19,7 +19,7 @@ class AkkaActorSpec extends BenchmarkSpec {
         log-dead-letters-during-shutdown = off
         actor {
           unstarted-push-timeout = 100s
-          default-dispatcher {
+          benchmark-dispatcher {
             executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
           }
@@ -28,7 +28,7 @@ class AkkaActorSpec extends BenchmarkSpec {
     """))
 
   val actorSystem = ActorSystem("system", config)
-  val root = actorSystem.actorOf(Props(classOf[RootAkkaActor]))
+  val root = actorSystem.actorOf(Props(classOf[RootAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher"))
   implicit val timeout = Timeout(1000, TimeUnit.SECONDS)
 
   "Enqueueing" in {
@@ -127,13 +127,13 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   private def replayAndCountActor(l: CountDownLatch, n: Int): ActorRef =
-    actorOf(Props(classOf[ReplayAndCountAkkaActor], l, n).withDispatcher("akka.actor.default-dispatcher"))
+    actorOf(Props(classOf[ReplayAndCountAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
 
   private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): ActorRef =
-    actorOf(Props(classOf[BlockableCountAkkaActor], l1, l2, n).withDispatcher("akka.actor.default-dispatcher"))
+    actorOf(Props(classOf[BlockableCountAkkaActor], l1, l2, n).withDispatcher("akka.actor.benchmark-dispatcher"))
 
   private def countActor(l: CountDownLatch, n: Int): ActorRef =
-    actorOf(Props(classOf[CountAkkaActor], l, n).withDispatcher("akka.actor.default-dispatcher"))
+    actorOf(Props(classOf[CountAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
 
   protected def sendMessages(a: ActorRef, n: Int): Unit = {
     val m = Message()
@@ -150,7 +150,7 @@ class AkkaActorSpec extends BenchmarkSpec {
 private class ReplayAndCountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
   private var i = n
 
-  def receive = {
+  def receive: Actor.Receive = {
     case m =>
       if (i > 0) sender ! m
       i -= 1
@@ -164,7 +164,7 @@ private class ReplayAndCountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
 private class CountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
   private var i = n
 
-  def receive = {
+  def receive: Actor.Receive = {
     case _ =>
       i -= 1
       if (i == 0) {
@@ -178,7 +178,7 @@ private class BlockableCountAkkaActor(l1: CountDownLatch, l2: CountDownLatch, n:
   private var blocked = true
   private var i = n - 1
 
-  def receive = {
+  def receive: Actor.Receive = {
     case _ =>
       if (blocked) {
         l1.await()
@@ -194,12 +194,12 @@ private class BlockableCountAkkaActor(l1: CountDownLatch, l2: CountDownLatch, n:
 }
 
 private class RootAkkaActor extends Actor {
-  def receive = {
+  def receive: Actor.Receive = {
     case p: Props =>
       sender ! context.actorOf(p)
     case "Initiation" =>
       footprintedAndTimedCollect(100000){
-        val p = Props(classOf[MinimalAkkaActor]).withDispatcher("akka.actor.default-dispatcher")
+        val p = Props(classOf[MinimalAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher")
         val c = context
         () => c.actorOf(p)
       }
@@ -208,7 +208,7 @@ private class RootAkkaActor extends Actor {
 }
 
 private class MinimalAkkaActor extends Actor {
-  def receive = {
+  def receive: Actor.Receive = {
     case _ =>
   }
 }
