@@ -46,7 +46,7 @@ class LiftActorSpec extends BenchmarkSpec {
 
   "Initiation" in {
     footprintedAndTimedCollect(10000000)(() => new LiftActor {
-      def messageHandler = {
+      def messageHandler: PartialFunction[Any, Unit] = {
         case _ =>
       }
     })
