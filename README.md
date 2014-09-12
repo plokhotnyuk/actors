@@ -10,7 +10,9 @@ Evaluation of API and performance of different actor libraries written on Scala:
 [Scala](https://github.com/scala/scala/blob/master/src/actors/scala/actors/Actor.scala) vs.
 [Scalaz](https://github.com/scalaz/scalaz/blob/master/core/src/main/scala/scalaz/concurrent/Actor.scala)
 
-[![Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
+Build on AMD: [![Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
+
+Build on Intel: [![Build Status](https://api.shippable.com/projects/5412f48d814f6b1f6a9fb1f1/badge?branchName=master)](https://app.shippable.com/projects/5412f48d814f6b1f6a9fb1f1)
 
 ## Benchmarks and their goals
 * `Enqueueing` - memory footprint of internal actor queue per submitted message and submition throughput in a single thread
