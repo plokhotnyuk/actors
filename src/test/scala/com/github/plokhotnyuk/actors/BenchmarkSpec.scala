@@ -143,7 +143,10 @@ class ParRunner(fs: Seq[() => Unit]) {
 final class AkkaForkJoinTask(runnable: Runnable) extends ForkJoinTask[Unit] {
   override def getRawResult(): Unit = ()
   override def setRawResult(unit: Unit): Unit = ()
-  override def exec(): Boolean = try { runnable.run(); true } catch {
+  final override def exec(): Boolean = try { runnable.run(); true } catch {
+    case ie: InterruptedException ⇒
+      Thread.currentThread.interrupt()
+      false
     case anything: Throwable ⇒
       val t = Thread.currentThread
       t.getUncaughtExceptionHandler match {
