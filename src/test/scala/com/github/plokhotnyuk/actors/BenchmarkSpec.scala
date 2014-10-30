@@ -42,6 +42,18 @@ object BenchmarkSpec {
 
   def createExecutorService(): ExecutorService =
     executorServiceType match {
+      case "akka-forkjoin-pool" => new ForkJoinPool(poolSize, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true) {
+        override def execute(r: Runnable): Unit = { // TODO replace by AkkaForkJoinPool after upgrade to Akka 2.3.7
+          if (r eq null) throw new NullPointerException("The Runnable must not be null")
+          val task =
+            if (r.isInstanceOf[ForkJoinTask[_]]) r.asInstanceOf[ForkJoinTask[Unit]]
+            else new AkkaForkJoinTask(r)
+          Thread.currentThread match {
+            case worker: ForkJoinWorkerThread if worker.getPool eq this => task.fork()
+            case _ => super.execute(task)
+          }
+        }
+      }
       case "scala-forkjoin-pool" => new ScalaForkJoinPool(poolSize, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "java-forkjoin-pool" => new ForkJoinPool(poolSize, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 1, TimeUnit.HOURS,
@@ -124,4 +136,20 @@ class ParRunner(fs: Seq[() => Unit]) {
   }).foreach(_.start())
 
   def start(): Unit = barrier.await()
+}
+
+// TODO remove AkkaForkJoinTask after upgrade to Akka 2.3.7
+@SerialVersionUID(1L)
+final class AkkaForkJoinTask(runnable: Runnable) extends ForkJoinTask[Unit] {
+  override def getRawResult(): Unit = ()
+  override def setRawResult(unit: Unit): Unit = ()
+  override def exec(): Boolean = try { runnable.run(); true } catch {
+    case anything: Throwable ⇒
+      val t = Thread.currentThread
+      t.getUncaughtExceptionHandler match {
+        case null ⇒
+        case some ⇒ some.uncaughtException(t, anything)
+      }
+      throw anything
+  }
 }
