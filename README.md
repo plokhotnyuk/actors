@@ -41,26 +41,21 @@ or
 sbt clean test >outX.txt
 ```
 
-To run benchmarks for all available types of executor service use `mvnAll.sh` or `sbtAll.sh` scripts (for Windows: `mvnAll.bat` or `sbtAll.bat`).
+To run benchmarks for all available types of executor service use `mvnAll.sh` or `sbtAll.sh` scripts
+(for Windows: `mvnAll.bat` or `sbtAll.bat`).
 
 Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS system variables:
 
 ```sh
--server -Xms1g -Xmx1g -Xss1m -XX:NewSize=512m -XX:PermSize=256m -XX:MaxPermSize=256m -XX:+TieredCompilation -XX:+UseG1GC -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -XX:+AlwaysPreTouch
+-server -Xms1g -Xmx1g -Xss1m -XX:NewSize=512m -XX:PermSize=256m -XX:MaxPermSize=256m -XX:+TieredCompilation -XX:+UseG1GC -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch
 ```
 
 ## Test result descriptions
-Results of running mvnAll.bat or mvnAll.sh scripts on different environments with
-pool size set to default (number of available processors), 1, 10 or 100 values accordingly:
+Results of running mvnAll.bat or mvnAll.sh scripts on different environments with pool size (or number of worker threads)
+set to number of available processors, 1, 10 or 100 values accordingly:
 
 #### out0*.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.8.0_25-b18 64-bit
 
 #### out1*.txt
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Windows 7 sp1, Oracle JDK 1.7.0_72-b14 64-bit
-
-#### out2*.txt
-Intel(R) Core(TM) i7-4870HQ CPU @ 2.50GHz (max 3.70GHz), RAM 16Gb DDR3-1600, Mac OS X 10.9.5, Oracle JDK 1.8.0_25-b18 64-bit
-
-#### out3*.txt
-Intel(R) Core(TM) i7-4870HQ CPU @ 2.50GHz (max 3.70GHz), RAM 16Gb DDR3-1600, Mac OS X 10.9.5, Oracle JDK 1.7.0_72-b14 64-bit
