@@ -1,5 +1,6 @@
 package com.github.plokhotnyuk.actors
 
+import akka.dispatch.ForkJoinExecutorConfigurator.AkkaForkJoinPool
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import com.sun.management.OperatingSystemMXBean
 import java.util.concurrent._
@@ -42,7 +43,7 @@ object BenchmarkSpec {
 
   def createExecutorService(): ExecutorService =
     executorServiceType match {
-      case "actor-forkjoin-pool" => new ActorForkJoinPool(poolSize, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null)
+      case "akka-forkjoin-pool" => new AkkaForkJoinPool(poolSize, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null)
       case "scala-forkjoin-pool" => new ScalaForkJoinPool(poolSize, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "java-forkjoin-pool" => new ForkJoinPool(poolSize, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 1, TimeUnit.HOURS,
