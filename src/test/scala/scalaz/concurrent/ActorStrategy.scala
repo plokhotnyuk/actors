@@ -13,8 +13,11 @@ object ActorStrategy {
 
             def setRawResult(unit: Unit): Unit = ()
 
-            def exec(): Boolean = try { a; true } catch {
-              case ex: Throwable => onError(ex)
+            def exec(): Boolean = {
+              try a catch {
+                case ex: Throwable => onError(ex)
+              }
+              false
             }
           }
           if (ForkJoinTask.getPool eq p) t.fork()
@@ -31,8 +34,11 @@ object ActorStrategy {
 
             def setRawResult(unit: Unit): Unit = ()
 
-            def exec(): Boolean = try { a; true } catch {
-              case ex: Throwable => onError(ex)
+            def exec(): Boolean = {
+              try a catch {
+                case ex: Throwable => onError(ex)
+              }
+              false
             }
           }
           if (ForkJoinTask.getPool eq p) t.fork()
@@ -53,11 +59,9 @@ object ActorStrategy {
       }
   }
 
-  private def onError(ex: Throwable): Boolean =
-    if (ex.isInstanceOf[InterruptedException]) {
-      Thread.currentThread.interrupt()
-      false
-    } else {
+  private def onError(ex: Throwable): Unit =
+    if (ex.isInstanceOf[InterruptedException]) Thread.currentThread.interrupt()
+    else {
       val ct = Thread.currentThread
       val h = ct.getUncaughtExceptionHandler
       if (h ne null) h.uncaughtException(ct, ex)
