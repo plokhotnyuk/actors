@@ -1,12 +1,14 @@
 package scalaz.concurrent
 
-import java.util.concurrent._
-import scala.concurrent.forkjoin.{ForkJoinPool => ScalaForkJoinPool, ForkJoinTask => ScalaForkJoinTask, ForkJoinWorkerThread => ScalaForkJoinWorkerThread}
+import java.util.concurrent.ExecutorService
 
 object ActorStrategy {
   def apply(exec: ExecutorService): Strategy = exec match {
-    case fjp: ForkJoinPool =>
+    case fjp: scala.concurrent.forkjoin.ForkJoinPool =>
+      import scala.concurrent.forkjoin._
       new Strategy {
+        private val p = fjp
+
         def apply[A](a: => A): () => A = {
           val t = new ForkJoinTask[Unit] {
             override def getRawResult(): Unit = ()
@@ -20,16 +22,20 @@ object ActorStrategy {
               case ex: Throwable => onError(ex)
             }
           }
-          val ct = Thread.currentThread
-          if (ct.isInstanceOf[ForkJoinWorkerThread] && (ct.asInstanceOf[ForkJoinWorkerThread].getPool eq fjp)) t.fork()
-          else fjp.execute(t)
+          Thread.currentThread match {
+            case wt: ForkJoinWorkerThread if wt.getPool eq p => t.fork()
+            case _ => p.execute(t)
+          }
           null
         }
       }
-    case sfjp: ScalaForkJoinPool =>
+    case fjp: java.util.concurrent.ForkJoinPool =>
+      import java.util.concurrent._
       new Strategy {
+        private val p = fjp
+
         def apply[A](a: => A): () => A = {
-          val t = new ScalaForkJoinTask[Unit] {
+          val t = new ForkJoinTask[Unit] {
             override def getRawResult(): Unit = ()
 
             override def setRawResult(unit: Unit): Unit = ()
@@ -41,16 +47,19 @@ object ActorStrategy {
               case ex: Throwable => onError(ex)
             }
           }
-          val ct = Thread.currentThread
-          if (ct.isInstanceOf[ScalaForkJoinWorkerThread] && (ct.asInstanceOf[ScalaForkJoinWorkerThread].getPool eq sfjp)) t.fork()
-          else sfjp.execute(t)
+          Thread.currentThread match {
+            case wt: ForkJoinWorkerThread if wt.getPool eq p => t.fork()
+            case _ => p.execute(t)
+          }
           null
         }
       }
     case e =>
       new Strategy {
+        private val p = e
+
         def apply[A](a: => A): () => A = {
-          e.execute(new Runnable() {
+          p.execute(new Runnable() {
             def run(): Unit = try a catch {
               case ex: Throwable => onError(ex)
             }
