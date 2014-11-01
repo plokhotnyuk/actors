@@ -21,7 +21,7 @@
 [WARNING]  com.typesafe.akka:akka-actor_2.11:2.3.6 requires scala version: 2.11.2
 [WARNING] Multiple versions of scala libraries detected!
 [INFO] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala:-1: info: compiling
-[INFO] Compiling 16 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\test-classes at 1414856129222
+[INFO] Compiling 17 source files to C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\test-classes at 1414867032277
 [WARNING] C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\scala\com\github\plokhotnyuk\actors\ScalaActorSpec.scala:10: warning: trait SchedulerAdapter in package actors is deprecated: Use the akka.actor package instead. For migration from the scala.actors package refer to the Actors Migration Guide.
 [WARNING]   val customScheduler = new SchedulerAdapter {
 [WARNING]                             ^
@@ -61,12 +61,12 @@
 [WARNING] warning: there was one feature warning; re-run with -feature for details
 [WARNING] 13 warnings found
 [INFO] prepare-compile in 0 s
-[INFO] compile in 12 s
+[INFO] compile in 13 s
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 13.868s
-[INFO] Finished at: Sat Nov 01 17:35:41 EET 2014
+[INFO] Total time: 14.508s
+[INFO] Finished at: Sat Nov 01 20:37:25 EET 2014
 [INFO] Final Memory: 15M/1024M
 [INFO] ------------------------------------------------------------------------
 [INFO] Scanning for projects...
@@ -105,2322 +105,549 @@ Executor service type: akka-forkjoin-pool
 
 Enqueueing:
 10,000,000 ops
-331,369,072 ns
-30,177,831 ops/s
-28.2 % of CPU usage
+322,193,595 ns
+31,037,240 ops/s
+31.5 % of CPU usage
 48 bytes per instance
 
 Dequeueing:
 10,000,000 ops
-714,755,717 ns
-13,990,794 ops/s
-29.5 % of CPU usage
-
-Initiation:
-100,000 ops
-852,983,835 ns
-8,529 ns/op
-75.0 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-636,103,130 ns
-9,432,432 ops/s
-45.4 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-750,555,942 ns
-7,994,074 ops/s
-72.7 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-609,907,593 ns
-19,675,111 ops/s
-92.7 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-635,491,382 ns
-423 ns/op
-95.1 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-738,016,407 ns
-2,438,970 ops/s
-87.2 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.739 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
-Running com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
-Executor service type: akka-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-307,403,168 ns
-32,530,569 ops/s
-27.9 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-576,313,543 ns
-17,351,665 ops/s
-29.8 % of CPU usage
-
-Initiation:
-100,000 ops
-851,169,119 ns
-8,511 ns/op
-77.4 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-573,060,909 ns
-10,470,091 ops/s
-42.9 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-747,295,612 ns
-8,028,951 ops/s
-66.8 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-573,715,542 ns
-20,916,288 ops/s
-93.1 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-676,371,419 ns
-450 ns/op
-96.9 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-888,004,440 ns
-2,027,016 ops/s
-82.1 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.754 sec - in com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
-Running com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
-Executor service type: akka-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-778,000,265 ns
-12,853,466 ops/s
-26.6 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-793,424,066 ns
-12,603,600 ops/s
-27.5 % of CPU usage
-
-Initiation:
-100,000 ops
-935,294,810 ns
-9,352 ns/op
-76.3 % of CPU usage
-608 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-1,023,990,461 ns
-5,859,429 ops/s
-49.5 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-1,245,942,547 ns
-4,815,631 ops/s
-85.5 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-1,127,613,258 ns
-10,641,946 ops/s
-90.6 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-744,070,835 ns
-496 ns/op
-98.5 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-804,353,778 ns
-2,237,821 ops/s
-100.4 % of CPU usage
-
-Overflow throughput:
-5,000,000 ops
-390,416,057 ns
-12,806,850 ops/s
-28.0 % of CPU usage
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.794 sec - in com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
-Running com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
-Executor service type: akka-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-280,365,333 ns
-35,667,747 ops/s
-29.2 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-576,520,269 ns
-17,345,443 ops/s
-25.7 % of CPU usage
-
-Initiation:
-100,000 ops
-842,253,883 ns
-8,422 ns/op
-76.4 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-551,839,988 ns
-10,872,716 ops/s
-44.5 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-680,490,542 ns
-8,817,168 ops/s
-63.0 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-516,041,962 ns
-23,253,922 ops/s
-97.5 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-766,671,395 ns
-511 ns/op
-97.2 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-690,523,709 ns
-2,606,717 ops/s
-98.8 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.928 sec - in com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
-Running com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
-Executor service type: akka-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-311,468,043 ns
-32,106,022 ops/s
-32.6 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-643,689,309 ns
-15,535,445 ops/s
-28.5 % of CPU usage
-
-Initiation:
-100,000 ops
-807,327,112 ns
-8,073 ns/op
-80.7 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-593,765,016 ns
-10,105,007 ops/s
-44.7 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-857,506,146 ns
-6,997,034 ops/s
-71.0 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-657,175,971 ns
-18,259,949 ops/s
-91.4 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-703,066,544 ns
-468 ns/op
-99.3 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-645,133,091 ns
-2,790,121 ops/s
-84.0 % of CPU usage
-
-Overflow throughput:
-5,000,000 ops
-345,202,476 ns
-14,484,253 ops/s
-29.4 % of CPU usage
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.253 sec - in com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
-Running com.github.plokhotnyuk.actors.LiftActorSpec
-Executor service type: akka-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-406,793,583 ns
-24,582,492 ops/s
-25.9 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-450,736,021 ns
-22,185,934 ops/s
-26.8 % of CPU usage
-
-Initiation:
-10,000,000 ops
-713,002,945 ns
-71 ns/op
-33.4 % of CPU usage
-72 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-645,404,694 ns
-9,296,492 ops/s
-49.6 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-777,566,653 ns
-7,716,380 ops/s
-59.2 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-471,322,837 ns
-25,460,255 ops/s
-86.9 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-1,087,868,748 ns
-725 ns/op
-97.5 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-525,323,000 ns
-3,426,463 ops/s
-99.5 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.538 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
-Running com.github.plokhotnyuk.actors.ScalaActorSpec
-Executor service type: akka-forkjoin-pool
-
-Enqueueing:
-40,000,000 ops
-1,263,827,265 ns
-31,649,894 ops/s
-25.6 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-600,000 ops
-1,005,703,654 ns
-596,597 ops/s
-96.6 % of CPU usage
-
-Initiation:
-600,000 ops
-606,336,807 ns
-1,010 ns/op
-85.5 % of CPU usage
-224 bytes per instance
-
-Single-producer sending:
-300,000 ops
-720,487,594 ns
-416,384 ops/s
-99.1 % of CPU usage
-
-Multi-producer sending:
-300,000 ops
-637,081,779 ns
-470,897 ops/s
-94.3 % of CPU usage
-
-Max throughput:
-600,000 ops
-735,396,780 ns
-815,886 ops/s
-94.9 % of CPU usage
-
-Ping latency:
-250,000 ops
-535,900,472 ns
-2,143 ns/op
-92.4 % of CPU usage
-
-Ping throughput 10K:
-400,000 ops
-659,834,818 ns
-606,212 ops/s
-99.3 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.599 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
-Running com.github.plokhotnyuk.actors.ScalazActorSpec
-Executor service type: akka-forkjoin-pool
-
-Enqueueing:
-40,000,000 ops
-698,455,530 ns
-57,269,215 ops/s
-25.1 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-40,000,000 ops
-158,179,728 ns
-252,876,904 ops/s
-39.4 % of CPU usage
-
-Initiation:
-10,000,000 ops
-385,737,970 ns
-38 ns/op
-43.5 % of CPU usage
-104 bytes per instance
-
-Single-producer sending:
-16,000,000 ops
-934,952,099 ns
-17,113,176 ops/s
-85.1 % of CPU usage
-
-Multi-producer sending:
-16,000,000 ops
-1,053,783,908 ns
-15,183,378 ops/s
-96.6 % of CPU usage
-
-Max throughput:
-32,000,000 ops
-773,652,057 ns
-41,362,263 ops/s
-92.8 % of CPU usage
-
-Ping latency:
-3,200,000 ops
-603,670,997 ns
-188 ns/op
-90.4 % of CPU usage
-
-Ping throughput 10K:
-4,000,000 ops
-159,312,321 ns
-25,107,913 ops/s
-73.4 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.686 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
-Running com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
-Executor service type: akka-forkjoin-pool
-
-Enqueueing:
-40,000,000 ops
-734,233,031 ns
-54,478,616 ops/s
-25.5 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-40,000,000 ops
-182,656,214 ns
-218,990,633 ops/s
-38.4 % of CPU usage
-
-Initiation:
-10,000,000 ops
-249,673,508 ns
-24 ns/op
-56.2 % of CPU usage
-56 bytes per instance
-
-Single-producer sending:
-16,000,000 ops
-1,215,847,076 ns
-13,159,549 ops/s
-94.6 % of CPU usage
-
-Multi-producer sending:
-16,000,000 ops
-1,048,511,665 ns
-15,259,725 ops/s
-94.5 % of CPU usage
-
-Max throughput:
-32,000,000 ops
-690,387,358 ns
-46,350,790 ops/s
-93.2 % of CPU usage
-
-Ping latency:
-3,200,000 ops
-945,251,005 ns
-295 ns/op
-94.5 % of CPU usage
-
-Ping throughput 10K:
-4,000,000 ops
-167,676,654 ns
-23,855,437 ops/s
-88.4 % of CPU usage
-
-Overflow throughput:
-100,000,000 ops
-811,989,439 ns
-123,154,311 ops/s
-25.0 % of CPU usage
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.954 sec - in com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
-Running com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
-Executor service type: akka-forkjoin-pool
-
-Enqueueing:
-40,000,000 ops
-755,899,659 ns
-52,917,076 ops/s
-25.3 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-40,000,000 ops
-149,135,106 ns
-268,213,173 ops/s
-26.2 % of CPU usage
-
-Initiation:
-10,000,000 ops
-234,845,695 ns
-23 ns/op
-69.7 % of CPU usage
-48 bytes per instance
-
-Single-producer sending:
-16,000,000 ops
-476,834,059 ns
-33,554,650 ops/s
-56.4 % of CPU usage
-
-Multi-producer sending:
-16,000,000 ops
-887,932,965 ns
-18,019,378 ops/s
-97.1 % of CPU usage
-
-Max throughput:
-32,000,000 ops
-648,441,804 ns
-49,349,070 ops/s
-97.4 % of CPU usage
-
-Ping latency:
-3,200,000 ops
-574,628,948 ns
-179 ns/op
-90.9 % of CPU usage
-
-Ping throughput 10K:
-4,000,000 ops
-146,925,998 ns
-27,224,589 ops/s
-92.9 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.006 sec - in com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
-
-Results :
-
-Tests run: 83, Failures: 0, Errors: 0, Skipped: 0
-
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 3:10.336s
-[INFO] Finished at: Sat Nov 01 17:38:53 EET 2014
-[INFO] Final Memory: 20M/1024M
-[INFO] ------------------------------------------------------------------------
-[INFO] Scanning for projects...
-[INFO]                                                                         
-[INFO] ------------------------------------------------------------------------
-[INFO] Building Actors 1.0-SNAPSHOT
-[INFO] ------------------------------------------------------------------------
-[INFO] 
-[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ actors ---
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
-[INFO] 
-[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ actors ---
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.11.4
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.11.4
-[WARNING]  com.typesafe.akka:akka-actor_2.11:2.3.6 requires scala version: 2.11.2
-[WARNING] Multiple versions of scala libraries detected!
-[INFO] Nothing to compile - all classes are up to date
-[INFO] 
-[INFO] --- maven-surefire-plugin:2.16:test (default-test) @ actors ---
-[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-Running com.github.plokhotnyuk.actors.AkkaActorSpec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-325,728,827 ns
-30,700,383 ops/s
-28.7 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-744,971,779 ns
-13,423,327 ops/s
-30.4 % of CPU usage
-
-Initiation:
-100,000 ops
-885,959,173 ns
-8,859 ns/op
-80.1 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-642,375,646 ns
-9,340,329 ops/s
-41.3 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-772,049,199 ns
-7,771,525 ops/s
-73.2 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-604,302,904 ns
-19,857,591 ops/s
-94.9 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-647,508,971 ns
-431 ns/op
-95.8 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-629,174,148 ns
-2,860,893 ops/s
-98.6 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.77 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
-Running com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-279,932,822 ns
-35,722,856 ops/s
-30.7 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-579,372,646 ns
-17,260,048 ops/s
-30.3 % of CPU usage
-
-Initiation:
-100,000 ops
-945,891,342 ns
-9,458 ns/op
-79.6 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-576,351,662 ns
-10,410,310 ops/s
-45.3 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-725,917,081 ns
-8,265,406 ops/s
-63.9 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-500,589,205 ns
-23,971,751 ops/s
-93.5 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-611,351,008 ns
-407 ns/op
-99.5 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-733,917,444 ns
-2,452,591 ops/s
-98.3 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.959 sec - in com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
-Running com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-544,617,046 ns
-18,361,525 ops/s
-27.9 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-795,597,986 ns
-12,569,162 ops/s
-27.9 % of CPU usage
-
-Initiation:
-100,000 ops
-963,603,056 ns
-9,636 ns/op
-74.9 % of CPU usage
-608 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-966,922,764 ns
-6,205,252 ops/s
-46.0 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-1,118,861,497 ns
-5,362,594 ops/s
-69.4 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-1,062,099,858 ns
-11,298,372 ops/s
-91.8 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-701,871,272 ns
-467 ns/op
-100.0 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-951,691,028 ns
-1,891,370 ops/s
-90.2 % of CPU usage
-
-Overflow throughput:
-5,000,000 ops
-392,182,757 ns
-12,749,158 ops/s
-26.8 % of CPU usage
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.233 sec - in com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
-Running com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-280,603,581 ns
-35,637,463 ops/s
-26.4 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-567,834,484 ns
-17,610,765 ops/s
-28.2 % of CPU usage
-
-Initiation:
-100,000 ops
-842,684,563 ns
-8,426 ns/op
-75.0 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-558,699,695 ns
-10,739,221 ops/s
-44.7 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-694,791,645 ns
-8,635,682 ops/s
-65.7 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-569,627,208 ns
-21,066,409 ops/s
-85.6 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-630,507,970 ns
-420 ns/op
-98.3 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-694,328,711 ns
-2,592,432 ops/s
-98.3 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.787 sec - in com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
-Running com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-303,546,851 ns
-32,943,843 ops/s
-29.6 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-584,080,057 ns
-17,120,940 ops/s
-28.0 % of CPU usage
-
-Initiation:
-100,000 ops
-908,904,276 ns
-9,089 ns/op
-75.5 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-564,876,179 ns
-10,621,796 ops/s
-44.9 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-822,577,175 ns
-7,294,148 ops/s
-74.9 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-548,085,568 ns
-21,894,391 ops/s
-91.8 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-658,907,117 ns
-439 ns/op
-99.4 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-721,005,509 ns
-2,496,513 ops/s
-86.5 % of CPU usage
-
-Overflow throughput:
-5,000,000 ops
-445,625,788 ns
-11,220,176 ops/s
-30.6 % of CPU usage
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.223 sec - in com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
-Running com.github.plokhotnyuk.actors.LiftActorSpec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-404,767,743 ns
-24,705,526 ops/s
-25.1 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-466,325,129 ns
-21,444,265 ops/s
-31.8 % of CPU usage
-
-Initiation:
-10,000,000 ops
-694,197,491 ns
-69 ns/op
-39.3 % of CPU usage
-72 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-666,367,207 ns
-9,004,044 ops/s
-46.8 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-822,655,613 ns
-7,293,452 ops/s
-66.8 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-593,116,249 ns
-20,232,121 ops/s
-87.5 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-1,152,448,583 ns
-768 ns/op
-99.5 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-560,267,366 ns
-3,212,751 ops/s
-94.0 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.896 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
-Running com.github.plokhotnyuk.actors.ScalaActorSpec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-40,000,000 ops
-1,068,173,712 ns
-37,447,092 ops/s
-25.2 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-600,000 ops
-1,100,430,276 ns
-545,241 ops/s
-96.8 % of CPU usage
-
-Initiation:
-600,000 ops
-680,420,533 ns
-1,134 ns/op
-86.0 % of CPU usage
-224 bytes per instance
-
-Single-producer sending:
-300,000 ops
-707,799,246 ns
-423,848 ops/s
-98.1 % of CPU usage
-
-Multi-producer sending:
-300,000 ops
-540,203,596 ns
-555,346 ops/s
-91.7 % of CPU usage
-
-Max throughput:
-600,000 ops
-618,974,208 ns
-969,345 ops/s
-97.7 % of CPU usage
-
-Ping latency:
-250,000 ops
-635,142,441 ns
-2,540 ns/op
-95.8 % of CPU usage
-
-Ping throughput 10K:
-400,000 ops
-581,251,138 ns
-688,170 ops/s
-99.3 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.162 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
-Running com.github.plokhotnyuk.actors.ScalazActorSpec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-40,000,000 ops
-695,356,842 ns
-57,524,421 ops/s
-25.2 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-40,000,000 ops
-179,532,235 ns
-222,801,214 ops/s
-28.2 % of CPU usage
-
-Initiation:
-10,000,000 ops
-397,936,994 ns
-39 ns/op
-53.9 % of CPU usage
-104 bytes per instance
-
-Single-producer sending:
-16,000,000 ops
-503,403,096 ns
-31,783,674 ops/s
-66.6 % of CPU usage
-
-Multi-producer sending:
-16,000,000 ops
-983,820,037 ns
-16,263,136 ops/s
-95.1 % of CPU usage
-
-Max throughput:
-32,000,000 ops
-744,242,740 ns
-42,996,724 ops/s
-90.1 % of CPU usage
-
-Ping latency:
-3,200,000 ops
-452,297,828 ns
-141 ns/op
-95.7 % of CPU usage
-
-Ping throughput 10K:
-4,000,000 ops
-156,635,148 ns
-25,537,052 ops/s
-89.6 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.046 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
-Running com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-40,000,000 ops
-729,293,602 ns
-54,847,594 ops/s
-24.1 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-40,000,000 ops
-183,031,914 ns
-218,541,122 ops/s
-32.0 % of CPU usage
-
-Initiation:
-10,000,000 ops
-255,078,803 ns
-25 ns/op
-59.6 % of CPU usage
-56 bytes per instance
-
-Single-producer sending:
-16,000,000 ops
-1,291,409,039 ns
-12,389,567 ops/s
-91.5 % of CPU usage
-
-Multi-producer sending:
-16,000,000 ops
-982,808,034 ns
-16,279,883 ops/s
-95.6 % of CPU usage
-
-Max throughput:
-32,000,000 ops
-720,717,412 ns
-44,400,203 ops/s
-92.0 % of CPU usage
-
-Ping latency:
-3,200,000 ops
-528,007,871 ns
-165 ns/op
-90.9 % of CPU usage
-
-Ping throughput 10K:
-4,000,000 ops
-183,823,629 ns
-21,759,988 ops/s
-63.6 % of CPU usage
-
-Overflow throughput:
-100,000,000 ops
-909,700,024 ns
-109,926,346 ops/s
-24.4 % of CPU usage
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.736 sec - in com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
-Running com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
-Executor service type: scala-forkjoin-pool
-
-Enqueueing:
-40,000,000 ops
-771,182,343 ns
-51,868,407 ops/s
-24.8 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-40,000,000 ops
-169,735,849 ns
-235,660,293 ops/s
-34.5 % of CPU usage
-
-Initiation:
-10,000,000 ops
-224,384,413 ns
-22 ns/op
-53.9 % of CPU usage
-48 bytes per instance
-
-Single-producer sending:
-16,000,000 ops
-782,003,928 ns
-20,460,255 ops/s
-87.3 % of CPU usage
-
-Multi-producer sending:
-16,000,000 ops
-936,928,091 ns
-17,077,084 ops/s
-99.1 % of CPU usage
-
-Max throughput:
-32,000,000 ops
-809,868,301 ns
-39,512,597 ops/s
-95.8 % of CPU usage
-
-Ping latency:
-3,200,000 ops
-458,314,136 ns
-143 ns/op
-80.0 % of CPU usage
-
-Ping throughput 10K:
-4,000,000 ops
-157,676,108 ns
-25,368,459 ops/s
-76.7 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.364 sec - in com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
-
-Results :
-
-Tests run: 83, Failures: 0, Errors: 0, Skipped: 0
-
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 3:07.652s
-[INFO] Finished at: Sat Nov 01 17:42:02 EET 2014
-[INFO] Final Memory: 20M/1024M
-[INFO] ------------------------------------------------------------------------
-[INFO] Scanning for projects...
-[INFO]                                                                         
-[INFO] ------------------------------------------------------------------------
-[INFO] Building Actors 1.0-SNAPSHOT
-[INFO] ------------------------------------------------------------------------
-[INFO] 
-[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ actors ---
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
-[INFO] 
-[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ actors ---
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.11.4
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.11.4
-[WARNING]  com.typesafe.akka:akka-actor_2.11:2.3.6 requires scala version: 2.11.2
-[WARNING] Multiple versions of scala libraries detected!
-[INFO] Nothing to compile - all classes are up to date
-[INFO] 
-[INFO] --- maven-surefire-plugin:2.16:test (default-test) @ actors ---
-[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-Running com.github.plokhotnyuk.actors.AkkaActorSpec
-Executor service type: java-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-327,314,459 ns
-30,551,659 ops/s
-29.8 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-740,390,822 ns
-13,506,380 ops/s
-27.9 % of CPU usage
-
-Initiation:
-100,000 ops
-812,848,964 ns
-8,128 ns/op
-70.1 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-670,050,153 ns
-8,954,553 ops/s
-43.7 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-834,370,445 ns
-7,191,050 ops/s
-65.0 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-672,999,295 ns
-17,830,627 ops/s
-84.0 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-1,484,147,903 ns
-989 ns/op
-98.3 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-453,542,214 ns
-3,968,759 ops/s
-99.7 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.238 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
-Running com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
-Executor service type: java-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-307,575,439 ns
-32,512,348 ops/s
-29.2 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-574,810,016 ns
-17,397,052 ops/s
-30.5 % of CPU usage
-
-Initiation:
-100,000 ops
-834,746,143 ns
-8,347 ns/op
-66.8 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-573,187,730 ns
-10,467,774 ops/s
-46.3 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-741,233,486 ns
-8,094,615 ops/s
-67.9 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-515,436,080 ns
-23,281,257 ops/s
-93.1 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-2,627,099,193 ns
-1,751 ns/op
-98.9 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-525,861,807 ns
-3,422,952 ops/s
-100.1 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.378 sec - in com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
-Running com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
-Executor service type: java-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-550,034,803 ns
-18,180,667 ops/s
-30.5 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-799,326,016 ns
-12,510,539 ops/s
-29.3 % of CPU usage
-
-Initiation:
-100,000 ops
-843,174,254 ns
-8,431 ns/op
-68.5 % of CPU usage
-608 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-867,420,189 ns
-6,917,062 ops/s
-45.4 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-1,141,372,990 ns
-5,256,826 ops/s
-73.1 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-955,671,967 ns
-12,556,609 ops/s
-83.7 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-1,055,851,533 ns
-703 ns/op
-89.4 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-705,915,988 ns
-2,549,878 ops/s
-99.4 % of CPU usage
-
-Overflow throughput:
-5,000,000 ops
-410,729,071 ns
-12,173,474 ops/s
-27.5 % of CPU usage
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.968 sec - in com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
-Running com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
-Executor service type: java-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-275,859,149 ns
-36,250,383 ops/s
-29.7 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-561,909,076 ns
-17,796,473 ops/s
-28.5 % of CPU usage
-
-Initiation:
-100,000 ops
-854,707,283 ns
-8,547 ns/op
-73.0 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-605,712,231 ns
-9,905,693 ops/s
-41.2 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-694,498,783 ns
-8,639,323 ops/s
-65.7 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-557,087,306 ns
-21,540,609 ops/s
-95.2 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-2,497,726,566 ns
-1,665 ns/op
-99.0 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-424,445,918 ns
-4,240,822 ops/s
-99.2 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.565 sec - in com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
-Running com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
-Executor service type: java-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-413,864,414 ns
-24,162,502 ops/s
-49.0 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-575,829,350 ns
-17,366,256 ops/s
-27.1 % of CPU usage
-
-Initiation:
-100,000 ops
-821,523,753 ns
-8,215 ns/op
-68.4 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-541,733,147 ns
-11,075,563 ops/s
-41.8 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-822,613,095 ns
-7,293,829 ops/s
-76.3 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-476,652,258 ns
-25,175,586 ops/s
-96.5 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-1,276,239,613 ns
-850 ns/op
-96.0 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-550,021,974 ns
-3,272,596 ops/s
-100.0 % of CPU usage
-
-Overflow throughput:
-5,000,000 ops
-345,546,653 ns
-14,469,826 ops/s
-29.3 % of CPU usage
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.487 sec - in com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
-Running com.github.plokhotnyuk.actors.LiftActorSpec
-Executor service type: java-forkjoin-pool
-
-Enqueueing:
-10,000,000 ops
-418,846,360 ns
-23,875,103 ops/s
-25.1 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-478,395,133 ns
-20,903,222 ops/s
-29.3 % of CPU usage
-
-Initiation:
-10,000,000 ops
-706,546,062 ns
-70 ns/op
-36.4 % of CPU usage
-72 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-643,699,205 ns
-9,321,123 ops/s
-51.5 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-742,330,526 ns
-8,082,652 ops/s
-63.6 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-478,418,591 ns
-25,082,637 ops/s
-93.7 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-1,677,090,561 ns
-1,118 ns/op
-72.6 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-392,612,704 ns
-4,584,670 ops/s
-98.3 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.662 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
-Running com.github.plokhotnyuk.actors.ScalaActorSpec
-Executor service type: java-forkjoin-pool
-
-Enqueueing:
-40,000,000 ops
-1,086,931,885 ns
-36,800,834 ops/s
-25.5 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-600,000 ops
-2,288,416,645 ns
-262,190 ops/s
-94.6 % of CPU usage
-
-Initiation:
-600,000 ops
-1,087,560,126 ns
-1,812 ns/op
-84.3 % of CPU usage
-224 bytes per instance
-
-Single-producer sending:
-300,000 ops
-1,272,588,189 ns
-235,740 ops/s
-95.0 % of CPU usage
-
-Multi-producer sending:
-300,000 ops
-1,474,255,852 ns
-203,492 ops/s
-94.4 % of CPU usage
-
-Max throughput:
-600,000 ops
-626,678,411 ns
-957,428 ops/s
-97.1 % of CPU usage
-
-Ping latency:
-250,000 ops
-1,243,869,058 ns
-4,975 ns/op
-95.9 % of CPU usage
-
-Ping throughput 10K:
-400,000 ops
-561,515,417 ns
-712,358 ops/s
-96.5 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.171 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
-Running com.github.plokhotnyuk.actors.ScalazActorSpec
-Executor service type: java-forkjoin-pool
-
-Enqueueing:
-40,000,000 ops
-706,808,868 ns
-56,592,385 ops/s
-24.8 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-40,000,000 ops
-188,734,468 ns
-211,937,969 ops/s
-35.1 % of CPU usage
-
-Initiation:
-10,000,000 ops
-423,046,120 ns
-42 ns/op
-47.9 % of CPU usage
-104 bytes per instance
-
-Single-producer sending:
-16,000,000 ops
-472,061,771 ns
-33,893,869 ops/s
-55.4 % of CPU usage
-
-Multi-producer sending:
-16,000,000 ops
-1,013,188,303 ns
-15,791,733 ops/s
-98.5 % of CPU usage
-
-Max throughput:
-32,000,000 ops
-460,736,933 ns
-69,453,950 ops/s
-97.3 % of CPU usage
-
-Ping latency:
-3,200,000 ops
-7,505,909,831 ns
-2,345 ns/op
-99.7 % of CPU usage
-
-Ping throughput 10K:
-4,000,000 ops
-325,599,441 ns
-12,285,033 ops/s
-95.8 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 27.066 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
-Running com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
-Executor service type: java-forkjoin-pool
-
-Enqueueing:
-40,000,000 ops
-724,455,705 ns
-55,213,865 ops/s
-25.3 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-40,000,000 ops
-185,276,941 ns
-215,893,029 ops/s
-35.8 % of CPU usage
-
-Initiation:
-10,000,000 ops
-281,408,125 ns
-28 ns/op
-52.7 % of CPU usage
-56 bytes per instance
-
-Single-producer sending:
-16,000,000 ops
-692,124,001 ns
-23,117,244 ops/s
-78.3 % of CPU usage
-
-Multi-producer sending:
-16,000,000 ops
-1,118,628,382 ns
-14,303,230 ops/s
-95.5 % of CPU usage
-
-Max throughput:
-32,000,000 ops
-848,203,116 ns
-37,726,812 ops/s
-96.1 % of CPU usage
-
-Ping latency:
-3,200,000 ops
-9,987,531,939 ns
-3,121 ns/op
-99.7 % of CPU usage
-
-Ping throughput 10K:
-4,000,000 ops
-489,577,755 ns
-8,170,305 ops/s
-95.6 % of CPU usage
-
-Overflow throughput:
-100,000,000 ops
-846,822,012 ns
-118,088,569 ops/s
-24.9 % of CPU usage
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 28.096 sec - in com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
-Running com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
-Executor service type: java-forkjoin-pool
-
-Enqueueing:
-40,000,000 ops
-765,072,202 ns
-52,282,647 ops/s
-25.5 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-40,000,000 ops
-171,115,487 ns
-233,760,255 ops/s
-34.2 % of CPU usage
-
-Initiation:
-10,000,000 ops
-219,726,485 ns
-21 ns/op
-56.8 % of CPU usage
-48 bytes per instance
-
-Single-producer sending:
-16,000,000 ops
-538,354,426 ns
-29,720,197 ops/s
-58.7 % of CPU usage
-
-Multi-producer sending:
-16,000,000 ops
-502,963,254 ns
-31,811,469 ops/s
-73.7 % of CPU usage
-
-Max throughput:
-32,000,000 ops
-660,069,400 ns
-48,479,750 ops/s
-76.8 % of CPU usage
-
-Ping latency:
-3,200,000 ops
-3,117,898,243 ns
-974 ns/op
-89.8 % of CPU usage
-
-Ping throughput 10K:
-4,000,000 ops
-355,304,186 ns
-11,257,959 ops/s
-97.7 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.679 sec - in com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
-
-Results :
-
-Tests run: 83, Failures: 0, Errors: 0, Skipped: 0
-
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time: 3:33.650s
-[INFO] Finished at: Sat Nov 01 17:45:37 EET 2014
-[INFO] Final Memory: 20M/1024M
-[INFO] ------------------------------------------------------------------------
-[INFO] Scanning for projects...
-[INFO]                                                                         
-[INFO] ------------------------------------------------------------------------
-[INFO] Building Actors 1.0-SNAPSHOT
-[INFO] ------------------------------------------------------------------------
-[INFO] 
-[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ actors ---
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
-[INFO] 
-[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ actors ---
-[INFO] Using 'UTF-8' encoding to copy filtered resources.
-[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
-[INFO] 
-[INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
-[WARNING]  Expected all dependencies to require Scala version: 2.11.4
-[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.11.4
-[WARNING]  com.typesafe.akka:akka-actor_2.11:2.3.6 requires scala version: 2.11.2
-[WARNING] Multiple versions of scala libraries detected!
-[INFO] Nothing to compile - all classes are up to date
-[INFO] 
-[INFO] --- maven-surefire-plugin:2.16:test (default-test) @ actors ---
-[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-Running com.github.plokhotnyuk.actors.AkkaActorSpec
-Executor service type: thread-pool
-
-Enqueueing:
-10,000,000 ops
-326,067,140 ns
-30,668,530 ops/s
-29.9 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-754,243,653 ns
-13,258,315 ops/s
-27.9 % of CPU usage
-
-Initiation:
-100,000 ops
-883,681,157 ns
-8,836 ns/op
-68.8 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-657,503,287 ns
-9,125,429 ops/s
-42.1 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-894,811,364 ns
-6,705,323 ops/s
-62.8 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-617,420,831 ns
-19,435,690 ops/s
-96.0 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-3,337,037,171 ns
-2,224 ns/op
+752,584,348 ns
+13,287,547 ops/s
 29.0 % of CPU usage
 
+Initiation:
+100,000 ops
+922,520,691 ns
+9,225 ns/op
+73.1 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+619,900,809 ns
+9,678,967 ops/s
+42.2 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+818,384,012 ns
+7,331,521 ops/s
+65.3 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+612,177,178 ns
+19,602,168 ops/s
+87.9 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+629,528,588 ns
+419 ns/op
+98.5 % of CPU usage
+
 Ping throughput 10K:
 1,800,000 ops
-1,295,963,237 ns
-1,388,928 ops/s
-80.0 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.108 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
+843,210,541 ns
+2,134,698 ops/s
+96.7 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.646 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
 Running com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
-Executor service type: thread-pool
+Executor service type: akka-forkjoin-pool
 
 Enqueueing:
 10,000,000 ops
-286,059,824 ns
-34,957,722 ops/s
+271,257,667 ns
+36,865,317 ops/s
+27.3 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+579,891,659 ns
+17,244,600 ops/s
+28.2 % of CPU usage
+
+Initiation:
+100,000 ops
+862,723,041 ns
+8,627 ns/op
+76.9 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+583,173,615 ns
+10,288,531 ops/s
+44.1 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+711,722,271 ns
+8,430,254 ops/s
+64.1 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+578,519,719 ns
+20,742,594 ops/s
+96.4 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+607,579,362 ns
+405 ns/op
+100.1 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+672,171,292 ns
+2,677,888 ops/s
+98.1 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.849 sec - in com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
+Running com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
+Executor service type: akka-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+571,852,810 ns
+17,487,017 ops/s
 28.6 % of CPU usage
 48 bytes per instance
 
 Dequeueing:
 10,000,000 ops
-584,311,707 ns
-17,114,153 ops/s
-27.4 % of CPU usage
-
-Initiation:
-100,000 ops
-880,029,733 ns
-8,800 ns/op
-70.0 % of CPU usage
-424 bytes per instance
-
-Single-producer sending:
-6,000,000 ops
-561,537,776 ns
-10,684,944 ops/s
-43.8 % of CPU usage
-
-Multi-producer sending:
-6,000,000 ops
-815,730,664 ns
-7,355,368 ops/s
-65.0 % of CPU usage
-
-Max throughput:
-12,000,000 ops
-479,405,671 ns
-25,030,993 ops/s
-91.1 % of CPU usage
-
-Ping latency:
-1,500,000 ops
-2,795,734,337 ns
-1,863 ns/op
-36.1 % of CPU usage
-
-Ping throughput 10K:
-1,800,000 ops
-1,222,212,326 ns
-1,472,739 ops/s
-92.9 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.565 sec - in com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
-Running com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
-Executor service type: thread-pool
-
-Enqueueing:
-10,000,000 ops
-668,135,373 ns
-14,967,026 ops/s
+788,831,013 ns
+12,676,986 ops/s
 29.2 % of CPU usage
-48 bytes per instance
-
-Dequeueing:
-10,000,000 ops
-811,017,388 ns
-12,330,191 ops/s
-26.4 % of CPU usage
 
 Initiation:
 100,000 ops
-867,104,969 ns
-8,671 ns/op
-66.1 % of CPU usage
+900,440,245 ns
+9,004 ns/op
+77.5 % of CPU usage
 608 bytes per instance
 
 Single-producer sending:
 6,000,000 ops
-1,113,981,448 ns
-5,386,086 ops/s
+984,567,769 ns
+6,094,044 ops/s
 45.2 % of CPU usage
 
 Multi-producer sending:
 6,000,000 ops
-999,566,755 ns
-6,002,600 ops/s
-72.2 % of CPU usage
+1,049,484,450 ns
+5,717,092 ops/s
+74.7 % of CPU usage
 
 Max throughput:
 12,000,000 ops
-744,930,360 ns
-16,108,888 ops/s
-93.7 % of CPU usage
+858,015,996 ns
+13,985,753 ops/s
+93.6 % of CPU usage
 
 Ping latency:
 1,500,000 ops
-3,398,612,151 ns
-2,265 ns/op
-29.6 % of CPU usage
+750,430,220 ns
+500 ns/op
+99.8 % of CPU usage
 
 Ping throughput 10K:
 1,800,000 ops
-1,387,847,013 ns
-1,296,972 ops/s
-86.3 % of CPU usage
+724,523,880 ns
+2,484,390 ops/s
+101.2 % of CPU usage
 
 Overflow throughput:
 5,000,000 ops
-438,334,303 ns
-11,406,818 ops/s
-36.5 % of CPU usage
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.259 sec - in com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
+445,059,857 ns
+11,234,443 ops/s
+42.1 % of CPU usage
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.594 sec - in com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
 Running com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
-Executor service type: thread-pool
+Executor service type: akka-forkjoin-pool
 
 Enqueueing:
 10,000,000 ops
-314,394,827 ns
-31,807,139 ops/s
-31.0 % of CPU usage
+275,047,274 ns
+36,357,386 ops/s
+28.4 % of CPU usage
 48 bytes per instance
 
 Dequeueing:
 10,000,000 ops
-565,933,266 ns
-17,669,927 ops/s
-27.6 % of CPU usage
+573,974,316 ns
+17,422,382 ops/s
+27.9 % of CPU usage
 
 Initiation:
 100,000 ops
-906,120,074 ns
-9,061 ns/op
-75.8 % of CPU usage
+948,775,608 ns
+9,487 ns/op
+74.8 % of CPU usage
 424 bytes per instance
 
 Single-producer sending:
 6,000,000 ops
-542,873,438 ns
-11,052,299 ops/s
-40.9 % of CPU usage
+537,078,517 ns
+11,171,550 ops/s
+44.3 % of CPU usage
 
 Multi-producer sending:
 6,000,000 ops
-759,191,145 ns
-7,903,148 ops/s
-65.2 % of CPU usage
+714,060,033 ns
+8,402,654 ops/s
+65.0 % of CPU usage
 
 Max throughput:
 12,000,000 ops
-446,567,783 ns
-26,871,620 ops/s
-95.2 % of CPU usage
+456,134,717 ns
+26,308,017 ops/s
+93.2 % of CPU usage
 
 Ping latency:
 1,500,000 ops
-2,967,709,349 ns
-1,978 ns/op
-29.8 % of CPU usage
+582,923,639 ns
+388 ns/op
+99.0 % of CPU usage
 
 Ping throughput 10K:
 1,800,000 ops
-1,229,991,669 ns
-1,463,424 ops/s
-86.2 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.299 sec - in com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
+545,032,697 ns
+3,302,554 ops/s
+99.5 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.912 sec - in com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
 Running com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
-Executor service type: thread-pool
+Executor service type: akka-forkjoin-pool
 
 Enqueueing:
 10,000,000 ops
-296,850,253 ns
-33,687,018 ops/s
-30.2 % of CPU usage
+331,532,546 ns
+30,162,951 ops/s
+28.2 % of CPU usage
 48 bytes per instance
 
 Dequeueing:
 10,000,000 ops
-610,091,227 ns
-16,390,991 ops/s
-30.7 % of CPU usage
+582,262,410 ns
+17,174,387 ops/s
+31.5 % of CPU usage
 
 Initiation:
 100,000 ops
-885,315,904 ns
-8,853 ns/op
-69.2 % of CPU usage
+871,659,902 ns
+8,716 ns/op
+73.8 % of CPU usage
 424 bytes per instance
 
 Single-producer sending:
 6,000,000 ops
-645,792,854 ns
-9,290,904 ops/s
-44.1 % of CPU usage
+606,514,576 ns
+9,892,589 ops/s
+47.6 % of CPU usage
 
 Multi-producer sending:
 6,000,000 ops
-854,371,903 ns
-7,022,702 ops/s
-68.0 % of CPU usage
+843,063,927 ns
+7,116,898 ops/s
+71.7 % of CPU usage
 
 Max throughput:
 12,000,000 ops
-495,084,580 ns
-24,238,282 ops/s
-94.5 % of CPU usage
+553,045,156 ns
+21,698,047 ops/s
+92.4 % of CPU usage
 
 Ping latency:
 1,500,000 ops
-3,369,329,289 ns
-2,246 ns/op
-29.1 % of CPU usage
+601,747,054 ns
+401 ns/op
+98.5 % of CPU usage
 
 Ping throughput 10K:
 1,800,000 ops
-1,264,635,842 ns
-1,423,334 ops/s
-81.4 % of CPU usage
+797,718,392 ns
+2,256,435 ops/s
+99.2 % of CPU usage
 
 Overflow throughput:
 5,000,000 ops
-365,070,516 ns
-13,695,984 ops/s
-34.2 % of CPU usage
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.218 sec - in com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
+402,253,312 ns
+12,429,978 ops/s
+28.1 % of CPU usage
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.175 sec - in com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
 Running com.github.plokhotnyuk.actors.LiftActorSpec
-Executor service type: thread-pool
+Executor service type: akka-forkjoin-pool
 
 Enqueueing:
 10,000,000 ops
-419,189,437 ns
-23,855,562 ops/s
-27.0 % of CPU usage
+401,773,151 ns
+24,889,667 ops/s
+27.2 % of CPU usage
 24 bytes per instance
 
 Dequeueing:
 10,000,000 ops
-414,136,749 ns
-24,146,613 ops/s
-27.3 % of CPU usage
+410,074,073 ns
+24,385,838 ops/s
+27.6 % of CPU usage
 
 Initiation:
 10,000,000 ops
-709,277,849 ns
+704,644,111 ns
 70 ns/op
-34.1 % of CPU usage
+34.9 % of CPU usage
 72 bytes per instance
 
 Single-producer sending:
 6,000,000 ops
-638,200,444 ns
-9,401,435 ops/s
-50.1 % of CPU usage
+522,157,602 ns
+11,490,783 ops/s
+50.0 % of CPU usage
 
 Multi-producer sending:
 6,000,000 ops
-853,667,057 ns
-7,028,501 ops/s
-75.8 % of CPU usage
+806,956,178 ns
+7,435,347 ops/s
+78.3 % of CPU usage
 
 Max throughput:
 12,000,000 ops
-563,312,540 ns
-21,302,561 ops/s
-86.5 % of CPU usage
+492,470,450 ns
+24,366,944 ops/s
+82.4 % of CPU usage
 
 Ping latency:
 1,500,000 ops
-3,446,041,805 ns
-2,297 ns/op
-37.1 % of CPU usage
+1,092,771,889 ns
+728 ns/op
+96.7 % of CPU usage
 
 Ping throughput 10K:
 1,800,000 ops
-1,091,549,861 ns
-1,649,031 ops/s
-71.1 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.221 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
+535,606,144 ns
+3,360,678 ops/s
+91.7 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.132 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
 Running com.github.plokhotnyuk.actors.ScalaActorSpec
-Executor service type: thread-pool
+Executor service type: akka-forkjoin-pool
 
 Enqueueing:
 40,000,000 ops
-1,083,413,513 ns
-36,920,344 ops/s
-25.2 % of CPU usage
-24 bytes per instance
-
-Dequeueing:
-600,000 ops
-2,186,122,904 ns
-274,458 ops/s
-61.5 % of CPU usage
-
-Initiation:
-600,000 ops
-439,068,839 ns
-731 ns/op
-83.5 % of CPU usage
-232 bytes per instance
-
-Single-producer sending:
-300,000 ops
-1,749,690,553 ns
-171,458 ops/s
-53.5 % of CPU usage
-
-Multi-producer sending:
-300,000 ops
-1,670,847,734 ns
-179,549 ops/s
-51.4 % of CPU usage
-
-Max throughput:
-600,000 ops
-983,859,256 ns
-609,843 ops/s
-93.9 % of CPU usage
-
-Ping latency:
-250,000 ops
-1,324,208,073 ns
-5,296 ns/op
-65.7 % of CPU usage
-
-Ping throughput 10K:
-400,000 ops
-847,651,481 ns
-471,892 ops/s
-91.1 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 21.232 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
-Running com.github.plokhotnyuk.actors.ScalazActorSpec
-Executor service type: thread-pool
-
-Enqueueing:
-40,000,000 ops
-692,107,141 ns
-57,794,519 ops/s
+1,073,720,490 ns
+37,253,643 ops/s
 25.4 % of CPU usage
 24 bytes per instance
 
 Dequeueing:
+600,000 ops
+1,078,775,743 ns
+556,186 ops/s
+97.2 % of CPU usage
+
+Initiation:
+600,000 ops
+654,856,903 ns
+1,091 ns/op
+97.1 % of CPU usage
+224 bytes per instance
+
+Single-producer sending:
+300,000 ops
+685,705,970 ns
+437,505 ops/s
+99.5 % of CPU usage
+
+Multi-producer sending:
+300,000 ops
+563,195,249 ns
+532,674 ops/s
+97.6 % of CPU usage
+
+Max throughput:
+600,000 ops
+661,390,027 ns
+907,180 ops/s
+93.8 % of CPU usage
+
+Ping latency:
+250,000 ops
+640,153,344 ns
+2,560 ns/op
+98.1 % of CPU usage
+
+Ping throughput 10K:
+400,000 ops
+527,407,486 ns
+758,426 ops/s
+99.1 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.193 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
+Running com.github.plokhotnyuk.actors.ScalazActorSpec
+Executor service type: akka-forkjoin-pool
+
+Enqueueing:
 40,000,000 ops
-193,946,232 ns
-206,242,728 ops/s
-36.2 % of CPU usage
+688,811,990 ns
+58,070,998 ops/s
+25.5 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+189,209,497 ns
+211,405,878 ops/s
+37.1 % of CPU usage
 
 Initiation:
 10,000,000 ops
-449,746,743 ns
+449,764,702 ns
 44 ns/op
-37.3 % of CPU usage
+48.6 % of CPU usage
 104 bytes per instance
 
 Single-producer sending:
 16,000,000 ops
-488,532,763 ns
-32,751,129 ops/s
-63.1 % of CPU usage
+493,346,103 ns
+32,431,592 ops/s
+56.1 % of CPU usage
 
 Multi-producer sending:
 16,000,000 ops
-1,066,296,320 ns
-15,005,209 ops/s
-96.6 % of CPU usage
+979,067,542 ns
+16,342,079 ops/s
+98.4 % of CPU usage
 
 Max throughput:
 32,000,000 ops
-361,039,728 ns
-88,632,905 ops/s
-86.4 % of CPU usage
+712,509,956 ns
+44,911,653 ops/s
+92.5 % of CPU usage
 
 Ping latency:
 3,200,000 ops
-938,791,555 ns
-293 ns/op
-40.7 % of CPU usage
+657,655,033 ns
+205 ns/op
+97.3 % of CPU usage
 
 Ping throughput 10K:
 4,000,000 ops
-1,789,509,470 ns
-2,235,249 ops/s
-46.6 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.542 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
+158,289,688 ns
+25,270,123 ops/s
+76.4 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.171 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
 Running com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
-Executor service type: thread-pool
+Executor service type: akka-forkjoin-pool
 
 Enqueueing:
 40,000,000 ops
-721,760,571 ns
-55,420,040 ops/s
-25.4 % of CPU usage
+710,393,216 ns
+56,306,844 ops/s
+25.3 % of CPU usage
 24 bytes per instance
 
 Dequeueing:
 40,000,000 ops
-201,864,491 ns
-198,152,730 ops/s
-29.0 % of CPU usage
+183,780,378 ns
+217,651,092 ops/s
+40.3 % of CPU usage
 
 Initiation:
 10,000,000 ops
-287,479,414 ns
-28 ns/op
-59.7 % of CPU usage
+274,716,659 ns
+27 ns/op
+59.6 % of CPU usage
 56 bytes per instance
 
 Single-producer sending:
 16,000,000 ops
-520,641,979 ns
-30,731,290 ops/s
-69.7 % of CPU usage
+1,326,261,037 ns
+12,063,990 ops/s
+96.7 % of CPU usage
 
 Multi-producer sending:
 16,000,000 ops
-1,141,579,348 ns
-14,015,670 ops/s
-93.9 % of CPU usage
+1,183,826,561 ns
+13,515,493 ops/s
+96.2 % of CPU usage
 
 Max throughput:
 32,000,000 ops
-385,846,463 ns
-82,934,542 ops/s
-93.0 % of CPU usage
+870,805,509 ns
+36,747,585 ops/s
+94.5 % of CPU usage
 
 Ping latency:
 3,200,000 ops
-1,031,338,759 ns
-322 ns/op
-41.2 % of CPU usage
+714,548,991 ns
+223 ns/op
+86.8 % of CPU usage
 
 Ping throughput 10K:
 4,000,000 ops
-1,748,657,657 ns
-2,287,468 ops/s
-48.8 % of CPU usage
+162,629,465 ns
+24,595,788 ops/s
+74.3 % of CPU usage
 
 Overflow throughput:
 100,000,000 ops
-819,451,363 ns
-122,032,867 ops/s
+804,445,045 ns
+124,309,299 ops/s
 24.7 % of CPU usage
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.109 sec - in com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.923 sec - in com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
 Running com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
-Executor service type: thread-pool
+Executor service type: akka-forkjoin-pool
 
 Enqueueing:
 40,000,000 ops
-763,414,363 ns
-52,396,184 ops/s
-25.0 % of CPU usage
+765,492,984 ns
+52,253,908 ops/s
+25.5 % of CPU usage
 24 bytes per instance
 
 Dequeueing:
 40,000,000 ops
-190,661,343 ns
-209,796,067 ops/s
-30.7 % of CPU usage
+164,454,443 ns
+243,228,454 ops/s
+33.2 % of CPU usage
 
 Initiation:
 10,000,000 ops
-233,533,498 ns
-23 ns/op
-60.1 % of CPU usage
+243,389,630 ns
+24 ns/op
+57.7 % of CPU usage
 48 bytes per instance
 
 Single-producer sending:
 16,000,000 ops
-436,774,695 ns
-36,632,158 ops/s
-58.9 % of CPU usage
+505,143,772 ns
+31,674,150 ops/s
+60.2 % of CPU usage
 
 Multi-producer sending:
 16,000,000 ops
-865,416,342 ns
-18,488,211 ops/s
-93.3 % of CPU usage
+877,038,439 ns
+18,243,214 ops/s
+98.7 % of CPU usage
 
 Max throughput:
 32,000,000 ops
-306,965,525 ns
-104,246,234 ops/s
-87.7 % of CPU usage
+945,864,585 ns
+33,831,481 ops/s
+94.0 % of CPU usage
 
 Ping latency:
 3,200,000 ops
-938,847,635 ns
-293 ns/op
-38.2 % of CPU usage
+553,875,725 ns
+173 ns/op
+91.5 % of CPU usage
 
 Ping throughput 10K:
 4,000,000 ops
-1,697,540,659 ns
-2,356,350 ops/s
-47.3 % of CPU usage
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.389 sec - in com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
+154,072,701 ns
+25,961,769 ops/s
+78.5 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.302 sec - in com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
 
 Results :
 
@@ -2429,7 +656,1780 @@ Tests run: 83, Failures: 0, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 3:37.402s
-[INFO] Finished at: Sat Nov 01 17:49:16 EET 2014
+[INFO] Total time: 3:06.218s
+[INFO] Finished at: Sat Nov 01 20:40:33 EET 2014
+[INFO] Final Memory: 20M/1024M
+[INFO] ------------------------------------------------------------------------
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Actors 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ actors ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ actors ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.11.4
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.11.4
+[WARNING]  com.typesafe.akka:akka-actor_2.11:2.3.6 requires scala version: 2.11.2
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.16:test (default-test) @ actors ---
+[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running com.github.plokhotnyuk.actors.AkkaActorSpec
+Executor service type: scala-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+328,249,123 ns
+30,464,666 ops/s
+29.7 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+789,089,787 ns
+12,672,829 ops/s
+31.6 % of CPU usage
+
+Initiation:
+100,000 ops
+864,543,621 ns
+8,645 ns/op
+80.3 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+683,320,926 ns
+8,780,647 ops/s
+43.9 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+783,731,775 ns
+7,655,680 ops/s
+65.2 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+630,551,588 ns
+19,030,956 ops/s
+95.3 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+656,342,103 ns
+437 ns/op
+99.2 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+671,831,147 ns
+2,679,244 ops/s
+99.8 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.848 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
+Running com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
+Executor service type: scala-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+306,857,397 ns
+32,588,427 ops/s
+28.0 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+636,075,640 ns
+15,721,400 ops/s
+28.8 % of CPU usage
+
+Initiation:
+100,000 ops
+847,013,343 ns
+8,470 ns/op
+76.4 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+624,225,924 ns
+9,611,904 ops/s
+44.4 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+744,451,299 ns
+8,059,627 ops/s
+65.0 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+522,279,659 ns
+22,976,196 ops/s
+93.3 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+589,461,527 ns
+392 ns/op
+95.3 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+748,759,553 ns
+2,403,976 ops/s
+99.5 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.818 sec - in com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
+Running com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
+Executor service type: scala-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+589,297,320 ns
+16,969,362 ops/s
+31.1 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+793,119,475 ns
+12,608,440 ops/s
+30.0 % of CPU usage
+
+Initiation:
+100,000 ops
+918,412,932 ns
+9,184 ns/op
+78.6 % of CPU usage
+608 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+928,377,191 ns
+6,462,890 ops/s
+46.6 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+1,043,338,388 ns
+5,750,770 ops/s
+74.0 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+867,408,461 ns
+13,834,312 ops/s
+94.9 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+892,542,145 ns
+595 ns/op
+99.6 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+764,755,516 ns
+2,353,693 ops/s
+100.0 % of CPU usage
+
+Overflow throughput:
+5,000,000 ops
+391,598,867 ns
+12,768,167 ops/s
+34.9 % of CPU usage
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.671 sec - in com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
+Running com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
+Executor service type: scala-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+300,561,788 ns
+33,271,029 ops/s
+36.3 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+565,884,517 ns
+17,671,450 ops/s
+27.6 % of CPU usage
+
+Initiation:
+100,000 ops
+908,877,152 ns
+9,088 ns/op
+78.5 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+514,200,856 ns
+11,668,592 ops/s
+42.5 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+730,834,150 ns
+8,209,796 ops/s
+64.6 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+526,672,949 ns
+22,784,538 ops/s
+88.9 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+704,274,644 ns
+469 ns/op
+99.7 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+792,435,520 ns
+2,271,478 ops/s
+99.4 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.839 sec - in com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
+Running com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
+Executor service type: scala-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+304,216,144 ns
+32,871,365 ops/s
+35.9 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+579,374,845 ns
+17,259,983 ops/s
+31.0 % of CPU usage
+
+Initiation:
+100,000 ops
+844,010,687 ns
+8,440 ns/op
+77.2 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+650,184,678 ns
+9,228,147 ops/s
+46.8 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+796,878,294 ns
+7,529,380 ops/s
+78.3 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+627,007,925 ns
+19,138,514 ops/s
+90.2 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+594,710,311 ns
+396 ns/op
+99.7 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+745,306,059 ns
+2,415,115 ops/s
+98.9 % of CPU usage
+
+Overflow throughput:
+5,000,000 ops
+356,941,499 ns
+14,007,897 ops/s
+35.0 % of CPU usage
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.976 sec - in com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
+Running com.github.plokhotnyuk.actors.LiftActorSpec
+Executor service type: scala-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+411,189,440 ns
+24,319,690 ops/s
+26.6 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+413,337,336 ns
+24,193,314 ops/s
+28.3 % of CPU usage
+
+Initiation:
+10,000,000 ops
+681,190,991 ns
+68 ns/op
+36.6 % of CPU usage
+72 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+674,015,697 ns
+8,901,869 ops/s
+50.3 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+839,129,537 ns
+7,150,266 ops/s
+66.0 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+606,746,594 ns
+19,777,614 ops/s
+89.3 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+1,110,229,227 ns
+740 ns/op
+89.9 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+542,787,303 ns
+3,316,216 ops/s
+92.7 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.6 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
+Running com.github.plokhotnyuk.actors.ScalaActorSpec
+Executor service type: scala-forkjoin-pool
+
+Enqueueing:
+40,000,000 ops
+1,126,391,963 ns
+35,511,617 ops/s
+25.6 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+600,000 ops
+994,936,316 ns
+603,053 ops/s
+96.8 % of CPU usage
+
+Initiation:
+600,000 ops
+620,172,044 ns
+1,033 ns/op
+96.8 % of CPU usage
+224 bytes per instance
+
+Single-producer sending:
+300,000 ops
+701,679,208 ns
+427,545 ops/s
+96.7 % of CPU usage
+
+Multi-producer sending:
+300,000 ops
+552,244,643 ns
+543,237 ops/s
+97.5 % of CPU usage
+
+Max throughput:
+600,000 ops
+1,002,465,316 ns
+598,524 ops/s
+96.1 % of CPU usage
+
+Ping latency:
+250,000 ops
+690,758,291 ns
+2,763 ns/op
+93.7 % of CPU usage
+
+Ping throughput 10K:
+400,000 ops
+518,631,534 ns
+771,260 ops/s
+94.7 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.507 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
+Running com.github.plokhotnyuk.actors.ScalazActorSpec
+Executor service type: scala-forkjoin-pool
+
+Enqueueing:
+40,000,000 ops
+681,821,064 ns
+58,666,418 ops/s
+25.2 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+182,206,476 ns
+219,531,165 ops/s
+34.2 % of CPU usage
+
+Initiation:
+10,000,000 ops
+366,494,505 ns
+36 ns/op
+60.7 % of CPU usage
+104 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+528,694,391 ns
+30,263,230 ops/s
+62.0 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+991,433,706 ns
+16,138,244 ops/s
+93.6 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+978,769,915 ns
+32,694,098 ops/s
+94.4 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+406,108,529 ns
+126 ns/op
+91.2 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+167,155,075 ns
+23,929,874 ops/s
+77.0 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.143 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
+Running com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
+Executor service type: scala-forkjoin-pool
+
+Enqueueing:
+40,000,000 ops
+727,604,608 ns
+54,974,912 ops/s
+25.2 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+183,243,037 ns
+218,289,331 ops/s
+34.1 % of CPU usage
+
+Initiation:
+10,000,000 ops
+279,067,432 ns
+27 ns/op
+53.1 % of CPU usage
+56 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+591,592,196 ns
+27,045,657 ops/s
+71.9 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+1,090,675,308 ns
+14,669,810 ops/s
+96.2 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+844,558,290 ns
+37,889,628 ops/s
+97.4 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+885,987,030 ns
+276 ns/op
+93.3 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+177,569,439 ns
+22,526,398 ops/s
+76.9 % of CPU usage
+
+Overflow throughput:
+100,000,000 ops
+796,196,171 ns
+125,597,187 ops/s
+25.0 % of CPU usage
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.346 sec - in com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
+Running com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
+Executor service type: scala-forkjoin-pool
+
+Enqueueing:
+40,000,000 ops
+760,185,189 ns
+52,618,757 ops/s
+25.1 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+151,343,480 ns
+264,299,459 ops/s
+38.7 % of CPU usage
+
+Initiation:
+10,000,000 ops
+235,749,937 ns
+23 ns/op
+61.2 % of CPU usage
+48 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+436,864,863 ns
+36,624,598 ops/s
+57.1 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+922,017,439 ns
+17,353,250 ops/s
+95.6 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+693,159,830 ns
+46,165,398 ops/s
+94.0 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+571,658,546 ns
+178 ns/op
+91.4 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+151,706,350 ns
+26,366,727 ops/s
+69.4 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.287 sec - in com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
+
+Results :
+
+Tests run: 83, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 3:06.403s
+[INFO] Finished at: Sat Nov 01 20:43:40 EET 2014
+[INFO] Final Memory: 20M/1024M
+[INFO] ------------------------------------------------------------------------
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Actors 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ actors ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ actors ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.11.4
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.11.4
+[WARNING]  com.typesafe.akka:akka-actor_2.11:2.3.6 requires scala version: 2.11.2
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.16:test (default-test) @ actors ---
+[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running com.github.plokhotnyuk.actors.AkkaActorSpec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+375,401,311 ns
+26,638,159 ops/s
+30.1 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+767,433,055 ns
+13,030,452 ops/s
+29.0 % of CPU usage
+
+Initiation:
+100,000 ops
+814,945,180 ns
+8,149 ns/op
+64.1 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+662,793,123 ns
+9,052,598 ops/s
+45.3 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+775,392,366 ns
+7,738,017 ops/s
+72.9 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+689,953,747 ns
+17,392,470 ops/s
+92.1 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+1,668,517,303 ns
+1,112 ns/op
+98.6 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+531,847,327 ns
+3,384,429 ops/s
+99.7 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.363 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
+Running com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+300,035,078 ns
+33,329,436 ops/s
+29.9 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+578,425,519 ns
+17,288,310 ops/s
+27.6 % of CPU usage
+
+Initiation:
+100,000 ops
+811,521,374 ns
+8,115 ns/op
+71.1 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+624,476,268 ns
+9,608,051 ops/s
+44.3 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+674,145,084 ns
+8,900,161 ops/s
+66.5 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+559,954,710 ns
+21,430,304 ops/s
+93.3 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+2,111,068,593 ns
+1,407 ns/op
+97.7 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+444,932,303 ns
+4,045,559 ops/s
+94.7 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.16 sec - in com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
+Running com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+531,281,396 ns
+18,822,417 ops/s
+30.8 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+808,997,046 ns
+12,360,984 ops/s
+28.0 % of CPU usage
+
+Initiation:
+100,000 ops
+853,799,009 ns
+8,537 ns/op
+69.4 % of CPU usage
+608 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+937,417,048 ns
+6,400,566 ops/s
+44.1 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+1,106,075,651 ns
+5,424,583 ops/s
+77.9 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+739,766,613 ns
+16,221,332 ops/s
+97.5 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+1,009,308,528 ns
+672 ns/op
+92.7 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+570,939,038 ns
+3,152,700 ops/s
+97.0 % of CPU usage
+
+Overflow throughput:
+5,000,000 ops
+413,680,047 ns
+12,086,635 ops/s
+30.2 % of CPU usage
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.549 sec - in com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
+Running com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+285,443,311 ns
+35,033,225 ops/s
+27.3 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+564,894,139 ns
+17,702,431 ops/s
+27.6 % of CPU usage
+
+Initiation:
+100,000 ops
+787,322,354 ns
+7,873 ns/op
+65.4 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+602,267,167 ns
+9,962,356 ops/s
+42.7 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+713,465,880 ns
+8,409,652 ops/s
+66.1 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+529,055,428 ns
+22,681,933 ops/s
+93.6 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+1,145,285,020 ns
+763 ns/op
+95.7 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+365,975,492 ns
+4,918,362 ops/s
+97.0 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.309 sec - in com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
+Running com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+299,972,033 ns
+33,336,441 ops/s
+32.5 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+579,923,548 ns
+17,243,652 ops/s
+28.9 % of CPU usage
+
+Initiation:
+100,000 ops
+832,789,579 ns
+8,327 ns/op
+70.7 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+650,279,611 ns
+9,226,800 ops/s
+48.0 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+781,447,162 ns
+7,678,062 ops/s
+79.9 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+580,118,911 ns
+20,685,414 ops/s
+90.1 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+1,516,852,739 ns
+1,011 ns/op
+97.4 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+557,478,399 ns
+3,228,824 ops/s
+96.5 % of CPU usage
+
+Overflow throughput:
+5,000,000 ops
+354,789,937 ns
+14,092,846 ops/s
+33.0 % of CPU usage
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.472 sec - in com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
+Running com.github.plokhotnyuk.actors.LiftActorSpec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+10,000,000 ops
+400,511,536 ns
+24,968,069 ops/s
+25.3 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+445,941,741 ns
+22,424,453 ops/s
+28.0 % of CPU usage
+
+Initiation:
+10,000,000 ops
+713,279,680 ns
+71 ns/op
+33.9 % of CPU usage
+72 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+619,828,235 ns
+9,680,101 ops/s
+47.8 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+893,058,960 ns
+6,718,481 ops/s
+72.1 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+598,496,253 ns
+20,050,250 ops/s
+88.0 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+1,735,263,361 ns
+1,156 ns/op
+72.1 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+437,513,631 ns
+4,114,157 ops/s
+91.8 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.333 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
+Running com.github.plokhotnyuk.actors.ScalaActorSpec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+40,000,000 ops
+1,075,163,906 ns
+37,203,629 ops/s
+25.0 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+600,000 ops
+2,711,622,941 ns
+221,269 ops/s
+93.1 % of CPU usage
+
+Initiation:
+600,000 ops
+1,249,070,192 ns
+2,081 ns/op
+81.8 % of CPU usage
+224 bytes per instance
+
+Single-producer sending:
+300,000 ops
+1,567,377,415 ns
+191,402 ops/s
+97.5 % of CPU usage
+
+Multi-producer sending:
+300,000 ops
+1,008,622,008 ns
+297,435 ops/s
+93.6 % of CPU usage
+
+Max throughput:
+600,000 ops
+670,646,506 ns
+894,659 ops/s
+99.4 % of CPU usage
+
+Ping latency:
+250,000 ops
+1,184,987,379 ns
+4,739 ns/op
+98.7 % of CPU usage
+
+Ping throughput 10K:
+400,000 ops
+522,054,239 ns
+766,203 ops/s
+98.6 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.408 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
+Running com.github.plokhotnyuk.actors.ScalazActorSpec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+40,000,000 ops
+691,996,081 ns
+57,803,795 ops/s
+25.4 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+185,415,491 ns
+215,731,704 ops/s
+35.8 % of CPU usage
+
+Initiation:
+10,000,000 ops
+441,520,593 ns
+44 ns/op
+38.9 % of CPU usage
+104 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+507,099,969 ns
+31,551,964 ops/s
+61.5 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+1,033,583,420 ns
+15,480,124 ops/s
+97.4 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+616,247,552 ns
+51,927,183 ops/s
+89.9 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+8,406,446,108 ns
+2,627 ns/op
+99.3 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+459,629,997 ns
+8,702,652 ops/s
+94.2 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 28.208 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
+Running com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+40,000,000 ops
+724,155,879 ns
+55,236,726 ops/s
+25.3 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+185,269,244 ns
+215,901,998 ops/s
+31.6 % of CPU usage
+
+Initiation:
+10,000,000 ops
+307,492,236 ns
+30 ns/op
+52.0 % of CPU usage
+56 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+716,259,245 ns
+22,338,280 ops/s
+75.1 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+1,059,430,383 ns
+15,102,455 ops/s
+95.7 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+803,040,483 ns
+39,848,551 ops/s
+96.2 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+11,663,464,982 ns
+3,644 ns/op
+99.6 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+315,453,013 ns
+12,680,176 ops/s
+96.4 % of CPU usage
+
+Overflow throughput:
+100,000,000 ops
+1,073,606,497 ns
+93,143,996 ops/s
+24.7 % of CPU usage
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 29.744 sec - in com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
+Running com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
+Executor service type: java-forkjoin-pool
+
+Enqueueing:
+40,000,000 ops
+774,693,018 ns
+51,633,355 ops/s
+25.2 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+171,188,795 ns
+233,660,152 ops/s
+34.2 % of CPU usage
+
+Initiation:
+10,000,000 ops
+219,963,632 ns
+21 ns/op
+67.4 % of CPU usage
+48 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+468,705,042 ns
+34,136,607 ops/s
+59.9 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+941,053,077 ns
+17,002,229 ops/s
+96.6 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+471,124,541 ns
+67,922,592 ops/s
+93.5 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+6,649,566,700 ns
+2,077 ns/op
+99.7 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+279,061,201 ns
+14,333,773 ops/s
+83.9 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.15 sec - in com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
+
+Results :
+
+Tests run: 83, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 3:40.981s
+[INFO] Finished at: Sat Nov 01 20:47:23 EET 2014
+[INFO] Final Memory: 20M/1024M
+[INFO] ------------------------------------------------------------------------
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Actors 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ actors ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\main\resources
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ actors ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\src\test\resources
+[INFO] 
+[INFO] --- scala-maven-plugin:3.1.6:testCompile (testCompile) @ actors ---
+[WARNING]  Expected all dependencies to require Scala version: 2.11.4
+[WARNING]  com.github.plokhotnyuk.actors:actors:1.0-SNAPSHOT requires scala version: 2.11.4
+[WARNING]  com.typesafe.akka:akka-actor_2.11:2.3.6 requires scala version: 2.11.2
+[WARNING] Multiple versions of scala libraries detected!
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.16:test (default-test) @ actors ---
+[INFO] Surefire report directory: C:\Users\Andriy\Projects\com\github\plokhotnyuk\actors\target\surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running com.github.plokhotnyuk.actors.AkkaActorSpec
+Executor service type: thread-pool
+
+Enqueueing:
+10,000,000 ops
+385,572,295 ns
+25,935,473 ops/s
+32.4 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+744,157,337 ns
+13,438,018 ops/s
+32.0 % of CPU usage
+
+Initiation:
+100,000 ops
+847,425,695 ns
+8,474 ns/op
+76.4 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+664,533,432 ns
+9,028,891 ops/s
+45.2 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+914,069,857 ns
+6,564,049 ops/s
+64.4 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+593,434,768 ns
+20,221,262 ops/s
+95.3 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+3,193,389,831 ns
+2,128 ns/op
+33.3 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+1,379,932,785 ns
+1,304,411 ops/s
+82.2 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.765 sec - in com.github.plokhotnyuk.actors.AkkaActorSpec
+Running com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
+Executor service type: thread-pool
+
+Enqueueing:
+10,000,000 ops
+301,911,004 ns
+33,122,343 ops/s
+31.0 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+634,874,137 ns
+15,751,153 ops/s
+27.0 % of CPU usage
+
+Initiation:
+100,000 ops
+885,937,547 ns
+8,859 ns/op
+70.9 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+656,408,813 ns
+9,140,645 ops/s
+42.8 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+818,080,521 ns
+7,334,241 ops/s
+65.3 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+519,890,949 ns
+23,081,763 ops/s
+93.8 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+3,097,428,352 ns
+2,064 ns/op
+29.3 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+1,330,272,398 ns
+1,353,106 ops/s
+82.7 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.064 sec - in com.github.plokhotnyuk.actors.AkkaBalanceableActorSpec
+Running com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
+Executor service type: thread-pool
+
+Enqueueing:
+10,000,000 ops
+561,778,957 ns
+17,800,595 ops/s
+29.2 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+793,189,483 ns
+12,607,328 ops/s
+26.6 % of CPU usage
+
+Initiation:
+100,000 ops
+900,243,050 ns
+9,002 ns/op
+73.2 % of CPU usage
+608 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+1,080,483,430 ns
+5,553,069 ops/s
+49.1 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+1,058,557,295 ns
+5,668,091 ops/s
+75.9 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+716,660,967 ns
+16,744,319 ops/s
+96.3 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+2,594,727,904 ns
+1,729 ns/op
+33.1 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+1,329,239,502 ns
+1,354,157 ops/s
+88.9 % of CPU usage
+
+Overflow throughput:
+5,000,000 ops
+455,793,107 ns
+10,969,889 ops/s
+29.9 % of CPU usage
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.121 sec - in com.github.plokhotnyuk.actors.AkkaBoundedActorSpec
+Running com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
+Executor service type: thread-pool
+
+Enqueueing:
+10,000,000 ops
+308,967,540 ns
+32,365,859 ops/s
+29.0 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+575,266,351 ns
+17,383,252 ops/s
+27.8 % of CPU usage
+
+Initiation:
+100,000 ops
+900,661,266 ns
+9,006 ns/op
+81.0 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+581,086,198 ns
+10,325,490 ops/s
+44.3 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+753,794,647 ns
+7,959,727 ops/s
+61.1 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+520,372,209 ns
+23,060,416 ops/s
+92.2 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+3,229,030,980 ns
+2,152 ns/op
+28.3 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+1,137,072,432 ns
+1,583,012 ops/s
+89.2 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.235 sec - in com.github.plokhotnyuk.actors.AkkaNonBalanceableActorSpec
+Running com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
+Executor service type: thread-pool
+
+Enqueueing:
+10,000,000 ops
+309,231,812 ns
+32,338,199 ops/s
+29.0 % of CPU usage
+48 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+577,947,191 ns
+17,302,618 ops/s
+28.3 % of CPU usage
+
+Initiation:
+100,000 ops
+868,727,988 ns
+8,687 ns/op
+76.3 % of CPU usage
+424 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+616,449,513 ns
+9,733,157 ops/s
+45.6 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+858,409,288 ns
+6,989,672 ops/s
+66.8 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+516,825,614 ns
+23,218,663 ops/s
+92.8 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+3,034,163,279 ns
+2,022 ns/op
+29.7 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+1,198,053,625 ns
+1,502,436 ops/s
+87.6 % of CPU usage
+
+Overflow throughput:
+5,000,000 ops
+376,768,486 ns
+13,270,748 ops/s
+29.0 % of CPU usage
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.578 sec - in com.github.plokhotnyuk.actors.AkkaNonBlockingBoundedActorSpec
+Running com.github.plokhotnyuk.actors.LiftActorSpec
+Executor service type: thread-pool
+
+Enqueueing:
+10,000,000 ops
+393,480,659 ns
+25,414,209 ops/s
+25.8 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+10,000,000 ops
+438,268,693 ns
+22,817,053 ops/s
+26.7 % of CPU usage
+
+Initiation:
+10,000,000 ops
+672,007,818 ns
+67 ns/op
+34.2 % of CPU usage
+72 bytes per instance
+
+Single-producer sending:
+6,000,000 ops
+577,690,982 ns
+10,386,175 ops/s
+45.9 % of CPU usage
+
+Multi-producer sending:
+6,000,000 ops
+762,489,961 ns
+7,868,956 ops/s
+73.7 % of CPU usage
+
+Max throughput:
+12,000,000 ops
+561,237,218 ns
+21,381,333 ops/s
+86.2 % of CPU usage
+
+Ping latency:
+1,500,000 ops
+3,322,469,597 ns
+2,214 ns/op
+36.5 % of CPU usage
+
+Ping throughput 10K:
+1,800,000 ops
+967,798,418 ns
+1,859,891 ops/s
+81.4 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.158 sec - in com.github.plokhotnyuk.actors.LiftActorSpec
+Running com.github.plokhotnyuk.actors.ScalaActorSpec
+Executor service type: thread-pool
+
+Enqueueing:
+40,000,000 ops
+1,334,858,119 ns
+29,965,731 ops/s
+25.4 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+600,000 ops
+2,090,320,869 ns
+287,037 ops/s
+56.9 % of CPU usage
+
+Initiation:
+600,000 ops
+527,057,078 ns
+878 ns/op
+86.6 % of CPU usage
+224 bytes per instance
+
+Single-producer sending:
+300,000 ops
+1,356,703,618 ns
+221,124 ops/s
+54.9 % of CPU usage
+
+Multi-producer sending:
+300,000 ops
+1,373,885,687 ns
+218,358 ops/s
+53.1 % of CPU usage
+
+Max throughput:
+600,000 ops
+863,399,666 ns
+694,927 ops/s
+90.8 % of CPU usage
+
+Ping latency:
+250,000 ops
+1,289,505,988 ns
+5,158 ns/op
+62.9 % of CPU usage
+
+Ping throughput 10K:
+400,000 ops
+803,610,079 ns
+497,753 ops/s
+94.6 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.969 sec - in com.github.plokhotnyuk.actors.ScalaActorSpec
+Running com.github.plokhotnyuk.actors.ScalazActorSpec
+Executor service type: thread-pool
+
+Enqueueing:
+40,000,000 ops
+689,927,723 ns
+57,977,087 ops/s
+25.4 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+195,576,946 ns
+204,523,083 ops/s
+29.9 % of CPU usage
+
+Initiation:
+10,000,000 ops
+427,873,755 ns
+42 ns/op
+39.2 % of CPU usage
+104 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+448,015,231 ns
+35,713,071 ops/s
+52.2 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+979,855,959 ns
+16,328,930 ops/s
+93.9 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+333,620,697 ns
+95,917,310 ops/s
+94.7 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+1,049,499,845 ns
+327 ns/op
+42.7 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+1,634,353,657 ns
+2,447,450 ops/s
+51.1 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.012 sec - in com.github.plokhotnyuk.actors.ScalazActorSpec
+Running com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
+Executor service type: thread-pool
+
+Enqueueing:
+40,000,000 ops
+709,550,917 ns
+56,373,685 ops/s
+25.3 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+217,552,564 ns
+183,863,611 ops/s
+43.0 % of CPU usage
+
+Initiation:
+10,000,000 ops
+258,573,350 ns
+25 ns/op
+57.3 % of CPU usage
+56 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+509,018,416 ns
+31,433,047 ops/s
+70.5 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+1,221,526,905 ns
+13,098,360 ops/s
+98.7 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+348,831,907 ns
+91,734,727 ops/s
+81.6 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+1,028,236,038 ns
+321 ns/op
+43.6 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+1,683,828,577 ns
+2,375,538 ops/s
+52.3 % of CPU usage
+
+Overflow throughput:
+100,000,000 ops
+806,936,019 ns
+123,925,562 ops/s
+24.6 % of CPU usage
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.14 sec - in com.github.plokhotnyuk.actors.ScalazBoundedActor2Spec
+Running com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
+Executor service type: thread-pool
+
+Enqueueing:
+40,000,000 ops
+758,557,405 ns
+52,731,671 ops/s
+25.2 % of CPU usage
+24 bytes per instance
+
+Dequeueing:
+40,000,000 ops
+177,893,090 ns
+224,854,152 ops/s
+32.9 % of CPU usage
+
+Initiation:
+10,000,000 ops
+238,688,816 ns
+23 ns/op
+65.4 % of CPU usage
+48 bytes per instance
+
+Single-producer sending:
+16,000,000 ops
+459,531,400 ns
+34,818,077 ops/s
+67.0 % of CPU usage
+
+Multi-producer sending:
+16,000,000 ops
+982,528,733 ns
+16,284,511 ops/s
+94.9 % of CPU usage
+
+Max throughput:
+32,000,000 ops
+306,293,299 ns
+104,475,024 ops/s
+85.3 % of CPU usage
+
+Ping latency:
+3,200,000 ops
+1,112,585,682 ns
+347 ns/op
+40.0 % of CPU usage
+
+Ping throughput 10K:
+4,000,000 ops
+1,699,390,928 ns
+2,353,784 ops/s
+45.0 % of CPU usage
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.33 sec - in com.github.plokhotnyuk.actors.ScalazUnboundedActor2Spec
+
+Results :
+
+Tests run: 83, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 3:33.146s
+[INFO] Finished at: Sat Nov 01 20:50:57 EET 2014
 [INFO] Final Memory: 20M/1024M
 [INFO] ------------------------------------------------------------------------
