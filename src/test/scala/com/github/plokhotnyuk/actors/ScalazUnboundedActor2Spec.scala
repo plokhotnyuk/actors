@@ -5,11 +5,11 @@ import java.util.concurrent.CountDownLatch
 import org.specs2.execute.Success
 import scalaz.concurrent.Actor2
 import scalaz.concurrent.Actor2._
-import scalaz.concurrent.ActorStrategy
+import scalaz.concurrent.Strategy
 
 class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   val executorService = createExecutorService()
-  implicit val strategy = ActorStrategy(executorService)
+  implicit val strategy = Strategy.Executor(executorService)
 
   "Enqueueing" in {
     val n = 40000000
