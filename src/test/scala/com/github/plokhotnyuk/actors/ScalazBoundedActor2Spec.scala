@@ -1,8 +1,9 @@
 package com.github.plokhotnyuk.actors
 
-import com.github.plokhotnyuk.actors.Actor2._
-import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import java.util.concurrent.CountDownLatch
+import com.github.plokhotnyuk.actors.BenchmarkSpec._
+import scalaz.concurrent.Actor2
+import scalaz.concurrent.Actor2._
 
 import org.specs2.execute.Success
 

@@ -1,8 +1,7 @@
-package com.github.plokhotnyuk.actors
+package scalaz.concurrent
 
 import java.util.concurrent.atomic.AtomicReference
 import scala.concurrent.util.Unsafe._
-import scalaz.concurrent.{Strategy, Run}
 import scalaz.Contravariant
 import sun.misc.Unsafe
 

@@ -1,8 +1,8 @@
 package com.github.plokhotnyuk.actors
 
+import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import java.util.concurrent.CountDownLatch
 import net.liftweb.actor.{ILAExecute, LAScheduler, LiftActor}
-import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import net.liftweb.common.Full
 import org.specs2.execute.Success
 

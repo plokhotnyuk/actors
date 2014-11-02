@@ -5,7 +5,6 @@ import com.typesafe.config.Config
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import akka.actor.{Actor, ActorRef, Props}
 import java.util.concurrent.CountDownLatch
-
 import org.specs2.execute.Success
 
 class AkkaBoundedActorSpec extends AkkaActorSpec {

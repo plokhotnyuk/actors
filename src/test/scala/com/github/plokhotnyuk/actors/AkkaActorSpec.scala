@@ -1,13 +1,13 @@
 package com.github.plokhotnyuk.actors
 
 import akka.actor._
-import java.util.concurrent.{TimeUnit, ExecutorService, ThreadFactory, CountDownLatch}
+import akka.dispatch.{ExecutorServiceFactory, ExecutorServiceConfigurator, DispatcherPrerequisites}
+import akka.pattern.ask
+import akka.util.Timeout
+import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import com.typesafe.config.ConfigFactory._
 import com.typesafe.config.Config
-import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import akka.dispatch.{ExecutorServiceFactory, ExecutorServiceConfigurator, DispatcherPrerequisites}
-import akka.util.Timeout
-import akka.pattern.ask
+import java.util.concurrent.{TimeUnit, ExecutorService, ThreadFactory, CountDownLatch}
 import org.specs2.execute.Success
 import scala.concurrent.Await
 

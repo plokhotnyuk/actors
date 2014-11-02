@@ -3,8 +3,8 @@ package com.github.plokhotnyuk.actors
 import akka.dispatch.ForkJoinExecutorConfigurator.AkkaForkJoinPool
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import com.sun.management.OperatingSystemMXBean
-import java.util.concurrent._
 import java.lang.management.ManagementFactory._
+import java.util.concurrent._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import org.specs2.mutable.Specification

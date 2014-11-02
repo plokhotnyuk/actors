@@ -1,11 +1,10 @@
 package com.github.plokhotnyuk.actors
 
-import org.specs2.execute.Success
-
-import scalaz.concurrent.{ActorStrategy, Actor}
-import scalaz.concurrent.Actor._
-import java.util.concurrent.CountDownLatch
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
+import java.util.concurrent.CountDownLatch
+import org.specs2.execute.Success
+import scalaz.concurrent.Actor._
+import scalaz.concurrent.{ActorStrategy, Actor}
 
 class ScalazActorSpec extends BenchmarkSpec {
   val executorService = createExecutorService()

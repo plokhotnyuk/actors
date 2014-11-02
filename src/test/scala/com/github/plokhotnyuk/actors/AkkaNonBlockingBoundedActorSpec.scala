@@ -1,7 +1,7 @@
 package com.github.plokhotnyuk.actors
 
-import com.typesafe.config.ConfigFactory._
 import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory._
 
 class AkkaNonBlockingBoundedActorSpec extends AkkaBoundedActorSpec {
   override def config: Config = load(parseString(

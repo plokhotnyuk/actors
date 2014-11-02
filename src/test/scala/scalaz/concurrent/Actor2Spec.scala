@@ -1,10 +1,10 @@
-package com.github.plokhotnyuk.actors
+package scalaz.concurrent
 
 import java.util.concurrent._
-import scala.collection.mutable
-import org.specs2.mutable.Specification
-import com.github.plokhotnyuk.actors.Actor2._
 import java.util.concurrent.atomic.AtomicInteger
+import org.specs2.mutable.Specification
+import scala.collection.mutable
+import scalaz.concurrent.Actor2._
 
 class Actor2Spec extends Specification {
   val NumOfMessages = 100000
