@@ -19,10 +19,7 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) wit
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
     if (!offer(new NodeWithCount(handle))) onOverflow(receiver, handle)
 
-  override def dequeue(): Envelope = {
-    val tn = tail
-    poll(tn, tn.get)
-  }
+  override def dequeue(): Envelope = poll()
 
   override def numberOfMessages: Int = Math.min(capacity, Math.max(0, get.count - tail.count))
 
@@ -51,24 +48,17 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) wit
     a.asInstanceOf[InternalActorRef].provider.deadLetters.tell(DeadLetter(e.message, e.sender, a), e.sender)
 
   @annotation.tailrec
-  private def poll(tn: NodeWithCount, n: NodeWithCount): Envelope =
+  private def poll(): Envelope = {
+    val tn = tail
+    val n = tn.get
     if (n ne null) {
       if (Unsafe.instance.compareAndSwapObject(this, NBBQ.tailOffset, tn, n)) {
         val e = n.handle
         n.handle = null // to avoid possible memory leak when queue is empty
         e
-      } else {
-        val tn2 = tail
-        poll(tn2, tn2.get)
-      }
-    } else if (tn ne get) poll(tn, next(tn))
+      } else poll()
+    } else if (tn ne get) poll()
     else null
-
-  @annotation.tailrec
-  private def next(tn: NodeWithCount): NodeWithCount = {
-    val n = tn.get
-    if (n ne null) n
-    else next(tn)
   }
 
   @annotation.tailrec
@@ -103,10 +93,7 @@ private class UQ extends AtomicReference(new Node) with MessageQueue with Multip
     getAndSet(n).lazySet(n)
   }
 
-  override def dequeue(): Envelope = {
-    val tn = tail
-    poll(tn, tn.get)
-  }
+  override def dequeue(): Envelope = poll()
 
   override def numberOfMessages: Int = count(tail, 0, Int.MaxValue)
 
@@ -118,24 +105,17 @@ private class UQ extends AtomicReference(new Node) with MessageQueue with Multip
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = drain(owner, deadLetters)
 
   @annotation.tailrec
-  private def poll(tn: Node, n: Node): Envelope =
+  private def poll(): Envelope = {
+    val tn = tail
+    val n = tn.get
     if (n ne null) {
       if (Unsafe.instance.compareAndSwapObject(this, UQ.tailOffset, tn, n)) {
         val e = n.handle
         n.handle = null // to avoid possible memory leak when queue is empty
         e
-      } else {
-        val tn2 = tail
-        poll(tn2, tn2.get)
-      }
-    } else if (tn ne get) poll(tn, next(tn))
+      } else poll()
+    } else if (tn ne get) poll()
     else null
-
-  @annotation.tailrec
-  private def next(tn: Node): Node = {
-    val n = tn.get
-    if (n ne null) n
-    else next(tn)
   }
 
   @annotation.tailrec
