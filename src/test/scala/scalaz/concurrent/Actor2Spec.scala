@@ -10,7 +10,7 @@ class Actor2Spec extends Specification {
   val NumOfMessages = 100000
   val NumOfThreads = 4
   val NumOfMessagesPerThread = NumOfMessages / NumOfThreads
-  implicit val executor = Executors.newFixedThreadPool(NumOfThreads)
+  implicit val strategy = ActorStrategy(Executors.newFixedThreadPool(NumOfThreads))
 
   "unbounded actor" should {
     "execute code async" in {
