@@ -49,13 +49,14 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) wit
     val tn = tail
     val n = tn.get
     if (n ne null) {
-      if (u.compareAndSwapObject(this, NBBQ.tailOffset, tn, n)) n.handle
+      if (u.compareAndSwapObject(this, NBBQ.tailOffset, tn, n)) {
+        val  e = n.handle
+        n.handle = null // to avoid possible memory leak when queue is empty
+        e
+      }
       else poll()
     } else if (tn ne get) poll()
-    else {
-      tn.handle = null // to avoid possible memory leak when queue is empty
-      null
-    }
+    else null
   }
 
   @annotation.tailrec
@@ -103,13 +104,14 @@ private class UQ extends AtomicReference(new Node) with MessageQueue with Multip
     val tn = tail
     val n = tn.get
     if (n ne null) {
-      if (u.compareAndSwapObject(this, UQ.tailOffset, tn, n)) n.handle
+      if (u.compareAndSwapObject(this, UQ.tailOffset, tn, n)) {
+        val e = n.handle
+        n.handle = null // to avoid possible memory leak when queue is empty
+        e
+      }
       else poll()
     } else if (tn ne get) poll()
-    else {
-      tn.handle = null // to avoid possible memory leak when queue is empty
-      null
-    }
+    else null
   }
 
   @annotation.tailrec
