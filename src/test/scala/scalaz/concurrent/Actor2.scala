@@ -3,6 +3,7 @@ package scalaz.concurrent
 import java.util.concurrent.atomic.AtomicReference
 import scala.concurrent.util.Unsafe.{instance => u}
 import scalaz.Contravariant
+import sun.misc.Unsafe
 
 /**
  * Processes messages of type `A`, one at a time. Messages are submitted to
@@ -146,15 +147,16 @@ private case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Thro
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: NodeWithCount[A], i: Int = 1024, f: A => Unit = handler): Unit = {
-    u.putOrderedInt(this, BoundedActor.countOffset, n.count)
+  private def act(n: NodeWithCount[A], i: Int = 1024, f: A => Unit = handler,
+                  u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
+    u.putOrderedInt(this, o, n.count)
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
     if (n2 eq null) scheduleLastTry(n)
     else if (i == 0) schedule(n2)
-    else act(n2, i - 1, f)
+    else act(n2, i - 1, f, u, o)
   }
 
   private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
