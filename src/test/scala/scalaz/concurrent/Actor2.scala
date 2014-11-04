@@ -93,16 +93,19 @@ private case class UnboundedActor[A](strategy: Strategy, onError: Throwable => U
   private def schedule(n: Node[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: Node[A], i: Int = 1024, f: A => Unit = handler): Unit =
-    if (i == 0) schedule(n)
-    else {
-      try f(n.a) catch {
-        case ex: Throwable => onError(ex)
-      }
-      val n2 = n.get
-      if (n2 ne null) act(n2, i - 1, f)
-      else if (!compareAndSet(n, null)) act(next(n), i - 1, f)
+  private def act(n: Node[A], i: Int = 1024, f: A => Unit = handler): Unit = {
+    try f(n.a) catch {
+      case ex: Throwable => onError(ex)
     }
+    val n2 = n.get
+    if (n2 eq null) scheduleLastTry(n)
+    else if (i == 0) schedule(n2)
+    else act(n2, i - 1, f)
+  }
+
+  private def scheduleLastTry(n: Node[A]): Unit = strategy(lastTry(n))
+
+  private def lastTry(n: Node[A]): Unit = if (!compareAndSet(n, null)) act(next(n))
 
   @annotation.tailrec
   private def next(n: Node[A]): Node[A] = {
@@ -143,17 +146,20 @@ private case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Thro
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: NodeWithCount[A], i: Int = 1024, f: A => Unit = handler): Unit =
-    if (i == 0) schedule(n)
-    else {
-      u.putOrderedInt(this, BoundedActor.countOffset, n.count)
-      try f(n.a) catch {
-        case ex: Throwable => onError(ex)
-      }
-      val n2 = n.get
-      if (n2 ne null) act(n2, i - 1, f)
-      else if (!compareAndSet(n, null)) act(next(n), i - 1, f)
+  private def act(n: NodeWithCount[A], i: Int = 1024, f: A => Unit = handler): Unit = {
+    u.putOrderedInt(this, BoundedActor.countOffset, n.count)
+    try f(n.a) catch {
+      case ex: Throwable => onError(ex)
     }
+    val n2 = n.get
+    if (n2 eq null) scheduleLastTry(n)
+    else if (i == 0) schedule(n2)
+    else act(n2, i - 1, f)
+  }
+
+  private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
+
+  private def lastTry(n: NodeWithCount[A]): Unit = if (!compareAndSet(n, null)) act(next(n))
 
   @annotation.tailrec
   private def next(n: NodeWithCount[A]): NodeWithCount[A] = {
