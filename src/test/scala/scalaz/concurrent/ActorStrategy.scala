@@ -15,7 +15,9 @@ object ActorStrategy {
           def setRawResult(unit: Unit): Unit = ()
 
           def exec(): Boolean = {
-            a
+            try a catch {
+              case ex: Throwable => onError(ex)
+            }
             false
           }
         }
@@ -35,7 +37,9 @@ object ActorStrategy {
           def setRawResult(unit: Unit): Unit = ()
 
           def exec(): Boolean = {
-            a
+            try a catch {
+              case ex: Throwable => onError(ex)
+            }
             false
           }
         }
@@ -53,4 +57,13 @@ object ActorStrategy {
       }
     }
   }
+
+  private def onError(ex: Throwable): Unit =
+    if (ex.isInstanceOf[InterruptedException]) Thread.currentThread.interrupt()
+    else {
+      val ct = Thread.currentThread
+      val h = ct.getUncaughtExceptionHandler
+      if (h ne null) h.uncaughtException(ct, ex)
+      throw ex
+    }
 }
