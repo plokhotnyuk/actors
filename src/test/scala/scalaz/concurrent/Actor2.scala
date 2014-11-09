@@ -100,8 +100,12 @@ private case class UnboundedActor[A](strategy: Strategy, onError: Throwable => U
       case ex: Throwable => onError(ex)
     }
     val n2 = u.getObject(n, o).asInstanceOf[Node[A]]
-    if (n2 eq null) scheduleLastTry(n)
-    else if (i == 0) schedule(n2)
+    if (n2 eq null) {
+      val n3 = n.get
+      if (n3 eq null) scheduleLastTry(n)
+      else if (i == 0) schedule(n3)
+      else act(n3, i - 1, f, u, o)
+    } else if (i == 0) schedule(n2)
     else act(n2, i - 1, f, u, o)
   }
 
@@ -159,8 +163,12 @@ private case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Thro
       case ex: Throwable => onError(ex)
     }
     val n2 = u.getObject(n, o2).asInstanceOf[NodeWithCount[A]]
-    if (n2 eq null) scheduleLastTry(n)
-    else if (i == 0) schedule(n2)
+    if (n2 eq null) {
+      val n3 = n.get
+      if (n3 eq null) scheduleLastTry(n)
+      else if (i == 0) schedule(n3)
+      else act(n3, i - 1, f, u, o1, o2)
+    } else if (i == 0) schedule(n2)
     else act(n2, i - 1, f, u, o1, o2)
   }
 
