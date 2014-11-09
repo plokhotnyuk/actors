@@ -93,7 +93,7 @@ private class UQ extends AtomicReference(new Node) with MessageQueue with Multip
 
   override def dequeue(): Envelope = poll()
 
-  override def numberOfMessages: Int = count(tail, 0)
+  override def numberOfMessages: Int = count(tail, 0, Int.MaxValue)
 
   override def hasMessages: Boolean = (tail.get ne null) || (tail ne get)
 
@@ -115,9 +115,11 @@ private class UQ extends AtomicReference(new Node) with MessageQueue with Multip
   }
 
   @annotation.tailrec
-  private def count(tn: Node, i: Int): Int = {
+  private def count(tn: Node, i: Int, l: Int): Int = {
     val n = tn.get
-    if (((n ne null) || (tn ne get)) && i < Int.MaxValue) count(n, i + 1)
+    if (i == l) i
+    else if (n ne null) count(n, i + 1, l)
+    else if (tn ne get) count(tn, i, l)
     else i
   }
 
