@@ -4,6 +4,7 @@ import akka.actor.{InternalActorRef, ActorRef, ActorSystem, DeadLetter}
 import akka.util.Unsafe.{instance => u}
 import com.typesafe.config.Config
 import java.util.concurrent.atomic.AtomicReference
+import sun.misc.Unsafe
 
 class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxType with ProducesMessageQueue[MessageQueue] {
   require(capacity > 0, "Mailbox capacity should be greater than 0")
@@ -23,7 +24,10 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) wit
 
   override def numberOfMessages: Int = Math.min(capacity, Math.max(0, get.count - tail.count))
 
-  override def hasMessages: Boolean = (tail.get ne null) || (tail ne get)
+  override def hasMessages: Boolean = {
+    val tn = tail
+    (u.getObject(tn, NBBQ.valueOffset) ne null) || (tn ne get)
+  }
 
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = drain(owner, deadLetters)
 
@@ -47,14 +51,13 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) wit
   @annotation.tailrec
   private def poll(): Envelope = {
     val tn = tail
-    val n = tn.get
+    val n = u.getObject(tn, NBBQ.valueOffset).asInstanceOf[NodeWithCount]
     if (n ne null) {
       if (u.compareAndSwapObject(this, NBBQ.tailOffset, tn, n)) {
-        val  e = n.handle
+        val e = n.handle
         n.handle = null // to avoid possible memory leak when queue is empty
         e
-      }
-      else poll()
+      } else poll()
     } else if (tn ne get) poll()
     else null
   }
@@ -71,6 +74,7 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) wit
 
 private object NBBQ {
   private val tailOffset = u.objectFieldOffset(classOf[NBBQ].getDeclaredField("tail"))
+  private val valueOffset = u.objectFieldOffset(classOf[AtomicReference[_]].getDeclaredField("value"))
 }
 
 private class NodeWithCount(var handle: Envelope = null) extends AtomicReference[NodeWithCount] {
@@ -93,33 +97,36 @@ private class UQ extends AtomicReference(new Node) with MessageQueue with Multip
 
   override def dequeue(): Envelope = poll()
 
-  override def numberOfMessages: Int = count(tail, 0, Int.MaxValue)
+  override def numberOfMessages: Int = count()
 
-  override def hasMessages: Boolean = (tail.get ne null) || (tail ne get)
+  override def hasMessages: Boolean = {
+    val tn = tail
+    (u.getObject(tn, UQ.valueOffset) ne null) || (tn ne get)
+  }
 
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = drain(owner, deadLetters)
 
   @annotation.tailrec
   private def poll(): Envelope = {
     val tn = tail
-    val n = tn.get
+    val n = u.getObject(tn, UQ.valueOffset).asInstanceOf[Node]
     if (n ne null) {
       if (u.compareAndSwapObject(this, UQ.tailOffset, tn, n)) {
         val e = n.handle
         n.handle = null // to avoid possible memory leak when queue is empty
         e
-      }
-      else poll()
+      } else poll()
     } else if (tn ne get) poll()
     else null
   }
 
   @annotation.tailrec
-  private def count(tn: Node, i: Int, l: Int): Int = {
-    val n = tn.get
+  private def count(tn: Node = tail, i: Int = 0, l: Int = Int.MaxValue,
+                    u: Unsafe = u, o: Long = UQ.valueOffset): Int = {
+    val n = u.getObject(tn, o).asInstanceOf[Node]
     if (i == l) i
-    else if (n ne null) count(n, i + 1, l)
-    else if (tn ne get) count(tn, i, l)
+    else if (n ne null) count(n, i + 1, l, u, o)
+    else if (tn ne get) count(tn, i, l, u, o)
     else i
   }
 
@@ -135,6 +142,7 @@ private class UQ extends AtomicReference(new Node) with MessageQueue with Multip
 
 private object UQ {
   private val tailOffset = u.objectFieldOffset(classOf[UQ].getDeclaredField("tail"))
+  private val valueOffset = u.objectFieldOffset(classOf[AtomicReference[_]].getDeclaredField("value"))
 }
 
 private class Node(var handle: Envelope = null) extends AtomicReference[Node]
