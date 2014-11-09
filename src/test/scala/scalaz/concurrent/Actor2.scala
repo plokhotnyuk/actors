@@ -94,14 +94,15 @@ private case class UnboundedActor[A](strategy: Strategy, onError: Throwable => U
   private def schedule(n: Node[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: Node[A], i: Int = 1024, f: A => Unit = handler): Unit = {
+  private def act(n: Node[A], i: Int = 1024, f: A => Unit = handler,
+                  u: Unsafe = u, o: Long = UnboundedActor.valueOffset): Unit = {
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
-    val n2 = n.get
+    val n2 = u.getObject(n, o).asInstanceOf[Node[A]]
     if (n2 eq null) scheduleLastTry(n)
     else if (i == 0) schedule(n2)
-    else act(n2, i - 1, f)
+    else act(n2, i - 1, f, u, o)
   }
 
   private def scheduleLastTry(n: Node[A]): Unit = strategy(lastTry(n))
@@ -114,6 +115,10 @@ private case class UnboundedActor[A](strategy: Strategy, onError: Throwable => U
     if (n2 ne null) n2
     else next(n)
   }
+}
+
+private object UnboundedActor {
+  private val valueOffset = u.objectFieldOffset(classOf[AtomicReference[_]].getDeclaredField("value"))
 }
 
 private class Node[A](val a: A) extends AtomicReference[Node[A]]
@@ -148,15 +153,15 @@ private case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Thro
 
   @annotation.tailrec
   private def act(n: NodeWithCount[A], i: Int = 1024, f: A => Unit = handler,
-                  u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
-    u.putOrderedInt(this, o, n.count)
+                  u: Unsafe = u, o1: Long = BoundedActor.countOffset, o2: Long = BoundedActor.valueOffset): Unit = {
+    u.putOrderedInt(this, o1, n.count)
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
-    val n2 = n.get
+    val n2 = u.getObject(n, o2).asInstanceOf[NodeWithCount[A]]
     if (n2 eq null) scheduleLastTry(n)
     else if (i == 0) schedule(n2)
-    else act(n2, i - 1, f, u, o)
+    else act(n2, i - 1, f, u, o1, o2)
   }
 
   private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
@@ -173,6 +178,7 @@ private case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Thro
 
 private object BoundedActor {
   private val countOffset = u.objectFieldOffset(classOf[BoundedActor[_]].getDeclaredField("count"))
+  private val valueOffset = u.objectFieldOffset(classOf[AtomicReference[_]].getDeclaredField("value"))
 }
 
 private class NodeWithCount[A](val a: A) extends AtomicReference[NodeWithCount[A]] {

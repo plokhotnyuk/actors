@@ -23,7 +23,10 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) wit
 
   override def numberOfMessages: Int = Math.min(capacity, Math.max(0, get.count - tail.count))
 
-  override def hasMessages: Boolean = (tail.get ne null) || (tail ne get)
+  override def hasMessages: Boolean = {
+    val tn = tail
+    (tn.relaxedGet ne null) || (tn ne get)
+  }
 
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = drain(owner, deadLetters)
 
@@ -47,7 +50,7 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) wit
   @annotation.tailrec
   private def poll(): Envelope = {
     val tn = tail
-    val n = tn.get
+    val n = tn.relaxedGet
     if (n ne null) {
       if (u.compareAndSwapObject(this, NBBQ.tailOffset, tn, n)) {
         val  e = n.handle
@@ -75,6 +78,12 @@ private object NBBQ {
 
 private class NodeWithCount(var handle: Envelope = null) extends AtomicReference[NodeWithCount] {
   var count: Int = _
+
+  def relaxedGet: NodeWithCount = u.getObject(this, NodeWithCount.valueOffset).asInstanceOf[NodeWithCount]
+}
+
+private object NodeWithCount {
+  private val valueOffset = u.objectFieldOffset(classOf[AtomicReference[_]].getDeclaredField("value"))
 }
 
 class UnboundedMailbox2 extends MailboxType with ProducesMessageQueue[MessageQueue] {
@@ -95,14 +104,17 @@ private class UQ extends AtomicReference(new Node) with MessageQueue with Multip
 
   override def numberOfMessages: Int = count(tail, 0, Int.MaxValue)
 
-  override def hasMessages: Boolean = (tail.get ne null) || (tail ne get)
+  override def hasMessages: Boolean = {
+    val tn = tail
+    (tn.relaxedGet ne null) || (tn ne get)
+  }
 
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = drain(owner, deadLetters)
 
   @annotation.tailrec
   private def poll(): Envelope = {
     val tn = tail
-    val n = tn.get
+    val n = tn.relaxedGet
     if (n ne null) {
       if (u.compareAndSwapObject(this, UQ.tailOffset, tn, n)) {
         val e = n.handle
@@ -116,7 +128,7 @@ private class UQ extends AtomicReference(new Node) with MessageQueue with Multip
 
   @annotation.tailrec
   private def count(tn: Node, i: Int, l: Int): Int = {
-    val n = tn.get
+    val n = tn.relaxedGet
     if (i == l) i
     else if (n ne null) count(n, i + 1, l)
     else if (tn ne get) count(tn, i, l)
@@ -137,4 +149,10 @@ private object UQ {
   private val tailOffset = u.objectFieldOffset(classOf[UQ].getDeclaredField("tail"))
 }
 
-private class Node(var handle: Envelope = null) extends AtomicReference[Node]
+private class Node(var handle: Envelope = null) extends AtomicReference[Node] {
+  def relaxedGet: Node = u.getObject(this, Node.valueOffset).asInstanceOf[Node]
+}
+
+private object Node {
+  private val valueOffset = u.objectFieldOffset(classOf[AtomicReference[_]].getDeclaredField("value"))
+}
