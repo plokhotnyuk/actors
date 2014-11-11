@@ -28,7 +28,7 @@ class AkkaActorSpec extends BenchmarkSpec {
     """))
 
   val actorSystem = ActorSystem("system", config)
-  val root = actorSystem.actorOf(Props(classOf[RootAkkaActor]))
+  val root = actorSystem.actorOf(Props(classOf[RootAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher"))
   implicit val timeout = Timeout(1000, TimeUnit.SECONDS)
 
   "Enqueueing" in {
