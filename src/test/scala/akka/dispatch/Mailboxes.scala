@@ -13,13 +13,25 @@ class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxTyp
   override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new NBBQ(capacity)
 }
 
-private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) with MessageQueue with MultipleConsumerSemantics {
+final private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) with MessageQueue with MultipleConsumerSemantics {
   @volatile private var tail: NodeWithCount = get
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
-    if (!offer(new NodeWithCount(handle))) onOverflow(receiver, handle)
+    if (offer(new NodeWithCount(handle))) onOverflow(receiver, handle)
 
-  override def dequeue(): Envelope = poll()
+  @annotation.tailrec
+  override def dequeue(): Envelope =  {
+    val tn = tail
+    val n = tn.get
+    if (n ne null) {
+      if (u.compareAndSwapObject(this, NBBQ.tailOffset, tn, n)) {
+        val e = n.handle
+        n.handle = null // to avoid possible memory leak when queue is empty
+        e
+      } else dequeue()
+    } else if (tn ne get) dequeue()
+    else null
+  }
 
   override def numberOfMessages: Int = Math.min(capacity, Math.max(0, get.count - tail.count))
 
@@ -36,27 +48,13 @@ private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCount) wit
       n.count = hc + 1
       if (compareAndSet(h, n)) {
         h.lazySet(n)
-        true
+        false
       } else offer(n)
-    } else false
+    } else true
   }
 
   private def onOverflow(a: ActorRef, e: Envelope): Unit =
     a.asInstanceOf[InternalActorRef].provider.deadLetters.tell(DeadLetter(e.message, e.sender, a), e.sender)
-
-  @annotation.tailrec
-  private def poll(): Envelope = {
-    val tn = tail
-    val n = tn.get
-    if (n ne null) {
-      if (u.compareAndSwapObject(this, NBBQ.tailOffset, tn, n)) {
-        val e = n.handle
-        n.handle = null // to avoid possible memory leak when queue is empty
-        e
-      } else poll()
-    } else if (tn ne get) poll()
-    else null
-  }
 
   @annotation.tailrec
   private def drain(owner: ActorRef, deadLetters: MessageQueue): Unit = {
@@ -82,7 +80,7 @@ class UnboundedMailbox2 extends MailboxType with ProducesMessageQueue[MessageQue
   override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new UQ
 }
 
-private class UQ extends AtomicReference(new Node) with MessageQueue with MultipleConsumerSemantics {
+final private class UQ extends AtomicReference(new Node) with MessageQueue with MultipleConsumerSemantics {
   @volatile private var tail: Node = get
 
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit = {
@@ -90,16 +88,8 @@ private class UQ extends AtomicReference(new Node) with MessageQueue with Multip
     getAndSet(n).lazySet(n)
   }
 
-  override def dequeue(): Envelope = poll()
-
-  override def numberOfMessages: Int = count(tail, 0, Int.MaxValue)
-
-  override def hasMessages: Boolean = (tail.get ne null) || (tail ne get)
-
-  override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = drain(owner, deadLetters)
-
   @annotation.tailrec
-  private def poll(): Envelope = {
+  override def dequeue(): Envelope = {
     val tn = tail
     val n = tn.get
     if (n ne null) {
@@ -107,10 +97,16 @@ private class UQ extends AtomicReference(new Node) with MessageQueue with Multip
         val e = n.handle
         n.handle = null // to avoid possible memory leak when queue is empty
         e
-      } else poll()
-    } else if (tn ne get) poll()
+      } else dequeue()
+    } else if (tn ne get) dequeue()
     else null
   }
+
+  override def numberOfMessages: Int = count(tail, 0, Int.MaxValue)
+
+  override def hasMessages: Boolean = (tail.get ne null) || (tail ne get)
+
+  override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = drain(owner, deadLetters)
 
   @annotation.tailrec
   private def count(tn: Node, i: Int, l: Int): Int = {
