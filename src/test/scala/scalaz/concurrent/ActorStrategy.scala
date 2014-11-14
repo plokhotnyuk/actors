@@ -10,12 +10,14 @@ object ActorStrategy {
 
       def apply[A](a: => A): () => A = {
         val t = new ForkJoinTask[Unit] {
-          def getRawResult: Unit = ()
+          def getRawResult(): Unit = ()
 
           def setRawResult(unit: Unit): Unit = ()
 
           def exec(): Boolean = {
-            try a catch onError
+            try a catch {
+              case ex: Throwable => onError(ex)
+            }
             false
           }
         }
@@ -30,12 +32,14 @@ object ActorStrategy {
 
       def apply[A](a: => A): () => A = {
         val t = new ForkJoinTask[Unit] {
-          def getRawResult: Unit = ()
+          def getRawResult(): Unit = ()
 
           def setRawResult(unit: Unit): Unit = ()
 
           def exec(): Boolean = {
-            try a catch onError
+            try a catch {
+              case ex: Throwable => onError(ex)
+            }
             false
           }
         }
@@ -46,7 +50,7 @@ object ActorStrategy {
     }
     case p => new Strategy {
       def apply[A](a: => A): () => A = {
-        p.execute(new Runnable {
+        p.execute(new Runnable() {
           def run(): Unit = a
         })
         null
@@ -54,12 +58,12 @@ object ActorStrategy {
     }
   }
 
-  private val onError: PartialFunction[Throwable, Unit] = {
-    case _: InterruptedException => Thread.currentThread.interrupt()
-    case e =>
-      val t = Thread.currentThread
-      val h = t.getUncaughtExceptionHandler
-      if (h ne null) h.uncaughtException(t, e)
-      throw e
-  }
+  private def onError(ex: Throwable): Unit =
+    if (ex.isInstanceOf[InterruptedException]) Thread.currentThread.interrupt()
+    else {
+      val ct = Thread.currentThread
+      val h = ct.getUncaughtExceptionHandler
+      if (h ne null) h.uncaughtException(ct, ex)
+      throw ex
+    }
 }

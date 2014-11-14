@@ -22,9 +22,7 @@ class Actor2Spec extends Specification {
 
     "caught code errors to be handled" in {
       val l = new CountDownLatch(1)
-      val a = unboundedActor((_: Int) => throw new RuntimeException(), {
-        case _: Throwable => l.countDown()
-      })
+      val a = unboundedActor((_: Int) => throw new RuntimeException(), (ex: Throwable) => l.countDown())
       a ! 1
       assertCountDown(l)
     }
@@ -67,9 +65,7 @@ class Actor2Spec extends Specification {
 
     "caught code errors to be handled" in {
       val l = new CountDownLatch(1)
-      val a = boundedActor(1, (_: Int) => throw new RuntimeException(), {
-        case _: Throwable => l.countDown()
-      })
+      val a = boundedActor(1, (_: Int) => throw new RuntimeException(), (ex: Throwable) => l.countDown())
       a ! 1
       assertCountDown(l)
     }
