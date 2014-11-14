@@ -26,22 +26,21 @@ class ActorStrategySpec extends Specification {
 
     "redirect unhandled errors to thread's uncaught exception handler of different pools" in {
       val l = new CountDownLatch(3)
+      val h = new UncaughtExceptionHandler() {
+        override def uncaughtException(t: Thread, e: Throwable): Unit = l.countDown()
+      }
       unboundedActor((_: Int) => throw new RuntimeException()) {
         import scala.concurrent.forkjoin._
         ActorStrategy(new ForkJoinPool(NumOfThreads, new ForkJoinPool.ForkJoinWorkerThreadFactory() {
           override def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
-            setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
-              override def uncaughtException(t: Thread, e: Throwable): Unit = l.countDown()
-            })
+            setUncaughtExceptionHandler(h)
           }
         }, null, true))
       } ! 1
       unboundedActor((_: Int) => throw new RuntimeException()) {
         ActorStrategy(new ForkJoinPool(NumOfThreads, new ForkJoinPool.ForkJoinWorkerThreadFactory() {
           override def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
-            setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
-              override def uncaughtException(t: Thread, e: Throwable): Unit = l.countDown()
-            })
+            setUncaughtExceptionHandler(h)
           }
         }, null, true))
       } ! 1
@@ -49,9 +48,7 @@ class ActorStrategySpec extends Specification {
         ActorStrategy(new ThreadPoolExecutor(NumOfThreads, NumOfThreads, 0L, TimeUnit.MILLISECONDS,
           new LinkedBlockingQueue[Runnable], new ThreadFactory {
             override def newThread(r: Runnable): Thread = new Thread(r) {
-              setUncaughtExceptionHandler(new UncaughtExceptionHandler {
-                override def uncaughtException(t: Thread, e: Throwable): Unit = l.countDown()
-              })
+              setUncaughtExceptionHandler(h)
             }
           }))
       } ! 1

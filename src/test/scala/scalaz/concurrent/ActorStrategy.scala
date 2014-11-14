@@ -10,7 +10,7 @@ object ActorStrategy {
 
       def apply[A](a: => A): () => A = {
         val t = new ForkJoinTask[Unit] {
-          def getRawResult(): Unit = ()
+          def getRawResult: Unit = ()
 
           def setRawResult(unit: Unit): Unit = ()
 
@@ -32,7 +32,7 @@ object ActorStrategy {
 
       def apply[A](a: => A): () => A = {
         val t = new ForkJoinTask[Unit] {
-          def getRawResult(): Unit = ()
+          def getRawResult: Unit = ()
 
           def setRawResult(unit: Unit): Unit = ()
 
@@ -50,7 +50,7 @@ object ActorStrategy {
     }
     case p => new Strategy {
       def apply[A](a: => A): () => A = {
-        p.execute(new Runnable() {
+        p.execute(new Runnable {
           def run(): Unit = a
         })
         null
