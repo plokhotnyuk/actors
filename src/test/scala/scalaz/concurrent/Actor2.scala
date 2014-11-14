@@ -41,9 +41,10 @@ sealed abstract class ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  private val rethrow: Throwable => Unit = (ex: Throwable) =>
-    if (ex.isInstanceOf[InterruptedException]) Thread.currentThread.interrupt()
-    else throw ex
+  private val rethrow: PartialFunction[Throwable, Unit] = {
+    case _: InterruptedException => Thread.currentThread.interrupt()
+    case e => throw e
+  }
 
   private val ignore: Any => Unit = _ => ()
 
@@ -56,7 +57,7 @@ trait ActorFunctions2 {
    * @tparam A       The type of messages accepted by this actor
    * @return         An instance of actor
    */
-  def unboundedActor[A](handler: A => Unit, onError: Throwable => Unit = rethrow)
+  def unboundedActor[A](handler: A => Unit, onError: PartialFunction[Throwable, Unit] = rethrow)
                        (implicit strategy: Strategy): Actor2[A] =
     new UnboundedActor[A](strategy, onError, handler)
 
@@ -71,7 +72,7 @@ trait ActorFunctions2 {
    * @tparam A         The type of messages accepted by this actor
    * @return           An instance of actor
    */
-  def boundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit = rethrow, onOverflow: A => Unit = ignore)
+  def boundedActor[A](bound: Int, handler: A => Unit, onError: PartialFunction[Throwable, Unit] = rethrow, onOverflow: A => Unit = ignore)
                      (implicit strategy: Strategy): Actor2[A] = {
     require(bound > 0, "Bound should be greater than 0")
     new BoundedActor[A](bound, strategy, onError, onOverflow, handler)
@@ -80,7 +81,7 @@ trait ActorFunctions2 {
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
 }
 
-private case class UnboundedActor[A](strategy: Strategy, onError: Throwable => Unit,
+private case class UnboundedActor[A](strategy: Strategy, onError: PartialFunction[Throwable, Unit],
                                      handler: A => Unit) extends AtomicReference[Node[A]] with Actor2[A] {
   def !(a: A): Unit = {
     val n = new Node(a)
@@ -94,14 +95,12 @@ private case class UnboundedActor[A](strategy: Strategy, onError: Throwable => U
   private def schedule(n: Node[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: Node[A], i: Int = 1024, f: A => Unit = handler): Unit = {
-    try f(n.a) catch {
-      case ex: Throwable => onError(ex)
-    }
+  private def act(n: Node[A], i: Int = 1024, f: A => Unit = handler, e: PartialFunction[Throwable, Unit] = onError): Unit = {
+    try f(n.a) catch e
     val n2 = n.get
     if (n2 eq null) scheduleLastTry(n)
     else if (i == 0) schedule(n2)
-    else act(n2, i - 1, f)
+    else act(n2, i - 1, f, e)
   }
 
   private def scheduleLastTry(n: Node[A]): Unit = strategy(lastTry(n))
@@ -118,7 +117,7 @@ private case class UnboundedActor[A](strategy: Strategy, onError: Throwable => U
 
 private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
-private case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Throwable => Unit, onOverflow: A => Unit,
+private case class BoundedActor[A](bound: Int, strategy: Strategy, onError: PartialFunction[Throwable, Unit], onOverflow: A => Unit,
                                    handler: A => Unit) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
   @volatile private var count: Int = _
 
@@ -147,16 +146,14 @@ private case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Thro
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: NodeWithCount[A], i: Int = 1024, f: A => Unit = handler,
+  private def act(n: NodeWithCount[A], i: Int = 1024, f: A => Unit = handler, e: PartialFunction[Throwable, Unit] = onError,
                   u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
     u.putOrderedInt(this, o, n.count)
-    try f(n.a) catch {
-      case ex: Throwable => onError(ex)
-    }
+    try f(n.a) catch e
     val n2 = n.get
     if (n2 eq null) scheduleLastTry(n)
     else if (i == 0) schedule(n2)
-    else act(n2, i - 1, f, u, o)
+    else act(n2, i - 1, f, e, u, o)
   }
 
   private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
