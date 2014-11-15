@@ -1,5 +1,6 @@
 package scalaz.concurrent
 
+import java.lang.Thread.UncaughtExceptionHandler
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
 import org.specs2.mutable.Specification
@@ -10,7 +11,7 @@ class Actor2Spec extends Specification {
   val NumOfMessages = 100000
   val NumOfThreads = 4
   val NumOfMessagesPerThread = NumOfMessages / NumOfThreads
-  implicit val strategy = ActorStrategy(Executors.newFixedThreadPool(NumOfThreads))
+  implicit val strategy = Actor2.strategy(Executors.newFixedThreadPool(NumOfThreads))
 
   "unbounded actor" should {
     "execute code async" in {
@@ -106,6 +107,56 @@ class Actor2Spec extends Specification {
       val a = boundedActor(1, (_: Int) => (), onOverflow = (_: Int) => i.incrementAndGet())
       (1 to NumOfMessages).foreach(a ! _)
       i.get must be greaterThan 0
+    }
+  }
+
+  "actor strategy" should {
+    "execute code async for different pools" in {
+      val l = new CountDownLatch(3)
+      val f = (_: Int) => l.countDown()
+      unboundedActor(f) {
+        import scala.concurrent.forkjoin._
+        Actor2.strategy(new ForkJoinPool(NumOfThreads))
+      } ! 1
+      unboundedActor(f) {
+        Actor2.strategy(new ForkJoinPool(NumOfThreads))
+      } ! 1
+      unboundedActor(f) {
+        Actor2.strategy(Executors.newFixedThreadPool(NumOfThreads))
+      } ! 1
+      assertCountDown(l)
+    }
+
+    "redirect unhandled errors to thread's uncaught exception handler of different pools" in {
+      val l = new CountDownLatch(3)
+      val f = (_: Int) => throw new RuntimeException()
+      val h = new UncaughtExceptionHandler() {
+        override def uncaughtException(t: Thread, e: Throwable): Unit = l.countDown()
+      }
+      unboundedActor(f) {
+        import scala.concurrent.forkjoin._
+        Actor2.strategy(new ForkJoinPool(NumOfThreads, new ForkJoinPool.ForkJoinWorkerThreadFactory() {
+          override def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
+            setUncaughtExceptionHandler(h)
+          }
+        }, null, true))
+      } ! 1
+      unboundedActor(f) {
+        Actor2.strategy(new ForkJoinPool(NumOfThreads, new ForkJoinPool.ForkJoinWorkerThreadFactory() {
+          override def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
+            setUncaughtExceptionHandler(h)
+          }
+        }, null, true))
+      } ! 1
+      unboundedActor(f) {
+        Actor2.strategy(new ThreadPoolExecutor(NumOfThreads, NumOfThreads, 0L, TimeUnit.MILLISECONDS,
+          new LinkedBlockingQueue[Runnable], new ThreadFactory {
+            override def newThread(r: Runnable): Thread = new Thread(r) {
+              setUncaughtExceptionHandler(h)
+            }
+          }))
+      } ! 1
+      assertCountDown(l)
     }
   }
 

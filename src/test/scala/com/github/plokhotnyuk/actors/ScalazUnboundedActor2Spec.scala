@@ -3,12 +3,12 @@ package com.github.plokhotnyuk.actors
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import java.util.concurrent.CountDownLatch
 import org.specs2.execute.Success
-import scalaz.concurrent.{ActorStrategy, Actor2}
+import scalaz.concurrent.Actor2
 import scalaz.concurrent.Actor2._
 
 class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   val executorService = createExecutorService()
-  implicit val strategy = ActorStrategy(executorService)
+  implicit val strategy = Actor2.strategy(executorService)
 
   "Enqueueing" in {
     val n = 40000000
@@ -143,10 +143,10 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
     }
 
   protected def sendMessages(a: Actor2[Message], n: Int): Unit = {
-    val t = Message()
+    val m = Message()
     var i = n
     while (i > 0) {
-      a ! t
+      a ! m
       i -= 1
     }
   }
