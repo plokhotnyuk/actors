@@ -42,9 +42,19 @@ sealed abstract class ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  private val rethrow: Throwable => Unit = (ex: Throwable) =>
-    if (ex.isInstanceOf[InterruptedException]) Thread.currentThread.interrupt()
-    else throw ex
+  private val rethrow: Throwable => Unit =  {
+    case _: InterruptedException => Thread.currentThread.interrupt()
+    case e => throw e
+  }
+
+  private val handleAndRethrow: Throwable => Unit = {
+    case _: InterruptedException => Thread.currentThread.interrupt()
+    case e =>
+      val t = Thread.currentThread
+      val h = t.getUncaughtExceptionHandler
+      if (h ne null) h.uncaughtException(t, e)
+      throw e
+  }
 
   private val ignore: Any => Unit = _ => ()
 
@@ -93,7 +103,7 @@ trait ActorFunctions2 {
 
           def exec(): Boolean = {
             try a catch {
-              case ex: Throwable => onError(ex)
+              case ex: Throwable => handleAndRethrow(ex)
             }
             false
           }
@@ -115,7 +125,7 @@ trait ActorFunctions2 {
 
           def exec(): Boolean = {
             try a catch {
-              case ex: Throwable => onError(ex)
+              case ex: Throwable => handleAndRethrow(ex)
             }
             false
           }
@@ -134,15 +144,6 @@ trait ActorFunctions2 {
       }
     }
   }
-
-  private def onError(ex: Throwable): Unit =
-    if (ex.isInstanceOf[InterruptedException]) Thread.currentThread.interrupt()
-    else {
-      val ct = Thread.currentThread
-      val h = ct.getUncaughtExceptionHandler
-      if (h ne null) h.uncaughtException(ct, ex)
-      throw ex
-    }
 }
 
 private case class UnboundedActor[A](strategy: Strategy, onError: Throwable => Unit,
