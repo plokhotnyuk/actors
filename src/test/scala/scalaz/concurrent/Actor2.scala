@@ -42,12 +42,7 @@ sealed abstract class ActorInstances2 {
 }
 
 trait ActorFunctions2 {
-  private val rethrow: Throwable => Unit =  {
-    case _: InterruptedException => Thread.currentThread.interrupt()
-    case e => throw e
-  }
-
-  private val handleAndRethrow: Throwable => Unit = {
+  private val rethrow: Throwable => Unit = {
     case _: InterruptedException => Thread.currentThread.interrupt()
     case e =>
       val t = Thread.currentThread
@@ -102,9 +97,7 @@ trait ActorFunctions2 {
           def setRawResult(unit: Unit): Unit = ()
 
           def exec(): Boolean = {
-            try a catch {
-              case ex: Throwable => handleAndRethrow(ex)
-            }
+            a
             false
           }
         }
@@ -124,9 +117,7 @@ trait ActorFunctions2 {
           def setRawResult(unit: Unit): Unit = ()
 
           def exec(): Boolean = {
-            try a catch {
-              case ex: Throwable => handleAndRethrow(ex)
-            }
+            a
             false
           }
         }

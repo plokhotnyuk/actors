@@ -1,192 +1,240 @@
 package scalaz.concurrent
 
-import java.lang.Thread.UncaughtExceptionHandler
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
 import org.specs2.mutable.Specification
-import scala.collection.mutable
-import scalaz.concurrent.Actor2._
 
 class Actor2Spec extends Specification {
-  val NumOfMessages = 100000
+  args(sequential = true)
+
+  val NumOfMessages = 10000
   val NumOfThreads = 4
-  val NumOfMessagesPerThread = NumOfMessages / NumOfThreads
-  implicit val strategy = Actor2.strategy(Executors.newFixedThreadPool(NumOfThreads))
 
-  "unbounded actor" should {
+  "actor with sequential strategy" should {
+    unboundedActorTests(NumOfMessages)(Strategy.Sequential)
+  }
+  "actor with default strategy" should {
+    unboundedActorTests(NumOfMessages)(Strategy.DefaultStrategy)
+  }
+
+  "actor with executor strategy backed by Scala fork-join pool" should {
+    unboundedActorTests(NumOfMessages)(Strategy.Executor(new scala.concurrent.forkjoin.ForkJoinPool()))
+  }
+
+  "actor with executor strategy backed by Java fork-join pool" should {
+    unboundedActorTests(NumOfMessages)(Strategy.Executor(new ForkJoinPool()))
+  }
+
+  "actor with executor strategy backed by fixed thread pool" should {
+    unboundedActorTests(NumOfMessages)(Strategy.Executor(Strategy.DefaultExecutorService))
+  }
+
+  "actor with naive strategy" should {
+    unboundedActorTests(NumOfMessages / 1000)(Strategy.Naive)
+  }
+
+  "actor with Swing worker strategy" should {
+    unboundedActorTests(NumOfMessages)(Strategy.SwingWorker)
+  }
+
+  "actor with Swing invoke later strategy" should {
+    unboundedActorTests(NumOfMessages)(Strategy.SwingInvokeLater)
+  }
+
+  "actor with actor strategy backed by Scala fork-join pool" should {
+    unboundedActorTests(NumOfMessages)(Actor2.strategy(new scala.concurrent.forkjoin.ForkJoinPool()))
+  }
+
+  "actor with actor strategy backed by Java fork-join pool" should {
+    unboundedActorTests(NumOfMessages)(Actor2.strategy(new ForkJoinPool()))
+  }
+
+  "actor with actor strategy backed by fixed thread pool" should {
+    unboundedActorTests(NumOfMessages)(Actor2.strategy(Strategy.DefaultExecutorService))
+  }
+
+  def unboundedActorTests(n: Int)(implicit s: Strategy) = {
     "execute code async" in {
-      val l = new CountDownLatch(1)
-      val a = unboundedActor((_: Int) => l.countDown())
-      a ! 1
-      assertCountDown(l)
+      val latch = new CountDownLatch(1)
+      val actor = Actor2.unboundedActor[Int]((i: Int) => latch.countDown())
+      actor ! 1
+      assertCountDown(latch)
     }
 
-    "caught code errors to be handled" in {
-      val l = new CountDownLatch(1)
-      val a = unboundedActor((_: Int) => throw new RuntimeException(), (ex: Throwable) => l.countDown())
-      a ! 1
-      assertCountDown(l)
+    "catch code errors that can be handled" in {
+      val latch = new CountDownLatch(1)
+      val actor = Actor2.unboundedActor[Int]((i: Int) => 1 / 0, (ex: Throwable) => latch.countDown())
+      actor ! 1
+      assertCountDown(latch)
     }
 
-    "exchange messages without loss" in {
-      val l = new CountDownLatch(NumOfMessages)
-      var a1: Actor2[Int] = null
-      val a2 = unboundedActor((i: Int) => a1 ! i - 1)
-      a1 = unboundedActor {
+    "exchange messages with another actor without loss" in {
+      val latch = new CountDownLatch(n)
+      var actor1: Actor2[Int] = null
+      val actor2 = Actor2.unboundedActor[Int]((i: Int) => actor1 ! i - 1)
+      actor1 = Actor2.unboundedActor[Int] {
         (i: Int) =>
-          if (i == l.getCount) {
-            if (i != 0) a2 ! i - 1
-            l.countDown()
-            l.countDown()
+          if (i == latch.getCount) {
+            if (i != 0) actor2 ! i - 1
+            latch.countDown()
+            latch.countDown()
           }
       }
-      a1 ! NumOfMessages
-      assertCountDown(l)
+      actor1 ! n
+      assertCountDown(latch)
+    }
+
+    "send messages to itself and process them" in {
+      val latch = new CountDownLatch(1)
+      var actor: Actor2[Int] = null
+      actor = Actor2.unboundedActor[Int] {
+        (i: Int) =>
+          if (i > 0) actor ! i - 1
+          else latch.countDown()
+      }
+      actor ! n
+      assertCountDown(latch)
     }
 
     "handle messages in order of sending by each thread" in {
-      val l = new CountDownLatch(NumOfMessages)
-      val a = countingDownUnboundedActor(l)
+      val nRounded = (n / NumOfThreads) * NumOfThreads
+      val latch = new CountDownLatch(nRounded)
+      val actor = countingDownUnboundedActor(latch)
       for (j <- 1 to NumOfThreads) fork {
-        for (i <- 1 to NumOfMessagesPerThread) {
-          a ! (j, i)
+        for (i <- 1 to nRounded / NumOfThreads) {
+          actor !(j, i)
         }
       }
-      assertCountDown(l)
+      assertCountDown(latch)
+    }
+
+    "redirect unhandled errors to uncaught exception handler of thread" in {
+      val l = new CountDownLatch(1)
+      val err = System.err
+      try {
+        System.setErr(new java.io.PrintStream(new java.io.OutputStream {
+          override def write(b: Int): Unit = l.countDown()
+        }))
+        Actor2.unboundedActor((_: Int) => 1 / 0) ! 1
+        assertCountDown(l)
+      } catch {
+        case e: ArithmeticException if e.getMessage == "/ by zero" =>
+          l.countDown() // for a sequential strategy
+          assertCountDown(l)
+      } finally System.setErr(err)
     }
   }
 
-  "bounded actor" should {
+  def boundedActorTests(n: Int)(implicit s: Strategy) = {
     "execute code async" in {
-      val l = new CountDownLatch(1)
-      val a = boundedActor(1, (_: Int) => l.countDown())
-      a ! 1
-      assertCountDown(l)
+      val latch = new CountDownLatch(1)
+      val actor = Actor2.boundedActor[Int](Int.MaxValue, (i: Int) => latch.countDown())
+      actor ! 1
+      assertCountDown(latch)
     }
 
-    "caught code errors to be handled" in {
-      val l = new CountDownLatch(1)
-      val a = boundedActor(1, (_: Int) => throw new RuntimeException(), (ex: Throwable) => l.countDown())
-      a ! 1
-      assertCountDown(l)
+    "catch code errors that can be handled" in {
+      val latch = new CountDownLatch(1)
+      val actor = Actor2.boundedActor[Int](Int.MaxValue, (i: Int) => 1 / 0, (ex: Throwable) => latch.countDown())
+      actor ! 1
+      assertCountDown(latch)
     }
 
-    "exchange messages without loss" in {
-      val l = new CountDownLatch(NumOfMessages)
-      var a1: Actor2[Int] = null
-      val a2 = boundedActor(1, (i: Int) => a1 ! i - 1)
-      a1 = boundedActor(1, {
+    "exchange messages with another actor without loss" in {
+      val latch = new CountDownLatch(n)
+      var actor1: Actor2[Int] = null
+      val actor2 = Actor2.boundedActor[Int](Int.MaxValue, (i: Int) => actor1 ! i - 1)
+      actor1 = Actor2.boundedActor[Int](Int.MaxValue,
         (i: Int) =>
-          if (i == l.getCount) {
-            if (i != 0) a2 ! i - 1
-            l.countDown()
-            l.countDown()
+          if (i == latch.getCount) {
+            if (i != 0) actor2 ! i - 1
+            latch.countDown()
+            latch.countDown()
           }
-      })
-      a1 ! NumOfMessages
-      assertCountDown(l)
+      )
+      actor1 ! n
+      assertCountDown(latch)
+    }
+
+    "send messages to itself and process them" in {
+      val latch = new CountDownLatch(1)
+      var actor: Actor2[Int] = null
+      actor = Actor2.boundedActor[Int](Int.MaxValue,
+        (i: Int) =>
+        (i: Int) =>
+          if (i > 0) actor ! i - 1
+          else latch.countDown()
+      )
+      actor ! n
+      assertCountDown(latch)
     }
 
     "handle messages in order of sending by each thread" in {
-      val l = new CountDownLatch(NumOfMessages)
-      val a = countingDownBoundedActor(l)
+      val nRounded = (n / NumOfThreads) * NumOfThreads
+      val latch = new CountDownLatch(nRounded)
+      val actor = countingDownBoundedActor(latch)
       for (j <- 1 to NumOfThreads) fork {
-        for (i <- 1 to NumOfMessagesPerThread) {
-          a ! (j, i)
+        for (i <- 1 to nRounded / NumOfThreads) {
+          actor !(j, i)
         }
       }
-      assertCountDown(l)
+      assertCountDown(latch)
+    }
+
+    "redirect unhandled errors to uncaught exception handler of thread" in {
+      val l = new CountDownLatch(1)
+      val err = System.err
+      try {
+        System.setErr(new java.io.PrintStream(new java.io.OutputStream {
+          override def write(b: Int): Unit = l.countDown()
+        }))
+        Actor2.boundedActor(Int.MaxValue, (i: Int) => (_: Int) => 1 / 0) ! 1
+        assertCountDown(l)
+      } catch {
+        case e: ArithmeticException if e.getMessage == "/ by zero" =>
+          l.countDown() // for a sequential strategy
+          assertCountDown(l)
+      } finally System.setErr(err)
     }
 
     "be bounded by positive number" in {
-      boundedActor(0, (_: Int) => ()) must throwA[IllegalArgumentException]
+      Actor2.boundedActor(0, (_: Int) => ()) must throwA[IllegalArgumentException]
     }
 
     "handle overflow" in {
       val i = new AtomicInteger
-      val a = boundedActor(1, (_: Int) => (), onOverflow = (_: Int) => i.incrementAndGet())
+      val a = Actor2.boundedActor(1, (_: Int) => (), onOverflow = (_: Int) => i.incrementAndGet())
       (1 to NumOfMessages).foreach(a ! _)
       i.get must be greaterThan 0
     }
   }
 
-  "actor strategy" should {
-    "execute code async for different pools" in {
-      val l = new CountDownLatch(3)
-      val f = (_: Int) => l.countDown()
-      unboundedActor(f) {
-        import scala.concurrent.forkjoin._
-        Actor2.strategy(new ForkJoinPool(NumOfThreads))
-      } ! 1
-      unboundedActor(f) {
-        Actor2.strategy(new ForkJoinPool(NumOfThreads))
-      } ! 1
-      unboundedActor(f) {
-        Actor2.strategy(Executors.newFixedThreadPool(NumOfThreads))
-      } ! 1
-      assertCountDown(l)
-    }
+  def countingDownUnboundedActor(latch: CountDownLatch): Actor2[(Int, Int)] = Actor2.unboundedActor[(Int, Int)] {
+    val ms = collection.mutable.Map[Int, Int]()
 
-    "redirect unhandled errors to thread's uncaught exception handler of different pools" in {
-      val l = new CountDownLatch(3)
-      val f = (_: Int) => throw new RuntimeException()
-      val h = new UncaughtExceptionHandler() {
-        override def uncaughtException(t: Thread, e: Throwable): Unit = l.countDown()
+    (m: (Int, Int)) =>
+      val (j, i) = m
+      if (ms.getOrElse(j, 0) + 1 == i) {
+        ms.put(j, i)
+        latch.countDown()
       }
-      unboundedActor(f) {
-        import scala.concurrent.forkjoin._
-        Actor2.strategy(new ForkJoinPool(NumOfThreads, new ForkJoinPool.ForkJoinWorkerThreadFactory() {
-          override def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
-            setUncaughtExceptionHandler(h)
-          }
-        }, null, true))
-      } ! 1
-      unboundedActor(f) {
-        Actor2.strategy(new ForkJoinPool(NumOfThreads, new ForkJoinPool.ForkJoinWorkerThreadFactory() {
-          override def newThread(pool: ForkJoinPool): ForkJoinWorkerThread = new ForkJoinWorkerThread(pool) {
-            setUncaughtExceptionHandler(h)
-          }
-        }, null, true))
-      } ! 1
-      unboundedActor(f) {
-        Actor2.strategy(new ThreadPoolExecutor(NumOfThreads, NumOfThreads, 0L, TimeUnit.MILLISECONDS,
-          new LinkedBlockingQueue[Runnable], new ThreadFactory {
-            override def newThread(r: Runnable): Thread = new Thread(r) {
-              setUncaughtExceptionHandler(h)
-            }
-          }))
-      } ! 1
-      assertCountDown(l)
-    }
   }
 
-  private def countingDownUnboundedActor(l: CountDownLatch): Actor2[(Int, Int)] =
-    unboundedActor {
-      val ms = mutable.Map[Int, Int]()
-      (m: (Int, Int)) =>
-        val (j, i) = m
-        if (ms.getOrElse(j, 0) + 1 == i) {
-          ms.put(j, i)
-          l.countDown()
-        }
-    }
+  private def countingDownBoundedActor(l: CountDownLatch): Actor2[(Int, Int)] = Actor2.boundedActor(Int.MaxValue, {
+    val ms = collection.mutable.Map[Int, Int]()
 
-  private def countingDownBoundedActor(l: CountDownLatch): Actor2[(Int, Int)] =
-    boundedActor(Int.MaxValue, {
-      val ms = mutable.Map[Int, Int]()
-      (m: (Int, Int)) =>
-        val (j, i) = m
-        if (ms.getOrElse(j, 0) + 1 == i) {
-          ms.put(j, i)
-          l.countDown()
-        }
-    })
+    (m: (Int, Int)) =>
+      val (j, i) = m
+      if (ms.getOrElse(j, 0) + 1 == i) {
+        ms.put(j, i)
+        l.countDown()
+      }
+  })
 
   private def assertCountDown(latch: CountDownLatch, timeout: Long = 1000): Boolean =
     latch.await(timeout, TimeUnit.MILLISECONDS) must_== true
 
-  private def fork(f: => Unit): Unit =
-    new Thread {
-      override def run(): Unit = f
-    }.start()
+  private def fork(f: => Unit): Unit = new Thread {
+    override def run(): Unit = f
+  }.start()
 }
