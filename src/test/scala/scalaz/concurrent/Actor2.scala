@@ -1,6 +1,6 @@
 package scalaz.concurrent
 
-import java.util.concurrent.ExecutorService
+import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicReference
 import scala.concurrent.util.Unsafe.{instance => u}
 import scalaz.Contravariant
@@ -63,7 +63,7 @@ trait ActorFunctions2 {
    * @return         An instance of actor
    */
   def unboundedActor[A](handler: A => Unit, onError: Throwable => Unit = rethrow)
-                       (implicit strategy: Strategy): Actor2[A] =
+                       (implicit strategy: ActorStrategy): Actor2[A] =
     new UnboundedActor[A](strategy, onError, handler)
 
   /**
@@ -78,66 +78,15 @@ trait ActorFunctions2 {
    * @return           An instance of actor
    */
   def boundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit = rethrow, onOverflow: A => Unit = ignore)
-                     (implicit strategy: Strategy): Actor2[A] = {
+                     (implicit strategy: ActorStrategy): Actor2[A] = {
     require(bound > 0, "Bound should be greater than 0")
     new BoundedActor[A](bound, strategy, onError, onOverflow, handler)
   }
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
-
-  def strategy(exec: ExecutorService): Strategy = exec match {
-    case p: scala.concurrent.forkjoin.ForkJoinPool => new Strategy {
-
-      import scala.concurrent.forkjoin.ForkJoinTask
-
-      def apply[A](a: => A): () => A = {
-        val t = new ForkJoinTask[Unit] {
-          def getRawResult: Unit = ()
-
-          def setRawResult(unit: Unit): Unit = ()
-
-          def exec(): Boolean = {
-            a
-            false
-          }
-        }
-        if (ForkJoinTask.getPool eq p) t.fork()
-        else p.execute(t)
-        null
-      }
-    }
-    case p: java.util.concurrent.ForkJoinPool => new Strategy {
-
-      import java.util.concurrent.ForkJoinTask
-
-      def apply[A](a: => A): () => A = {
-        val t = new ForkJoinTask[Unit] {
-          def getRawResult: Unit = ()
-
-          def setRawResult(unit: Unit): Unit = ()
-
-          def exec(): Boolean = {
-            a
-            false
-          }
-        }
-        if (ForkJoinTask.getPool eq p) t.fork()
-        else p.execute(t)
-        null
-      }
-    }
-    case p => new Strategy {
-      def apply[A](a: => A): () => A = {
-        p.execute(new Runnable {
-          def run(): Unit = a
-        })
-        null
-      }
-    }
-  }
 }
 
-private case class UnboundedActor[A](strategy: Strategy, onError: Throwable => Unit,
+private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable => Unit,
                                      handler: A => Unit) extends AtomicReference[Node[A]] with Actor2[A] {
   def !(a: A): Unit = {
     val n = new Node(a)
@@ -175,7 +124,7 @@ private case class UnboundedActor[A](strategy: Strategy, onError: Throwable => U
 
 private class Node[A](val a: A) extends AtomicReference[Node[A]]
 
-private case class BoundedActor[A](bound: Int, strategy: Strategy, onError: Throwable => Unit, onOverflow: A => Unit,
+private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError: Throwable => Unit, onOverflow: A => Unit,
                                    handler: A => Unit) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
   @volatile private var count: Int = _
 
@@ -234,4 +183,53 @@ private object BoundedActor {
 
 private class NodeWithCount[A](val a: A) extends AtomicReference[NodeWithCount[A]] {
   var count: Int = _
+}
+
+trait ActorStrategy {
+  def apply(a: => Unit): Unit
+}
+
+object ActorStrategy {
+  implicit def Executor(implicit s: ExecutorService): ActorStrategy = s match {
+    case p: scala.concurrent.forkjoin.ForkJoinPool => new ActorStrategy {
+
+      import scala.concurrent.forkjoin.ForkJoinTask
+
+      def apply(a: => Unit): Unit = {
+        val t = new ForkJoinTask[Unit] {
+          def getRawResult: Unit = ()
+
+          def setRawResult(unit: Unit): Unit = ()
+
+          def exec(): Boolean = {
+            a
+            false
+          }
+        }
+        if (ForkJoinTask.getPool eq p) t.fork()
+        else p.execute(t)
+      }
+    }
+    case p: java.util.concurrent.ForkJoinPool => new ActorStrategy {
+      def apply(a: => Unit): Unit = {
+        val t = new ForkJoinTask[Unit] {
+          def getRawResult: Unit = ()
+
+          def setRawResult(unit: Unit): Unit = ()
+
+          def exec(): Boolean = {
+            a
+            false
+          }
+        }
+        if (ForkJoinTask.getPool eq p) t.fork()
+        else p.execute(t)
+      }
+    }
+    case p => new ActorStrategy {
+      def apply(a: => Unit): Unit = p.execute(new Runnable {
+        def run(): Unit = a
+      })
+    }
+  }
 }
