@@ -100,7 +100,7 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
   private def schedule(n: Node[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: Node[A], i: Int = 1024, f: A => Unit = handler): Unit = {
+  private def act(n: Node[A], i: Int = strategy.batch, f: A => Unit = handler): Unit = {
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
@@ -153,7 +153,7 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: NodeWithCount[A], i: Int = 1024, f: A => Unit = handler,
+  private def act(n: NodeWithCount[A], i: Int = strategy.batch, f: A => Unit = handler,
                   u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
     u.putOrderedInt(this, o, n.count)
     try f(n.a) catch {
@@ -187,13 +187,25 @@ private class NodeWithCount[A](val a: A) extends AtomicReference[NodeWithCount[A
 
 trait ActorStrategy {
   def apply(a: => Unit): Unit
+
+  def batch: Int
 }
 
 object ActorStrategy {
-  implicit def Executor(implicit s: ExecutorService): ActorStrategy = s match {
+  implicit val Sequential: ActorStrategy = new AtomicReference[Thread] with ActorStrategy {
+    val batch = -1
+
+    def apply(a: => Unit): Unit =
+      if ((get eq Thread.currentThread()) || compareAndSet(null, Thread.currentThread())) a
+      else throw new IllegalStateException("Detected sending message to an actor with a sequential strategy from different threads")
+  }
+
+  implicit def Executor(b: Int  = 1024)(implicit s: ExecutorService): ActorStrategy = s match {
     case p: scala.concurrent.forkjoin.ForkJoinPool => new ActorStrategy {
 
       import scala.concurrent.forkjoin.ForkJoinTask
+
+      val batch = b
 
       def apply(a: => Unit): Unit = {
         val t = new ForkJoinTask[Unit] {
@@ -211,6 +223,8 @@ object ActorStrategy {
       }
     }
     case p: java.util.concurrent.ForkJoinPool => new ActorStrategy {
+      val batch = b
+
       def apply(a: => Unit): Unit = {
         val t = new ForkJoinTask[Unit] {
           def getRawResult: Unit = ()
@@ -227,6 +241,8 @@ object ActorStrategy {
       }
     }
     case p => new ActorStrategy {
+      val batch = b
+
       def apply(a: => Unit): Unit = p.execute(new Runnable {
         def run(): Unit = a
       })

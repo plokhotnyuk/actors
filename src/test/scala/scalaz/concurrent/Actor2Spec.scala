@@ -4,28 +4,32 @@ import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicInteger
 import org.specs2.mutable.Specification
 
-import scala.concurrent.forkjoin
-
 class Actor2Spec extends Specification {
   args(sequential = true)
 
-  val NumOfMessages = 10000
+  val NumOfMessages = 1000000
   val NumOfThreads = 4
 
+  "actor with sequential actor strategy" should {
+    implicit val s: ActorStrategy = ActorStrategy.Sequential
+    unboundedActorTests(NumOfMessages)
+    boundedActorTests(NumOfMessages)
+  }
+
   "actor with actor strategy backed by Scala fork-join pool" should {
-    implicit val s: ActorStrategy = ActorStrategy.Executor(new forkjoin.ForkJoinPool())
+    implicit val s: ActorStrategy = ActorStrategy.Executor()(new scala.concurrent.forkjoin.ForkJoinPool())
     unboundedActorTests(NumOfMessages)
     boundedActorTests(NumOfMessages)
   }
 
   "actor with actor strategy backed by Java fork-join pool" should {
-    implicit val s: ActorStrategy = ActorStrategy.Executor(new ForkJoinPool())
+    implicit val s: ActorStrategy = ActorStrategy.Executor()(new ForkJoinPool())
     unboundedActorTests(NumOfMessages)
     boundedActorTests(NumOfMessages)
   }
 
   "actor with actor strategy backed by fixed thread pool" should {
-    implicit val s: ActorStrategy = ActorStrategy.Executor(Strategy.DefaultExecutorService)
+    implicit val s: ActorStrategy = ActorStrategy.Executor()(Strategy.DefaultExecutorService)
     unboundedActorTests(NumOfMessages)
     boundedActorTests(NumOfMessages)
   }
@@ -82,7 +86,8 @@ class Actor2Spec extends Specification {
           actor !(j, i)
         }
       }
-      assertCountDown(latch)
+      if (s eq ActorStrategy.Sequential) true // it is expected for sequential strategy to fail this test
+      else assertCountDown(latch)
     }
 
     "redirect unhandled errors to uncaught exception handler of thread" in {
@@ -154,7 +159,8 @@ class Actor2Spec extends Specification {
           actor !(j, i)
         }
       }
-      assertCountDown(latch)
+      if (s eq ActorStrategy.Sequential) true // it is expected for sequential strategy to fail this test
+      else assertCountDown(latch)
     }
 
     "redirect unhandled errors to uncaught exception handler of thread" in {
@@ -181,7 +187,8 @@ class Actor2Spec extends Specification {
       val i = new AtomicInteger
       val a = Actor2.boundedActor(1, (_: Int) => (), onOverflow = (_: Int) => i.incrementAndGet())
       (1 to NumOfMessages).foreach(a ! _)
-      i.get must be greaterThan 0
+      if (s eq ActorStrategy.Sequential) i.get must_== 0 // a sequential strategy never overflow
+      else i.get must be greaterThan 0
     }
   }
 
