@@ -7,7 +7,7 @@ import org.specs2.mutable.Specification
 class Actor2Spec extends Specification {
   args(sequential = true)
 
-  val NumOfMessages = 1000000
+  val NumOfMessages = 100000
   val NumOfThreads = 4
 
   "actor with sequential actor strategy" should {
