@@ -195,9 +195,7 @@ object ActorStrategy {
   implicit val Sequential: ActorStrategy = new AtomicReference[Thread] with ActorStrategy {
     val batch = -1
 
-    def apply(a: => Unit): Unit =
-      if ((get eq Thread.currentThread()) || compareAndSet(null, Thread.currentThread())) a
-      else throw new IllegalStateException("Detected sending message to an actor with a sequential strategy from different threads")
+    def apply(a: => Unit): Unit = a
   }
 
   implicit def Executor(b: Int  = 1024)(implicit s: ExecutorService): ActorStrategy = s match {

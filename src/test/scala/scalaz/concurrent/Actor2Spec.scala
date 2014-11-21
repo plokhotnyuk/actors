@@ -86,8 +86,28 @@ class Actor2Spec extends Specification {
           actor !(j, i)
         }
       }
-      if (s eq ActorStrategy.Sequential) true // it is expected for sequential strategy to fail this test
-      else assertCountDown(latch)
+      assertCountDown(latch)
+    }
+
+    "doesn't handle messages in simultaneous threads" in {
+      val nRounded = (n / NumOfThreads) * NumOfThreads
+      val latch = new CountDownLatch(1)
+      val actor = Actor2.boundedActor[Int](Int.MaxValue, {
+        var sum = 0L
+        val expectedSum = nRounded * (nRounded + 1L) / 2
+
+        (i: Int) =>
+          sum += i
+          if (sum == expectedSum) latch.countDown()
+      })
+      val numOfMessagesPerThread = nRounded / NumOfThreads
+      for (j <- 1 to NumOfThreads) fork {
+        val off = (j - 1) * numOfMessagesPerThread
+        for (i <- 1 to numOfMessagesPerThread) {
+          actor ! i + off
+        }
+      }
+      assertCountDown(latch)
     }
 
     "redirect unhandled errors to uncaught exception handler of thread" in {
@@ -159,8 +179,29 @@ class Actor2Spec extends Specification {
           actor !(j, i)
         }
       }
-      if (s eq ActorStrategy.Sequential) true // it is expected for sequential strategy to fail this test
-      else assertCountDown(latch)
+      assertCountDown(latch)
+    }
+
+    "doesn't handle messages in simultaneous thread" in {
+      val nRounded = (n / NumOfThreads) * NumOfThreads
+      val latch = new CountDownLatch(1)
+      val actor = Actor2.boundedActor[Int](Int.MaxValue, {
+        var sum = 0L
+        val expectedSum = nRounded * (nRounded + 1L) / 2
+
+        (i: Int) =>
+          sum += i
+          if (sum == expectedSum) latch.countDown()
+
+      })
+      val numOfMessagesPerThread = nRounded / NumOfThreads
+      for (j <- 1 to NumOfThreads) fork {
+        val off = (j - 1) * numOfMessagesPerThread
+        for (i <- 1 to numOfMessagesPerThread) {
+          actor ! i + off
+        }
+      }
+      assertCountDown(latch)
     }
 
     "redirect unhandled errors to uncaught exception handler of thread" in {
