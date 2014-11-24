@@ -83,7 +83,7 @@ class Actor2Spec extends Specification {
       val actor = countingDownUnboundedActor(latch)
       for (j <- 1 to NumOfThreads) fork {
         for (i <- 1 to nRounded / NumOfThreads) {
-          actor !(j, i)
+          actor ! j -> i
         }
       }
       assertCountDown(latch)
@@ -176,7 +176,7 @@ class Actor2Spec extends Specification {
       val actor = countingDownBoundedActor(latch)
       for (j <- 1 to NumOfThreads) fork {
         for (i <- 1 to nRounded / NumOfThreads) {
-          actor !(j, i)
+          actor ! j -> i
         }
       }
       assertCountDown(latch)

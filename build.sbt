@@ -1,13 +1,7 @@
 name := "actors"
-
 version := "1.0-SNAPSHOT"
-
 scalaVersion := "2.11.4"
-
-resolvers ++= Seq(
-  "sonatype-staging" at "https://oss.sonatype.org/content/groups/staging"
-)
-
+resolvers ++= Seq("sonatype-staging" at "https://oss.sonatype.org/content/groups/staging")
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.3.7" % "test",
   "net.liftweb" %% "lift-actor" % "3.0-M2" % "test",
@@ -16,11 +10,9 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2" % "2.4.2" % "test",
   "junit" % "junit" % "4.11" % "test"
 )
-
-scalacOptions ++= Seq("-target:jvm-1.7", "-optimize", "-deprecation", "-unchecked")
-
+scalacOptions ++= Seq("-target:jvm-1.7", "-optimize", "-deprecation", "-unchecked", "-feature",
+  "-language:implicitConversions", "-Xlog-reflective-calls", "-Xfuture", "-Xlint")
 parallelExecution in test := false
-
 testGrouping in Test <<= definedTests in Test map { tests =>
   tests.map { test =>
     import Tests._

@@ -28,7 +28,7 @@ abstract class BenchmarkSpec extends Specification {
 
   def setup(): Unit = println(s"Executor service type: $executorServiceType")
 
-  def shutdown()
+  def shutdown(): Unit
 }
 
 object BenchmarkSpec {
