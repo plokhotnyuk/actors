@@ -100,29 +100,30 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
   private def schedule(n: Node[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: Node[A], i: Long = strategy.batch, f: A => Unit = handler): Unit = {
+  private def act(n: Node[A], f: A => Unit = handler, i: Long = strategy.batch): Unit = {
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
     if (n2 eq null) scheduleLastTry(n)
     else if (i == 0) schedule(n2)
-    else act(n2, i - 1, f)
+    else act(n2, f, i - 1)
   }
 
   private def scheduleLastTry(n: Node[A]): Unit = strategy(lastTry(n))
 
-  private def lastTry(n: Node[A]): Unit = if (!compareAndSet(n, null)) act(next(n))
+  private def lastTry(n: Node[A]): Unit = if (!compareAndSet(n, null)) act(n.next)
 
-  @annotation.tailrec
-  private def next(n: Node[A]): Node[A] = {
-    val n2 = n.get
-    if (n2 ne null) n2
-    else next(n)
-  }
 }
 
-private class Node[A](val a: A) extends AtomicReference[Node[A]]
+private final class Node[A](val a: A) extends AtomicReference[Node[A]] {
+  @annotation.tailrec
+  def next: Node[A] = {
+    val n2 = get
+    if (n2 ne null) n2
+    else next
+  }
+}
 
 private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError: Throwable => Unit, onOverflow: A => Unit,
                                    handler: A => Unit) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
@@ -153,7 +154,7 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
-  private def act(n: NodeWithCount[A], i: Long = strategy.batch, f: A => Unit = handler,
+  private def act(n: NodeWithCount[A], f: A => Unit = handler, i: Long = strategy.batch,
                   u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
     u.putOrderedInt(this, o, n.count)
     try f(n.a) catch {
@@ -162,27 +163,27 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
     val n2 = n.get
     if (n2 eq null) scheduleLastTry(n)
     else if (i == 0) schedule(n2)
-    else act(n2, i - 1, f, u, o)
+    else act(n2, f, i - 1, u, o)
   }
 
   private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
 
-  private def lastTry(n: NodeWithCount[A]): Unit = if (!compareAndSet(n, null)) act(next(n))
-
-  @annotation.tailrec
-  private def next(n: NodeWithCount[A]): NodeWithCount[A] = {
-    val n2 = n.get
-    if (n2 ne null) n2
-    else next(n)
-  }
+  private def lastTry(n: NodeWithCount[A]): Unit = if (!compareAndSet(n, null)) act(n.next)
 }
 
 private object BoundedActor {
   private val countOffset = u.objectFieldOffset(classOf[BoundedActor[_]].getDeclaredField("count"))
 }
 
-private class NodeWithCount[A](val a: A) extends AtomicReference[NodeWithCount[A]] {
+private final class NodeWithCount[A](val a: A) extends AtomicReference[NodeWithCount[A]] {
   var count: Int = _
+
+  @annotation.tailrec
+  def next: NodeWithCount[A] = {
+    val n2 = get
+    if (n2 ne null) n2
+    else next
+  }
 }
 
 trait ActorStrategy {
