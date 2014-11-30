@@ -192,13 +192,13 @@ trait ActorStrategy {
 }
 
 object ActorStrategy {
-  implicit val Sequential: ActorStrategy = new AtomicReference[Thread] with ActorStrategy {
+  val Sequential: ActorStrategy = new AtomicReference[Thread] with ActorStrategy {
     val batch: Long = -1
 
     def apply(a: => Unit): Unit = a
   }
 
-  implicit def Executor(b: Int  = 1024)(implicit s: ExecutorService): ActorStrategy = s match {
+  def Executor(s: ExecutorService, b: Int  = 10): ActorStrategy = s match {
     case p: scala.concurrent.forkjoin.ForkJoinPool => new ActorStrategy {
       val batch: Long = b
 

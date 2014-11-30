@@ -8,7 +8,7 @@ import scalaz.concurrent.Actor2._
 
 class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   val executorService = createExecutorService()
-  implicit val strategy = ActorStrategy.Executor()(executorService)
+  implicit val strategy = ActorStrategy.Executor(executorService, 1024)
 
   "Enqueueing" in {
     val n = 40000000

@@ -17,19 +17,19 @@ class Actor2Spec extends Specification {
   }
 
   "actor with actor strategy backed by Scala fork-join pool" should {
-    implicit val s: ActorStrategy = ActorStrategy.Executor()(new scala.concurrent.forkjoin.ForkJoinPool())
+    implicit val s: ActorStrategy = ActorStrategy.Executor(new scala.concurrent.forkjoin.ForkJoinPool())
     unboundedActorTests(NumOfMessages)
     boundedActorTests(NumOfMessages)
   }
 
   "actor with actor strategy backed by Java fork-join pool" should {
-    implicit val s: ActorStrategy = ActorStrategy.Executor()(new ForkJoinPool())
+    implicit val s: ActorStrategy = ActorStrategy.Executor(new ForkJoinPool())
     unboundedActorTests(NumOfMessages)
     boundedActorTests(NumOfMessages)
   }
 
   "actor with actor strategy backed by fixed thread pool" should {
-    implicit val s: ActorStrategy = ActorStrategy.Executor()(Strategy.DefaultExecutorService)
+    implicit val s: ActorStrategy = ActorStrategy.Executor(Strategy.DefaultExecutorService)
     unboundedActorTests(NumOfMessages)
     boundedActorTests(NumOfMessages)
   }
