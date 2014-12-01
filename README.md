@@ -11,7 +11,6 @@ Evaluation of API and performance of different actor libraries written on Scala:
 [Scalaz](https://github.com/scalaz/scalaz/blob/master/core/src/main/scala/scalaz/concurrent/Actor.scala)
 
 [![Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
-[![Build Status](https://api.shippable.com/projects/54131ace814f6b1f6a9fb4dc/badge?branchName=master)](https://app.shippable.com/projects/54131ace814f6b1f6a9fb4dc/builds/latest)
 
 ## Benchmarks and their goals
 * `Enqueueing` - memory footprint of internal actor queue per submitted message and submition throughput in a single thread
