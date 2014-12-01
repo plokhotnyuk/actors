@@ -99,20 +99,39 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
 
   private def schedule(n: Node[A]): Unit = strategy(act(n))
 
+  private def act(n: Node[A]): Unit = {
+    val i = strategy.batch
+    if (i < 0) syncLoop(n)
+    else asyncLoop(n, i)
+  }
+
   @annotation.tailrec
-  private def act(n: Node[A], f: A => Unit = handler, i: Long = strategy.batch): Unit = {
+  private def asyncLoop(n: Node[A], i: Int, f: A => Unit = handler): Unit = {
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
     if (n2 eq null) scheduleLastTry(n)
     else if (i == 0) schedule(n2)
-    else act(n2, f, i - 1)
+    else asyncLoop(n2, i - 1, f)
+  }
+  
+  @annotation.tailrec
+  private def syncLoop(n: Node[A], f: A => Unit = handler): Unit = {
+    try f(n.a) catch {
+      case ex: Throwable => onError(ex)
+    }
+    val n2 = n.get
+    if (n2 eq null) {
+      if (!suspend(n)) syncLoop(n.next, f)
+    } else syncLoop(n2, f)
   }
 
   private def scheduleLastTry(n: Node[A]): Unit = strategy(lastTry(n))
 
-  private def lastTry(n: Node[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
+  private def lastTry(n: Node[A]): Unit = if (!suspend(n)) act(n.next)
+
+  private def suspend(n: Node[A]): Boolean = (n eq get) && compareAndSet(n, null)
 }
 
 private final class Node[A](val a: A) extends AtomicReference[Node[A]] {
@@ -152,9 +171,15 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
 
   private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
 
+  private def act(n: NodeWithCount[A]): Unit = {
+    val i = strategy.batch
+    if (i < 0) syncLoop(n)
+    else asyncLoop(n, i)
+  }
+
   @annotation.tailrec
-  private def act(n: NodeWithCount[A], f: A => Unit = handler, i: Long = strategy.batch,
-                  u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
+  private def asyncLoop(n: NodeWithCount[A], i: Int, f: A => Unit = handler,
+                        u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
     u.putOrderedInt(this, o, n.count)
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
@@ -162,12 +187,27 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
     val n2 = n.get
     if (n2 eq null) scheduleLastTry(n)
     else if (i == 0) schedule(n2)
-    else act(n2, f, i - 1, u, o)
+    else asyncLoop(n2, i - 1, f, u, o)
+  }
+
+  @annotation.tailrec
+  private def syncLoop(n: NodeWithCount[A], f: A => Unit = handler,
+                       u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
+    u.putOrderedInt(this, o, n.count)
+    try f(n.a) catch {
+      case ex: Throwable => onError(ex)
+    }
+    val n2 = n.get
+    if (n2 eq null) {
+      if (!suspend(n)) syncLoop(n.next, f, u, o)
+    } else syncLoop(n2, f, u, o)
   }
 
   private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
 
-  private def lastTry(n: NodeWithCount[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
+  private def lastTry(n: NodeWithCount[A]): Unit = if (!suspend(n)) act(n.next)
+
+  private def suspend(n: NodeWithCount[A]): Boolean = (n eq get) && compareAndSet(n, null)
 }
 
 private object BoundedActor {
@@ -186,21 +226,21 @@ private final class NodeWithCount[A](val a: A) extends AtomicReference[NodeWithC
 }
 
 trait ActorStrategy {
-  def batch: Long
+  def batch: Int
 
   def apply(a: => Unit): Unit
 }
 
 object ActorStrategy {
   val Sequential: ActorStrategy = new AtomicReference[Thread] with ActorStrategy {
-    val batch: Long = -1
+    val batch: Int = -1
 
     def apply(a: => Unit): Unit = a
   }
 
   def Executor(s: ExecutorService, b: Int  = 10): ActorStrategy = s match {
     case p: scala.concurrent.forkjoin.ForkJoinPool => new ActorStrategy {
-      val batch: Long = b
+      val batch: Int = b
 
       def apply(a: => Unit): Unit = new ScalaForkJoinTaskForUnit(p) {
         def exec(): Boolean = {
@@ -210,7 +250,7 @@ object ActorStrategy {
       }
     }
     case p: ForkJoinPool => new ActorStrategy {
-      val batch: Long = b
+      val batch: Int = b
 
       def apply(a: => Unit): Unit = new JavaForkJoinTaskForUnit(p) {
         def exec(): Boolean = {
@@ -220,7 +260,7 @@ object ActorStrategy {
       }
     }
     case p => new ActorStrategy {
-      val batch: Long = b
+      val batch: Int = b
 
       def apply(a: => Unit): Unit = p.execute(new Runnable {
         def run(): Unit = a
