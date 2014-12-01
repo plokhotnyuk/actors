@@ -112,8 +112,7 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
 
   private def scheduleLastTry(n: Node[A]): Unit = strategy(lastTry(n))
 
-  private def lastTry(n: Node[A]): Unit = if (!compareAndSet(n, null)) act(n.next)
-
+  private def lastTry(n: Node[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
 }
 
 private final class Node[A](val a: A) extends AtomicReference[Node[A]] {
@@ -168,7 +167,7 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
 
   private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
 
-  private def lastTry(n: NodeWithCount[A]): Unit = if (!compareAndSet(n, null)) act(n.next)
+  private def lastTry(n: NodeWithCount[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
 }
 
 private object BoundedActor {
