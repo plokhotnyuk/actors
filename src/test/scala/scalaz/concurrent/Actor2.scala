@@ -104,15 +104,14 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
-    val n2 = n.get
-    if (n2 eq null) scheduleLastTry(n)
-    else if (i == 0) schedule(n2)
+    var n2 = n.get
+    if (n2 eq null) {
+      if (compareAndSet(n, null)) return
+      else n2 = n.next
+    }
+    if (i == 0) schedule(n2)
     else act(n2, f, i - 1)
   }
-
-  private def scheduleLastTry(n: Node[A]): Unit = strategy(lastTry(n))
-
-  private def lastTry(n: Node[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
 }
 
 private final class Node[A](val a: A) extends AtomicReference[Node[A]] {
@@ -159,15 +158,14 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
-    val n2 = n.get
-    if (n2 eq null) scheduleLastTry(n)
-    else if (i == 0) schedule(n2)
+    var n2 = n.get
+    if (n2 eq null) {
+      if (compareAndSet(n, null)) return
+      else n2 = n.next
+    }
+    if (i == 0) schedule(n2)
     else act(n2, f, i - 1, u, o)
   }
-
-  private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
-
-  private def lastTry(n: NodeWithCount[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
 }
 
 private object BoundedActor {
