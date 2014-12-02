@@ -65,15 +65,16 @@ class Actor2Spec extends Specification {
       assertCountDown(latch)
     }
 
-    "send messages to itself and process them" in {
+    "create child actor and send messages to it recursively" in {
       val latch = new CountDownLatch(1)
-      var actor: Actor2[Int] = null
-      actor = Actor2.unboundedActor[Int] {
+
+      def actor: Actor2[Int] = Actor2.unboundedActor[Int] {
         (i: Int) =>
           if (i > 0) actor ! i - 1
           else latch.countDown()
       }
-      actor ! n
+
+      actor ! (if (s eq  ActorStrategy.Sequential) 100 else n)
       assertCountDown(latch)
     }
 
@@ -158,15 +159,16 @@ class Actor2Spec extends Specification {
       assertCountDown(latch)
     }
 
-    "send messages to itself and process them" in {
+    "create child actor and send messages to it recursively" in {
       val latch = new CountDownLatch(1)
-      var actor: Actor2[Int] = null
-      actor = Actor2.boundedActor[Int](Int.MaxValue,
+
+      def actor: Actor2[Int] = Actor2.boundedActor[Int](Int.MaxValue,
         (i: Int) =>
           if (i > 0) actor ! i - 1
           else latch.countDown()
       )
-      actor ! n
+
+      actor ! (if (s eq  ActorStrategy.Sequential) 100 else n)
       assertCountDown(latch)
     }
 
