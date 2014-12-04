@@ -97,33 +97,17 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
 
   def contramap[B](f: B => A): Actor2[B] = new UnboundedActor[B](strategy, onError, b => this ! f(b))
 
-  private def act(n: Node[A]): Unit = {
-    val b = strategy.batch
-    if (b >= 0) loop(n, b)
-    else nonRecLoop(n)
-  }
-
   @annotation.tailrec
-  private def loop(n: Node[A], i: Int, f: A => Unit = handler): Unit = {
+  private def act(n: Node[A], i: Int = strategy.batch, f: A => Unit = handler): Unit = {
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
-    if ((n2 ne null) && i != 0) loop(n2, i - 1, f)
+    if ((n2 ne null) && i != 0) act(n2, i - 1, f)
     else strategy(suspendOrAct(n))
   }
 
-  @annotation.tailrec
-  private def nonRecLoop(n: Node[A], f: A => Unit = handler): Unit = {
-    try f(n.a) catch {
-      case ex: Throwable => onError(ex)
-    }
-    val n2 = n.get
-    if (n2 ne null) nonRecLoop(n2, f)
-    else if ((n ne get) || !compareAndSet(n, null)) nonRecLoop(n.next, f)
-  }
-
-  private def suspendOrAct(n: Node[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) loop(n.next, strategy.batch)
+  private def suspendOrAct(n: Node[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
 }
 
 private final class Node[A](val a: A) extends AtomicReference[Node[A]] {
@@ -161,37 +145,19 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
     }
   }
 
-  private def act(n: NodeWithCount[A]): Unit = {
-    val b = strategy.batch
-    if (b >= 0) loop(n, b)
-    else nonRecLoop(n)
-  }
-
   @annotation.tailrec
-  private def loop(n: NodeWithCount[A], i: Int, f: A => Unit = handler,
-                   u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
+  private def act(n: NodeWithCount[A], i: Int = strategy.batch, f: A => Unit = handler,
+                  u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
     u.putOrderedInt(this, o, n.count)
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
-    if ((n2 ne null) && i != 0) loop(n2, i - 1, f, u, o)
+    if ((n2 ne null) && i != 0) act(n2, i - 1, f, u, o)
     else strategy(suspendOrAct(n))
   }
 
-  @annotation.tailrec
-  private def nonRecLoop(n: NodeWithCount[A], f: A => Unit = handler,
-                         u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
-    u.putOrderedInt(this, o, n.count)
-    try f(n.a) catch {
-      case ex: Throwable => onError(ex)
-    }
-    val n2 = n.get
-    if (n2 ne null) nonRecLoop(n2, f, u, o)
-    else if ((n ne get) || !compareAndSet(n, null)) nonRecLoop(n.next, f, u, o)
-  }
-
-  private def suspendOrAct(n: NodeWithCount[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) loop(n.next, strategy.batch)
+  private def suspendOrAct(n: NodeWithCount[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
 }
 
 private object BoundedActor {
