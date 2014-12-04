@@ -176,8 +176,8 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
-    if ((n2 ne null) && i != 0) loop(n2, i - 1, f)
-    else strategy(suspendOrAct(n))
+    if ((n2 eq null) || i == 0) strategy(suspendOrAct(n))
+    else loop(n2, i - 1, f, u, o)
   }
 
   @annotation.tailrec
