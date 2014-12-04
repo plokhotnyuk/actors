@@ -112,7 +112,7 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
     if ((n2 ne null) && i != 0) loop(n2, i - 1, f)
     else strategy(suspendOrAct(n))
   }
-  
+
   @annotation.tailrec
   private def nonRecLoop(n: Node[A], f: A => Unit = handler): Unit = {
     try f(n.a) catch {
@@ -224,38 +224,42 @@ object ActorStrategy {
     def apply(a: => Unit): Unit = a
   }
 
-  def Executor(s: ExecutorService, b: Int  = 10): ActorStrategy = s match {
-    case p: scala.concurrent.forkjoin.ForkJoinPool => new ActorStrategy {
-      val batch: Int = b
+  def Executor(s: ExecutorService, b: Int = 10): ActorStrategy = s match {
+    case p: scala.concurrent.forkjoin.ForkJoinPool => new ScalaForkJoinStrategy(p, b)
+    case p: ForkJoinPool => new JavaForkJoinStrategy(p, b)
+    case p => new ExecutorStrategy(p, b)
+  }
+}
 
-      def apply(a: => Unit): Unit = new ScalaForkJoinTaskForUnit(p) {
-        def exec(): Boolean = {
-          a
-          false
-        }
-      }
-    }
-    case p: ForkJoinPool => new ActorStrategy {
-      val batch: Int = b
-
-      def apply(a: => Unit): Unit = new JavaForkJoinTaskForUnit(p) {
-        def exec(): Boolean = {
-          a
-          false
-        }
-      }
-    }
-    case p => new ActorStrategy {
-      val batch: Int = b
-
-      def apply(a: => Unit): Unit = p.execute(new Runnable {
-        def run(): Unit = a
-      })
+private final class ScalaForkJoinStrategy(p: scala.concurrent.forkjoin.ForkJoinPool, b: Int) extends AsyncStrategy(b) {
+  def apply(a: => Unit): Unit = new ScalaForkJoinTask(p) {
+    def exec(): Boolean = {
+      a
+      false
     }
   }
 }
 
-private abstract class JavaForkJoinTaskForUnit(p: ForkJoinPool) extends ForkJoinTask[Unit] {
+private final class JavaForkJoinStrategy(p: ForkJoinPool, b: Int) extends AsyncStrategy(b) {
+  def apply(a: => Unit): Unit = new JavaForkJoinTask(p) {
+    def exec(): Boolean = {
+      a
+      false
+    }
+  }
+}
+
+private final class ExecutorStrategy(p: ExecutorService, b: Int) extends AsyncStrategy(b) {
+  def apply(a: => Unit): Unit = p.execute(new Runnable {
+    def run(): Unit = a
+  })
+}
+
+private abstract class AsyncStrategy(b: Int) extends ActorStrategy {
+  val batch: Int = b
+}
+
+private abstract class JavaForkJoinTask(p: ForkJoinPool) extends ForkJoinTask[Unit] {
   if (ForkJoinTask.getPool eq p) fork()
   else p.execute(this)
 
@@ -266,7 +270,7 @@ private abstract class JavaForkJoinTaskForUnit(p: ForkJoinPool) extends ForkJoin
 
 import scala.concurrent.forkjoin.{ForkJoinPool, ForkJoinTask}
 
-private abstract class ScalaForkJoinTaskForUnit(p: ForkJoinPool) extends ForkJoinTask[Unit] {
+private abstract class ScalaForkJoinTask(p: ForkJoinPool) extends ForkJoinTask[Unit] {
   if (ForkJoinTask.getPool eq p) fork()
   else p.execute(this)
 
