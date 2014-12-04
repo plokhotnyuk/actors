@@ -74,7 +74,7 @@ class Actor2Spec extends Specification {
           else latch.countDown()
       }
 
-      actor ! (if (s eq  ActorStrategy.Sequential) 100 else n)
+      actor ! (if (s eq  ActorStrategy.Sequential) 300 else n)
       assertCountDown(latch)
     }
 
@@ -168,7 +168,7 @@ class Actor2Spec extends Specification {
           else latch.countDown()
       )
 
-      actor ! (if (s eq  ActorStrategy.Sequential) 256 else n)
+      actor ! (if (s eq  ActorStrategy.Sequential) 300 else n)
       assertCountDown(latch)
     }
 

@@ -64,7 +64,8 @@ trait ActorFunctions2 {
    */
   def unboundedActor[A](handler: A => Unit, onError: Throwable => Unit = rethrow)
                        (implicit strategy: ActorStrategy): Actor2[A] =
-    new UnboundedActor[A](strategy, onError, handler)
+    if (strategy eq ActorStrategy.Sequential) new SeqUnboundedActor[A](onError, handler)
+    else new UnboundedActor[A](strategy, onError, handler)
 
   /**
    * Create actor with bounded message queue
@@ -80,7 +81,8 @@ trait ActorFunctions2 {
   def boundedActor[A](bound: Int, handler: A => Unit, onError: Throwable => Unit = rethrow, onOverflow: A => Unit = ignore)
                      (implicit strategy: ActorStrategy): Actor2[A] = {
     require(bound > 0, "Bound should be greater than 0")
-    new BoundedActor[A](bound, strategy, onError, onOverflow, handler)
+    if (strategy eq ActorStrategy.Sequential) new SeqBoundedActor[A](bound, onError, onOverflow, handler)
+    else new BoundedActor[A](bound, strategy, onError, onOverflow, handler)
   }
 
   implicit def ToFunctionFromActor[A](a: Actor2[A]): A => Unit = a ! _
@@ -108,6 +110,28 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
   }
 
   private def suspendOrAct(n: Node[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
+}
+
+private case class SeqUnboundedActor[A](onError: Throwable => Unit,
+                                        handler: A => Unit) extends AtomicReference[Node[A]] with Actor2[A] {
+  def !(a: A): Unit = {
+    val n = new Node(a)
+    val h = getAndSet(n)
+    if (h ne null) h.lazySet(n)
+    else act(n, handler)
+  }
+
+  def contramap[B](f: B => A): Actor2[B] = new SeqUnboundedActor[B](onError, b => this ! f(b))
+
+  @annotation.tailrec
+  private def act(n: Node[A], f: A => Unit): Unit = {
+    try f(n.a) catch {
+      case ex: Throwable => onError(ex)
+    }
+    val n2 = n.get
+    if (n2 ne null) act(n2, f)
+    else if ((n ne get) || !compareAndSet(n, null)) act(n.next, f)
+  }
 }
 
 private final class Node[A](val a: A) extends AtomicReference[Node[A]] {
@@ -160,8 +184,50 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
   private def suspendOrAct(n: NodeWithCount[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
 }
 
+private case class SeqBoundedActor[A](bound: Int, onError: Throwable => Unit, onOverflow: A => Unit,
+                                      handler: A => Unit) extends AtomicReference[NodeWithCount[A]] with Actor2[A] {
+  @volatile private var count: Int = _
+
+  def !(a: A): Unit = checkAndAdd(new NodeWithCount(a))
+
+  def contramap[B](f: B => A): Actor2[B] = new SeqBoundedActor[B](bound, onError, b => onOverflow(f(b)), b => this ! f(b))
+
+  @annotation.tailrec
+  private def checkAndAdd(n: NodeWithCount[A]): Unit = {
+    val tc = count
+    val h = get
+    if (h eq null) {
+      n.count = tc + 1
+      if (compareAndSet(h, n)) act(n, handler, u, SeqBoundedActor.countOffset)
+      else checkAndAdd(n)
+    } else {
+      val hc = h.count
+      if (hc - tc < bound) {
+        n.count = hc + 1
+        if (compareAndSet(h, n)) h.lazySet(n)
+        else checkAndAdd(n)
+      } else onOverflow(n.a)
+    }
+  }
+
+  @annotation.tailrec
+  private def act(n: NodeWithCount[A], f: A => Unit, u: Unsafe, o: Long): Unit = {
+    u.putOrderedInt(this, o, n.count)
+    try f(n.a) catch {
+      case ex: Throwable => onError(ex)
+    }
+    val n2 = n.get
+    if (n2 ne null) act(n2, f, u, o)
+    else if ((n ne get) || !compareAndSet(n, null)) act(n.next, f, u, o)
+  }
+}
+
 private object BoundedActor {
   private val countOffset = u.objectFieldOffset(classOf[BoundedActor[_]].getDeclaredField("count"))
+}
+
+private object SeqBoundedActor {
+  private val countOffset = u.objectFieldOffset(classOf[SeqBoundedActor[_]].getDeclaredField("count"))
 }
 
 private final class NodeWithCount[A](val a: A) extends AtomicReference[NodeWithCount[A]] {
