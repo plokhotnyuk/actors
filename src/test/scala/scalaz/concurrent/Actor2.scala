@@ -92,46 +92,39 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
     val n = new Node(a)
     val h = getAndSet(n)
     if (h ne null) h.lazySet(n)
-    else schedule(n)
+    else strategy(act(n))
   }
 
   def contramap[B](f: B => A): Actor2[B] = new UnboundedActor[B](strategy, onError, b => this ! f(b))
 
-  private def schedule(n: Node[A]): Unit = strategy(act(n))
-
   private def act(n: Node[A]): Unit = {
-    val i = strategy.batch
-    if (i < 0) syncLoop(n)
-    else asyncLoop(n, i)
+    val b = strategy.batch
+    if (b >= 0) loop(n, b)
+    else nonRecLoop(n)
   }
 
   @annotation.tailrec
-  private def asyncLoop(n: Node[A], i: Int, f: A => Unit = handler): Unit = {
+  private def loop(n: Node[A], i: Int, f: A => Unit = handler): Unit = {
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
-    if (n2 eq null) scheduleLastTry(n)
-    else if (i == 0) schedule(n2)
-    else asyncLoop(n2, i - 1, f)
+    if ((n2 ne null) && i != 0) loop(n2, i - 1, f)
+    else strategy(suspendOrAct(n))
   }
   
   @annotation.tailrec
-  private def syncLoop(n: Node[A], f: A => Unit = handler): Unit = {
+  private def nonRecLoop(n: Node[A], f: A => Unit = handler): Unit = {
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
     if (n2 eq null) {
-      if (!suspend(n)) syncLoop(n.next, f)
-    } else syncLoop(n2, f)
+      if ((n ne get) || !compareAndSet(n, null)) nonRecLoop(n.next, f)
+    } else nonRecLoop(n2, f)
   }
 
-  private def scheduleLastTry(n: Node[A]): Unit = strategy(lastTry(n))
-
-  private def lastTry(n: Node[A]): Unit = if (!suspend(n)) act(n.next)
-
-  private def suspend(n: Node[A]): Boolean = (n eq get) && compareAndSet(n, null)
+  private def suspendOrAct(n: Node[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
 }
 
 private final class Node[A](val a: A) extends AtomicReference[Node[A]] {
@@ -157,7 +150,7 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
     val h = get
     if (h eq null) {
       n.count = tc + 1
-      if (compareAndSet(h, n)) schedule(n)
+      if (compareAndSet(h, n)) strategy(act(n))
       else checkAndAdd(n)
     } else {
       val hc = h.count
@@ -169,45 +162,38 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
     }
   }
 
-  private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
-
   private def act(n: NodeWithCount[A]): Unit = {
-    val i = strategy.batch
-    if (i < 0) syncLoop(n)
-    else asyncLoop(n, i)
+    val b = strategy.batch
+    if (b >= 0) loop(n, b)
+    else nonRecLoop(n)
   }
 
   @annotation.tailrec
-  private def asyncLoop(n: NodeWithCount[A], i: Int, f: A => Unit = handler,
-                        u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
+  private def loop(n: NodeWithCount[A], i: Int, f: A => Unit = handler,
+                   u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
     u.putOrderedInt(this, o, n.count)
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
-    if (n2 eq null) scheduleLastTry(n)
-    else if (i == 0) schedule(n2)
-    else asyncLoop(n2, i - 1, f, u, o)
+    if ((n2 ne null) && i != 0) loop(n2, i - 1, f)
+    else strategy(suspendOrAct(n))
   }
 
   @annotation.tailrec
-  private def syncLoop(n: NodeWithCount[A], f: A => Unit = handler,
-                       u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
+  private def nonRecLoop(n: NodeWithCount[A], f: A => Unit = handler,
+                         u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
     u.putOrderedInt(this, o, n.count)
     try f(n.a) catch {
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
     if (n2 eq null) {
-      if (!suspend(n)) syncLoop(n.next, f, u, o)
-    } else syncLoop(n2, f, u, o)
+      if ((n ne get) || !compareAndSet(n, null)) nonRecLoop(n.next, f, u, o)
+    } else nonRecLoop(n2, f, u, o)
   }
 
-  private def scheduleLastTry(n: NodeWithCount[A]): Unit = strategy(lastTry(n))
-
-  private def lastTry(n: NodeWithCount[A]): Unit = if (!suspend(n)) act(n.next)
-
-  private def suspend(n: NodeWithCount[A]): Boolean = (n eq get) && compareAndSet(n, null)
+  private def suspendOrAct(n: NodeWithCount[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
 }
 
 private object BoundedActor {
