@@ -91,8 +91,8 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
   def !(a: A): Unit = {
     val n = new Node(a)
     val h = getAndSet(n)
-    if (h eq null) strategy(act(n))
-    else h.lazySet(n)
+    if (h ne null) h.lazySet(n)
+    else strategy(act(n))
   }
 
   def contramap[B](f: B => A): Actor2[B] = new UnboundedActor[B](strategy, onError, b => this ! f(b))
@@ -109,8 +109,8 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
-    if ((n2 eq null) || i == 0) strategy(suspendOrAct(n))
-    else loop(n2, i - 1, f)
+    if ((n2 ne null) && i != 0) loop(n2, i - 1, f)
+    else strategy(suspendOrAct(n))
   }
 
   @annotation.tailrec
@@ -119,9 +119,8 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
-    if (n2 eq null) {
-      if ((n ne get) || !compareAndSet(n, null)) nonRecLoop(n.next, f)
-    } else nonRecLoop(n2, f)
+    if (n2 ne null) nonRecLoop(n2, f)
+    else if ((n ne get) || !compareAndSet(n, null)) nonRecLoop(n.next, f)
   }
 
   private def suspendOrAct(n: Node[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) loop(n.next, strategy.batch)
@@ -176,8 +175,8 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
-    if ((n2 eq null) || i == 0) strategy(suspendOrAct(n))
-    else loop(n2, i - 1, f, u, o)
+    if ((n2 ne null) && i != 0) loop(n2, i - 1, f, u, o)
+    else strategy(suspendOrAct(n))
   }
 
   @annotation.tailrec
@@ -188,9 +187,8 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
-    if (n2 eq null) {
-      if ((n ne get) || !compareAndSet(n, null)) nonRecLoop(n.next, f, u, o)
-    } else nonRecLoop(n2, f, u, o)
+    if (n2 ne null) nonRecLoop(n2, f, u, o)
+    else if ((n ne get) || !compareAndSet(n, null)) nonRecLoop(n.next, f, u, o)
   }
 
   private def suspendOrAct(n: NodeWithCount[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) loop(n.next, strategy.batch)
