@@ -94,10 +94,12 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
     val n = new Node(a)
     val h = getAndSet(n)
     if (h ne null) h.lazySet(n)
-    else strategy(act(n))
+    else schedule(n)
   }
 
   def contramap[B](f: B => A): Actor2[B] = new UnboundedActor[B](strategy, onError, b => this ! f(b))
+
+  private def schedule(n: Node[A]): Unit = strategy(act(n))
 
   @annotation.tailrec
   private def act(n: Node[A], i: Int = strategy.batch, f: A => Unit = handler): Unit = {
@@ -105,8 +107,9 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
-    if ((n2 ne null) && i != 0) act(n2, i - 1, f)
-    else strategy(suspendOrAct(n))
+    if (n2 eq null) strategy(suspendOrAct(n))
+    else if (i != 0) act(n2, i - 1, f)
+    else schedule(n2)
   }
 
   private def suspendOrAct(n: Node[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
@@ -157,7 +160,7 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
     val h = get
     if (h eq null) {
       n.count = tc + 1
-      if (compareAndSet(h, n)) strategy(act(n))
+      if (compareAndSet(h, n)) schedule(n)
       else checkAndAdd(n)
     } else {
       val hc = h.count
@@ -169,6 +172,8 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
     }
   }
 
+  private def schedule(n: NodeWithCount[A]): Unit = strategy(act(n))
+
   @annotation.tailrec
   private def act(n: NodeWithCount[A], i: Int = strategy.batch, f: A => Unit = handler,
                   u: Unsafe = u, o: Long = BoundedActor.countOffset): Unit = {
@@ -177,8 +182,9 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
       case ex: Throwable => onError(ex)
     }
     val n2 = n.get
-    if ((n2 ne null) && i != 0) act(n2, i - 1, f, u, o)
-    else strategy(suspendOrAct(n))
+    if (n2 eq null) strategy(suspendOrAct(n))
+    else if (i != 0) act(n2, i - 1, f)
+    else schedule(n2)
   }
 
   private def suspendOrAct(n: NodeWithCount[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
