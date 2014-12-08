@@ -109,7 +109,11 @@ private case class UnboundedActor[A](strategy: ActorStrategy, onError: Throwable
     else strategy(suspendOrAct(n))
   }
 
-  private def suspendOrAct(n: Node[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
+  private def suspendOrAct(n: Node[A]): Unit = {
+    val n2 = n.get
+    if (n2 ne null) act(n2)
+    else if ((n ne get) || !compareAndSet(n, null)) act(n.next)
+  }
 }
 
 private case class SeqUnboundedActor[A](onError: Throwable => Unit,
@@ -181,7 +185,11 @@ private case class BoundedActor[A](bound: Int, strategy: ActorStrategy, onError:
     else strategy(suspendOrAct(n))
   }
 
-  private def suspendOrAct(n: NodeWithCount[A]): Unit = if ((n ne get) || !compareAndSet(n, null)) act(n.next)
+  private def suspendOrAct(n: NodeWithCount[A]): Unit = {
+    val n2 = n.get
+    if (n2 ne null) act(n2)
+    else if ((n ne get) || !compareAndSet(n, null)) act(n.next)
+  }
 }
 
 private case class SeqBoundedActor[A](bound: Int, onError: Throwable => Unit, onOverflow: A => Unit,
