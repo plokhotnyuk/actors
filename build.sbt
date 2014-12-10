@@ -7,7 +7,7 @@ libraryDependencies ++= Seq(
   "net.liftweb" %% "lift-actor" % "3.0-M2" % "test",
   "org.scala-lang" % "scala-actors" % "2.11.4" % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.1.0" % "test",
-  "org.specs2" %% "specs2" % "2.4.2" % "test",
+  "org.specs2" %% "specs2-junit" % "2.4.15" % "test",
   "junit" % "junit" % "4.11" % "test"
 )
 scalacOptions ++= Seq("-target:jvm-1.7", "-optimize", "-deprecation", "-unchecked", "-feature",
