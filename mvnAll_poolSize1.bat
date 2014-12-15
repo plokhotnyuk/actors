@@ -5,4 +5,3 @@ call mvn -B -Dbenchmark.poolSize=1 -Dbenchmark.executorServiceType=scala-forkjoi
 call mvn -B -Dbenchmark.poolSize=1 -Dbenchmark.executorServiceType=java-forkjoin-pool test >>outX_poolSize1.txt
 call mvn -B -Dbenchmark.poolSize=1 -Dbenchmark.executorServiceType=abq-thread-pool test >>outX_poolSize1.txt
 call mvn -B -Dbenchmark.poolSize=1 -Dbenchmark.executorServiceType=lbq-thread-pool test >>outX_poolSize1.txt
-call mvn -B -Dbenchmark.poolSize=1 -Dbenchmark.executorServiceType=ltq-thread-pool test >>outX_poolSize1.txt

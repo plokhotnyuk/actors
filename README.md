@@ -47,7 +47,6 @@ Use `mvnAll.sh` or `sbtAll.sh` scripts (for Windows: `mvnAll.bat` or `sbtAll.bat
 - `java-forkjoin-pool` for `java.util.concurrent.ForkJoinPool`
 - `abq-thread-pool` for `java.util.concurrent.ThreadPoolExecutor` with `java.util.concurrent.ArrayBlockingQueue`
 - `lbq-thread-pool` for `java.util.concurrent.ThreadPoolExecutor` with `java.util.concurrent.LinkedBlockingQueue`
-- `ltq-thread-pool` for `java.util.concurrent.ThreadPoolExecutor` with `java.util.concurrent.LinkedTransferQueue`
 
 Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS system variables:
 
