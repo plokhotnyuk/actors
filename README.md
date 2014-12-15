@@ -45,6 +45,7 @@ Use `mvnAll.sh` or `sbtAll.sh` scripts (for Windows: `mvnAll.bat` or `sbtAll.bat
 - `akka-forkjoin-pool` for `akka.dispatch.ForkJoinExecutorConfigurator.AkkaForkJoinPool`
 - `scala-forkjoin-pool` for `scala.concurrent.forkjoin.ForkJoinPool`
 - `java-forkjoin-pool` for `java.util.concurrent.ForkJoinPool`
+- `abq-thread-pool` for `java.util.concurrent.ThreadPoolExecutor` with `java.util.concurrent.ArrayBlockingQueue`
 - `lbq-thread-pool` for `java.util.concurrent.ThreadPoolExecutor` with `java.util.concurrent.LinkedBlockingQueue`
 - `ltq-thread-pool` for `java.util.concurrent.ThreadPoolExecutor` with `java.util.concurrent.LinkedTransferQueue`
 
