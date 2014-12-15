@@ -41,8 +41,12 @@ or
 sbt clean test >outX.txt
 ```
 
-To run benchmarks for all available types of executor service use `mvnAll.sh` or `sbtAll.sh` scripts
-(for Windows: `mvnAll.bat` or `sbtAll.bat`).
+Use `mvnAll.sh` or `sbtAll.sh` scripts (for Windows: `mvnAll.bat` or `sbtAll.bat`) to run benchmarks for the following types of executor services:
+- `akka-forkjoin-pool` for `akka.dispatch.ForkJoinExecutorConfigurator.AkkaForkJoinPool`
+- `scala-forkjoin-pool` for `scala.concurrent.forkjoin.ForkJoinPool`
+- `java-forkjoin-pool` for `java.util.concurrent.ForkJoinPool`
+- `lbq-thread-pool` for `java.util.concurrent.ThreadPoolExecutor` with `java.util.concurrent.LinkedBlockingQueue`
+- `ltq-thread-pool` for `java.util.concurrent.ThreadPoolExecutor` with `java.util.concurrent.LinkedTransferQueue`
 
 Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS system variables:
 

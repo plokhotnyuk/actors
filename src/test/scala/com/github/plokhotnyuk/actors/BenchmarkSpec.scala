@@ -46,8 +46,10 @@ object BenchmarkSpec {
       case "akka-forkjoin-pool" => new AkkaForkJoinPool(poolSize, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null)
       case "scala-forkjoin-pool" => new ScalaForkJoinPool(poolSize, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "java-forkjoin-pool" => new ForkJoinPool(poolSize, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
-      case "thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 1, TimeUnit.HOURS,
+      case "lbq-thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 1, TimeUnit.HOURS,
         new LinkedBlockingQueue[Runnable](), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
+      case "ltq-thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 1, TimeUnit.HOURS,
+        new LinkedTransferQueue[Runnable](), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
       case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
     }
 
