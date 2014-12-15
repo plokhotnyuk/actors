@@ -106,7 +106,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   "Ping throughput 10K" in {
-    ping(1800000, 10000)
+    ping(2000000, 10000)
     Success()
   }
 

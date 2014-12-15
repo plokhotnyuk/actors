@@ -85,7 +85,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   }
 
   "Ping throughput 10K" in {
-    ping(4000000, 10000)
+    ping(8000000, 10000)
     Success()
   }
 
