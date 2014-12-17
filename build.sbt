@@ -3,12 +3,11 @@ version := "1.0-SNAPSHOT"
 scalaVersion := "2.11.4"
 resolvers ++= Seq("sonatype-staging" at "https://oss.sonatype.org/content/groups/staging")
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.3.7" % "test",
+  "com.typesafe.akka" %% "akka-actor" % "2.3.8" % "test",
   "net.liftweb" %% "lift-actor" % "3.0-M2" % "test",
   "org.scala-lang" % "scala-actors" % "2.11.4" % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.1.0" % "test",
-  "org.specs2" %% "specs2-junit" % "2.4.15" % "test",
-  "junit" % "junit" % "4.11" % "test"
+  "org.specs2" %% "specs2-junit" % "2.4.15" % "test"
 )
 scalacOptions ++= Seq("-target:jvm-1.7", "-optimize", "-deprecation", "-unchecked", "-feature",
   "-language:implicitConversions", "-Xlog-reflective-calls", "-Xfuture", "-Xlint")
