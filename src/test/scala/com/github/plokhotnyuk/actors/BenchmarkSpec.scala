@@ -41,14 +41,14 @@ object BenchmarkSpec {
 
   def roundToParallelism(n: Int): Int = (n / parallelism) * parallelism
 
-  def createExecutorService(): ExecutorService =
+  def createExecutorService(size: Int = poolSize): ExecutorService =
     executorServiceType match {
-      case "akka-forkjoin-pool" => new AkkaForkJoinPool(poolSize, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null)
-      case "scala-forkjoin-pool" => new ScalaForkJoinPool(poolSize, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
-      case "java-forkjoin-pool" => new ForkJoinPool(poolSize, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
-      case "lbq-thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 1, TimeUnit.HOURS,
+      case "akka-forkjoin-pool" => new AkkaForkJoinPool(size, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null)
+      case "scala-forkjoin-pool" => new ScalaForkJoinPool(size, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
+      case "java-forkjoin-pool" => new ForkJoinPool(size, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
+      case "lbq-thread-pool" => new ThreadPoolExecutor(size, size, 1, TimeUnit.HOURS,
         new LinkedBlockingQueue[Runnable](), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
-      case "abq-thread-pool" => new ThreadPoolExecutor(poolSize, poolSize, 1, TimeUnit.HOURS,
+      case "abq-thread-pool" => new ThreadPoolExecutor(size, size, 1, TimeUnit.HOURS,
         new ArrayBlockingQueue[Runnable](100000), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
       case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
     }
