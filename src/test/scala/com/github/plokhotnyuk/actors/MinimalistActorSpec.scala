@@ -100,22 +100,23 @@ class MinimalistActorSpec extends BenchmarkSpec {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
-        var a1: Actor.Address = null
-        val a2 = actor {
-          var i = n / p / 2
-          (m: Any) =>
-            if (i > 0) a1 ! m
-            i -= 1
-            if (i == 0) l.countDown()
+        val system = new {
+          lazy val a2: Actor.Address = actor {
+            var i = n / p / 2
+            (m: Any) =>
+              if (i > 0) a1 ! m
+              i -= 1
+              if (i == 0) l.countDown()
+          }
+          lazy val a1: Actor.Address = actor {
+            var i = n / p / 2
+            (m: Any) =>
+              if (i > 0) a2 ! m
+              i -= 1
+              if (i == 0) l.countDown()
+          }
         }
-        a1 = actor {
-          var i = n / p / 2
-          (m: Any) =>
-            if (i > 0) a2 ! m
-            i -= 1
-            if (i == 0) l.countDown()
-        }
-        a2
+        system.a2
     }
     timed(n, printAvgLatency = p == 1) {
       as.foreach(_ ! Message())
