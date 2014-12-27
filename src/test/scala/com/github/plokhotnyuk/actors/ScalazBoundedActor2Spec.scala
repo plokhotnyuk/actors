@@ -19,5 +19,5 @@ class ScalazBoundedActor2Spec extends ScalazUnboundedActor2Spec {
     Success()
   }
 
-  override def actor[A](handler: A => Unit): Actor2[A] = boundedActor(40000000, handler)
+  override def actor[A](f: A => Unit): Actor2[A] = boundedActor(40000000, f)
 }

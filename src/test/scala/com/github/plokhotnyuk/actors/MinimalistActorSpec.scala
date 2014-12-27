@@ -1,17 +1,17 @@
 package com.github.plokhotnyuk.actors
 
-import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import java.util.concurrent.CountDownLatch
-import org.specs2.execute.Success
-import scalaz.concurrent.{ActorStrategy, Actor2}
-import scalaz.concurrent.Actor2._
 
-class ScalazUnboundedActor2Spec extends BenchmarkSpec {
-  val executorService = createExecutorService()
-  implicit val strategy = ActorStrategy.Executor(executorService, 1024)
+import com.github.gist.viktorklang.Actor
+import com.github.plokhotnyuk.actors.BenchmarkSpec._
+import org.specs2.execute.Success
+import com.github.gist.viktorklang.Actor._
+
+class MinimalistActorSpec extends BenchmarkSpec {
+  implicit val executorService = createExecutorService()
 
   "Enqueueing" in {
-    val n = 40000000
+    val n = 10000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -24,7 +24,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   }
 
   "Dequeueing" in {
-    val n = 40000000
+    val n = 2000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -37,12 +37,12 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(10000000)(() => actor((_: Message) => ()))
+    footprintedAndTimedCollect(2000000)(() => Actor(self => m => Die))
     Success()
   }
 
   "Single-producer sending" in {
-    val n = 16000000
+    val n = 3000000
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     timed(n) {
@@ -53,7 +53,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = roundToParallelism(16000000)
+    val n = roundToParallelism(3000000)
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     val r = new ParRunner((1 to parallelism).map(_ => () => sendMessages(a, n / parallelism)))
@@ -65,7 +65,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = roundToParallelism(32000000)
+    val n = roundToParallelism(6000000)
     val l = new CountDownLatch(parallelism)
     val r = new ParRunner((1 to parallelism).map {
       _ =>
@@ -80,34 +80,37 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(3200000, 1)
+    ping(2000000, 1)
     Success()
   }
 
   "Ping throughput 10K" in {
-    ping(8000000, 10000)
+    ping(4000000, 10000)
     Success()
   }
 
   def shutdown(): Unit = fullShutdown(executorService)
 
-  def actor[A](f: A => Unit): Actor2[A] = unboundedActor(f)
+  def actor(f: Any => Unit) = Actor(self => m => {
+    f(m)
+    Stay
+  })
 
   private def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
-        var a1: Actor2[Message] = null
+        var a1: Actor.Address = null
         val a2 = actor {
           var i = n / p / 2
-          (m: Message) =>
+          (m: Any) =>
             if (i > 0) a1 ! m
             i -= 1
             if (i == 0) l.countDown()
         }
         a1 = actor {
           var i = n / p / 2
-          (m: Message) =>
+          (m: Any) =>
             if (i > 0) a2 ! m
             i -= 1
             if (i == 0) l.countDown()
@@ -120,11 +123,11 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
     }
   }
 
-  private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Actor2[Message] =
+  private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Actor.Address =
     actor {
       var blocked = true
       var i = n - 1
-      (m: Message) =>
+      (m: Any) =>
         if (blocked) {
           l1.await()
           blocked = false
@@ -134,15 +137,15 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
         }
     }
 
-  private def countActor(l: CountDownLatch, n: Int): Actor2[Message] =
+  private def countActor(l: CountDownLatch, n: Int): Actor.Address =
     actor {
       var i = n
-      (m: Message) =>
+      (m: Any) =>
         i -= 1
         if (i == 0) l.countDown()
     }
 
-  protected def sendMessages(a: Actor2[Message], n: Int): Unit = {
+  protected def sendMessages(a: Actor.Address, n: Int): Unit = {
     val m = Message()
     var i = n
     while (i > 0) {
