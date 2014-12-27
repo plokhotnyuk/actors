@@ -34,7 +34,7 @@ object Actor {
         case dead @ Die.`like` => dead(msg)                   // Efficiently bail out if we're _known_ to be dead
         case _ => mbox.offer(msg); async()      // Enqueue the message onto the mailbox and try to schedule for execution
       }
-      final def run(): Unit = try { if (on.get == 1) behavior = behavior(mbox.poll())(behavior) } finally { on.set(0); async() } // Switch ourselves off, and then see if we should be rescheduled for execution
+      final def run(): Unit = try { val msg = mbox.poll(); if (msg != null) behavior = behavior(msg)(behavior) } finally { on.set(0); async() } // Switch ourselves off, and then see if we should be rescheduled for execution
       final def async(): Unit = if(!mbox.isEmpty && on.compareAndSet(0, 1))         // If there's something to process, and we're not already scheduled
           try e.execute(this) catch { case t => on.set(0); throw t } // Schedule to run on the Executor and back out on failure
     } match { case a: Address => a ! a; a } // Make the actor self aware by seeding its address to the initial behavior
