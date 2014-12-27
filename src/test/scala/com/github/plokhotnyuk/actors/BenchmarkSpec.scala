@@ -49,7 +49,7 @@ object BenchmarkSpec {
       case "lbq-thread-pool" => new ThreadPoolExecutor(size, size, 1, TimeUnit.HOURS,
         new LinkedBlockingQueue[Runnable](), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
       case "abq-thread-pool" => new ThreadPoolExecutor(size, size, 1, TimeUnit.HOURS,
-        new ArrayBlockingQueue[Runnable](100000), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
+        new ArrayBlockingQueue[Runnable](1000000), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
       case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
     }
 
