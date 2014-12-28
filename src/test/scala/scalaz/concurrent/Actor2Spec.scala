@@ -50,9 +50,7 @@ class Actor2Spec extends Specification {
 
     "exchange messages with another actor without loss" in {
       val l = new CountDownLatch(n)
-      var a1: Actor2[Int] = null
-      val a2 = unboundedActor((i: Int) => a1 ! i - 1)
-      a1 = unboundedActor {
+      lazy val a1: Actor2[Int] = unboundedActor {
         (i: Int) =>
           if (i == l.getCount) {
             if (i != 0) a2 ! i - 1
@@ -60,6 +58,7 @@ class Actor2Spec extends Specification {
             l.countDown()
           }
       }
+      lazy val a2 = unboundedActor((i: Int) => a1 ! i - 1)
       a1 ! n
       assertCountDown(l)
     }
@@ -133,9 +132,7 @@ class Actor2Spec extends Specification {
 
     "exchange messages with another actor without loss" in {
       val l = new CountDownLatch(n)
-      var a1: Actor2[Int] = null
-      val a2 = boundedActor(Int.MaxValue, (i: Int) => a1 ! i - 1)
-      a1 = boundedActor(Int.MaxValue,
+      lazy val a1: Actor2[Int] = boundedActor(Int.MaxValue,
         (i: Int) =>
           if (i == l.getCount) {
             if (i != 0) a2 ! i - 1
@@ -143,6 +140,7 @@ class Actor2Spec extends Specification {
             l.countDown()
           }
       )
+      lazy val a2 = boundedActor(Int.MaxValue, (i: Int) => a1 ! i - 1)
       a1 ! n
       assertCountDown(l)
     }
