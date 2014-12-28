@@ -38,21 +38,21 @@ class Actor2Spec extends Specification {
   def unboundedActorTests(n: Int)(implicit s: ActorStrategy) = {
     "execute code async" in {
       val l = new CountDownLatch(1)
-      unboundedActor[Int]((i: Int) => l.countDown()) ! 1
+      unboundedActor((i: Int) => l.countDown()) ! 1
       assertCountDown(l)
     }
 
     "catch code errors that can be handled" in {
       val l = new CountDownLatch(1)
-      unboundedActor[Int]((i: Int) => 1 / 0, (ex: Throwable) => l.countDown()) ! 1
+      unboundedActor((_: Int) => 1 / 0, (_: Throwable) => l.countDown()) ! 1
       assertCountDown(l)
     }
 
     "exchange messages with another actor without loss" in {
       val l = new CountDownLatch(n)
       var a1: Actor2[Int] = null
-      val a2 = unboundedActor[Int]((i: Int) => a1 ! i - 1)
-      a1 = unboundedActor[Int] {
+      val a2 = unboundedActor((i: Int) => a1 ! i - 1)
+      a1 = unboundedActor {
         (i: Int) =>
           if (i == l.getCount) {
             if (i != 0) a2 ! i - 1
@@ -67,7 +67,7 @@ class Actor2Spec extends Specification {
     "create child actor and send messages to it recursively" in {
       val l = new CountDownLatch(1)
 
-      def a: Actor2[Int] = unboundedActor[Int]((i: Int) => if (i > 0) a ! i - 1 else l.countDown())
+      def a: Actor2[Int] = unboundedActor((i: Int) => if (i > 0) a ! i - 1 else l.countDown())
 
       a ! (if (s eq  ActorStrategy.Sequential) 300 else n)
       assertCountDown(l)
@@ -88,7 +88,7 @@ class Actor2Spec extends Specification {
     "doesn't handle messages in simultaneous threads" in {
       val nRounded = (n / NumOfThreads) * NumOfThreads
       val l = new CountDownLatch(1)
-      val a = boundedActor[Int](Int.MaxValue, {
+      val a = boundedActor(Int.MaxValue, {
         var sum = 0L
         val expectedSum = nRounded * (nRounded + 1L) / 2
         (i: Int) =>
@@ -125,21 +125,21 @@ class Actor2Spec extends Specification {
   def boundedActorTests(n: Int)(implicit s: ActorStrategy) = {
     "execute code async" in {
       val l = new CountDownLatch(1)
-      boundedActor[Int](Int.MaxValue, (i: Int) => l.countDown()) ! 1
+      boundedActor(Int.MaxValue, (_: Int) => l.countDown()) ! 1
       assertCountDown(l)
     }
 
     "catch code errors that can be handled" in {
       val l = new CountDownLatch(1)
-      boundedActor[Int](Int.MaxValue, (i: Int) => 1 / 0, (ex: Throwable) => l.countDown()) ! 1
+      boundedActor(Int.MaxValue, (_: Int) => 1 / 0, (_: Throwable) => l.countDown()) ! 1
       assertCountDown(l)
     }
 
     "exchange messages with another actor without loss" in {
       val l = new CountDownLatch(n)
       var a1: Actor2[Int] = null
-      val a2 = boundedActor[Int](Int.MaxValue, (i: Int) => a1 ! i - 1)
-      a1 = boundedActor[Int](Int.MaxValue,
+      val a2 = boundedActor(Int.MaxValue, (i: Int) => a1 ! i - 1)
+      a1 = boundedActor(Int.MaxValue,
         (i: Int) =>
           if (i == l.getCount) {
             if (i != 0) a2 ! i - 1
@@ -154,7 +154,7 @@ class Actor2Spec extends Specification {
     "create child actor and send messages to it recursively" in {
       val l = new CountDownLatch(1)
 
-      def a: Actor2[Int] = boundedActor[Int](Int.MaxValue, (i: Int) => if (i > 0) a ! i - 1 else l.countDown())
+      def a: Actor2[Int] = boundedActor(Int.MaxValue, (i: Int) => if (i > 0) a ! i - 1 else l.countDown())
 
       a ! (if (s eq  ActorStrategy.Sequential) 300 else n)
       assertCountDown(l)
@@ -175,7 +175,7 @@ class Actor2Spec extends Specification {
     "doesn't handle messages in simultaneous thread" in {
       val nRounded = (n / NumOfThreads) * NumOfThreads
       val l = new CountDownLatch(1)
-      val a = boundedActor[Int](Int.MaxValue, {
+      val a = boundedActor(Int.MaxValue, {
         var sum = 0L
         val expectedSum = nRounded * (nRounded + 1L) / 2
         (i: Int) =>
@@ -222,7 +222,7 @@ class Actor2Spec extends Specification {
   }
 
   private def countingDownUnboundedActor(l: CountDownLatch)(implicit s: ActorStrategy): Actor2[(Int, Int)] =
-    unboundedActor[(Int, Int)] {
+    unboundedActor {
       val ms = collection.mutable.Map[Int, Int]()
       (m: (Int, Int)) =>
         val (j, i) = m
