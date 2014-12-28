@@ -38,7 +38,7 @@ class Actor2Spec extends Specification {
   def unboundedActorTests(n: Int)(implicit s: ActorStrategy) = {
     "execute code async" in {
       val l = new CountDownLatch(1)
-      unboundedActor((i: Int) => l.countDown()) ! 1
+      unboundedActor((_: Int) => l.countDown()) ! 1
       assertCountDown(l)
     }
 
@@ -78,9 +78,7 @@ class Actor2Spec extends Specification {
       val l = new CountDownLatch(nRounded)
       val a = countingDownUnboundedActor(l)
       for (j <- 1 to NumOfThreads) fork {
-        for (i <- 1 to nRounded / NumOfThreads) {
-          a ! j -> i
-        }
+        for (i <- 1 to nRounded / NumOfThreads) a ! j -> i
       }
       assertCountDown(l)
     }
@@ -95,12 +93,10 @@ class Actor2Spec extends Specification {
           sum += i
           if (sum == expectedSum) l.countDown()
       })
-      val numOfMessagesPerThread = nRounded / NumOfThreads
+      val nPerThread = nRounded / NumOfThreads
       for (j <- 1 to NumOfThreads) fork {
-        val off = (j - 1) * numOfMessagesPerThread
-        for (i <- 1 to numOfMessagesPerThread) {
-          a ! i + off
-        }
+        val off = (j - 1) * nPerThread
+        for (i <- 1 to nPerThread) a ! i + off
       }
       assertCountDown(l)
     }
@@ -162,14 +158,12 @@ class Actor2Spec extends Specification {
 
     "handle messages in order of sending by each thread" in {
       val nRounded = (n / NumOfThreads) * NumOfThreads
-      val latch = new CountDownLatch(nRounded)
-      val actor = countingDownBoundedActor(latch)
+      val l = new CountDownLatch(nRounded)
+      val a = countingDownBoundedActor(l)
       for (j <- 1 to NumOfThreads) fork {
-        for (i <- 1 to nRounded / NumOfThreads) {
-          actor ! j -> i
-        }
+        for (i <- 1 to nRounded / NumOfThreads) a ! j -> i
       }
-      assertCountDown(latch)
+      assertCountDown(l)
     }
 
     "doesn't handle messages in simultaneous thread" in {
@@ -182,12 +176,10 @@ class Actor2Spec extends Specification {
           sum += i
           if (sum == expectedSum) l.countDown()
       })
-      val numOfMessagesPerThread = nRounded / NumOfThreads
+      val nPerThread = nRounded / NumOfThreads
       for (j <- 1 to NumOfThreads) fork {
-        val off = (j - 1) * numOfMessagesPerThread
-        for (i <- 1 to numOfMessagesPerThread) {
-          a ! i + off
-        }
+        val off = (j - 1) * nPerThread
+        for (i <- 1 to nPerThread) a ! i + off
       }
       assertCountDown(l)
     }
