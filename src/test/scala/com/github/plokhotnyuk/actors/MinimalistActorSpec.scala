@@ -42,7 +42,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   "Single-producer sending" in {
-    val n = 3000000
+    val n = 2000000
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     timed(n) {
@@ -53,7 +53,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = roundToParallelism(3000000)
+    val n = roundToParallelism(2000000)
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     val r = new ParRunner((1 to parallelism).map(_ => () => sendMessages(a, n / parallelism)))
@@ -80,12 +80,12 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(2000000, 1)
+    ping(1500000, 1)
     Success()
   }
 
   "Ping throughput 10K" in {
-    ping(4000000, 10000)
+    ping(3000000, 10000)
     Success()
   }
 
