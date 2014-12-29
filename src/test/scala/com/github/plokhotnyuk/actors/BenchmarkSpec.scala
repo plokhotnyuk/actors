@@ -117,15 +117,3 @@ object BenchmarkSpec {
     e.awaitTermination(0, TimeUnit.SECONDS)
   }
 }
-
-class ParRunner(fs: Seq[() => Unit]) {
-  val barrier = new CyclicBarrier(fs.size + 1)
-  fs.map(f => new Thread {
-    override def run(): Unit = {
-      barrier.await()
-      f()
-    }
-  }).foreach(_.start())
-
-  def start(): Unit = barrier.await()
-}

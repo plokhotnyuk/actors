@@ -1,14 +1,45 @@
 package com.github.plokhotnyuk.actors
 
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent._
 import org.specs2.execute.Success
 import scalaz.concurrent.{Strategy, Actor}
 import scalaz.concurrent.Actor._
 
 class ScalazActorSpec extends BenchmarkSpec {
   val executorService = createExecutorService()
-  implicit val strategy = Strategy.Executor(executorService)
+  implicit val strategy = executorService match {
+    case p: scala.concurrent.forkjoin.ForkJoinPool => new Strategy {
+      def apply[A](a: => A): () => A = {
+        new ScalaForkJoinTask(p) {
+          def exec(): Boolean = {
+            a
+            false
+          }
+        }
+        null
+      }
+    }
+    case p: ForkJoinPool => new Strategy {
+      def apply[A](a: => A): () => A = {
+        new JavaForkJoinTask(p) {
+          def exec(): Boolean = {
+            a
+            false
+          }
+        }
+        null
+      }
+    }
+    case p => new Strategy {
+      def apply[A](a: => A): () => A = {
+        p.execute(new Runnable {
+          def run(): Unit = a
+        })
+        null
+      }
+    }
+  }
 
   "Enqueueing" in {
     val n = 40000000

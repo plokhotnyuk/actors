@@ -1,19 +1,32 @@
 package com.github.plokhotnyuk.actors
 
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent.{ForkJoinPool, CountDownLatch}
 import net.liftweb.actor.{ILAExecute, LAScheduler, LiftActor}
 import net.liftweb.common.Full
 import org.specs2.execute.Success
 
 class LiftActorSpec extends BenchmarkSpec {
   LAScheduler.createExecutor = () => new ILAExecute {
-    val executorService = createExecutorService()
+    private val executorService = createExecutorService()
 
-    def execute(f: () => Unit): Unit =
-      executorService.execute(new Runnable {
+    def execute(f: () => Unit): Unit = executorService match {
+      case p: scala.concurrent.forkjoin.ForkJoinPool => new ScalaForkJoinTask(p) {
+        def exec(): Boolean = {
+          f()
+          false
+        }
+      }
+      case p: ForkJoinPool => new JavaForkJoinTask(p) {
+        def exec(): Boolean = {
+          f()
+          false
+        }
+      }
+      case p => p.execute(new Runnable {
         def run(): Unit = f()
       })
+    }
 
     def shutdown(): Unit = fullShutdown(executorService)
   }

@@ -1,5 +1,6 @@
 package scalaz.concurrent
 
+import com.github.plokhotnyuk.actors.{ScalaForkJoinTask, JavaForkJoinTask}
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicReference
 import scala.concurrent.util.Unsafe.{instance => u}
@@ -295,24 +296,4 @@ private final class ExecutorStrategy(p: ExecutorService, b: Int) extends AsyncSt
 
 private abstract class AsyncStrategy(b: Int) extends ActorStrategy {
   val batch: Int = b
-}
-
-private abstract class JavaForkJoinTask(p: ForkJoinPool) extends ForkJoinTask[Unit] {
-  if (ForkJoinTask.getPool eq p) fork()
-  else p.execute(this)
-
-  def getRawResult: Unit = ()
-
-  def setRawResult(unit: Unit): Unit = ()
-}
-
-import scala.concurrent.forkjoin.{ForkJoinPool, ForkJoinTask}
-
-private abstract class ScalaForkJoinTask(p: ForkJoinPool) extends ForkJoinTask[Unit] {
-  if (ForkJoinTask.getPool eq p) fork()
-  else p.execute(this)
-
-  def getRawResult: Unit = ()
-
-  def setRawResult(unit: Unit): Unit = ()
 }

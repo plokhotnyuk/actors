@@ -1,18 +1,31 @@
 package com.github.plokhotnyuk.actors
 
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent._
 import org.specs2.execute.Success
 import scala.actors.{IScheduler, SchedulerAdapter, Actor}
 
 class ScalaActorSpec extends BenchmarkSpec {
   val customScheduler = new SchedulerAdapter {
-    val executorService = createExecutorService()
+    private val executorService = createExecutorService()
 
-    def execute(f: => Unit): Unit =
-      executorService.execute(new Runnable {
+    def execute(f: => Unit): Unit = executorService match {
+      case p: scala.concurrent.forkjoin.ForkJoinPool => new ScalaForkJoinTask(p) {
+        def exec(): Boolean = {
+          f
+          false
+        }
+      }
+      case p: ForkJoinPool => new JavaForkJoinTask(p) {
+        def exec(): Boolean = {
+          f
+          false
+        }
+      }
+      case p => p.execute(new Runnable {
         def run(): Unit = f
       })
+    }
 
     override def executeFromActor(task: Runnable): Unit = executorService.execute(task)
 
@@ -24,7 +37,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Enqueueing" in {
-    val n = 40000000
+    val n = 20000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, 2) // hack to exit without dequeueing
@@ -37,7 +50,7 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Dequeueing" in {
-    val n = 600000
+    val n = 300000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
