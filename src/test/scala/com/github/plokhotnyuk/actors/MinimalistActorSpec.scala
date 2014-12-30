@@ -11,7 +11,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   implicit val executorService = createExecutorService()
 
   "Enqueueing" in {
-    val n = 10000000
+    val n = 20000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -24,7 +24,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   "Dequeueing" in {
-    val n = 2000000
+    val n = 3000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -42,7 +42,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   "Single-producer sending" in {
-    val n = 2000000
+    val n = 3000000
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     timed(n) {
@@ -53,7 +53,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = roundToParallelism(2000000)
+    val n = roundToParallelism(3000000)
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     val r = new ParRunner((1 to parallelism).map(_ => () => sendMessages(a, n / parallelism)))
@@ -65,7 +65,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = roundToParallelism(6000000)
+    val n = roundToParallelism(12000000)
     val l = new CountDownLatch(parallelism)
     val r = new ParRunner((1 to parallelism).map {
       _ =>
@@ -80,12 +80,12 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(1500000, 1)
+    ping(2000000, 1)
     Success()
   }
 
   "Ping throughput 10K" in {
-    ping(3000000, 10000)
+    ping(4000000, 10000)
     Success()
   }
 
