@@ -11,7 +11,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   implicit val executorService = createExecutorService()
 
   "Enqueueing" in {
-    val n = 20000000
+    val n = 10000000
     val l1 = new CountDownLatch(1)
     val l2 = new CountDownLatch(1)
     val a = blockableCountActor(l1, l2, n)
@@ -37,7 +37,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(2000000)(() => Actor(self => m => Die))
+    footprintedAndTimedCollect(3000000)(() => Actor(self => m => Stay))
     Success()
   }
 
