@@ -28,15 +28,15 @@ object Actor {
   def apply(initial: Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
     new AtomicReference[Node] with Address { // Memory visibility of behavior is guarded by volatile piggybacking
       private var b: Behavior = initial // Rebindable top of the mailbox
-      def !(msg: Any): Unit = { val n = new Node(msg); val h = getAndSet(n); if (h ne null) h.lazySet(n) else schedule(n) } // Enqueue the message onto the mailbox and try to schedule for execution
+      def !(msg: Any): Unit = { val n = Node(msg); val h = getAndSet(n); if (h ne null) h.lazySet(n) else schedule(n) } // Enqueue the message onto the mailbox and try to schedule for execution
       private def schedule(t: Node): Unit = e.execute(new Runnable { def run(): Unit = act(t) })
-      private def act(t: Node): Unit = { var n2, n = t; var i = batch; try do { n = n2; b = b(n.msg)(b); n2 = n.get; i -= 1 } while ((n2 ne null) && i != 0) finally scheduleOrSuspend(n) } // Switch ourselves off in batch loop, and then see if we should be rescheduled for execution
+      private def act(t: Node): Unit = { var n, n2 = t; var i = batch; try do { n = n2; b = b(n.msg)(b); n2 = n.get; i -= 1 } while ((n2 ne null) && i != 0) finally scheduleOrSuspend(n) } // Switch ourselves off in batch loop, and then see if we should be rescheduled for execution
       private def scheduleOrSuspend(t: Node): Unit = e.execute(new Runnable { def run(): Unit = if ((t ne get) || !compareAndSet(t, null)) act(t.next)})
     }
 }
 
-private final class Node(val msg: Any) extends AtomicReference[Node] {
-  @annotation.tailrec def next: Node = { val n2 = get; if (n2 ne null) n2 else next }
+private final case class Node(msg: Any) extends AtomicReference[Node] {
+  @annotation.tailrec def next: Node = { val n = get; if (n ne null) n else next }
 }
 
 //Usage
