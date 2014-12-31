@@ -25,9 +25,9 @@ object Actor {
   case class Become(like: Behavior) extends Effect { def apply(old: Behavior): Behavior = like }
   final val Die = Become(msg => { println("Dropping msg [" + msg + "] due to severe case of death."); Stay }) // Stay Dead plz
   trait Address { def !(msg: Any): Unit } // The notion of an Address to where you can post messages to
-  def apply(initial: Address => Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
+  def apply(initial: Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
     new AtomicReference[Node] with Address { // Memory visibility of behavior is guarded by volatile piggybacking
-      private var b: Behavior = initial(this) // Rebindable top of the mailbox, bootstrapped to identity
+      private var b: Behavior = initial // Rebindable top of the mailbox
       final def !(msg: Any): Unit = { val n = new Node(msg); val h = getAndSet(n); if (h ne null) h.lazySet(n) else schedule(n) } // Enqueue the message onto the mailbox and try to schedule for execution
       private def schedule(t: Node): Unit = e.execute(new Runnable { def run(): Unit = act(t) })
       private def act(t: Node): Unit = { var n2, n = t; var i = batch; try do { n = n2; b = b(n.msg)(b); n2 = n.get; i -= 1 } while ((n2 ne null) && i != 0) finally scheduleOrSuspend(n) } // Switch ourselves off in batch loop, and then see if we should be rescheduled for execution
