@@ -25,17 +25,18 @@ object Actor {
   case class Become(like: Behavior) extends Effect { def apply(old: Behavior): Behavior = like }
   final val Die = Become(msg => sys.error("Dropping of message due to severe case of death: " + msg))
   trait Address { def !(msg: Any): Unit } // The notion of an Address to where you can post messages to
-  def apply(initial: Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the initial behavior
+  def apply(initial: Address => Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
     new AtomicReference[Node] with Address { // Memory visibility of behavior is guarded by volatile piggybacking
-      private var b: Behavior = initial // Rebindable top of the mailbox
-      def !(msg: Any): Unit = { val n = Node(msg); val h = getAndSet(n); if (h ne null) h.lazySet(n) else schedule(n) } // Enqueue the message onto the mailbox and try to schedule for execution
+      private var b: Behavior = { case self: Address => Become(initial(self)) } // Rebindable top of the mailbox, bootstrapped to identity
+      this ! this // Make the actor self aware by seeding its address to the initial behavior
+      def !(msg: Any): Unit = { val n = new Node(msg); val h = getAndSet(n); if (h ne null) h.lazySet(n) else schedule(n) } // Enqueue the message onto the mailbox and try to schedule for execution
       private def schedule(t: Node): Unit = e.execute(new Runnable { def run(): Unit = act(t) })
       private def act(t: Node): Unit = { var n, n2 = t; var i = batch; try do { n = n2; b = b(n.msg)(b); n2 = n.get; i -= 1 } while ((n2 ne null) && i != 0) finally scheduleOrSuspend(n) } // Switch ourselves off in batch loop, and then see if we should be rescheduled for execution
       private def scheduleOrSuspend(t: Node): Unit = e.execute(new Runnable { def run(): Unit = if ((t ne get) || !compareAndSet(t, null)) act(t.next)})
     }
 }
 
-private final case class Node(msg: Any) extends AtomicReference[Node] {
+private final class Node(val msg: Any) extends AtomicReference[Node] {
   @annotation.tailrec def next: Node = { val n = get; if (n ne null) n else next }
 }
 
@@ -46,7 +47,7 @@ private final case class Node(msg: Any) extends AtomicReference[Node] {
 //implicit val e: java.util.concurrent.Executor = java.util.concurrent.Executors.newCachedThreadPool
 
 //Creates an actor that will, after it's first message is received, Die
-//val actor = Actor(msg => { println("self: " + self + " got msg " + msg); Die })
+//val actor = Actor( self => msg => { println("self: " + self + " got msg " + msg); Die } )
 
 //actor ! "foo"
 //actor ! "foo"
