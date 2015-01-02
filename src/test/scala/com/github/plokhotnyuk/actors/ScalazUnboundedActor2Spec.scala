@@ -42,7 +42,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   }
 
   "Single-producer sending" in {
-    val n = 16000000
+    val n = 15000000
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     timed(n) {
@@ -53,7 +53,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   }
 
   "Multi-producer sending" in {
-    val n = roundToParallelism(16000000)
+    val n = roundToParallelism(15000000)
     val l = new CountDownLatch(1)
     val a = countActor(l, n)
     val r = new ParRunner((1 to parallelism).map(_ => () => sendMessages(a, n / parallelism)))
@@ -65,7 +65,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   }
 
   "Max throughput" in {
-    val n = roundToParallelism(32000000)
+    val n = roundToParallelism(30000000)
     val l = new CountDownLatch(parallelism)
     val r = new ParRunner((1 to parallelism).map {
       _ =>
@@ -80,12 +80,12 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(3200000, 1)
+    ping(3000000, 1)
     Success()
   }
 
   "Ping throughput 10K" in {
-    ping(8000000, 10000)
+    ping(6000000, 10000)
     Success()
   }
 
