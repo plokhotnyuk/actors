@@ -1,9 +1,10 @@
+
+
 /**
  * Disractor = Actor + Disruptor
  *
  * Array-based non-blocking thread-safe queue implementation. It also may save old entries for EventSourcing
  *
- * Based on Viktor Klang's gist https://gist.github.com/viktorklang/2362563 
  * @author dk14 (Dmytro Kondratiuk)
  */
 
@@ -12,10 +13,10 @@ object Disruptor {
   trait Meta //could attach ConcurrentLinkedQueue here for parallel conflicts
   case class Entry(id: Any, value: Any, val got: Boolean = false, val meta: Option[Meta] = None)
   class Ring(size: Int, val c: ConflictResolver = new ConflictResolver {}) {
-    val data = new AtomicReferenceArray[Entry](size) //we need AtomicReference in case of conflict
+    val data = new AtomicReferenceArray[Entry](size + 1) //we need AtomicReference in case of conflict
     var factor = new AtomicInteger(2)
     var counter = new AtomicInteger(0)
-    implicit class RichAtomic(a: AtomicInteger) { def incr() = { a.compareAndSet(size - 1, 0); a.incrementAndGet}} //cyclic increment
+    implicit class RichAtomic(a: AtomicInteger) { def incr() = {a.incrementAndGet() % size}; def gt() = a.get % size} //cyclic increment
     def allocate() = { // allocate new queue
       if (counter.compareAndSet(factor.get() - 1,0)) while(!factor.compareAndSet(factor.get(), factor.get() * 2)) {}
       counter.incrementAndGet() * (3 * size / (2* factor.get())) % size
@@ -36,17 +37,20 @@ object Disruptor {
     lazy val pointer = allocate() //may be reused between actors for parallel logging etc.
     def finish(e: Entry) = true //is this actor finally processes message (like logger to cache), so it can be removed from queue
     lazy val (readPointer, writePointer) = (new AtomicInteger(pointer), new AtomicInteger(pointer)) //may be reused between actors for  load balancing
-    def isEmpty = data.get(readPointer.get()) == null || readPointer.get() == writePointer.get()
+    def isEmpty = readPointer.get() == writePointer.get()
     def offer(a: Any) = {
-      val i = writePointer.get(); val e = data.get(i); val ne = Entry(this, a)
-      if (e == null || e.got || isDrop) data.lazySet(i, ne)
-      if (e != null && !e.got) resolve(this, e, ne, i)
-      writePointer.incr()
+      val i = writePointer.incr();
+      def set(): Unit = {
+        val e = data.get(i); val ne = Entry(this, a)
+        if (e == null || e.got || isDrop) if (!data.compareAndSet(i,e, ne)) return set
+        if (e != null && !e.got) resolve(this, e, ne, i)
+
+      }
+      set()
     }
     def poll() = {
-      val i = readPointer.get(); val datum = data.get(i)
+      val i = readPointer.incr(); while(data.get(i) == null || data.get(i).got){}; val datum = data.get(i)
       val r = if (datum.id == this && data.compareAndSet(i, datum, datum.copy(got = finish(datum)))) datum.value else processReplacedEntry(datum) //it's all needed in case of conflict
-      readPointer.incr()
       r
     }
   }
@@ -66,7 +70,7 @@ object Actor {
   private abstract class AtomicRunnableAddress extends Address with Queue with Runnable { val on = new AtomicInteger(0) }
   def apply(initial: Address => Behavior)(implicit e: Executor, ring: Ring): Address = // Seeded by the self-reference that yields the initial behavior
     new AtomicRunnableAddress { // Memory visibility of "behavior" is guarded by "on" using volatile piggybacking
-      private var behavior: Behavior = { case self: Address => Become(initial(self))}
+      private var behavior: Behavior = { case self: Address => Become(initial(self)); case null => Stay }
       val r = ring
       final override def !(msg: Any): Unit = behavior match { // As an optimization, we peek at our threads local copy of our behavior to see if we should bail out early
         case dead@Die.`like` => dead(msg) // Efficiently bail out if we're _known_ to be dead
@@ -85,14 +89,14 @@ object ActorTest extends App {
   implicit val e: java.util.concurrent.Executor = java.util.concurrent.Executors.newCachedThreadPool
   implicit val ring = new Ring(20) //this number should be very big enough, and instance should be shared between all actors in app
 
-  val actor = Actor( self => msg => { println("1: " + " got msg " + msg); Stay } )
-  val actor2 = Actor( self => msg => { println("2: " + " got msg " + msg); Stay } )
-  val actor3 = Actor( self => msg => { println("3: " + " got msg " + msg); Stay } )
+  val actor = Actor( self => msg => { println("1: " + "got msg " + msg); Stay } )
+  val actor2 = Actor( self => msg => { println("2: " + "got msg " + msg); Stay } )
 
-  (1 to 10) foreach (x => actor !  ("A " + x))
-  //Thread.sleep(1000) //this usually drops B8
-  (1 to 16) foreach (x => actor2 ! ("B " + x)) //usually drops A2
-  (1 to 20) foreach (x => actor3 ! ("C " + x))
+  //println(actor.pointer + "+" + actor2.pointer)
+
+  (1 to 9).par foreach (x => actor !  ("A " + x))
+  (1 to 9) foreach (x => actor2 ! ("B " + x)) //usually drops A2
+
 
 }
 
