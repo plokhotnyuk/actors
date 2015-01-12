@@ -18,6 +18,8 @@ This project provide and tests some alternative implementations of Scalaz and Mi
 [![Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
 
 ## Benchmarks and their goals
+
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/plokhotnyuk/actors?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 * `Enqueueing` - memory footprint of internal actor queue per submitted message and submition throughput in a single thread
 * `Dequeueing` - message handling throughput in a single thread
 * `Initiation` - memory footprint of minimal actors and initiation time in a single thread
