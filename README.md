@@ -10,7 +10,7 @@ Evaluation of API and performance of in-memory messaging for different actor imp
 [Scala](https://github.com/scala/scala/blob/master/src/actors/scala/actors/Actor.scala) vs.
 [Scalaz](https://github.com/scalaz/scalaz/blob/master/core/src/main/scala/scalaz/concurrent/Actor.scala)
 
-This project provide and tests some alternative implementations of Scalaz and Minimalist actors and mailboxes for Akka:
+This project provides and tests alternative implementations of Scalaz and Minimalist actors and mailboxes for Akka:
 [Akka](https://github.com/plokhotnyuk/actors/blob/master/src/test/scala/akka/dispatch/Mailboxes.scala) vs.
 [Minimalist Scala Actor](https://gist.github.com/viktorklang/2362563) vs.
 [Scalaz](https://github.com/plokhotnyuk/actors/blob/master/src/test/scala/scalaz/concurrent/Actor2.scala)
