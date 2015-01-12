@@ -124,7 +124,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
     actor {
       var blocked = true
       var i = n - 1
-      (m: Message) =>
+      (_: Message) =>
         if (blocked) {
           l1.await()
           blocked = false
@@ -137,7 +137,7 @@ class ScalazUnboundedActor2Spec extends BenchmarkSpec {
   private def countActor(l: CountDownLatch, n: Int): Actor2[Message] =
     actor {
       var i = n
-      (m: Message) =>
+      (_: Message) =>
         i -= 1
         if (i == 0) l.countDown()
     }

@@ -37,7 +37,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(1000000)(() => Actor(self => m => Stay))
+    footprintedAndTimedCollect(1000000)(() => Actor(_ => _ => Stay))
     Success()
   }
 
@@ -91,7 +91,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
 
   def shutdown(): Unit = fullShutdown(executorService)
 
-  def actor(f: Any => Unit) = Actor(self => m => {
+  def actor(f: Any => Unit) = Actor(_ => m => {
     f(m)
     Stay
   }, batch = 1024)
@@ -127,7 +127,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
     actor {
       var blocked = true
       var i = n - 1
-      (m: Any) =>
+      (_: Any) =>
         if (blocked) {
           l1.await()
           blocked = false
@@ -140,7 +140,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   private def countActor(l: CountDownLatch, n: Int): Actor.Address =
     actor {
       var i = n
-      (m: Any) =>
+      (_: Any) =>
         i -= 1
         if (i == 0) l.countDown()
     }
