@@ -1,5 +1,7 @@
 package com.github.plokhotnyuk.actors
 
+import java.lang.management.ManagementFactory
+
 import akka.dispatch.ForkJoinExecutorConfigurator.AkkaForkJoinPool
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import com.sun.management.OperatingSystemMXBean
@@ -35,8 +37,9 @@ object BenchmarkSpec {
   private val processors = Runtime.getRuntime.availableProcessors
   private val executorServiceType = System.getProperty("benchmark.executorServiceType", "scala-forkjoin-pool")
   private val poolSize = System.getProperty("benchmark.poolSize", processors.toString).toInt
-  private val osMBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
-  
+  private val osMXBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
+  private val memoryMXBean = ManagementFactory.getMemoryMXBean
+
   val parallelism: Int = System.getProperty("benchmark.parallelism", processors.toString).toInt
 
   def roundToParallelism(n: Int): Int = (n / parallelism) * parallelism
@@ -55,9 +58,9 @@ object BenchmarkSpec {
 
   def timed[A](n: Int, printAvgLatency: Boolean = false)(benchmark: => A): A = {
     val t = System.nanoTime()
-    val ct = osMBean.getProcessCpuTime
+    val ct = osMXBean.getProcessCpuTime
     val r = benchmark
-    val cd = osMBean.getProcessCpuTime - ct
+    val cd = osMXBean.getProcessCpuTime - ct
     val d = System.nanoTime() - t
     println(f"$n%,d ops")
     println(f"$d%,d ns")
@@ -93,13 +96,13 @@ object BenchmarkSpec {
     r
   }
 
-  def bytesPerInstance(m: Long, n: Int): Int = Math.round(m.toDouble / n / 4).toInt * 4
+  def bytesPerInstance(m: Long, n: Int): Int = Math.round(m.toDouble / n).toInt
 
-  def usedMemory(precision: Double = 0.01): Long = {
+  def usedMemory(precision: Double = 0.000001): Long = {
     @annotation.tailrec
     def waitForGCCompleting(prevUsage: Long = 0): Long = {
       Thread.sleep(30)
-      val usage = Runtime.getRuntime.totalMemory() - Runtime.getRuntime.freeMemory()
+      val usage = memoryMXBean.getHeapMemoryUsage.getUsed
       val diff = prevUsage - usage
       if (diff < 0) {
         System.gc()
