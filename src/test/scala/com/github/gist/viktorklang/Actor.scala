@@ -31,7 +31,7 @@ object Actor {
       this ! this // Make the actor self aware by seeding its address to the initial behavior
       def !(msg: Any): Unit = { val n = new Node(msg); val h = getAndSet(n); if (h ne null) h.lazySet(n) else schedule(n) } // Enqueue the message onto the mailbox and try to schedule for execution
       private def schedule(t: Node): Unit = e.execute(new Runnable { def run(): Unit = act(t) })
-      private def act(t: Node): Unit = { var n, n2 = t; var i = batch; var b = behavior; try do { n = n2; b = b(n.msg)(b); n2 = n.get; i -= 1 } while ((n2 ne null) && i != 0) finally { behavior = b; scheduleOrSuspend(n) } } // Switch ourselves off in batch loop, and then see if we should be rescheduled for execution
+      private def act(t: Node): Unit = { var n, n2 = t; var b = behavior; var i = batch; try do { n = n2; b = b(n.msg)(b); n2 = n.get; i -= 1 } while ((n2 ne null) && i != 0) finally { behavior = b; scheduleOrSuspend(n) } } // Switch ourselves off in batch loop, and then see if we should be rescheduled for execution
       private def scheduleOrSuspend(t: Node): Unit = e.execute(new Runnable { def run(): Unit = if ((t ne get) || !compareAndSet(t, null)) act(t.next)})
     }
 }

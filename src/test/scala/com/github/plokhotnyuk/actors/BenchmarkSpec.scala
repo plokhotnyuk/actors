@@ -1,7 +1,5 @@
 package com.github.plokhotnyuk.actors
 
-import java.lang.management.ManagementFactory
-
 import akka.dispatch.ForkJoinExecutorConfigurator.AkkaForkJoinPool
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import com.sun.management.OperatingSystemMXBean
@@ -38,7 +36,7 @@ object BenchmarkSpec {
   private val executorServiceType = System.getProperty("benchmark.executorServiceType", "scala-forkjoin-pool")
   private val poolSize = System.getProperty("benchmark.poolSize", processors.toString).toInt
   private val osMXBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
-  private val memoryMXBean = ManagementFactory.getMemoryMXBean
+  private val memoryMXBean = getMemoryMXBean
 
   val parallelism: Int = System.getProperty("benchmark.parallelism", processors.toString).toInt
 
