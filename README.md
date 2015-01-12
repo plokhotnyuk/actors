@@ -15,11 +15,14 @@ This project provide and tests some alternative implementations of Scalaz and Mi
 [Minimalist Scala Actor](https://gist.github.com/viktorklang/2362563) vs.
 [Scalaz](https://github.com/plokhotnyuk/actors/blob/master/src/test/scala/scalaz/concurrent/Actor2.scala)
 
-[![Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
+[![Travis CI Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
+
+[![Shippable Build Status](https://api.shippable.com/projects/54131ace814f6b1f6a9fb4dc/badge?branchName=master)](https://app.shippable.com/projects/54131ace814f6b1f6a9fb4dc/builds/latest)
+
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/plokhotnyuk/actors?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Benchmarks and their goals
 
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/plokhotnyuk/actors?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 * `Enqueueing` - memory footprint of internal actor queue per submitted message and submition throughput in a single thread
 * `Dequeueing` - message handling throughput in a single thread
 * `Initiation` - memory footprint of minimal actors and initiation time in a single thread
