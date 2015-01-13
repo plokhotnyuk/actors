@@ -20,8 +20,8 @@ testGrouping in Test <<= definedTests in Test map { tests =>
       name = test.name,
       tests = Seq(test),
       runPolicy = SubProcess(javaOptions = Seq(
-        "-server", "-Xms4096m", "-Xms4096m", "-XX:NewSize=3584m", "-Xss256k", "-XX:+TieredCompilation",
-        "-XX:+UseG1GC", "-XX:+UseNUMA", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
+        "-server", "-Xms4096m", "-Xms4096m", "-XX:NewSize=3584m", "-Xss256k", "-XX:+TieredCompilation", "-XX:+UseG1GC", 
+        "-XX:+UseNUMA", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch", "-XX:+UseLargePages", "-XX:LargePageSizeInBytes=2m") ++
         System.getProperties.toMap.map {
           case (k, v)  => "-D" + k + "=" + v
         }))
