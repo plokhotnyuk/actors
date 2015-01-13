@@ -19,7 +19,6 @@ abstract class BenchmarkSpec extends Specification {
   override def map(fs: => Fragments) = Step(setup()) ^ fs.map {
     case Example(desc, body, _, _, _) => Example(desc, {
       println()
-      usedMemory() // GC
       println(s"$desc:")
       body()
     })
@@ -55,11 +54,11 @@ object BenchmarkSpec {
     }
 
   def timed[A](n: Int, printAvgLatency: Boolean = false)(benchmark: => A): A = {
-    val ct = osMXBean.getProcessCpuTime
     val t = System.nanoTime()
+    val ct = osMXBean.getProcessCpuTime
     val r = benchmark
-    val d = System.nanoTime() - t
     val cd = osMXBean.getProcessCpuTime - ct
+    val d = System.nanoTime() - t
     println(f"$n%,d ops")
     println(f"$d%,d ns")
     if (printAvgLatency) println(f"${d / n}%,d ns/op")
@@ -99,14 +98,17 @@ object BenchmarkSpec {
   def usedMemory(precision: Double = 0.000001): Long = {
     @annotation.tailrec
     def getHeapMemoryUsage(prev: Long = memoryMXBean.getHeapMemoryUsage.getUsed): Long = {
-      System.gc()
-      Thread.sleep(10)
+      Thread.sleep(30)
       val curr = memoryMXBean.getHeapMemoryUsage.getUsed
       val diff = prev - curr
-      if (diff < 0 || diff > precision * curr) getHeapMemoryUsage(curr)
+      if (diff < 0) {
+        System.gc()
+        getHeapMemoryUsage(curr)
+      } else if (diff > precision * curr) getHeapMemoryUsage(curr)
       else curr
     }
 
+    System.gc()
     getHeapMemoryUsage()
   }
 
