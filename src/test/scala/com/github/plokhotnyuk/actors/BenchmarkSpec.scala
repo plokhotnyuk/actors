@@ -124,18 +124,16 @@ object BenchmarkSpec {
     }
 
     @annotation.tailrec
-    def waitForGCCompleting(prevUsage: Long = Long.MaxValue): Long = {
+    def getHeapMemoryUsage(prev: Long = memoryMXBean.getHeapMemoryUsage.getUsed): Long = {
+      fullGC()
       Thread.sleep(30)
-      val usage = memoryMXBean.getHeapMemoryUsage.getUsed
-      val diff = prevUsage - usage
-      if (diff < 0 || diff.toDouble / usage > precision) {
-        fullGC()
-        waitForGCCompleting(usage)
-      } else usage
+      val curr = memoryMXBean.getHeapMemoryUsage.getUsed
+      val diff = prev - curr
+      if (diff < 0 || diff > precision * curr) getHeapMemoryUsage(curr)
+      else curr
     }
 
-    fullGC()
-    waitForGCCompleting()
+    getHeapMemoryUsage()
   }
 
   def fullShutdown(e: ExecutorService): Unit = {
