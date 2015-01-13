@@ -99,7 +99,7 @@ object BenchmarkSpec {
     r
   }
 
-  def bytesPerInstance(m: Long, n: Int): Long = m / n
+  def bytesPerInstance(m: Long, n: Int): Int = Math.round(m.toDouble / n).toInt
 
   def usedMemory(precision: Double = 0.001): Long = {
     def fullGC(): Unit = {
