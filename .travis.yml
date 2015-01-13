@@ -6,7 +6,7 @@ jdk:
   - openjdk7
   - oraclejdk7
 install:
-  - sudo echo always > /sys/kernel/mm/transparent_hugepage/enabled
+  - sudo echo 2000 > /proc/sys/vm/nr_hugepages
 script:
   - sudo cat /proc/cpuinfo
   - sudo cat /proc/meminfo
