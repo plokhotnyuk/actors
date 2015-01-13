@@ -55,11 +55,11 @@ object BenchmarkSpec {
     }
 
   def timed[A](n: Int, printAvgLatency: Boolean = false)(benchmark: => A): A = {
-    val t = System.nanoTime()
     val ct = osMXBean.getProcessCpuTime
+    val t = System.nanoTime()
     val r = benchmark
-    val cd = osMXBean.getProcessCpuTime - ct
     val d = System.nanoTime() - t
+    val cd = osMXBean.getProcessCpuTime - ct
     println(f"$n%,d ops")
     println(f"$d%,d ns")
     if (printAvgLatency) println(f"${d / n}%,d ns/op")
