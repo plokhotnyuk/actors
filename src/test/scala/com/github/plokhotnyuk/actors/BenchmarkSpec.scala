@@ -19,6 +19,7 @@ abstract class BenchmarkSpec extends Specification {
   override def map(fs: => Fragments) = Step(setup()) ^ fs.map {
     case Example(desc, body, _, _, _) => Example(desc, {
       println()
+      usedMemory(0.1) // GC
       println(s"$desc:")
       body()
     })
@@ -95,7 +96,7 @@ object BenchmarkSpec {
 
   def bytesPerInstance(m: Long, n: Int): Int = Math.round(m.toDouble / n).toInt
 
-  def usedMemory(precision: Double = 0.000001): Long = {
+  def usedMemory(precision: Double = 0.001): Long = {
     @annotation.tailrec
     def getHeapMemoryUsage(prev: Long = memoryMXBean.getHeapMemoryUsage.getUsed): Long = {
       Thread.sleep(30)
