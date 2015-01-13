@@ -1,14 +1,18 @@
 package com.github.plokhotnyuk.actors
 
+import javax.management.openmbean.CompositeData
+import javax.management.{Notification, NotificationListener, NotificationEmitter}
+
 import akka.dispatch.ForkJoinExecutorConfigurator.AkkaForkJoinPool
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import com.sun.management.OperatingSystemMXBean
+import com.sun.management.{GarbageCollectionNotificationInfo, OperatingSystemMXBean}
 import java.lang.management.ManagementFactory._
 import java.util.concurrent._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import org.specs2.mutable.Specification
 import org.specs2.specification.{Example, Step, Fragments}
+import scala.collection.convert.wrapAsScala._
 import scala.concurrent.forkjoin.{ForkJoinPool => ScalaForkJoinPool}
 
 @RunWith(classOf[JUnitRunner])
@@ -37,6 +41,7 @@ object BenchmarkSpec {
   private val poolSize = System.getProperty("benchmark.poolSize", processors.toString).toInt
   private val osMXBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
   private val memoryMXBean = getMemoryMXBean
+  private val gcMXBeans: Array[NotificationEmitter] = getGarbageCollectorMXBeans.toArray.map((b: Any) => b.asInstanceOf[NotificationEmitter])
 
   val parallelism: Int = System.getProperty("benchmark.parallelism", processors.toString).toInt
 
@@ -94,22 +99,42 @@ object BenchmarkSpec {
     r
   }
 
-  def bytesPerInstance(m: Long, n: Int): Int = Math.round(m.toDouble / n).toInt
+  def bytesPerInstance(m: Long, n: Int): Long = m / n
 
-  def usedMemory(precision: Double = 0.000001): Long = {
+  def usedMemory(precision: Double = 0.001): Long = {
+    def fullGC(): Unit = {
+      val l = new CountDownLatch(1)
+      val enls = gcMXBeans.map {
+        e =>
+          val nl = new NotificationListener() {
+            def handleNotification(notification: Notification, handback: Any): Unit = {
+              if (notification.getType == GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION) {
+                val info = GarbageCollectionNotificationInfo.from(notification.getUserData.asInstanceOf[CompositeData])
+                if (info.getGcAction.contains("major")) l.countDown()
+              }
+            }
+          }
+          e.addNotificationListener(nl, null, null)
+          (e, nl)
+      }
+      System.gc()
+      try l.await(10, TimeUnit.SECONDS) finally enls.foreach {
+        case (e, nl) => e.removeNotificationListener(nl)
+      }
+    }
+
     @annotation.tailrec
-    def waitForGCCompleting(prevUsage: Long = 0): Long = {
+    def waitForGCCompleting(prevUsage: Long = Long.MaxValue): Long = {
       Thread.sleep(30)
       val usage = memoryMXBean.getHeapMemoryUsage.getUsed
       val diff = prevUsage - usage
-      if (diff < 0) {
-        System.gc()
+      if (diff < 0 || diff.toDouble / usage > precision) {
+        fullGC()
         waitForGCCompleting(usage)
-      } else if (diff.toDouble / prevUsage > precision) waitForGCCompleting(usage)
-      else usage
+      } else usage
     }
 
-    System.gc()
+    fullGC()
     waitForGCCompleting()
   }
 
