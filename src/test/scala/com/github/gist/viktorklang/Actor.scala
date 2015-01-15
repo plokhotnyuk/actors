@@ -26,8 +26,8 @@ object Actor {
   final val Die = Become(msg => sys.error("Dropping of message due to severe case of death: " + msg))
   trait Address { def !(msg: Any): Unit } // The notion of an Address to where you can post messages to
   def apply(initial: Address => Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
-    new AtomicReference[Node] with Address { // Memory visibility of behavior is guarded by volatile piggybacking
-      @volatile private var behavior: Behavior = { case self: Address => Become(initial(self)) } // Rebindable top of the mailbox, bootstrapped to identity
+    new AtomicReference[Node] with Address { // Memory visibility of behavior is provided by an executor
+      private var behavior: Behavior = { case self: Address => Become(initial(self)) } // Rebindable top of the mailbox, bootstrapped to identity
       this ! this // Make the actor self aware by seeding its address to the initial behavior
       def !(msg: Any): Unit = { val n = new Node(msg); val h = getAndSet(n); if (h ne null) h.lazySet(n) else schedule(n) } // Enqueue the message onto the mailbox and try to schedule for execution
       private def schedule(t: Node): Unit = e.execute(new Runnable { def run(): Unit = act(t) })
