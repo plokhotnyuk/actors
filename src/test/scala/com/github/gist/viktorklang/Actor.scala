@@ -26,13 +26,12 @@ object Actor {
   final val Die = Become(msg => sys.error("Dropping of message due to severe case of death: " + msg))
   trait Address { def !(msg: Any): Unit } // The notion of an Address to where you can post messages to
   def apply(initial: Address => Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
-    new AtomicReference[Node] with Address { // Memory visibility of behavior is provided by an executor
-      private var behavior: Behavior = { case self: Address => Become(initial(self)) } // Rebindable top of the mailbox, bootstrapped to identity
+    new AtomicReference[AnyRef]({ case self: Address => Become(initial(self)) }: Behavior) with Address { // Memory visibility of behavior is guarded by volatile piggybacking
       this ! this // Make the actor self aware by seeding its address to the initial behavior
-      def !(msg: Any): Unit = { val n = new Node(msg); val h = getAndSet(n); if (h ne null) h.lazySet(n) else schedule(n) } // Enqueue the message onto the mailbox and try to schedule for execution
-      private def schedule(t: Node): Unit = e.execute(new Runnable { def run(): Unit = act(t) })
-      private def act(t: Node): Unit = { var n, n2 = t; var b = behavior; var i = batch; try do { n = n2; b = b(n.msg)(b); n2 = n.get; i -= 1 } while ((n2 ne null) && i != 0) finally { behavior = b; scheduleOrSuspend(n) } } // Switch ourselves off in batch loop, and then see if we should be rescheduled for execution
-      private def scheduleOrSuspend(t: Node): Unit = e.execute(new Runnable { def run(): Unit = if ((t ne get) || !compareAndSet(t, null)) act(t.next)})
+      def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b: Behavior @unchecked => async(b, n) } } // Enqueue the message onto the mailbox or try to async for execution
+      private def async(b: Behavior, n: Node): Unit = e.execute(new Runnable { def run(): Unit = act(b, n) })
+      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i = batch; try do { n1 = n2; b1 = b1(n1.msg)(b1); n2 = n1.get; i -= 1 } while ((n2 ne null) && i != 0) finally lastTry(b1, n1) } // Switch ourselves off in batch loop
+      private def lastTry(b: Behavior, t: Node): Unit = e.execute(new Runnable { def run(): Unit = if ((t ne get) || !compareAndSet(t, b)) act(b, t.next) }) // See if we should be rescheduled for execution
     }
 }
 
