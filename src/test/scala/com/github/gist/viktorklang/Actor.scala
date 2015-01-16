@@ -1,7 +1,6 @@
 package com.github.gist.viktorklang
-
 /*
-Copyright 2012 Viktor Klang
+   Copyright 2012 Viktor Klang
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -26,12 +25,12 @@ object Actor {
   final val Die = Become(msg => sys.error("Dropping of message due to severe case of death: " + msg))
   trait Address { def !(msg: Any): Unit } // The notion of an Address to where you can post messages to
   def apply(initial: Address => Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
-    new AtomicReference[AnyRef]({ case self: Address => Become(initial(self)) }: Behavior) with Address { // Memory visibility of behavior is guarded by volatile piggybacking
+    new AtomicReference[AnyRef]({ case self: Address => Become(initial(self)) }: Behavior) with Address { // Memory visibility of behavior is guarded by volatile piggybacking & executor
       this ! this // Make the actor self aware by seeding its address to the initial behavior
-      def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b: Behavior @unchecked => async(b, n) } } // Enqueue the message onto the mailbox or try to async for execution
+      def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b: Behavior @unchecked => async(b, n) } } // Enqueue the message onto the mailbox or schedule for execution
       private def async(b: Behavior, n: Node): Unit = e.execute(new Runnable { def run(): Unit = act(b, n) })
-      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i = batch; try do { n1 = n2; b1 = b1(n1.msg)(b1); n2 = n1.get; i -= 1 } while ((n2 ne null) && i != 0) finally lastTry(b1, n1) } // Switch ourselves off in batch loop
-      private def lastTry(b: Behavior, t: Node): Unit = e.execute(new Runnable { def run(): Unit = if ((t ne get) || !compareAndSet(t, b)) act(b, t.next) }) // See if we should be rescheduled for execution
+      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i = batch; try do { n1 = n2; b1 = b1(n1.msg)(b1); n2 = n1.get; i -= 1 } while ((n2 ne null) && i != 0) finally lastTry(b1, n1) } // Reduce messages to behaviour in batch loop
+      private def lastTry(b: Behavior, n: Node): Unit = e.execute(new Runnable { def run(): Unit = if ((n ne get) || !compareAndSet(n, b)) act(b, n.next) }) // Schedule to last try for execution or switch ourselves off
     }
 }
 
@@ -39,14 +38,9 @@ private final class Node(val msg: Any) extends AtomicReference[Node] {
   @annotation.tailrec def next: Node = { val n = get; if (n ne null) n else next }
 }
 
-//Usage
-
+//Usage example that creates an actor that will, after it's first message is received, Die
 //import Actor._
-
 //implicit val e: java.util.concurrent.Executor = java.util.concurrent.Executors.newCachedThreadPool
-
-//Creates an actor that will, after it's first message is received, Die
 //val actor = Actor( self => msg => { println("self: " + self + " got msg " + msg); Die } )
-
 //actor ! "foo"
 //actor ! "foo"
