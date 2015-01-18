@@ -17,10 +17,10 @@ function removeFromPath() {
 
 rename_files () {
   NAME="${@}"
-  cp outX.txt "out${NAME}.txt"
-  cp outX_poolSize1.txt "out${NAME}_poolSize1.txt"
-  cp outX_poolSize10.txt "out${NAME}_poolSize10.txt"
-  cp outX_poolSize100.txt "out${NAME}_poolSize100.txt"
+  mv outX.txt "out${NAME}.txt"
+  mv outX_poolSize1.txt "out${NAME}_poolSize1.txt"
+  mv outX_poolSize10.txt "out${NAME}_poolSize10.txt"
+  mv outX_poolSize100.txt "out${NAME}_poolSize100.txt"
 }
 
 run_tests() {
