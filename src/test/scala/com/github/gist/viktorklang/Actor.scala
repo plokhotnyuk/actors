@@ -15,27 +15,38 @@ package com.github.gist.viktorklang
    limitations under the License.
 */
 import java.util.concurrent.atomic.AtomicReference
-import java.util.concurrent.Executor
+import java.util.concurrent._
 
 object Actor {
   type Behavior = Any => Effect
   sealed trait Effect extends (Behavior => Behavior)
   case object Stay extends Effect { def apply(old: Behavior): Behavior = old }
   case class Become(like: Behavior) extends Effect { def apply(old: Behavior): Behavior = like }
-  final val Die = Become(msg => sys.error("Dropping of message due to severe case of death: " + msg))
+  case object Die extends Effect { def apply(old: Behavior): Behavior = msg => sys.error("Dropping of message due to severe case of death: " + msg) }
   trait Address { def !(msg: Any): Unit } // The notion of an Address to where you can post messages to
   def apply(initial: Address => Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
     new AtomicReference[AnyRef]({ case self: Address => Become(initial(self)) }: Behavior) with Address { // Memory visibility of behavior is guarded by volatile piggybacking & executor
       this ! this // Make the actor self aware by seeding its address to the initial behavior
-      def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b: Behavior @unchecked => async(b, n) } } // Enqueue the message onto the mailbox or schedule for execution
-      private def async(b: Behavior, n: Node): Unit = e.execute(new Runnable { def run(): Unit = act(b, n) })
+      def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b: Behavior @unchecked => async(act(b, n)) } } // Enqueue the message onto the mailbox or schedule for execution
       private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i = batch; try do { n1 = n2; b1 = b1(n1.msg)(b1); n2 = n1.get; i -= 1 } while ((n2 ne null) && i != 0) finally lastTry(b1, n1) } // Reduce messages to behaviour in batch loop
-      private def lastTry(b: Behavior, n: Node): Unit = e.execute(new Runnable { def run(): Unit = if ((n ne get) || !compareAndSet(n, b)) act(b, n.next) }) // Schedule to last try for execution or switch ourselves off
+      private def lastTry(b: Behavior, n: Node): Unit = async(if ((n ne get) || !compareAndSet(n, b)) act(b, n.next)) // Schedule to last try for execution or switch ourselves off
+      private def async(f: => Unit): Unit = e match {
+        case p: scala.concurrent.forkjoin.ForkJoinPool => new scala.concurrent.forkjoin.ForkJoinTask[Unit] {
+          if (p eq scala.concurrent.forkjoin.ForkJoinTask.getPool) fork() else p.execute(this)
+          def exec(): Boolean = { f; false }
+          def getRawResult: Unit = ()
+          def setRawResult(unit: Unit): Unit = ()
+        }
+        case p: ForkJoinPool => new ForkJoinTask[Unit] {
+          if (p eq ForkJoinTask.getPool) fork() else p.execute(this)
+          def exec(): Boolean = { f; false }
+          def getRawResult: Unit = ()
+          def setRawResult(unit: Unit): Unit = ()
+        }
+        case p => p.execute(new Runnable { def run(): Unit = f })
+      }
     }
-}
-
-private final class Node(val msg: Any) extends AtomicReference[Node] {
-  @annotation.tailrec def next: Node = { val n = get; if (n ne null) n else next }
+  private class Node(val msg: Any) extends AtomicReference[Node] { @annotation.tailrec final def next: Node = { val n = get; if (n ne null) n else next } }
 }
 
 //Usage example that creates an actor that will, after it's first message is received, Die
