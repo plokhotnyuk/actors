@@ -77,7 +77,7 @@ object BenchmarkSpec {
     r
   }
 
-  def footprintedAndTimedCollect[A](n: Int)(construct: () => A): Seq[A] = {
+  def footprintedAndTimedCollect[A](n: Int)(construct: () => A, teardown: => Unit = ()): Seq[A] = {
     val r = Array.ofDim(n).asInstanceOf[Array[A]]
     val u = usedMemory()
     timed(n, printAvgLatency = true) {
@@ -87,6 +87,7 @@ object BenchmarkSpec {
         i -= 1
         as(i) = construct()
       }
+      teardown
     }
     val m = usedMemory() - u
     val b = bytesPerInstance(m, n)
