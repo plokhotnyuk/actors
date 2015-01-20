@@ -1,6 +1,6 @@
 package com.github.plokhotnyuk.actors
 
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent.{TimeUnit, CountDownLatch}
 
 import com.github.gist.viktorklang.Actor
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
@@ -37,7 +37,11 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(1000000)(() => Actor(_ => _ => Stay))
+    val es = createExecutorService()
+    footprintedAndTimedCollect(1000000)(() => Actor(_ => _ => Stay)(es), {
+      es.shutdown()
+      es.awaitTermination(10, TimeUnit.SECONDS)
+    })
     Success()
   }
 
@@ -91,7 +95,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
 
   def shutdown(): Unit = fullShutdown(executorService)
 
-  def actor(f: Any => Unit) = Actor(_ => m => {
+  def actor(f: Any => Unit): Address = Actor(_ => m => {
     f(m)
     Stay
   }, batch = 1024)
@@ -100,7 +104,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
-        var a1: Actor.Address = null
+        var a1: Address = null
         val a2 = actor {
           var i = n / p / 2
           (m: Any) =>
@@ -123,7 +127,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
     }
   }
 
-  private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Actor.Address =
+  private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Address =
     actor {
       var blocked = true
       var i = n - 1
@@ -137,7 +141,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
         }
     }
 
-  private def countActor(l: CountDownLatch, n: Int): Actor.Address =
+  private def countActor(l: CountDownLatch, n: Int): Address =
     actor {
       var i = n
       (_: Any) =>
@@ -145,7 +149,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
         if (i == 0) l.countDown()
     }
 
-  protected def sendMessages(a: Actor.Address, n: Int): Unit = {
+  protected def sendMessages(a: Address, n: Int): Unit = {
     val m = Message()
     var i = n
     while (i > 0) {
