@@ -18,28 +18,29 @@ import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.Executor
 
 object Actor {
-  type Behavior[A] = A => Effect[A]
-  sealed trait Effect[A] extends (Behavior[A] => Behavior[A])
-  case class Stay[A]() extends Effect[A] { def apply(old: Behavior[A]): Behavior[A] = old }
-  case class Become[A](like: Behavior[A]) extends Effect[A] { def apply(old: Behavior[A]): Behavior[A] = like }
-  case class Die[A]() extends Effect[A] { def apply(old: Behavior[A]): Behavior[A] = (a: A) => sys.error("Dropping of message due to severe case of death: " + a) }
-  trait Address[A] { def !(a: A): Unit } // The notion of an Address to where you can post messages to
-  def apply[A](initial: Behavior[A], batch: Int = 5)(implicit e: Executor): Address[A] = // Seeded by the self-reference that yields the initial behavior
-    new AtomicReference[AnyRef](initial) with Address[A] { // Memory visibility of behavior is guarded by volatile piggybacking & executor
-      def !(a: A): Unit = { val n = new Node(a); getAndSet(n) match { case h: Node[A] @unchecked => h.lazySet(n); case b: Behavior[A] @unchecked => async(b, n) } } // Enqueue the message onto the mailbox or schedule for execution
-      private def async(b: Behavior[A], n: Node[A]): Unit = e.execute(new Runnable { def run(): Unit = act(b, n) })
-      private def act(b: Behavior[A], n: Node[A]): Unit = { var b1 = b; var n1, n2 = n; var i = batch; try do { n1 = n2; b1 = b1(n1.a)(b1); n2 = n1.get; i -= 1 } while ((n2 ne null) && i != 0) finally lastTry(b1, n1) } // Reduce messages to behaviour in batch loop
-      private def lastTry(b: Behavior[A], n: Node[A]): Unit = e.execute(new Runnable { def run(): Unit = if ((n ne get) || !compareAndSet(n, b)) act(b, n.next) }) // Schedule to last try for execution or switch ourselves off
+  type Behavior = Any => Effect
+  sealed trait Effect extends (Behavior => Behavior)
+  case object Stay extends Effect { def apply(old: Behavior): Behavior = old }
+  case class Become(like: Behavior) extends Effect { def apply(old: Behavior): Behavior = like }
+  final val Die = Become(msg => sys.error("Dropping of message due to severe case of death: " + msg))
+  trait Address { def !(msg: Any): Unit } // The notion of an Address to where you can post messages to
+  def apply(initial: Address => Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
+    new AtomicReference[AnyRef]({ case self: Address => Become(initial(self)) }: Behavior) with Address { // Memory visibility of behavior is guarded by volatile piggybacking & executor
+      this ! this // Make the actor self aware by seeding its address to the initial behavior
+      def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b: Behavior @unchecked => async(b, n) } } // Enqueue the message onto the mailbox or schedule for execution
+      private def async(b: Behavior, n: Node): Unit = e.execute(new Runnable { def run(): Unit = act(b, n) })
+      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i = batch; try do { n1 = n2; b1 = b1(n1.msg)(b1); n2 = n1.get; i -= 1 } while ((n2 ne null) && i != 0) finally lastTry(b1, n1) } // Reduce messages to behaviour in batch loop
+      private def lastTry(b: Behavior, n: Node): Unit = e.execute(new Runnable { def run(): Unit = if ((n ne get) || !compareAndSet(n, b)) act(b, n.next) }) // Schedule to last try for execution or switch ourselves off
     }
 }
 
-private final class Node[A](val a: A) extends AtomicReference[Node[A]] {
-  @annotation.tailrec def next: Node[A] = { val n = get; if (n ne null) n else next }
+private final class Node(val msg: Any) extends AtomicReference[Node] {
+  @annotation.tailrec def next: Node = { val n = get; if (n ne null) n else next }
 }
 
 //Usage example that creates an actor that will, after it's first message is received, Die
 //import Actor._
 //implicit val e: java.util.concurrent.Executor = java.util.concurrent.Executors.newCachedThreadPool
-//val actor = Actor((msg: String) => { println("self: " + self + " got msg " + msg); Die[String]() })
+//val actor = Actor(self => msg => { println("self: " + self + " got msg " + msg); Die })
 //actor ! "foo"
 //actor ! "foo"
