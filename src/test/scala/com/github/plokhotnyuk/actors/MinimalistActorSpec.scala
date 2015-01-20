@@ -37,7 +37,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   "Initiation" in {
-    footprintedAndTimedCollect(1000000)(() => Actor(_ => _ => Stay))
+    footprintedAndTimedCollect(1000000)(() => Actor((_: Message) => Die[Message]()))
     Success()
   }
 
@@ -91,26 +91,29 @@ class MinimalistActorSpec extends BenchmarkSpec {
 
   def shutdown(): Unit = fullShutdown(executorService)
 
-  def actor(f: Any => Unit) = Actor(_ => m => {
-    f(m)
-    Stay
+  def actor[A](f: A => Unit) = Actor({
+    val stay = Stay[A]()
+    (m: A) => {
+      f(m)
+      stay
+    }
   }, batch = 1024)
 
   private def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
-        var a1: Actor.Address = null
+        var a1: Actor.Address[Message] = null
         val a2 = actor {
           var i = n / p / 2
-          (m: Any) =>
+          (m: Message) =>
             if (i > 0) a1 ! m
             i -= 1
             if (i == 0) l.countDown()
         }
         a1 = actor {
           var i = n / p / 2
-          (m: Any) =>
+          (m: Message) =>
             if (i > 0) a2 ! m
             i -= 1
             if (i == 0) l.countDown()
@@ -123,11 +126,11 @@ class MinimalistActorSpec extends BenchmarkSpec {
     }
   }
 
-  private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Actor.Address =
+  private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Actor.Address[Message] =
     actor {
       var blocked = true
       var i = n - 1
-      (_: Any) =>
+      (_: Message) =>
         if (blocked) {
           l1.await()
           blocked = false
@@ -137,15 +140,15 @@ class MinimalistActorSpec extends BenchmarkSpec {
         }
     }
 
-  private def countActor(l: CountDownLatch, n: Int): Actor.Address =
+  private def countActor(l: CountDownLatch, n: Int): Actor.Address[Message] =
     actor {
       var i = n
-      (_: Any) =>
+      (_: Message) =>
         i -= 1
         if (i == 0) l.countDown()
     }
 
-  protected def sendMessages(a: Actor.Address, n: Int): Unit = {
+  protected def sendMessages(a: Actor.Address[Message], n: Int): Unit = {
     val m = Message()
     var i = n
     while (i > 0) {
