@@ -14,6 +14,8 @@ package com.github.gist.viktorklang
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
+// Initial version from Viktor Klang: https://gist.github.com/viktorklang/2362563
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent._
 
@@ -27,23 +29,23 @@ object Actor {
   def apply(initial: Address => Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
     new AtomicReference[AnyRef]({ case self: Address => Become(initial(self)) }: Behavior) with Address { // Memory visibility of behavior is guarded by volatile piggybacking & executor
       this ! this // Make the actor self aware by seeding its address to the initial behavior
-      def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b: Behavior @unchecked => async(act(b, n)) } } // Enqueue the message onto the mailbox or schedule for execution
-      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i = batch; try do { n1 = n2; b1 = b1(n1.msg)(b1); n2 = n1.get; i -= 1 } while ((n2 ne null) && i != 0) finally lastTry(b1, n1) } // Reduce messages to behaviour in batch loop
-      private def lastTry(b: Behavior, n: Node): Unit = async(if ((n ne get) || !compareAndSet(n, b)) act(b, n.next)) // Schedule to last try for execution or switch ourselves off
-      private def async(f: => Unit): Unit = e match {
+      def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b: Behavior @unchecked => async(b, n, true) } } // Enqueue the message onto the mailbox or schedule for execution
+      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i = batch; try do { n1 = n2; b1 = b1(n1.msg)(b1); n2 = n1.get; i -= 1 } while ((n2 ne null) && i != 0) finally async(b1, n1, false) } // Reduce messages to behaviour in batch loop
+      private def actOrOff(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n) else if ((n ne get) || !compareAndSet(n, b)) act(b, n.next) // Act or switch ourselves off
+      private def async(b: Behavior, n: Node, x: Boolean): Unit = e match { // Schedule for execution
         case p: scala.concurrent.forkjoin.ForkJoinPool => new scala.concurrent.forkjoin.ForkJoinTask[Unit] {
           if (p eq scala.concurrent.forkjoin.ForkJoinTask.getPool) fork() else p.execute(this)
-          def exec(): Boolean = { f; false }
+          def exec(): Boolean = { actOrOff(b, n, x); false }
           def getRawResult: Unit = ()
           def setRawResult(unit: Unit): Unit = ()
         }
         case p: ForkJoinPool => new ForkJoinTask[Unit] {
           if (p eq ForkJoinTask.getPool) fork() else p.execute(this)
-          def exec(): Boolean = { f; false }
+          def exec(): Boolean = { actOrOff(b, n, x); false }
           def getRawResult: Unit = ()
           def setRawResult(unit: Unit): Unit = ()
         }
-        case p => p.execute(new Runnable { def run(): Unit = f })
+        case p => p.execute(new Runnable { def run(): Unit = actOrOff(b, n, x) })
       }
     }
   private class Node(val msg: Any) extends AtomicReference[Node] { @annotation.tailrec final def next: Node = { val n = get; if (n ne null) n else next } }
