@@ -95,30 +95,27 @@ class MinimalistActorSpec extends BenchmarkSpec {
 
   def shutdown(): Unit = fullShutdown(executorService)
 
-  def actor(f: Any => Unit): Address = Actor(_ => m => {
-    f(m)
-    Stay
-  }, batch = 1024)
-
   private def ping(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
         var a1: Address = null
-        val a2 = actor {
+        val a2 = Actor(_ => {
           var i = n / p / 2
           (m: Any) =>
             if (i > 0) a1 ! m
             i -= 1
             if (i == 0) l.countDown()
-        }
-        a1 = actor {
+            Stay
+        }, batch = 1024)
+        a1 = Actor(_ => {
           var i = n / p / 2
           (m: Any) =>
             if (i > 0) a2 ! m
             i -= 1
             if (i == 0) l.countDown()
-        }
+            Stay
+        }, batch = 1024)
         a2
     }
     timed(n, printAvgLatency = p == 1) {
@@ -128,7 +125,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Address =
-    actor {
+    Actor(_ => {
       var blocked = true
       var i = n - 1
       (_: Any) =>
@@ -139,15 +136,17 @@ class MinimalistActorSpec extends BenchmarkSpec {
           i -= 1
           if (i == 0) l2.countDown()
         }
-    }
+        Stay
+    }, batch = 1024)
 
   private def countActor(l: CountDownLatch, n: Int): Address =
-    actor {
+    Actor(_ => {
       var i = n
       (_: Any) =>
         i -= 1
         if (i == 0) l.countDown()
-    }
+        Stay
+    }, batch = 1024)
 
   protected def sendMessages(a: Address, n: Int): Unit = {
     val m = Message()

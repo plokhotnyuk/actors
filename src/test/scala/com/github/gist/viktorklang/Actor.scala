@@ -18,6 +18,7 @@ package com.github.gist.viktorklang
 // Initial version from Viktor Klang: https://gist.github.com/viktorklang/2362563
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent._
+import scala.annotation.tailrec
 
 object Actor {
   type Behavior = Any => Effect
@@ -30,7 +31,7 @@ object Actor {
     new AtomicReference[AnyRef]((self: Any) => Become(initial(self.asInstanceOf[Address]))) with Address { // Memory visibility of behavior is guarded by volatile piggybacking & executor
       this ! this // Make the actor self aware by seeding its address to the initial behavior
       def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b => async(b.asInstanceOf[Behavior], n) } } // Enqueue the message onto the mailbox and schedule for execution if the actor was suspended
-      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i1 = batch; try do { n1 = n2; b1 = b1(n1.msg)(b1); n2 = n1.get; i1 -= 1 } while ((n2 ne null) && i1 != 0) finally if (n2 ne null) async(b1, n2) else if (!compareAndSet(n1, b1)) async(b1, n1.next) } // Reduce messages to behaviour in batch loop then reschedule or suspend
+      @tailrec private def act(b: Behavior, n: Node, i: Int = batch): Unit = { val b1 = b(n.msg)(b); val n1 = n.get; if ((n1 ne null) && i != 0) act(b1, n1, i - 1) else if (n1 ne null) async(b1, n1) else if (!compareAndSet(n, b1)) async(b1, n.next) } // Reduce messages to behaviour in batch loop then reschedule or suspend
       private def async(b: Behavior, n: Node): Unit = e match { // Schedule for execution
         case p: scala.concurrent.forkjoin.ForkJoinPool => new scala.concurrent.forkjoin.ForkJoinTask[Unit] {
           if (p eq scala.concurrent.forkjoin.ForkJoinTask.getPool) fork() else p.execute(this)
@@ -47,7 +48,7 @@ object Actor {
         case p => p.execute(new Runnable { def run(): Unit = act(b, n) })
       }
     }
-  private class Node(val msg: Any) extends AtomicReference[Node] { @annotation.tailrec final def next: Node = { val n = get; if (n ne null) n else next } }
+  private class Node(val msg: Any) extends AtomicReference[Node] { @tailrec final def next: Node = { val n = get; if (n ne null) n else next } }
 }
 
 //Usage example that creates an actor that will, after it's first message is received, Die
