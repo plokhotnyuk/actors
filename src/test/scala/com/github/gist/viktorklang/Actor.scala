@@ -30,22 +30,23 @@ object Actor {
   def apply(initial: Address => Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
     new AtomicReference[AnyRef]((self: Any) => Become(initial(self.asInstanceOf[Address]))) with Address { // Memory visibility of behavior is guarded by volatile piggybacking & executor
       this ! this // Make the actor self aware by seeding its address to the initial behavior
-      def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b => async(b.asInstanceOf[Behavior], n) } } // Enqueue the message onto the mailbox and schedule for execution if the actor was suspended
-      @tailrec private def act(b: Behavior, n: Node, i: Int = batch): Unit = { val b1 = b(n.msg)(b); val n1 = n.get; if ((n1 ne null) && i != 0) act(b1, n1, i - 1) else if (n1 ne null) async(b1, n1) else if (!compareAndSet(n, b1)) async(b1, n.next) } // Reduce messages to behaviour in batch loop then reschedule or suspend
-      private def async(b: Behavior, n: Node): Unit = e match { // Schedule for execution
+      def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b => async(b.asInstanceOf[Behavior], n, true) } } // Enqueue the message onto the mailbox and schedule for execution if the actor was suspended
+      @tailrec private def act(b: Behavior, n: Node, i: Int = batch): Unit = { val b1 = b(n.msg)(b); val n1 = n.get; if ((n1 ne null) && i != 0) act(b1, n1, i - 1) else async(b1, n, false) } // Reduce messages to behaviour in batch loop then reschedule
+      private def actOrSuspend(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n) else if ((n ne get) || !compareAndSet(n, b)) act(b, n.next)
+      private def async(b: Behavior, n: Node, x: Boolean): Unit = e match {
         case p: scala.concurrent.forkjoin.ForkJoinPool => new scala.concurrent.forkjoin.ForkJoinTask[Unit] {
           if (p eq scala.concurrent.forkjoin.ForkJoinTask.getPool) fork() else p.execute(this)
-          def exec(): Boolean = { act(b, n); false }
+          def exec(): Boolean = { actOrSuspend(b, n, x); false }
           def getRawResult: Unit = ()
           def setRawResult(unit: Unit): Unit = ()
         }
         case p: ForkJoinPool => new ForkJoinTask[Unit] {
           if (p eq ForkJoinTask.getPool) fork() else p.execute(this)
-          def exec(): Boolean = { act(b, n); false }
+          def exec(): Boolean = { actOrSuspend(b, n, x); false }
           def getRawResult: Unit = ()
           def setRawResult(unit: Unit): Unit = ()
         }
-        case p => p.execute(new Runnable { def run(): Unit = act(b, n) })
+        case p => p.execute(new Runnable { def run(): Unit = actOrSuspend(b, n, x) })
       }
     }
   private class Node(val msg: Any) extends AtomicReference[Node] { @tailrec final def next: Node = { val n = get; if (n ne null) n else next } }
