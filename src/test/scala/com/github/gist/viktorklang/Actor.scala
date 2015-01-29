@@ -31,8 +31,8 @@ object Actor {
     new AtomicReference[AnyRef]((self: Any) => Become(initial(self.asInstanceOf[Address]))) with Address { // Memory visibility of behavior is guarded by volatile piggybacking & executor
       this ! this // Make the actor self aware by seeding its address to the initial behavior
       def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b => async(b.asInstanceOf[Behavior], n, true) } } // Enqueue the message onto the mailbox and schedule for execution if the actor was suspended
-      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i1 = batch; try do { n1 = n2; b1 = b1(n1.msg)(b1); n2 = n1.get; i1 -= 1 } while ((n2 ne null) && i1 != 0) finally async(b1, n1, false) } // Reduce messages to behaviour in batch loop then reschedule or suspend
-      private def actOrSuspend(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n) else if ((n ne get) || !compareAndSet(n, b)) act(b, n.next)
+      private def act(b: Behavior, n: Node, i: Int): Unit = { var b1 = b; var n1, n2 = n; var i1 = i; try do b1 = b1(n2.msg)(b1) while ({ n1 = n2; n2 = n2.get; n2 ne null } && { i1 -= 1; i1 != 0 }) finally async(b1, n1, false) } // Reduce messages to behaviour in batch loop then reschedule or suspend
+      private def actOrSuspend(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n, batch) else if ((get ne n) || !compareAndSet(n, b)) act(b, n.next, batch)
       private def async(b: Behavior, n: Node, x: Boolean): Unit = e match {
         case p: scala.concurrent.forkjoin.ForkJoinPool => new scala.concurrent.forkjoin.ForkJoinTask[Unit] {
           if (p eq scala.concurrent.forkjoin.ForkJoinTask.getPool) fork() else p.execute(this)
