@@ -85,13 +85,13 @@ class Actor2Spec extends Specification {
     "doesn't handle messages in simultaneous threads" in {
       val nRounded = (n / NumOfThreads) * NumOfThreads
       val l = new CountDownLatch(1)
-      val a = boundedActor(Int.MaxValue, {
+      val a = unboundedActor {
         var sum = 0L
         val expectedSum = nRounded * (nRounded + 1L) / 2
         (i: Int) =>
           sum += i
           if (sum == expectedSum) l.countDown()
-      })
+      }
       val nPerThread = nRounded / NumOfThreads
       for (j <- 1 to NumOfThreads) fork {
         val off = (j - 1) * nPerThread
