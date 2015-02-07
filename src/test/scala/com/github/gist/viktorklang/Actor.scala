@@ -31,7 +31,7 @@ object Actor {
     new AtomicReference[AnyRef]((self: Any) => Become(initial(self.asInstanceOf[Address]))) with Address { // Memory visibility of behavior is guarded by volatile piggybacking & executor
       this ! this // Make the actor self aware by seeding its address to the initial behavior
       def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b => async(b.asInstanceOf[Behavior], n, true) } } // Enqueue the message onto the mailbox and schedule for execution if the actor was suspended
-      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i1 = batch; try do b1 = b1(n2.msg)(b1) while ({ n1 = n2; n2 = n2.get; n2 ne null } && { i1 -= 1; i1 != 0 }) finally async(b1, n1, false) } // Reduce messages to behaviour in batch loop then reschedule or suspend
+      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i1 = batch; try do b1 = b1(n2.msg)(b1) while ({ n1 = n2; n2 = n2.get; n2 ne null } && { i1 -= 1; i1 != 0 }) catch { case e: Throwable => rethrow(e) }finally async(b1, n1, false) } // Reduce messages to behaviour in batch loop then reschedule or suspend
       private def actOrSuspend(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n) else if ((get ne n) || !compareAndSet(n, b)) act(b, n.next)
       private def async(b: Behavior, n: Node, x: Boolean): Unit = e match {
         case p: scala.concurrent.forkjoin.ForkJoinPool => new scala.concurrent.forkjoin.ForkJoinTask[Unit] {
@@ -48,6 +48,7 @@ object Actor {
         }
         case p => p.execute(new Runnable { def run(): Unit = actOrSuspend(b, n, x) })
       }
+      private def rethrow(e: Throwable): Unit = if (e.isInstanceOf[InterruptedException]) Thread.currentThread.interrupt() else { val t = Thread.currentThread; t.getUncaughtExceptionHandler.uncaughtException(t, e); throw e }
     }
   private class Node(val msg: Any) extends AtomicReference[Node] { @tailrec final def next: Node = { val n = get; if (n ne null) n else next } }
 }
