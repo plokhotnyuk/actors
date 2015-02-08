@@ -10,17 +10,17 @@ class ActorSpec extends Specification {
   val NumOfMessages = 1000000
   val NumOfThreads = 4
 
-  "actor with actor strategy backed by Scala fork-join pool" should {
+  "actor with Scala fork-join pool executor" should {
     implicit val e = new scala.concurrent.forkjoin.ForkJoinPool()
     actorTests(NumOfMessages)
   }
 
-  "actor with actor strategy backed by Java fork-join pool" should {
+  "actor with Java fork-join pool executor" should {
     implicit val e = new ForkJoinPool()
     actorTests(NumOfMessages)
   }
 
-  "actor with actor strategy backed by fixed thread pool" should {
+  "actor with fixed thread pool executor" should {
     implicit val e = Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors, new ThreadFactory {
       val defaultThreadFactory = Executors.defaultThreadFactory()
 
