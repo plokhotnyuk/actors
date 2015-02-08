@@ -79,7 +79,16 @@ class ActorSpec extends Specification {
     "handle messages in order of sending by each thread" in {
       val nRounded = (n / NumOfThreads) * NumOfThreads
       val l = new CountDownLatch(nRounded)
-      val a = countingDownActor(l)
+      val ms = collection.mutable.Map[Int, Int]()
+      val a = Actor(_ => {
+        case m: (Int, Int) @unchecked =>
+          val (j, i) = m
+          if (ms.getOrElse(j, 0) + 1 == i) {
+            ms.put(j, i)
+            l.countDown()
+          }
+          Stay
+      })
       for (j <- 1 to NumOfThreads) fork {
         for (i <- 1 to nRounded / NumOfThreads) a ! j -> i
       }
@@ -113,24 +122,39 @@ class ActorSpec extends Specification {
           override def write(b: Int): Unit = l.countDown()
         }))
         Actor(_ => _ => {
-          1 / 0; Stay
+          1 / 0
+          Stay
         }) ! 1
         assertCountDown(l)
       } finally System.setErr(err)
     }
-  }
 
-  private def countingDownActor(l: CountDownLatch)(implicit e: Executor): Address = {
-    val ms = collection.mutable.Map[Int, Int]()
-    Actor(_ => {
-      case m: (Int, Int)@unchecked =>
-        val (j, i) = m
-        if (ms.getOrElse(j, 0) + 1 == i) {
-          ms.put(j, i)
-          l.countDown()
+    "handle messages with previous behaviour after unhandled errors" in {
+      val l = new CountDownLatch(1)
+      val err = System.err
+      try {
+        System.setErr(new java.io.PrintStream(new java.io.OutputStream {
+          override def write(b: Int): Unit = ()
+        }))
+        val q = 1000 // 1 / frequency of exceptions
+        var sum = 0L
+        val expectedSum = n * (n + 1L) / 2 - q * (n / q * (n / q + 1L) / 2)
+        val a = Actor(_ => { case i: Int =>
+          if (i % q == 0) {
+            1 / 0
+            Die
+          } else {
+            sum += i
+            if (sum == expectedSum) l.countDown()
+            Stay
+          }
+        })
+        for (i <- 1 to n) {
+          a ! i
         }
-        Stay
-    })
+        assertCountDown(l)
+      } finally System.setErr(err)
+    }
   }
 
   private def assertCountDown(l: CountDownLatch, timeout: Long = 1000): Boolean =
