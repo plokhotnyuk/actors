@@ -111,7 +111,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
             if (i == 0) l.countDown()
             Stay[Message]
         }, batch = 1024)
-        a1 = Actor((_: Address[Message]) => {
+        a1 = Actor(_ => {
           var i = n / p / 2
           (m: Message) =>
             if (i > 0) a2 ! m
@@ -128,7 +128,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   }
 
   private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Address[Message] =
-    Actor((_: Address[Message]) => {
+    Actor(_ => {
       var blocked = true
       var i = n - 1
       (_: Message) =>
@@ -143,7 +143,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
     }, batch = 1024)
 
   private def countActor(l: CountDownLatch, n: Int): Address[Message] =
-    Actor((_: Address[Message]) => {
+    Actor(_ => {
       var i = n
       (_: Message) =>
         i -= 1
