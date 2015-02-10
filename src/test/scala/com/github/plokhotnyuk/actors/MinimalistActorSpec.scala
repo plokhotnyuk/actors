@@ -39,7 +39,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
   "Initiation" in {
     val es = createExecutorService()
     footprintedAndTimedCollect(1000000)({
-      val f = (_: Address[Any]) => (_: Any) => Stay[Any]
+      val f = (_: Address) => (_: Any) => Stay
       () => Actor(f)(es)
     }, {
       es.shutdown()
@@ -102,22 +102,22 @@ class MinimalistActorSpec extends BenchmarkSpec {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
-        var a1: Address[Message] = null
-        val a2 = Actor((_: Address[Message]) => {
+        var a1: Address = null
+        val a2 = Actor(_ => {
           var i = n / p / 2
-          (m: Message) =>
+          (m: Any) =>
             if (i > 0) a1 ! m
             i -= 1
             if (i == 0) l.countDown()
-            Stay[Message]
+            Stay
         }, batch = 1024)
         a1 = Actor(_ => {
           var i = n / p / 2
-          (m: Message) =>
+          (m: Any) =>
             if (i > 0) a2 ! m
             i -= 1
             if (i == 0) l.countDown()
-            Stay[Message]
+            Stay
         }, batch = 1024)
         a2
     }
@@ -127,11 +127,11 @@ class MinimalistActorSpec extends BenchmarkSpec {
     }
   }
 
-  private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Address[Message] =
+  private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): Address =
     Actor(_ => {
       var blocked = true
       var i = n - 1
-      (_: Message) =>
+      (_: Any) =>
         if (blocked) {
           l1.await()
           blocked = false
@@ -139,19 +139,19 @@ class MinimalistActorSpec extends BenchmarkSpec {
           i -= 1
           if (i == 0) l2.countDown()
         }
-        Stay[Message]
+        Stay
     }, batch = 1024)
 
-  private def countActor(l: CountDownLatch, n: Int): Address[Message] =
+  private def countActor(l: CountDownLatch, n: Int): Address =
     Actor(_ => {
       var i = n
-      (_: Message) =>
+      (_: Any) =>
         i -= 1
         if (i == 0) l.countDown()
-        Stay[Message]
+        Stay
     }, batch = 1024)
 
-  protected def sendMessages(a: Address[Message], n: Int): Unit = {
+  protected def sendMessages(a: Address, n: Int): Unit = {
     val m = Message()
     var i = n
     while (i > 0) {
