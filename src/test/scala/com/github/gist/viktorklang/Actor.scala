@@ -47,7 +47,7 @@ object Actor {
         case p => p.execute(new Runnable { def run(): Unit = actOrSuspend(b, n, x) })
       }
       private def actOrSuspend(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n) else if ((get ne n) || !compareAndSet(n, b)) act(b, n.next)
-      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i1 = batch; try while ({ b1 = b1(n2.msg)(b1); n1 = n2; n2 = n2.get; n2 ne null } && { i1 -= 1; i1 != 0 })() finally async(b1, n1, false) } // Reduce messages to behaviour in batch loop then reschedule or suspend
+      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i1 = batch; try do b1 = b1(n2.msg)(b1) while ({ n1 = n2; n2 = n2.get; n2 ne null } && { i1 -= 1; i1 != 0 }) finally async(b1, n1, false) } // Reduce messages to behaviour in batch loop then reschedule or suspend
       private def rethrow(e: Throwable): Unit = if (e.isInstanceOf[InterruptedException]) Thread.currentThread.interrupt() else { val t = Thread.currentThread; t.getUncaughtExceptionHandler.uncaughtException(t, e); throw e } // Fix handling of uncaught exceptions for FJ pools
     }
   private class Node(val msg: Any) extends AtomicReference[Node] { @tailrec final def next: Node = { val n = get; if (n ne null) n else next } }
