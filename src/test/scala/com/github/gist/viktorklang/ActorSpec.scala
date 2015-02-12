@@ -98,14 +98,15 @@ class ActorSpec extends Specification {
     "doesn't handle messages in simultaneous threads" in {
       val nRounded = (n / NumOfThreads) * NumOfThreads
       val l = new CountDownLatch(1)
-      var sum = 0L
       val expectedSum = nRounded * (nRounded + 1L) / 2
-      val a = Actor(_ => {
+
+      def accumulator(m: Any, sum: Long = 0L): Effect = m match {
         case i: Int =>
-          sum += i
-          if (sum == expectedSum) l.countDown()
-          Stay
-      })
+          if (sum + i == expectedSum) l.countDown()
+          Become(m => accumulator(m, sum + i))
+      }
+
+      val a = Actor(_ => m => accumulator(m))
       val nPerThread = nRounded / NumOfThreads
       for (j <- 1 to NumOfThreads) fork {
         val off = (j - 1) * nPerThread
@@ -122,7 +123,7 @@ class ActorSpec extends Specification {
           override def write(b: Int): Unit = l.countDown()
         }))
         Actor(_ => _ => {
-          1 / 0
+          throw null
           Stay
         }) ! 1
         assertCountDown(l)
@@ -134,21 +135,23 @@ class ActorSpec extends Specification {
       val err = System.err
       try {
         System.setErr(new java.io.PrintStream(new java.io.OutputStream {
-          override def write(b: Int): Unit = ()
+          override def write(b: Int): Unit = () // ignore err output that will be flooded with stack traces
         }))
         val q = 1000 // 1 / frequency of exceptions
-        var sum = 0L
         val expectedSum = n * (n + 1L) / 2 - q * (n / q * (n / q + 1L) / 2)
-        val a = Actor(_ => { case i: Int =>
-          if (i % q == 0) {
-            1 / 0
-            Die
-          } else {
-            sum += i
-            if (sum == expectedSum) l.countDown()
-            Stay
-          }
-        })
+
+        def failingAccumulator(m: Any, sum: Long = 0L): Effect = m match {
+          case i: Int =>
+            if (i % q == 0) {
+              throw null
+              Die // should never happen
+            } else {
+              if (sum + i == expectedSum) l.countDown()
+              Become(m => failingAccumulator(m, sum + i))
+            }
+        }
+
+        val a = Actor(_ => m => failingAccumulator(m))
         for (i <- 1 to n) {
           a ! i
         }
