@@ -117,38 +117,26 @@ class ActorSpec extends Specification {
 
     "redirect unhandled errors to uncaught exception handler of thread" in {
       val l = new CountDownLatch(1)
-      val err = System.err
-      try {
-        System.setErr(new java.io.PrintStream(new java.io.OutputStream {
-          override def write(b: Int): Unit = l.countDown()
-        }))
+      withSystemErrRedirect(_ => l.countDown()) {
         Actor(_ => _ => {
           throw null
           Stay
         }) ! 1
         assertCountDown(l)
-      } finally System.setErr(err)
+      }
     }
 
     "handle messages with previous behaviour after unhandled errors" in {
       val l = new CountDownLatch(1)
-      val err = System.err
-      try {
-        System.setErr(new java.io.PrintStream(new java.io.OutputStream {
-          override def write(b: Int): Unit = () // ignore err output that will be flooded with stack traces
-        }))
+      withSystemErrRedirect(_ => ()) { // ignore err output that will be flooded with stack traces
         val q = 1000 // 1 / frequency of exceptions
         val expectedSum = n * (n + 1L) / 2 - q * (n / q * (n / q + 1L) / 2)
 
         def failingAccumulator(m: Any, sum: Long = 0L): Effect = m match {
           case i: Int =>
-            if (i % q == 0) {
-              throw null
-              Die // should never happen
-            } else {
-              if (sum + i == expectedSum) l.countDown()
-              Become(m => failingAccumulator(m, sum + i))
-            }
+            if (i % q == 0) throw null
+            if (sum + i == expectedSum) l.countDown()
+            Become(m => failingAccumulator(m, sum + i))
         }
 
         val a = Actor(_ => m => failingAccumulator(m))
@@ -156,8 +144,18 @@ class ActorSpec extends Specification {
           a ! i
         }
         assertCountDown(l)
-      } finally System.setErr(err)
+      }
     }
+  }
+
+  private def withSystemErrRedirect[A](w: Int => Unit)(f: => A): A = {
+    val err = System.err
+    try {
+      System.setErr(new java.io.PrintStream(new java.io.OutputStream {
+        override def write(b: Int): Unit = w(b)
+      }))
+      f
+    } finally System.setErr(err)
   }
 
   private def assertCountDown(l: CountDownLatch, timeout: Long = 1000): Boolean =
