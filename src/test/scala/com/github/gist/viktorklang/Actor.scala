@@ -34,21 +34,21 @@ object Actor {
       private def async(b: Behavior, n: Node, x: Boolean): Unit = e match {
         case p: scala.concurrent.forkjoin.ForkJoinPool => new scala.concurrent.forkjoin.ForkJoinTask[Unit] {
           if (p eq scala.concurrent.forkjoin.ForkJoinTask.getPool) fork() else p.execute(this)
-          def exec(): Boolean = { try actOrSuspend(b, n, x) catch { case e: Throwable => rethrow(e) }; false }
+          def exec(): Boolean = { actOrSuspend(b, n, x); false }
           def getRawResult: Unit = ()
           def setRawResult(unit: Unit): Unit = ()
         }
         case p: ForkJoinPool => new ForkJoinTask[Unit] {
           if (p eq ForkJoinTask.getPool) fork() else p.execute(this)
-          def exec(): Boolean = { try actOrSuspend(b, n, x) catch { case e: Throwable => rethrow(e) }; false }
+          def exec(): Boolean = { actOrSuspend(b, n, x); false }
           def getRawResult: Unit = ()
           def setRawResult(unit: Unit): Unit = ()
         }
         case p => p.execute(new Runnable { def run(): Unit = actOrSuspend(b, n, x) })
       }
-      private def actOrSuspend(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n) else if ((n ne get) || !compareAndSet(n, b)) act(b, n.next)
-      private def act(b: Behavior, n: Node): Unit = { var b1 = b; var n1, n2 = n; var i1 = batch; try do b1 = b1(n2.msg)(b1) while ({ n1 = n2; n2 = n2.get; n2 ne null } && { i1 -= 1; i1 != 0 }) finally async(b1, n1, false) } // Reduce messages to behaviour in batch loop then reschedule or suspend
-      private def rethrow(e: Throwable): Unit = { val t = Thread.currentThread; if (e.isInstanceOf[InterruptedException]) t.interrupt() else { t.getUncaughtExceptionHandler.uncaughtException(t, e); throw e } } // Fix handling of uncaught exceptions for FJ pools
+      private def actOrSuspend(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n, batch) else if ((n ne get) || !compareAndSet(n, b)) act(b, n.next, batch)
+      @tailrec private def act(b: Behavior, n: Node, i: Int): Unit = { val b1 = try b(n.msg)(b) catch { case t: Throwable => asyncAndRethrow(b, n, t) }; val n1 = n.get; val i1 = i - 1; if ((n1 ne null) && i1 != 0) act(b1, n1, i1) else async(b1, n, false) } // Reduce messages to behaviour in batch loop then reschedule or suspend
+      private def asyncAndRethrow(b: Behavior, n: Node, t: Throwable): Nothing = { async(b, n, false); val c = Thread.currentThread(); if (t.isInstanceOf[InterruptedException]) c.interrupt(); if (e.isInstanceOf[scala.concurrent.forkjoin.ForkJoinPool] || e.isInstanceOf[ForkJoinPool]) c.getUncaughtExceptionHandler.uncaughtException(c, t); throw t }
     }
   private class Node(val msg: Any) extends AtomicReference[Node] { @tailrec final def next: Node = { val n = get; if (n ne null) n else next } }
 }
