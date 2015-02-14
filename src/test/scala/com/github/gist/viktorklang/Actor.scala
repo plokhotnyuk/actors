@@ -26,11 +26,11 @@ object Actor {
   case object Stay extends Effect { def apply(old: Behavior): Behavior = old }
   case class Become(like: Behavior) extends Effect { def apply(old: Behavior): Behavior = like }
   case object Die extends Effect { def apply(old: Behavior): Behavior = msg => sys.error("Dropping of message due to severe case of death: " + msg) }
-  trait Address { def !(msg: Any): Unit } // The notion of an Address to where you can post messages to
+  trait Address { def !(a: Any): Unit } // The notion of an Address to where you can post messages to
   def apply(initial: Address => Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
     new AtomicReference[AnyRef]((self: Address) => Become(initial(self))) with Address { // Memory visibility of behavior is guarded by volatile piggybacking & executor
       this ! this // Make the actor self aware by seeding its address to the initial behavior
-      def !(msg: Any): Unit = { val n = new Node(msg); getAndSet(n) match { case h: Node => h.lazySet(n); case b => async(b.asInstanceOf[Behavior], n, true) } } // Enqueue the message onto the mailbox and schedule for execution if the actor was suspended
+      def !(a: Any): Unit = { val n = new Node(a); getAndSet(n) match { case h: Node => h.lazySet(n); case b => async(b.asInstanceOf[Behavior], n, true) } } // Enqueue the message onto the mailbox and schedule for execution if the actor was suspended
       private def async(b: Behavior, n: Node, x: Boolean): Unit = e match {
         case p: scala.concurrent.forkjoin.ForkJoinPool => new scala.concurrent.forkjoin.ForkJoinTask[Unit] {
           if (p eq scala.concurrent.forkjoin.ForkJoinTask.getPool) fork() else p.execute(this)
@@ -47,10 +47,10 @@ object Actor {
         case p => p.execute(new Runnable { def run(): Unit = actOrSuspend(b, n, x) })
       }
       private def actOrSuspend(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n, batch) else if ((n ne get) || !compareAndSet(n, b)) act(b, n.next, batch)
-      @tailrec private def act(b: Behavior, n: Node, i: Int): Unit = { val b1 = try b(n.msg)(b) catch { case t: Throwable => asyncAndRethrow(b, n, t) }; val n1 = n.get; val i1 = i - 1; if ((n1 ne null) && i1 != 0) act(b1, n1, i1) else async(b1, n, false) } // Reduce messages to behaviour in batch loop then reschedule or suspend
+      @tailrec private def act(b: Behavior, n: Node, i: Int): Unit = { val b1 = try b(n.a)(b) catch { case t: Throwable => asyncAndRethrow(b, n, t) }; val n1 = n.get; if ((n1 ne null) && i != 1) act(b1, n1, i - 1) else async(b1, n, false) } // Reduce messages to behaviour in batch loop then reschedule or suspend
       private def asyncAndRethrow(b: Behavior, n: Node, t: Throwable): Nothing = { async(b, n, false); val c = Thread.currentThread(); if (t.isInstanceOf[InterruptedException]) c.interrupt(); if (e.isInstanceOf[scala.concurrent.forkjoin.ForkJoinPool] || e.isInstanceOf[ForkJoinPool]) c.getUncaughtExceptionHandler.uncaughtException(c, t); throw t }
     }
-  private class Node(val msg: Any) extends AtomicReference[Node] { @tailrec final def next: Node = { val n = get; if (n ne null) n else next } }
+  private class Node(val a: Any) extends AtomicReference[Node] { @tailrec final def next: Node = { val n = get; if (n ne null) n else next } }
 }
 
 //Usage example that creates an actor that will, after it's first message is received, Die
