@@ -87,8 +87,8 @@ object BenchmarkSpec {
         i -= 1
         as(i) = construct()
       }
-      teardown
     }
+    teardown
     val m = usedMemory() - u
     val b = bytesPerInstance(m, n)
     println(f"$b%,d bytes per instance")

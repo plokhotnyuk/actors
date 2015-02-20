@@ -42,7 +42,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
       val f = (_: Address) => (_: Any) => Stay
       () => Actor(f)(es)
     }, {
-      es.shutdown()
+      es.shutdownNow()
       es.awaitTermination(10, TimeUnit.SECONDS)
     })
     Success()
