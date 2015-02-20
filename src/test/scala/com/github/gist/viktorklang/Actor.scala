@@ -18,6 +18,7 @@ package com.github.gist.viktorklang
 // Initial version from Viktor Klang: https://gist.github.com/viktorklang/2362563
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent._
+import java.util.concurrent.locks.LockSupport
 import scala.annotation.tailrec
 
 object Actor {
@@ -34,23 +35,24 @@ object Actor {
       private def async(b: Behavior, n: Node, x: Boolean): Unit = e match {
         case p: scala.concurrent.forkjoin.ForkJoinPool => new scala.concurrent.forkjoin.ForkJoinTask[Unit] {
           if (p eq scala.concurrent.forkjoin.ForkJoinTask.getPool) fork() else p.execute(this)
-          def exec(): Boolean = { actOrSuspend(b, n, x); false }
+          def exec(): Boolean = { tryAct(b, n, x); false }
           def getRawResult: Unit = ()
           def setRawResult(unit: Unit): Unit = ()
         }
         case p: ForkJoinPool => new ForkJoinTask[Unit] {
           if (p eq ForkJoinTask.getPool) fork() else p.execute(this)
-          def exec(): Boolean = { actOrSuspend(b, n, x); false }
+          def exec(): Boolean = { tryAct(b, n, x); false }
           def getRawResult: Unit = ()
           def setRawResult(unit: Unit): Unit = ()
         }
-        case p => p.execute(new Runnable { def run(): Unit = actOrSuspend(b, n, x) })
+        case p => p.execute(new Runnable { def run(): Unit = tryAct(b, n, x) })
       }
-      private def actOrSuspend(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n, batch) else if ((n ne get) || !compareAndSet(n, b)) act(b, n.next, batch)
+      private def tryAct(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n, batch) else if ((n ne get) || !compareAndSet(n, b)) actOrSuspend(b, n, 999999)
+      @tailrec private def actOrSuspend(b: Behavior, n: Node, i: Int): Unit = { val n1 = n.get; if (n1 ne null) act(b, n1, batch) else if (i != 0) actOrSuspend(b, n, i - 1) else { LockSupport.parkNanos(1); async(b, n, false) } }
       @tailrec private def act(b: Behavior, n: Node, i: Int): Unit = { val b1 = try b(n.a)(b) catch { case t: Throwable => asyncAndRethrow(b, n, t) }; val n1 = n.get; if ((n1 ne null) && i != 1) act(b1, n1, i - 1) else async(b1, n, false) } // Reduce messages to behaviour in batch loop then reschedule or suspend
       private def asyncAndRethrow(b: Behavior, n: Node, t: Throwable): Nothing = { async(b, n, false); val c = Thread.currentThread(); if (t.isInstanceOf[InterruptedException]) c.interrupt(); if (e.isInstanceOf[scala.concurrent.forkjoin.ForkJoinPool] || e.isInstanceOf[ForkJoinPool]) c.getUncaughtExceptionHandler.uncaughtException(c, t); throw t }
     }
-  private class Node(val a: Any) extends AtomicReference[Node] { @tailrec final def next: Node = { val n = get; if (n ne null) n else next } }
+  private class Node(val a: Any) extends AtomicReference[Node]
 }
 
 //Usage example that creates an actor that will, after it's first message is received, Die
