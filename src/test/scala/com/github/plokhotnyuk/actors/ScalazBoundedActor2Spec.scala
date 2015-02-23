@@ -2,10 +2,9 @@ package com.github.plokhotnyuk.actors
 
 import java.util.concurrent.CountDownLatch
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
+import org.specs2.execute.Success
 import scalaz.concurrent.Actor2
 import scalaz.concurrent.Actor2._
-
-import org.specs2.execute.Success
 
 class ScalazBoundedActor2Spec extends ScalazUnboundedActor2Spec {
   "Overflow throughput" in {

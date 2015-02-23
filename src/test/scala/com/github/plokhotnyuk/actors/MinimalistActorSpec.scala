@@ -1,11 +1,10 @@
 package com.github.plokhotnyuk.actors
 
-import java.util.concurrent.{TimeUnit, CountDownLatch}
-
+import java.util.concurrent.CountDownLatch
 import com.github.gist.viktorklang.Actor
+import com.github.gist.viktorklang.Actor._
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import org.specs2.execute.Success
-import com.github.gist.viktorklang.Actor._
 
 class MinimalistActorSpec extends BenchmarkSpec {
   implicit val executorService = createExecutorService()
@@ -41,10 +40,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
     footprintedAndTimedCollect(1000000)({
       val f = (_: Address) => (_: Any) => Stay
       () => Actor(f)(es)
-    }, {
-      es.shutdownNow()
-      es.awaitTermination(10, TimeUnit.SECONDS)
-    })
+    }, fullShutdown(es))
     Success()
   }
 

@@ -116,6 +116,6 @@ object BenchmarkSpec {
 
   def fullShutdown(e: ExecutorService): Unit = {
     e.shutdownNow()
-    e.awaitTermination(10, TimeUnit.SECONDS)
+    e.awaitTermination(1, TimeUnit.MINUTES)
   }
 }
