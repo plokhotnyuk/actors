@@ -19,23 +19,11 @@ final private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
   override def enqueue(receiver: ActorRef, handle: Envelope): Unit =
     if (offer(new NodeWithCount(handle))) onOverflow(receiver, handle)
 
-  @annotation.tailrec
-  override def dequeue(): Envelope =  {
-    val tn = tail
-    val n = tn.get
-    if (n ne null) {
-      if (u.compareAndSwapObject(this, NBBQ.tailOffset, tn, n)) {
-        val e = n.handle
-        n.handle = null // to avoid possible memory leak when queue is empty
-        e
-      } else dequeue()
-    } else if (tn ne get) dequeue()
-    else null
-  }
+  override def dequeue(): Envelope = poll(0)
 
   override def numberOfMessages: Int = Math.min(capacity, Math.max(0, get.count - tail.count))
 
-  override def hasMessages: Boolean = (tail.get ne null) || (tail ne get)
+  override def hasMessages: Boolean = get ne tail
 
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = drain(owner, deadLetters)
 
@@ -51,6 +39,21 @@ final private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
         false
       } else offer(n)
     } else true
+  }
+
+  @annotation.tailrec
+  private def poll(i: Int): Envelope =  {
+    val o = NBBQ.tailOffset
+    val tn = tail
+    val n = tn.get
+    if ((n ne null) && u.compareAndSwapObject(this, o, tn, n)) {
+      val e = n.e
+      n.e = null // to avoid possible memory leak when queue is empty
+      e
+    } else if (get ne tn) {
+      if (i > 9999) Thread.`yield`()
+      poll(i + 1)
+    } else null
   }
 
   private def onOverflow(a: ActorRef, e: Envelope): Unit =
@@ -70,7 +73,7 @@ private object NBBQ {
   private val tailOffset = u.objectFieldOffset(classOf[NBBQ].getDeclaredField("tail"))
 }
 
-private class NodeWithCount(var handle: Envelope = null) extends AtomicReference[NodeWithCount] {
+private class NodeWithCount(var e: Envelope = null) extends AtomicReference[NodeWithCount] {
   var count: Int = _
 }
 
@@ -88,25 +91,28 @@ final private class UQ extends AtomicReference(new Node) with MessageQueue with 
     getAndSet(n).lazySet(n)
   }
 
-  @annotation.tailrec
-  override def dequeue(): Envelope = {
-    val tn = tail
-    val n = tn.get
-    if (n ne null) {
-      if (u.compareAndSwapObject(this, UQ.tailOffset, tn, n)) {
-        val e = n.handle
-        n.handle = null // to avoid possible memory leak when queue is empty
-        e
-      } else dequeue()
-    } else if (tn ne get) dequeue()
-    else null
-  }
+  override def dequeue(): Envelope = poll(0)
 
   override def numberOfMessages: Int = count(tail, 0, Int.MaxValue)
 
-  override def hasMessages: Boolean = (tail.get ne null) || (tail ne get)
+  override def hasMessages: Boolean = get ne tail
 
   override def cleanUp(owner: ActorRef, deadLetters: MessageQueue): Unit = drain(owner, deadLetters)
+
+  @annotation.tailrec
+  private def poll(i: Int): Envelope =  {
+    val o = UQ.tailOffset
+    val tn = tail
+    val n = tn.get
+    if ((n ne null) && u.compareAndSwapObject(this, o, tn, n)) {
+      val e = n.e
+      n.e = null // to avoid possible memory leak when queue is empty
+      e
+    } else if (get ne tn) {
+      if (i > 9999) Thread.`yield`()
+      poll(i + 1)
+    } else null
+  }
 
   @annotation.tailrec
   private def count(tn: Node, i: Int, l: Int): Int = {
@@ -131,4 +137,4 @@ private object UQ {
   private val tailOffset = u.objectFieldOffset(classOf[UQ].getDeclaredField("tail"))
 }
 
-private class Node(var handle: Envelope = null) extends AtomicReference[Node]
+private class Node(var e: Envelope = null) extends AtomicReference[Node]
