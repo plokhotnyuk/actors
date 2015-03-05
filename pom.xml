@@ -9,6 +9,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <benchmark.args>-server -Xms4096m -Xmx4096m -XX:NewSize=3584m -Xss256k -XX:+UseG1GC -XX:+TieredCompilation -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</benchmark.args>
     </properties>
     <prerequisites>
         <maven>3.1</maven>
@@ -126,10 +127,11 @@
                         <runOrder>alphabetical</runOrder>
                         <forkCount>1</forkCount>
                         <reuseForks>false</reuseForks>
+                        <useFile>false</useFile>
                         <includes>
                             <include>**/*Spec.class</include>
                         </includes>
-                        <argLine>-server -Xms4096m -Xmx4096m -XX:NewSize=3584m -Xss256k -XX:+UseG1GC -XX:+TieredCompilation -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
+                        <argLine>${benchmark.args}</argLine>
                     </configuration>
                 </plugin>
             </plugins>
@@ -144,20 +146,9 @@
     <profiles>
         <profile>
             <id>travis</id>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-surefire-plugin</artifactId>
-                            <configuration>
-                                <argLine>-server -Xms2560m -Xmx2560m -XX:NewSize=2240m -Xss256k -XX:+UseG1GC -XX:+TieredCompilation -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</argLine>
-                                <useFile>false</useFile>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
+            <properties>
+                <benchmark.args>-server -Xms2560m -Xmx2560m -XX:NewSize=2240m -Xss256k -XX:+UseG1GC -XX:+TieredCompilation -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</benchmark.args>
+            </properties>
         </profile>
     </profiles>
 </project>
