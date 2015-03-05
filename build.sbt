@@ -1,13 +1,13 @@
 name := "actors"
 version := "1.0-SNAPSHOT"
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.6"
 resolvers ++= Seq("sonatype-staging" at "https://oss.sonatype.org/content/groups/staging")
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.3.9" % "test",
   "net.liftweb" %% "lift-actor" % "3.0-M3" % "test",
-  "org.scala-lang" % "scala-actors" % "2.11.5" % "test",
-  "org.scalaz" %% "scalaz-concurrent" % "7.1.0" % "test",
-  "org.specs2" %% "specs2-junit" % "2.4.15" % "test"
+  "org.scala-lang" % "scala-actors" % "2.11.6" % "test",
+  "org.scalaz" %% "scalaz-concurrent" % "7.1.1" % "test",
+  "org.specs2" %% "specs2-junit" % "2.4.17" % "test"
 )
 scalacOptions ++= Seq("-target:jvm-1.7", "-optimize", "-deprecation", "-unchecked", "-feature",
   "-language:implicitConversions", "-Xlog-reflective-calls", "-Xfuture", "-Xlint")
