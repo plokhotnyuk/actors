@@ -37,7 +37,7 @@ class MinimalistActorSpec extends BenchmarkSpec {
 
   "Initiation" in {
     val es = createExecutorService()
-    footprintedAndTimedCollect(1000000)({
+    footprintedAndTimedCollect(2000000)({
       val f = (_: Address) => (_: Any) => Stay
       () => Actor(f)(es)
     }, fullShutdown(es))
