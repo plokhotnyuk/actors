@@ -73,7 +73,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.1</version>
+                    <version>3.2</version>
                     <executions>
                         <execution>
                             <id>default-compile</id>
@@ -88,12 +88,12 @@
                 <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
-                    <version>3.1.6</version>
+                    <version>3.2.0</version>
                     <configuration>
                         <scalaVersion>${scala.version}</scalaVersion>
                         <charset>${project.build.sourceEncoding}</charset>
                         <args>
-                            <arg>-target:jvm-1.7</arg>
+                            <arg>-target:jvm-${java.major.version}</arg>
                             <arg>-optimise</arg>
                             <arg>-deprecation</arg>
                             <arg>-unchecked</arg>
@@ -123,7 +123,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.16</version>
+                    <version>2.17</version>
                     <configuration>
                         <runOrder>alphabetical</runOrder>
                         <forkCount>1</forkCount>
@@ -150,6 +150,24 @@
             <properties>
                 <benchmark.args>-server -Xms2560m -Xmx2560m -XX:NewSize=2240m -Xss256k -XX:+UseG1GC -XX:+TieredCompilation -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</benchmark.args>
             </properties>
+        </profile>
+        <profile>
+            <id>jdk7</id>
+            <properties>
+                <java.major.version>1.7</java.major.version>
+            </properties>
+            <activation>
+                <jdk>1.7</jdk>
+            </activation>
+        </profile>
+        <profile>
+            <id>jdk8</id>
+            <properties>
+                <java.major.version>1.8</java.major.version>
+            </properties>
+            <activation>
+                <jdk>1.8</jdk>
+            </activation>
         </profile>
     </profiles>
 </project>

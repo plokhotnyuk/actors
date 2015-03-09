@@ -9,8 +9,8 @@ libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-concurrent" % "7.1.1" % "test",
   "org.specs2" %% "specs2-junit" % "2.4.17" % "test"
 )
-scalacOptions ++= Seq("-target:jvm-1.7", "-optimize", "-deprecation", "-unchecked", "-feature",
-  "-language:implicitConversions", "-Xlog-reflective-calls", "-Xfuture", "-Xlint")
+scalacOptions ++= Seq(s"-target:jvm-${sys.props("java.runtime.version").take(3)}", "-optimize", "-deprecation",
+  "-unchecked", "-feature", "-language:implicitConversions", "-Xlog-reflective-calls", "-Xfuture", "-Xlint")
 parallelExecution in test := false
 testGrouping in Test <<= definedTests in Test map { tests =>
   tests.map { test =>
