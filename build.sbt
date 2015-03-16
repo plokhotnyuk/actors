@@ -19,8 +19,9 @@ testGrouping in Test <<= definedTests in Test map { tests =>
       name = test.name,
       tests = Seq(test),
       runPolicy = SubProcess(javaOptions = Seq(
-        "-server", "-Xms4096m", "-Xms4096m", "-XX:NewSize=3584m", "-Xss256k", "-XX:+TieredCompilation", "-XX:+UseG1GC", 
+        "-server", "-Xms4096m", "-Xms4096m", "-XX:NewSize=3584m", "-Xss256k", "-XX:+TieredCompilation",
+        "-XX:+UseParNewGC", "-XX:+UseConcMarkSweepGC", "-XX:+UseCondCardMark",
         "-XX:+UseNUMA", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
         sys.props.map { case (k, v) => s"-D$k=$v" }))
-  }.sortWith(_.name < _.name)
+  }.sortBy(_.name)
 }

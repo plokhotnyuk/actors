@@ -100,17 +100,14 @@ object BenchmarkSpec {
   def usedMemory(precision: Double = 0.001): Long = {
     @annotation.tailrec
     def getHeapMemoryUsage(prev: Long = memoryMXBean.getHeapMemoryUsage.getUsed): Long = {
+      System.gc()
       Thread.sleep(30)
       val curr = memoryMXBean.getHeapMemoryUsage.getUsed
       val diff = prev - curr
-      if (diff < 0) {
-        System.gc()
-        getHeapMemoryUsage(curr)
-      } else if (diff > precision * curr) getHeapMemoryUsage(curr)
+      if (diff < 0 || diff > precision * curr) getHeapMemoryUsage(curr)
       else curr
     }
 
-    System.gc()
     getHeapMemoryUsage()
   }
 
