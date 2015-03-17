@@ -13,14 +13,15 @@ scalacOptions ++= Seq(s"-target:jvm-${sys.props("java.runtime.version").take(3)}
   "-unchecked", "-feature", "-language:implicitConversions", "-Xlog-reflective-calls", "-Xfuture", "-Xlint")
 parallelExecution in test := false
 testGrouping in Test <<= definedTests in Test map { tests =>
-  tests.map { test =>
+  tests.sortBy(_.name).map { test =>
     import Tests._
     new Group(
       name = test.name,
       tests = Seq(test),
       runPolicy = SubProcess(javaOptions = Seq(
         "-server", "-Xms4096m", "-Xms4096m", "-XX:NewSize=3584m", "-Xss256k", "-XX:+TieredCompilation",
-        "-XX:+UseG1GC", "-XX:+UseNUMA", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
+        "-XX:+UseParNewGC", "-XX:+UseConcMarkSweepGC", "-XX:+UseCondCardMark",
+        "-XX:+UseNUMA", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
         sys.props.map { case (k, v) => s"-D$k=$v" }))
-  }.sortBy(_.name)
+  }
 }

@@ -19,7 +19,7 @@ abstract class BenchmarkSpec extends Specification {
   override def map(fs: => Fragments) = Step(setup()) ^ fs.map {
     case Example(desc, body, _, _, _) => Example(desc, {
       println()
-      usedMemory(0.1) // GC
+      usedMemory() // GC
       println(s"$desc:")
       body()
     })
@@ -99,8 +99,7 @@ object BenchmarkSpec {
 
   def usedMemory(precision: Double = 0.001): Long = {
     @annotation.tailrec
-    def getHeapMemoryUsage(prev: Long = memoryMXBean.getHeapMemoryUsage.getUsed): Long = {
-      System.gc()
+    def getHeapMemoryUsage(prev: Long): Long = {
       Thread.sleep(30)
       val curr = memoryMXBean.getHeapMemoryUsage.getUsed
       val diff = prev - curr
@@ -108,7 +107,9 @@ object BenchmarkSpec {
       else curr
     }
 
-    getHeapMemoryUsage()
+    val prev = memoryMXBean.getHeapMemoryUsage.getUsed
+    System.gc()
+    getHeapMemoryUsage(prev)
   }
 
   def fullShutdown(e: ExecutorService): Unit = {
