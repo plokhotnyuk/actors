@@ -4,7 +4,7 @@ scalaVersion := "2.11.6"
 resolvers ++= Seq("sonatype-staging" at "https://oss.sonatype.org/content/groups/staging")
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.3.9" % "test",
-  "net.liftweb" %% "lift-actor" % "3.0-M3" % "test",
+  "net.liftweb" %% "lift-actor" % "3.0-M5" % "test",
   "org.scala-lang" % "scala-actors" % scalaVersion.value % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.1.1" % "test",
   "org.specs2" %% "specs2-junit" % "2.4.17" % "test"
@@ -19,8 +19,8 @@ testGrouping in Test <<= definedTests in Test map { tests =>
       name = test.name,
       tests = Seq(test),
       runPolicy = SubProcess(javaOptions = Seq(
-        "-server", "-Xms4096m", "-Xms4096m", "-XX:NewSize=3584m", "-Xss256k", "-XX:+TieredCompilation",
-        "-XX:+UseG1GC", "-XX:+UseNUMA", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
+        "-server", "-Xms4096m", "-Xms4096m", "-XX:NewSize=3584m", "-Xss256k", "-XX:+UseG1GC", "-XX:+TieredCompilation",
+        "-XX:ObjectAlignmentInBytes=16", "-XX:+UseNUMA", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
         sys.props.map { case (k, v) => s"-D$k=$v" }))
   }
 }
