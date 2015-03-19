@@ -76,7 +76,7 @@ Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Ubun
 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Ubuntu 14.10, Oracle JDK 1.7.0_76-b13 64-bit
 
 #### out2*.txt
-Intel(R) Core(TM) i7-4850MQ CPU @ 2.30GHz (max 3.50GHz), RAM 16Gb DDR3-1600, Mac OS X 10.10.2, Oracle JDK 1.8.0_40-b25 64-bit
+Intel(R) Core(TM) i7-4850MQ CPU @ 2.30GHz (max 3.50GHz), RAM 16Gb DDR3-1600, Mac OS X 10.10.2, Oracle JDK 1.8.0_31-b13 64-bit
 
 #### out3*.txt
 Intel(R) Core(TM) i7-4850MQ CPU @ 2.30GHz (max 3.50GHz), RAM 16Gb DDR3-1600, Mac OS X 10.10.2, Oracle JDK 1.7.0_76-b13 64-bit
