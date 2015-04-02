@@ -11,7 +11,7 @@ libraryDependencies ++= Seq(
 )
 scalacOptions ++= Seq(s"-target:jvm-${sys.props("java.runtime.version").take(3)}",
   "-optimize", "-deprecation", "-unchecked", "-feature", "-language:implicitConversions",
-  "-Xlog-reflective-calls", "-Xfuture", "-Xlint", "-Xmax-classfile-name", "128")
+  "-Xlog-reflective-calls", "-Xfuture", "-Xlint")
 parallelExecution in test := false
 testGrouping in Test <<= definedTests in Test map { tests =>
   tests.sortBy(_.name).map { test =>
