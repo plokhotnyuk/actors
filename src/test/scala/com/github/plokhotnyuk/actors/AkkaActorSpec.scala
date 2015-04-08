@@ -15,6 +15,7 @@ class AkkaActorSpec extends BenchmarkSpec {
   def config: Config = load(parseString(
     """
       akka {
+        # extensions = ["kamon.logreporter.LogReporter", "kamon.statsd.StatsD"] <-- uncomment to try reporting
         log-dead-letters = 0
         log-dead-letters-during-shutdown = off
         actor {
@@ -23,6 +24,24 @@ class AkkaActorSpec extends BenchmarkSpec {
             executor = "com.github.plokhotnyuk.actors.CustomExecutorServiceConfigurator"
             throughput = 1024
           }
+        }
+      }
+      kamon {
+        metrics {
+          filters = [
+            {
+              actor {
+                includes = ["user/$a/$a"]
+                excludes = ["system/*", "user/kamon-*"]
+              }
+            },
+            {
+              trace {
+                includes = []
+                excludes = []
+              }
+            }
+          ]
         }
       }
     """))
