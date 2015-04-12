@@ -101,8 +101,8 @@ object BenchmarkSpec {
     def getUsed: Long = memoryMXBean.getHeapMemoryUsage.getUsed
 
     @annotation.tailrec
-    def getHeapMemoryUsage(prev: Long, i: Int = 5): Long = {
-      Thread.sleep(5)
+    def getHeapMemoryUsage(prev: Long, i: Int = 10): Long = {
+      Thread.sleep(1)
       val curr = getUsed
       val diff = prev - curr
       if (diff < 0 || diff > precision * curr) getHeapMemoryUsage(curr)
