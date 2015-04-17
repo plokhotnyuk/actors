@@ -67,7 +67,7 @@ Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS s
 
 ## Known issues
 1. Benchmark freeze with Java ForkJoinPool baked by 1 thread on 8u40 or above, please see details here: 
-https://github.com/akka/akka/issues/created_by/plokhotnyuk
+https://github.com/akka/akka/issues/17045
 
 ## Test result descriptions
 Results of running mvnAll.bat or mvnAll.sh scripts on different environments with pool size (or number of worker threads)
