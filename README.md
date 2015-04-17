@@ -82,7 +82,10 @@ Intel(R) Core(TM) i7-4850MQ CPU @ 2.30GHz (max 3.50GHz), RAM 16Gb DDR3-1600, Mac
 Intel(R) Core(TM) i7-4850MQ CPU @ 2.30GHz (max 3.50GHz), RAM 16Gb DDR3-1600, Mac OS X 10.10.2, Oracle JDK 1.7.0_76-b13 64-bit
 
 #### out4*.txt
-Intel(R) Core(TM) i7-3770K CPU @ 3.50GHz (max 3.90GHz), RAM 8Gb DDR-1800, Ubuntu 14.04, Oracle JDK 1.8.0_31-b13 64-bit
+Intel(R) Core(TM) i7-3770K CPU @ 3.50GHz (max 3.90GHz), RAM 8Gb DDR3-1800, Ubuntu 14.04, Oracle JDK 1.8.0_31-b13 64-bit
 
 #### out5*.txt
-Intel(R) Core(TM) i7-3770K CPU @ 3.50GHz (max 3.90GHz), RAM 8Gb DDR-1800, Ubuntu 14.04, Oracle JDK 1.7.0_76-b13 64-bit
+Intel(R) Core(TM) i7-3770K CPU @ 3.50GHz (max 3.90GHz), RAM 8Gb DDR3-1800, Ubuntu 14.04, Oracle JDK 1.7.0_76-b13 64-bit
+
+#### out6*.txt
+2x Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (max 3.60GHz), RAM 128Gb DDR3-1600, CentOS release 6.6 (Final), Oracle JDK 1.8.0_40-b25 64-bit
