@@ -65,6 +65,10 @@ Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS s
 -server -Xms1g -Xmx1g -Xss1m -XX:NewSize=512m -XX:PermSize=256m -XX:MaxPermSize=256m -XX:+TieredCompilation -XX:+UseG1GC -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch
 ```
 
+## Known issues
+1. Benchmark freeze with Java ForkJoinPool baked by 1 thread on 8u40 or above, please see details here: 
+https://github.com/akka/akka/issues/created_by/plokhotnyuk
+
 ## Test result descriptions
 Results of running mvnAll.bat or mvnAll.sh scripts on different environments with pool size (or number of worker threads)
 set to number of available processors, 1, 10 or 100 values accordingly:
@@ -88,4 +92,4 @@ Intel(R) Core(TM) i7-3770K CPU @ 3.50GHz (max 3.90GHz), RAM 8Gb DDR3-1800, Ubunt
 Intel(R) Core(TM) i7-3770K CPU @ 3.50GHz (max 3.90GHz), RAM 8Gb DDR3-1800, Ubuntu 14.04, Oracle JDK 1.7.0_76-b13 64-bit
 
 #### out6*.txt
-2x Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (max 3.60GHz), RAM 128Gb DDR3-1600, CentOS release 6.6 (Final), Oracle JDK 1.8.0_40-b25 64-bit
+2x Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (max 3.60GHz), RAM 128Gb DDR4-1600, CentOS release 6.6 (Final), Oracle JDK 1.8.0_40-b25 64-bit
