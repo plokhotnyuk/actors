@@ -11,18 +11,15 @@ public class ForkJoinPoolTest {
     public static void main(String[] args) {
         ForkJoinPool e = new ForkJoinPool(1);
         AtomicBoolean b = new AtomicBoolean();
-        final boolean[] bs = {false};
         for (int i = 0; i < 100000; i++) {
-            bs[0] = true;
+            b.set(true);
             e.execute(new Runnable() {
                 @Override
                 public void run() {
-                    bs[0] = false;
+                    b.set(false);
                 }
             });
-            do {
-                b.get();
-            } while (bs[0]);
+            while (b.get());
         }
         e.shutdown();
     }
