@@ -10,7 +10,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <scala.version>2.11.6</scala.version>
-        <benchmark.args>-server -Xms4096m -Xmx4096m -XX:NewSize=3584m -Xss256k -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+UseCondCardMark -XX:+TieredCompilation -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</benchmark.args>
+        <benchmark.args>-server -Xms4096m -Xmx4096m -XX:NewSize=3584m -Xss256k -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+UseCondCardMark -XX:+TieredCompilation -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch -Dbenchmark.poolSize=1 -Xbootclasspath/p:target/classes</benchmark.args>
     </properties>
     <prerequisites>
         <maven>3.1</maven>
@@ -66,25 +66,9 @@
         </dependency>
     </dependencies>
     <build>
-        <sourceDirectory>src/main/scala</sourceDirectory>
         <testSourceDirectory>src/test/scala</testSourceDirectory>
         <pluginManagement>
             <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.2</version>
-                    <executions>
-                        <execution>
-                            <id>default-compile</id>
-                            <phase>none</phase>
-                        </execution>
-                        <execution>
-                            <id>default-testCompile</id>
-                            <phase>none</phase>
-                        </execution>
-                    </executions>
-                </plugin>
                 <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
@@ -155,6 +139,8 @@
             <id>jdk7</id>
             <properties>
                 <java.major.version>1.7</java.major.version>
+                <maven.compiler.source>1.7</maven.compiler.source>
+                <maven.compiler.target>1.7</maven.compiler.target>
             </properties>
             <activation>
                 <jdk>1.7</jdk>
@@ -164,6 +150,8 @@
             <id>jdk8</id>
             <properties>
                 <java.major.version>1.8</java.major.version>
+                <maven.compiler.source>1.8</maven.compiler.source>
+                <maven.compiler.target>1.8</maven.compiler.target>
             </properties>
             <activation>
                 <jdk>1.8</jdk>
