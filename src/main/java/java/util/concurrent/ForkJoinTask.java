@@ -268,15 +268,22 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     /**
-     * Tries to set SIGNAL status unless already completed. Used by
-     * ForkJoinPool. Other variants are directly incorporated into
-     * externalAwaitDone etc.
+     * If not done, sets SIGNAL status and performs Object.wait(timeout).
+     * This task may or may not be done on exit. Ignores interrupts.
      *
-     * @return true if successful
+     * @param timeout using Object.wait conventions.
      */
-    final boolean trySetSignal() {
-        int s = status;
-        return s >= 0 && U.compareAndSwapInt(this, STATUS, s, s | SIGNAL);
+    final void internalWait(long timeout) {
+        int s;
+        if ((s = status) >= 0 && // force completer to issue notify
+            U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
+            synchronized (this) {
+                if (status >= 0)
+                    try { wait(timeout); } catch (InterruptedException ie) { }
+                else
+                    notifyAll();
+            }
+        }
     }
 
     /**
@@ -284,35 +291,29 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @return status upon completion
      */
     private int externalAwaitDone() {
-        int s;
-        ForkJoinPool cp = ForkJoinPool.common;
-        if ((s = status) >= 0) {
-            if (cp != null) {
-                if (this instanceof CountedCompleter)
-                    s = cp.externalHelpComplete((CountedCompleter<?>)this, Integer.MAX_VALUE);
-                else if (cp.tryExternalUnpush(this))
-                    s = doExec();
-            }
-            if (s >= 0 && (s = status) >= 0) {
-                boolean interrupted = false;
-                do {
-                    if (U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
-                        synchronized (this) {
-                            if (status >= 0) {
-                                try {
-                                    wait();
-                                } catch (InterruptedException ie) {
-                                    interrupted = true;
-                                }
+        int s = ((this instanceof CountedCompleter) ? // try helping
+                 ForkJoinPool.common.externalHelpComplete(
+                     (CountedCompleter<?>)this, 0) :
+                 ForkJoinPool.common.tryExternalUnpush(this) ? doExec() : 0);
+        if (s >= 0 && (s = status) >= 0) {
+            boolean interrupted = false;
+            do {
+                if (U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
+                    synchronized (this) {
+                        if (status >= 0) {
+                            try {
+                                wait(0L);
+                            } catch (InterruptedException ie) {
+                                interrupted = true;
                             }
-                            else
-                                notifyAll();
                         }
+                        else
+                            notifyAll();
                     }
-                } while ((s = status) >= 0);
-                if (interrupted)
-                    Thread.currentThread().interrupt();
-            }
+                }
+            } while ((s = status) >= 0);
+            if (interrupted)
+                Thread.currentThread().interrupt();
         }
         return s;
     }
@@ -322,22 +323,22 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     private int externalInterruptibleAwaitDone() throws InterruptedException {
         int s;
-        ForkJoinPool cp = ForkJoinPool.common;
         if (Thread.interrupted())
             throw new InterruptedException();
-        if ((s = status) >= 0 && cp != null) {
-            if (this instanceof CountedCompleter)
-                cp.externalHelpComplete((CountedCompleter<?>)this, Integer.MAX_VALUE);
-            else if (cp.tryExternalUnpush(this))
-                doExec();
-        }
-        while ((s = status) >= 0) {
-            if (U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
-                synchronized (this) {
-                    if (status >= 0)
-                        wait();
-                    else
-                        notifyAll();
+        if ((s = status) >= 0 &&
+            (s = ((this instanceof CountedCompleter) ?
+                  ForkJoinPool.common.externalHelpComplete(
+                      (CountedCompleter<?>)this, 0) :
+                  ForkJoinPool.common.tryExternalUnpush(this) ? doExec() :
+                  0)) >= 0) {
+            while ((s = status) >= 0) {
+                if (U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
+                    synchronized (this) {
+                        if (status >= 0)
+                            wait(0L);
+                        else
+                            notifyAll();
+                    }
                 }
             }
         }
@@ -357,7 +358,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) ?
             (w = (wt = (ForkJoinWorkerThread)t).workQueue).
             tryUnpush(this) && (s = doExec()) < 0 ? s :
-            wt.pool.awaitJoin(w, this) :
+            wt.pool.awaitJoin(w, this, 0L) :
             externalAwaitDone();
     }
 
@@ -370,7 +371,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         int s; Thread t; ForkJoinWorkerThread wt;
         return (s = doExec()) < 0 ? s :
             ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread) ?
-            (wt = (ForkJoinWorkerThread)t).pool.awaitJoin(wt.workQueue, this) :
+            (wt = (ForkJoinWorkerThread)t).pool.
+            awaitJoin(wt.workQueue, this, 0L) :
             externalAwaitDone();
     }
 
@@ -988,67 +990,40 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     public final V get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
+        int s;
+        long nanos = unit.toNanos(timeout);
         if (Thread.interrupted())
             throw new InterruptedException();
-        // Messy in part because we measure in nanosecs, but wait in millisecs
-        int s; long ms;
-        long ns = unit.toNanos(timeout);
-        ForkJoinPool cp;
-        if ((s = status) >= 0 && ns > 0L) {
-            long deadline = System.nanoTime() + ns;
-            ForkJoinPool p = null;
-            ForkJoinPool.WorkQueue w = null;
+        if ((s = status) >= 0 && nanos > 0L) {
+            long d = System.nanoTime() + nanos;
+            long deadline = (d == 0L)? 1L : d; // avoid 0
             Thread t = Thread.currentThread();
             if (t instanceof ForkJoinWorkerThread) {
                 ForkJoinWorkerThread wt = (ForkJoinWorkerThread)t;
-                p = wt.pool;
-                w = wt.workQueue;
-                p.helpJoinOnce(w, this); // no retries on failure
+                s = wt.pool.awaitJoin(wt.workQueue, this, deadline);
             }
-            else if ((cp = ForkJoinPool.common) != null) {
-                if (this instanceof CountedCompleter)
-                    cp.externalHelpComplete((CountedCompleter<?>)this, Integer.MAX_VALUE);
-                else if (cp.tryExternalUnpush(this))
-                    doExec();
-            }
-            boolean canBlock = false;
-            boolean interrupted = false;
-            try {
-                while ((s = status) >= 0) {
-                    if (w != null && w.qlock < 0)
-                        cancelIgnoringExceptions(this);
-                    else if (!canBlock) {
-                        if (p == null || p.tryCompensate(p.ctl))
-                            canBlock = true;
-                    }
-                    else {
-                        if ((ms = TimeUnit.NANOSECONDS.toMillis(ns)) > 0L &&
-                            U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
-                            synchronized (this) {
-                                if (status >= 0) {
-                                    try {
-                                        wait(ms);
-                                    } catch (InterruptedException ie) {
-                                        if (p == null)
-                                            interrupted = true;
-                                    }
-                                }
-                                else
-                                    notifyAll();
-                            }
+            else if ((s = ((this instanceof CountedCompleter) ?
+                           ForkJoinPool.common.externalHelpComplete(
+                               (CountedCompleter<?>)this, 0) :
+                           ForkJoinPool.common.tryExternalUnpush(this) ?
+                           doExec() : 0)) >= 0) {
+                long ns, ms; // measure in nanosecs, but wait in millisecs
+                while ((s = status) >= 0 &&
+                       (ns = deadline - System.nanoTime()) > 0L) {
+                    if ((ms = TimeUnit.NANOSECONDS.toMillis(ns)) > 0L &&
+                        U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
+                        synchronized (this) {
+                            if (status >= 0)
+                                wait(ms); // OK to throw InterruptedException
+                            else
+                                notifyAll();
                         }
-                        if ((s = status) < 0 || interrupted ||
-                            (ns = deadline - System.nanoTime()) <= 0L)
-                            break;
                     }
                 }
-            } finally {
-                if (p != null && canBlock)
-                    p.incrementActiveCount();
             }
-            if (interrupted)
-                throw new InterruptedException();
         }
+        if (s >= 0)
+            s = status;
         if ((s &= DONE_MASK) != NORMAL) {
             Throwable ex;
             if (s == CANCELLED)

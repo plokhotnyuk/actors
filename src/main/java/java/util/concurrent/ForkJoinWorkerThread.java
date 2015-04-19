@@ -89,7 +89,7 @@ public class ForkJoinWorkerThread extends Thread {
      * @return the index number
      */
     public int getPoolIndex() {
-        return workQueue.poolIndex >>> 1; // ignore odd/even tag bit
+        return workQueue.getPoolIndex();
     }
 
     /**
