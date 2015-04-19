@@ -21,6 +21,5 @@ public class ForkJoinPoolTest {
             });
             while (b.get());
         }
-        e.shutdown();
     }
 }
