@@ -1,6 +1,7 @@
 package com.github.plokhotnyuk.actors
 
 import akka.dispatch.ForkJoinExecutorConfigurator.AkkaForkJoinPool
+import bes.injector.Injector
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import com.sun.management.OperatingSystemMXBean
 import java.lang.management.ManagementFactory._
@@ -44,6 +45,7 @@ object BenchmarkSpec {
 
   def createExecutorService(size: Int = poolSize): ExecutorService =
     executorServiceType match {
+      case "injection-executor" => new Injector(Executors.defaultThreadFactory()).newExecutor(size, Integer.MAX_VALUE)
       case "akka-forkjoin-pool" => new AkkaForkJoinPool(size, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null)
       case "scala-forkjoin-pool" => new ScalaForkJoinPool(size, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "java-forkjoin-pool" => new ForkJoinPool(size, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)

@@ -3,6 +3,7 @@ version := "1.0-SNAPSHOT"
 scalaVersion := "2.11.6"
 resolvers ++= Seq("sonatype-staging" at "https://oss.sonatype.org/content/groups/staging")
 libraryDependencies ++= Seq(
+  "bes.injector" % "injector" % "1.0-SNAPSHOT" % "test",
   "com.typesafe.akka" %% "akka-actor" % "2.3.9" % "test",
   "net.liftweb" %% "lift-actor" % "3.0-M5" % "test",
   "org.scala-lang" % "scala-actors" % scalaVersion.value % "test",
