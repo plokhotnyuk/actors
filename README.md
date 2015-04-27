@@ -20,6 +20,8 @@ with Lift, Scala & Scalaz actors.
 
 [![Shippable Build Status](https://api.shippable.com/projects/54131ace814f6b1f6a9fb4dc/badge?branchName=master)](https://app.shippable.com/projects/54131ace814f6b1f6a9fb4dc/builds)
 
+[![Wercker Build Status](https://app.wercker.com/status/25f11d8f54baf3a84d8ae429465bcbb3/s "wercker status")](https://app.wercker.com/project/bykey/25f11d8f54baf3a84d8ae429465bcbb3)
+
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/plokhotnyuk/actors?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Benchmarks and their goals
