@@ -2,17 +2,11 @@ box: plokhotnyuk/scala
 build:
   steps:
     - script:
-        name: print env
+        name: build
         code: |
           sudo cat /proc/cpuinfo
           sudo cat /proc/meminfo
-    - script:
-        name: build
-        code: |
           mvn -B -DskipTests test
-    - script:
-        name: benchmark
-        code: |
           mvn -B -Dbenchmark.executorServiceType=akka-forkjoin-pool test
           mvn -B -Dbenchmark.executorServiceType=scala-forkjoin-pool test
           mvn -B -Dbenchmark.executorServiceType=java-forkjoin-pool test
