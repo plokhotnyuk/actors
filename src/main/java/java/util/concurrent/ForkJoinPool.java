@@ -1145,8 +1145,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                                     if (top == s && array == a &&
                                             casAt(a, i, t, null)) {
                                         U.putOrderedInt(this, QTOP, s - 1);
-                                        qlock = 0; // until next line diagnosed
-                                        //                                        U.putOrderedInt(this, QLOCK, 0);
+                                        U.putOrderedInt(this, QLOCK, 0);
                                         return t;
                                     }
                                     U.compareAndSwapInt(this, QLOCK, 1, 0);
@@ -2413,8 +2412,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                     if ((n = s - b) < am) {
                         setAt(a, j, task);
                         U.putOrderedInt(q, QTOP, s + 1);
-                        q.qlock = 0; // fix until next line diagnosed
-                        // U.putOrderedInt(q, QLOCK, 0);
+                        U.putIntVolatile(q, QLOCK, 0);
                         if (n <= 1)
                             signalWork(ws, q);
                         return;
@@ -2470,8 +2468,7 @@ public class ForkJoinPool extends AbstractExecutorService {
                 int i = (al - 1) & (s - 1);
                 if (w.top == s && w.array == a && casAt(a, i, task, null)) {
                     U.putOrderedInt(w, QTOP, s - 1);
-                    w.qlock = 0; // fix until next line diagnosed
-                    //                    U.putOrderedInt(w, QLOCK, 0);
+                    U.putOrderedInt(w, QLOCK, 0);
                     return true;
                 }
                 U.compareAndSwapInt(w, QLOCK, 1, 0);
