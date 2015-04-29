@@ -68,8 +68,11 @@ Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS s
 ```
 
 ## Known issues
-1. Benchmark freeze with Java ForkJoinPool baked by 1 thread on 8u40 or above, please see details here: 
-https://github.com/akka/akka/issues/17045
+1. Benchmark freeze with Java ForkJoinPool baked by 1 thread on 8u40, 8u45 and some 8u60 ea build, please see details here: 
+http://cs.oswego.edu/pipermail/concurrency-interest/2015-April/014242.html
+
+W/A is to use latest jsr166.jar in working directory (link to download http://gee.cs.oswego.edu/dl/jsr166/dist/jsr166.jar) 
+with following JVM option to pick it up: `-Xbootclasspath/p:jsr166.jar`
 
 ## Test result descriptions
 Results of running mvnAll.bat or mvnAll.sh scripts on different environments with pool size (or number of worker threads)
