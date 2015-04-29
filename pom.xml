@@ -10,7 +10,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <scala.version>2.11.6</scala.version>
-        <benchmark.args>-server -Xms4096m -Xmx4096m -XX:NewSize=3584m -XX:MaxNewSize=3584m -Xss256k -XX:+UseG1GC -XX:+TieredCompilation -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch -Xbootclasspath/p:jsr166.jar</benchmark.args>
+        <benchmark.args>-server -Xms4096m -Xmx4096m -XX:NewSize=3584m -XX:MaxNewSize=3584m -Xss256k -XX:+UseG1GC -XX:+TieredCompilation -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</benchmark.args>
     </properties>
     <prerequisites>
         <maven>3.1</maven>
@@ -132,7 +132,7 @@
                         <includes>
                             <include>**/*Spec.class</include>
                         </includes>
-                        <argLine>${benchmark.args}</argLine>
+                        <argLine>${benchmark.args} ${jsr166.args}</argLine>
                     </configuration>
                 </plugin>
             </plugins>
@@ -155,6 +155,9 @@
             <id>jdk7</id>
             <properties>
                 <java.major.version>1.7</java.major.version>
+                <jsr166.args>-Xbootclasspath/p:jsr166-4jdk7.jar</jsr166.args>
+                <maven.compiler.source>1.7</maven.compiler.source>
+                <maven.compiler.target>1.7</maven.compiler.target>
             </properties>
             <activation>
                 <jdk>1.7</jdk>
@@ -164,6 +167,9 @@
             <id>jdk8</id>
             <properties>
                 <java.major.version>1.8</java.major.version>
+                <jsr166.args>-Xbootclasspath/p:jsr166.jar</jsr166.args>
+                <maven.compiler.source>1.8</maven.compiler.source>
+                <maven.compiler.target>1.8</maven.compiler.target>
             </properties>
             <activation>
                 <jdk>1.8</jdk>
