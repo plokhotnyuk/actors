@@ -9,7 +9,8 @@ libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-concurrent" % "7.1.1" % "test",
   "org.specs2" %% "specs2-junit" % "2.4.17" % "test"
 )
-scalacOptions ++= Seq(s"-target:jvm-${sys.props("java.runtime.version").take(3)}",
+val javaVersion = sys.props("java.runtime.version").take(3)
+scalacOptions ++= Seq(s"-target:jvm-$javaVersion",
   "-optimize", "-deprecation", "-unchecked", "-feature", "-language:implicitConversions",
   "-Xlog-reflective-calls", "-Xfuture", "-Xlint")
 parallelExecution in test := false
@@ -21,7 +22,8 @@ testGrouping in Test <<= definedTests in Test map { tests =>
       tests = Seq(test),
       runPolicy = SubProcess(javaOptions = Seq(
         "-server", "-Xms4096m", "-Xms4096m", "-XX:NewSize=3584m", "-XX:MaxNewSize=3584m", "-Xss256k", "-XX:+UseG1GC",
-        "-XX:+TieredCompilation", "-XX:+UseNUMA", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch") ++
+        "-XX:+TieredCompilation", "-XX:+UseNUMA", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch",
+        s"-Xbootclasspath/p:jsr166${if (javaVersion == "1.7") "-4jdk7.jar" else ".jar"}") ++
         sys.props.map { case (k, v) => s"-D$k=$v" }))
   }
 }
