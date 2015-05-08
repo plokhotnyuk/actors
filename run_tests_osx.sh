@@ -31,7 +31,7 @@ run_tests() {
   ./mvnAll_poolSize100.sh
 }
 
-run_tests "1.8.0_31" &&
+run_tests "1.8.0_45" &&
 rename_files "2" &&
-run_tests "1.7.0_76" &&
+run_tests "1.7.0_80" &&
 rename_files "3"
