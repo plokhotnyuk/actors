@@ -1,0 +1,17 @@
+language: scala
+scala:
+  - 2.11.6
+jdk:
+  - oraclejdk8
+  - openjdk7
+  - oraclejdk7
+script:
+  - cat /proc/cpuinfo
+  - cat /proc/meminfo
+  - mvn -B -DskipTests test
+  - mvn -B -Dbenchmark.executorServiceType=akka-forkjoin-pool test -Ptravis
+  - mvn -B -Dbenchmark.executorServiceType=scala-forkjoin-pool test -Ptravis
+  - mvn -B -Dbenchmark.executorServiceType=java-forkjoin-pool test -Ptravis
+  - mvn -B -Dbenchmark.executorServiceType=abq-thread-pool test -Ptravis
+  - mvn -B -Dbenchmark.executorServiceType=lbq-thread-pool test -Ptravis
+
