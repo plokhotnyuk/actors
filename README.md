@@ -22,6 +22,8 @@ with Lift, Scala & Scalaz actors.
 
 [![Wercker Build Status](https://app.wercker.com/status/25f11d8f54baf3a84d8ae429465bcbb3/s "wercker status")](https://app.wercker.com/project/bykey/25f11d8f54baf3a84d8ae429465bcbb3)
 
+[![Circle CI Build Status](https://circleci.com/gh/plokhotnyuk/actors.svg?style=shield)](https://circleci.com/gh/plokhotnyuk/actors)
+
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/plokhotnyuk/actors?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Benchmarks and their goals
