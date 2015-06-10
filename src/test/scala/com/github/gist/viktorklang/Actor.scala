@@ -34,18 +34,16 @@ object Actor {
       this ! this // Make the actor self aware by seeding its address to the initial behavior
       def !(a: Any): Unit = { val n = new Node(a); getAndSet(n) match { case h: Node => h.lazySet(n); case b => async(b.asInstanceOf[Behavior], n, true) } } // Enqueue the message onto the mailbox and schedule for execution if the actor was suspended
       private def async(b: Behavior, n: Node, x: Boolean): Unit = e match {
-        case p: scala.concurrent.forkjoin.ForkJoinPool => new scala.concurrent.forkjoin.ForkJoinTask[Unit] {
-          if (p eq scala.concurrent.forkjoin.ForkJoinTask.getPool) fork() else p.execute(this)
+        case p: scala.concurrent.forkjoin.ForkJoinPool => p.execute(new scala.concurrent.forkjoin.ForkJoinTask[Unit] {
           def exec(): Boolean = { tryAct(b, n, x); false }
           def getRawResult: Unit = ()
           def setRawResult(unit: Unit): Unit = ()
-        }
-        case p: ForkJoinPool => new ForkJoinTask[Unit] {
-          if (p eq ForkJoinTask.getPool) fork() else p.execute(this) // Can be replaced by p.execute(this) for latest JSR-166 code
+        })
+        case p: ForkJoinPool => p.execute(new ForkJoinTask[Unit] {
           def exec(): Boolean = { tryAct(b, n, x); false }
           def getRawResult: Unit = ()
           def setRawResult(unit: Unit): Unit = ()
-        }
+        })
         case p => p.execute(new Runnable { def run(): Unit = tryAct(b, n, x) })
       }
       private def tryAct(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n, batch) else if ((n ne get) || !compareAndSet(n, b)) actOrAsync(b, n, 0) // Act or stop or suspend
