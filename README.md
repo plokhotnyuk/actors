@@ -18,8 +18,6 @@ with Lift, Scala & Scalaz actors.
 
 [![Travis CI Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
 
-[![Shippable Build Status](https://api.shippable.com/projects/54131ace814f6b1f6a9fb4dc/badge?branchName=master)](https://app.shippable.com/projects/54131ace814f6b1f6a9fb4dc/builds)
-
 [![Wercker Build Status](https://app.wercker.com/status/25f11d8f54baf3a84d8ae429465bcbb3/s "wercker status")](https://app.wercker.com/project/bykey/25f11d8f54baf3a84d8ae429465bcbb3)
 
 [![Circle CI Build Status](https://circleci.com/gh/plokhotnyuk/actors.svg?style=shield)](https://circleci.com/gh/plokhotnyuk/actors)
