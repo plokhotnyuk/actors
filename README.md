@@ -41,7 +41,7 @@ with Lift, Scala & Scalaz actors.
 - RAM: 6Gb or greater
 
 ## Software installed required
-- JDK: 1.7.0_x or newer
+- JDK: 1.8.0_x
 - Maven: 3.x or sbt: 0.13.x
 
 ## Building & running benchmarks
@@ -69,9 +69,9 @@ Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS s
 
 ## Known issues
 1. Benchmark freeze with Java ForkJoinPool baked by 1 thread on 8u40, 8u45 and some early 8u60 ea builds, please see details here: 
-http://cs.oswego.edu/pipermail/concurrency-interest/2015-April/014242.html
+https://bugs.openjdk.java.net/browse/JDK-8078490
 
-W/A is to upgrade to latest 8u60 build or to use latest jsr166.jar (link to download http://gee.cs.oswego.edu/dl/jsr166/dist/jsr166.jar) 
+W/A is to upgrade to latest Java 8 build or to use latest jsr166.jar (link to download http://gee.cs.oswego.edu/dl/jsr166/dist/jsr166.jar) 
 in working directory with following JVM option to pick it up: `-Xbootclasspath/p:jsr166.jar`
 
 ## Test result descriptions

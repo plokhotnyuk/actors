@@ -3,8 +3,7 @@ scala:
   - 2.11.7
 jdk:
   - oraclejdk8
-  - openjdk7
-  - oraclejdk7
+  - openjdk8
 script:
   - cat /proc/cpuinfo
   - cat /proc/meminfo
@@ -14,4 +13,3 @@ script:
   - mvn -B -Dbenchmark.executorServiceType=java-forkjoin-pool test -Ptravis
   - mvn -B -Dbenchmark.executorServiceType=abq-thread-pool test -Ptravis
   - mvn -B -Dbenchmark.executorServiceType=lbq-thread-pool test -Ptravis
-

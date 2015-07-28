@@ -9,6 +9,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.major.version>1.8</java.major.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <scala.version>2.11.7</scala.version>
         <benchmark.args>-server -Xms4096m -Xmx4096m -XX:NewSize=3584m -XX:MaxNewSize=3584m -Xss256k -XX:+UseG1GC -XX:+TieredCompilation -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</benchmark.args>
     </properties>
@@ -141,28 +144,6 @@
             <properties>
                 <benchmark.args>-server -Xms2560m -Xmx2560m -XX:NewSize=2240m -XX:MaxNewSize=2240m -Xss256k -XX:+UseG1GC -XX:+TieredCompilation -XX:+UseNUMA -XX:-UseBiasedLocking -XX:+AlwaysPreTouch</benchmark.args>
             </properties>
-        </profile>
-        <profile>
-            <id>jdk7</id>
-            <properties>
-                <java.major.version>1.7</java.major.version>
-                <maven.compiler.source>1.7</maven.compiler.source>
-                <maven.compiler.target>1.7</maven.compiler.target>
-            </properties>
-            <activation>
-                <jdk>1.7</jdk>
-            </activation>
-        </profile>
-        <profile>
-            <id>jdk8</id>
-            <properties>
-                <java.major.version>1.8</java.major.version>
-                <maven.compiler.source>1.8</maven.compiler.source>
-                <maven.compiler.target>1.8</maven.compiler.target>
-            </properties>
-            <activation>
-                <jdk>1.8</jdk>
-            </activation>
         </profile>
     </profiles>
 </project>
