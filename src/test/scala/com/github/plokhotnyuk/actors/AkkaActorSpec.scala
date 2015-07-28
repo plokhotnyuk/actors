@@ -111,8 +111,8 @@ class AkkaActorSpec extends BenchmarkSpec {
   }
 
   def shutdown(): Unit = {
-    actorSystem.shutdown()
-    actorSystem.awaitTermination()
+    actorSystem.terminate()
+    Await.result(actorSystem.whenTerminated, timeout.duration)
   }
 
   private def ping(n: Int, p: Int): Unit = {
