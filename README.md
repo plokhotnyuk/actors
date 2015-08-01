@@ -68,7 +68,7 @@ Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS s
 ```
 
 ## Known issues
-1. Benchmark freeze with Java ForkJoinPool baked by 1 thread on 8u40, 8u45 and some early 8u60 ea builds, please see details here: 
+1. Benchmark freeze with Java ForkJoinPool baked by 1 thread on 8u40, 8u45, 8u51 and some early 8u60 ea builds, please see details here: 
 https://bugs.openjdk.java.net/browse/JDK-8078490
 
 W/A is to upgrade to latest Java 8 build or to use latest jsr166.jar (link to download http://gee.cs.oswego.edu/dl/jsr166/dist/jsr166.jar) 
@@ -79,22 +79,4 @@ Results of running mvnAll.bat or mvnAll.sh scripts on different environments wit
 set to number of available processors, 1, 10 or 100 values accordingly:
 
 #### out0*.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Ubuntu 14.10, Oracle JDK 1.8.0_45-b14 64-bit
-
-#### out1*.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Ubuntu 14.10, Oracle JDK 1.7.0_80-b15 64-bit
-
-#### out2*.txt
-Intel(R) Core(TM) i7-4850MQ CPU @ 2.30GHz (max 3.50GHz), RAM 16Gb DDR3-1600, Mac OS X 10.10.2, Oracle JDK 1.8.0_45-b14 64-bit
-
-#### out3*.txt
-Intel(R) Core(TM) i7-4850MQ CPU @ 2.30GHz (max 3.50GHz), RAM 16Gb DDR3-1600, Mac OS X 10.10.2, Oracle JDK 1.7.0_80-b15 64-bit
-
-#### out4*.txt
-Intel(R) Core(TM) i7-3770K CPU @ 3.50GHz (max 3.90GHz), RAM 8Gb DDR3-1800, Ubuntu 14.04, Oracle JDK 1.8.0_31-b13 64-bit
-
-#### out5*.txt
-Intel(R) Core(TM) i7-3770K CPU @ 3.50GHz (max 3.90GHz), RAM 8Gb DDR3-1800, Ubuntu 14.04, Oracle JDK 1.7.0_76-b13 64-bit
-
-#### out6*.txt
-2x Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (max 3.60GHz), RAM 128Gb DDR4-1600, CentOS release 6.6 (Final), Oracle JDK 1.8.0_40-b25 64-bit
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Ubuntu 14.10, Oracle JDK 1.8.0_60-ea-b26 64-bit
