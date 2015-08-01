@@ -7,7 +7,7 @@ import akka.actor.{Actor, ActorRef, Props}
 import java.util.concurrent.CountDownLatch
 import org.specs2.execute.Success
 
-class AkkaBoundedActorSpec extends AkkaActorSpec {
+class AkkaBoundedActorSpec extends AkkaUnboundedActorSpec {
   override def config: Config = load(parseString(
     """
       akka {

@@ -11,7 +11,7 @@ import java.util.concurrent.{TimeUnit, ExecutorService, ThreadFactory, CountDown
 import org.specs2.execute.Success
 import scala.concurrent.Await
 
-class AkkaActorSpec extends BenchmarkSpec {
+class AkkaUnboundedActorSpec extends BenchmarkSpec {
   def config: Config = load(parseString(
     """
       akka {

@@ -5,7 +5,7 @@ import akka.util.Unsafe.{instance => u}
 import com.typesafe.config.Config
 import java.util.concurrent.atomic.AtomicReference
 
-class NonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxType with ProducesMessageQueue[MessageQueue] {
+class MultiConsumerNonBlockingBoundedMailbox(capacity: Int = Int.MaxValue) extends MailboxType with ProducesMessageQueue[MessageQueue] {
   require(capacity > 0, "Mailbox capacity should be greater than 0")
 
   def this(settings: ActorSystem.Settings, config: Config) = this(config.getInt("mailbox-capacity"))
@@ -77,7 +77,7 @@ private class NodeWithCount(var e: Envelope = null) extends AtomicReference[Node
   var count: Int = _
 }
 
-class UnboundedMailbox2 extends MailboxType with ProducesMessageQueue[MessageQueue] {
+class MultiConsumerUnboundedMailbox extends MailboxType with ProducesMessageQueue[MessageQueue] {
   def this(settings: ActorSystem.Settings, config: Config) = this()
 
   override def create(owner: Option[ActorRef], system: Option[ActorSystem]): MessageQueue = new UQ

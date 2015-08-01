@@ -3,7 +3,7 @@ package com.github.plokhotnyuk.actors
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory._
 
-class AkkaNonBlockingBoundedActorSpec extends AkkaBoundedActorSpec {
+class AkkaSCONonBlockingBoundedActorSpec extends AkkaBoundedActorSpec {
   override def config: Config = load(parseString(
     """
       akka {
