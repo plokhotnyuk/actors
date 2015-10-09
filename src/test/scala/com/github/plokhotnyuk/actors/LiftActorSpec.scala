@@ -105,18 +105,58 @@ class LiftActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(1500000, 1)
+    pingLatency(1500000)
     Success()
   }
 
   "Ping throughput 10K" in {
-    ping(2000000, 10000)
+    pingThroughput(2000000, 10000)
     Success()
   }
 
   def shutdown(): Unit = LAScheduler.shutdown()
 
-  private def ping(n: Int, p: Int): Unit = {
+  private def pingLatency(n: Int): Unit = {
+    latencyTimed(n) {
+      h =>
+        val l = new CountDownLatch(2)
+        var a1: LiftActor = null
+        val a2 = new LiftActor {
+          private var i = n / 2
+
+          override val highPriorityReceive = Full[PartialFunction[Any, Unit]]({
+            case m =>
+              h.record()
+              if (i > 0) a1 ! m
+              i -= 1
+              if (i == 0) l.countDown()
+          })
+
+          def messageHandler: PartialFunction[Any, Unit] = {
+            case _ =>
+          }
+        }
+        a1 = new LiftActor {
+          private var i = n / 2
+
+          override val highPriorityReceive = Full[PartialFunction[Any, Unit]]({
+            case m =>
+              h.record()
+              if (i > 0) a2 ! m
+              i -= 1
+              if (i == 0) l.countDown()
+          })
+
+          def messageHandler: PartialFunction[Any, Unit] = {
+            case _ =>
+          }
+        }
+        a2 ! Message()
+        l.await()
+    }
+  }
+
+  private def pingThroughput(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
@@ -151,7 +191,7 @@ class LiftActorSpec extends BenchmarkSpec {
         }
         a2
     }
-    timed(n, printAvgLatency = p == 1) {
+    timed(n) {
       as.foreach(_ ! Message())
       l.await()
     }

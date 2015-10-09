@@ -10,6 +10,7 @@ import org.specs2.runner.JUnitRunner
 import org.specs2.mutable.Specification
 import org.specs2.specification.{Example, Step, Fragments}
 import scala.concurrent.forkjoin.{ForkJoinPool => ScalaForkJoinPool}
+import org.HdrHistogram.Histogram
 
 @RunWith(classOf[JUnitRunner])
 abstract class BenchmarkSpec extends Specification {
@@ -68,6 +69,20 @@ object BenchmarkSpec {
     r
   }
 
+  def latencyTimed[A](n: Int)(benchmark: LatencyHistogram => A): A = {
+    val h = new LatencyHistogram
+    val t = System.nanoTime()
+    val ct = osMXBean.getProcessCpuTime
+    val r = benchmark(h)
+    val cd = osMXBean.getProcessCpuTime - ct
+    val d = System.nanoTime() - t
+    println(f"$n%,d ops")
+    println(f"$d%,d ns")
+    List(50.0, 90.0, 99.0, 99.9).foreach(x => println(f"${h.getCorrectedValueAtPercentile(x)}%,d ns/op at $x%%'ile"))
+    println(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
+    r
+  }
+
   def footprintedAndTimed[A](n: Int)(benchmark: => A): A = {
     val u = usedMemory()
     val r = timed(n)(benchmark)
@@ -119,4 +134,27 @@ object BenchmarkSpec {
     e.shutdownNow()
     e.awaitTermination(1, TimeUnit.MINUTES)
   }
+}
+
+class LatencyHistogram extends Histogram(3600000000000L, 2) {
+  private var t: Long = 0
+
+  def record(): Unit = {
+    val t1 = System.nanoTime()
+    if (t != 0) recordValue(t1 - t)
+    t = t1
+  }
+
+  def getCorrectedValueAtPercentile(p: Double): Long = getValueAtPercentile(p) - LatencyHistogram.correction
+}
+
+object LatencyHistogram {
+  val correction =
+    new LatencyHistogram {
+      var i = 1000000
+      while (i > 0) {
+        record()
+        i -= 1
+      }
+    }.getValueAtPercentile(50.0)
 }

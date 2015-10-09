@@ -111,18 +111,43 @@ class ScalazActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(3000000, 1)
+    pingLatency(3000000)
     Success()
   }
 
   "Ping throughput 10K" in {
-    ping(6000000, 10000)
+    pingThroughput(6000000, 10000)
     Success()
   }
 
   def shutdown(): Unit = fullShutdown(executorService)
 
-  private def ping(n: Int, p: Int): Unit = {
+  private def pingLatency(n: Int): Unit =
+    latencyTimed(n) {
+      h =>
+        val l = new CountDownLatch(2)
+        var a1: Actor[Message] = null
+        val a2 = actor {
+          var i = n / 2
+          (m: Message) =>
+            h.record()
+            if (i > 0) a1 ! m
+            i -= 1
+            if (i == 0) l.countDown()
+        }
+        a1 = actor {
+          var i = n / 2
+          (m: Message) =>
+            h.record()
+            if (i > 0) a2 ! m
+            i -= 1
+            if (i == 0) l.countDown()
+        }
+        a2 ! Message()
+        l.await()
+    }
+
+  private def pingThroughput(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
     val as = (1 to p).map {
       _ =>
@@ -143,7 +168,7 @@ class ScalazActorSpec extends BenchmarkSpec {
         }
         a2
     }
-    timed(n, printAvgLatency = p == 1) {
+    timed(n) {
       as.foreach(_ ! Message())
       l.await()
     }

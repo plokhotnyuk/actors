@@ -101,12 +101,12 @@ class AkkaUnboundedActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(1500000, 1)
+    pingLatency(1500000)
     Success()
   }
 
   "Ping throughput 10K" in {
-    ping(2000000, 10000)
+    pingThroughput(2000000, 10000)
     Success()
   }
 
@@ -115,10 +115,20 @@ class AkkaUnboundedActorSpec extends BenchmarkSpec {
     Await.result(actorSystem.whenTerminated, timeout.duration)
   }
 
-  private def ping(n: Int, p: Int): Unit = {
+  private def pingLatency(n: Int): Unit =
+    latencyTimed(n) {
+      h =>
+        val l = new CountDownLatch(2)
+        val a1 = pingLatencyActor(l, n / 2, h)
+        val a2 = pingLatencyActor(l, n / 2, h)
+        a1.tell(Message(), a2)
+        l.await()
+    }
+
+  private def pingThroughput(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
-    val as = (1 to p).map(_ => (replayAndCountActor(l, n / p / 2), replayAndCountActor(l, n / p / 2)))
-    timed(n, printAvgLatency = p == 1) {
+    val as = (1 to p).map(_ => (pingThroughputActor(l, n / p / 2), pingThroughputActor(l, n / p / 2)))
+    timed(n) {
       as.foreach {
         case (a1, a2) => a1.tell(Message(), a2)
       }
@@ -126,8 +136,11 @@ class AkkaUnboundedActorSpec extends BenchmarkSpec {
     }
   }
 
-  private def replayAndCountActor(l: CountDownLatch, n: Int): ActorRef =
-    actorOf(Props(classOf[ReplayAndCountAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
+  private def pingLatencyActor(l: CountDownLatch, n: Int, h: LatencyHistogram): ActorRef =
+    actorOf(Props(classOf[PingLatencyAkkaActor], l, n, h).withDispatcher("akka.actor.benchmark-dispatcher"))
+
+  private def pingThroughputActor(l: CountDownLatch, n: Int): ActorRef =
+    actorOf(Props(classOf[PingThroughputAkkaActor], l, n).withDispatcher("akka.actor.benchmark-dispatcher"))
 
   private def blockableCountActor(l1: CountDownLatch, l2: CountDownLatch, n: Int): ActorRef =
     actorOf(Props(classOf[BlockableCountAkkaActor], l1, l2, n).withDispatcher("akka.actor.benchmark-dispatcher"))
@@ -147,7 +160,22 @@ class AkkaUnboundedActorSpec extends BenchmarkSpec {
   protected def actorOf(p: Props): ActorRef = Await.result(root ? p, timeout.duration).asInstanceOf[ActorRef]
 }
 
-private class ReplayAndCountAkkaActor(l: CountDownLatch, n: Int) extends Actor {
+private class PingLatencyAkkaActor(l: CountDownLatch, n: Int, h: LatencyHistogram) extends Actor {
+  private var i = n
+
+  def receive: Actor.Receive = {
+    case m =>
+      h.record()
+      if (i > 0) sender ! m
+      i -= 1
+      if (i == 0) {
+        l.countDown()
+        context.stop(self)
+      }
+  }
+}
+
+private class PingThroughputAkkaActor(l: CountDownLatch, n: Int) extends Actor {
   private var i = n
 
   def receive: Actor.Receive = {

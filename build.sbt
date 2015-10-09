@@ -7,7 +7,8 @@ libraryDependencies ++= Seq(
   "net.liftweb" %% "lift-actor" % "3.0-M6" % "test",
   "org.scala-lang" % "scala-actors" % scalaVersion.value % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.1.3" % "test",
-  "org.specs2" %% "specs2-junit" % "2.4.17" % "test"
+  "org.specs2" %% "specs2-junit" % "2.4.17" % "test",
+  "org.hdrhistogram" %% "HdrHistogram" % "2.1.7" % "test"
 )
 val javaVersion = sys.props("java.runtime.version").take(3)
 scalacOptions ++= Seq(s"-target:jvm-$javaVersion",

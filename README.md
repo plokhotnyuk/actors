@@ -71,7 +71,7 @@ Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS s
 1. Benchmark freeze with Java ForkJoinPool baked by 1 thread on 8u40, 8u45, 8u51 and some early 8u60 ea builds, please see details here: 
 https://bugs.openjdk.java.net/browse/JDK-8078490
 
-W/A is to upgrade to latest Java 8 build or to use latest jsr166.jar (link to download http://gee.cs.oswego.edu/dl/jsr166/dist/jsr166.jar) 
+W/A is to upgrade to latest Java 8 build (8u60-b27 or above) or to use latest jsr166.jar (link to download http://gee.cs.oswego.edu/dl/jsr166/dist/jsr166.jar) 
 in working directory with following JVM option to pick it up: `-Xbootclasspath/p:jsr166.jar`
 
 ## Test result descriptions
@@ -79,4 +79,4 @@ Results of running mvnAll.bat or mvnAll.sh scripts on different environments wit
 set to number of available processors, 1, 10 or 100 values accordingly:
 
 #### out0*.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Ubuntu 14.10, Oracle JDK 1.8.0_60-ea-b26 64-bit
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Ubuntu 14.10, Oracle JDK 1.8.0_60-b27 64-bit

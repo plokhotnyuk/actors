@@ -114,21 +114,51 @@ class ScalaActorSpec extends BenchmarkSpec {
   }
 
   "Ping latency" in {
-    ping(250000, 1)
+    pingLatency(250000)
     Success()
   }
 
   "Ping throughput 10K" in {
-    ping(400000, 10000)
+    pingThroughput(400000, 10000)
     Success()
   }
 
   def shutdown(): Unit = customScheduler.shutdown()
 
-  private def ping(n: Int, p: Int): Unit = {
+  private def pingLatency(n: Int): Unit = {
+    latencyTimed(n) {
+      h =>
+        val l = new CountDownLatch(2)
+        val a1 = pingLatencyActor(l, n / 2, h)
+        val a2 = pingLatencyActor(l, n / 2, h)
+        a1.send(Message(), a2)
+        l.await()
+    }
+  }
+
+  private def pingLatencyActor(l: CountDownLatch, n: Int, h: LatencyHistogram): Actor =
+    new Actor {
+      private var i = n
+
+      def act(): Unit =
+        loop(react {
+          case m =>
+            h.record()
+            if (i > 0) sender ! m
+            i -= 1
+            if (i == 0) {
+              l.countDown()
+              exit()
+            }
+        })
+
+      override def scheduler: IScheduler = customScheduler
+    }.start()
+
+  private def pingThroughput(n: Int, p: Int): Unit = {
     val l = new CountDownLatch(p * 2)
-    val as = (1 to p).map(_ => (replayAndCountActor(l, n / p / 2), replayAndCountActor(l, n / p / 2)))
-    timed(n, printAvgLatency = p == 1) {
+    val as = (1 to p).map(_ => (pingThroughputActor(l, n / p / 2), pingThroughputActor(l, n / p / 2)))
+    timed(n) {
       as.foreach {
         case (a1, a2) => a1.send(Message(), a2)
       }
@@ -136,7 +166,7 @@ class ScalaActorSpec extends BenchmarkSpec {
     }
   }
 
-  private def replayAndCountActor(l: CountDownLatch, n: Int): Actor =
+  private def pingThroughputActor(l: CountDownLatch, n: Int): Actor =
     new Actor {
       private var i = n
 
