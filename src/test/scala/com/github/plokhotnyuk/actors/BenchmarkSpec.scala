@@ -78,7 +78,7 @@ object BenchmarkSpec {
     val d = System.nanoTime() - t
     println(f"$n%,d ops")
     println(f"$d%,d ns")
-    List(0.0, 50.0, 90.0, 99.0, 99.9).foreach(x => println(f"${h.getCorrectedValueAtPercentile(x)}%,d ns/op at $x%%'ile"))
+    List(0.0, 50.0, 90.0, 99.0, 99.9).foreach(x => println(f"${h.getValueAtPercentile(x)}%,d ns/op at $x%%'ile"))
     println(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
     r
   }
@@ -136,7 +136,7 @@ object BenchmarkSpec {
   }
 }
 
-class LatencyHistogram extends Histogram(3600000000000L, 2) {
+class LatencyHistogram extends Histogram(1000000000L, 2) {
   private var t: Long = 0
 
   def record(): Unit = {
@@ -144,17 +144,4 @@ class LatencyHistogram extends Histogram(3600000000000L, 2) {
     if (t != 0) recordValue(t1 - t)
     t = t1
   }
-
-  def getCorrectedValueAtPercentile(p: Double): Long = getValueAtPercentile(p) - LatencyHistogram.correction
-}
-
-object LatencyHistogram {
-  val correction =
-    new LatencyHistogram {
-      var i = 1000000
-      while (i > 0) {
-        record()
-        i -= 1
-      }
-    }.getValueAtPercentile(50.0)
 }
