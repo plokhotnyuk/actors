@@ -78,7 +78,7 @@ object BenchmarkSpec {
     val d = System.nanoTime() - t
     println(f"$n%,d ops")
     println(f"$d%,d ns")
-    List(50.0, 90.0, 99.0, 99.9).foreach(x => println(f"${h.getCorrectedValueAtPercentile(x)}%,d ns/op at $x%%'ile"))
+    List(0.0, 50.0, 90.0, 99.0, 99.9).foreach(x => println(f"${h.getCorrectedValueAtPercentile(x)}%,d ns/op at $x%%'ile"))
     println(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
     r
   }
