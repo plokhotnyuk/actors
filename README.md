@@ -45,6 +45,9 @@ with Lift, Scala & Scalaz actors.
 - Maven: 3.x or sbt: 0.13.x
 
 ## Building & running benchmarks
+Before benchmark running check if your CPU works in most performant mode (not a powersave one). Check it on Linux by following command:
+`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
+
 Use following command-line instructions to build from sources and run benchmarks with Scala's ForkJoinPool in FIFO mode:
 ```sh
 mvn -B clean test >outX.txt
@@ -79,4 +82,4 @@ Results of running mvnAll.bat or mvnAll.sh scripts on different environments wit
 set to number of available processors, 1, 10 or 100 values accordingly:
 
 #### out0*.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Ubuntu 14.10, Oracle JDK 1.8.0_60-b27 64-bit
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Ubuntu 14.04.1, Linux 3.16.0-60-generic, Oracle JDK build 1.8.0_72-b15 64-bit
