@@ -4,7 +4,8 @@ build:
     - script:
         name: build
         code: |
-          cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+          sudo apt-get install cpufrequtils
+          cpufreq-info -o
           cat /sys/devices/system/clocksource/clocksource0/current_clocksource
           cat /proc/cpuinfo
           cat /proc/meminfo
