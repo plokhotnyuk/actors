@@ -1,7 +1,6 @@
 name := "actors"
 version := "1.0-SNAPSHOT"
-scalaVersion := "2.11.7"
-resolvers ++= Seq("sonatype-staging" at "https://oss.sonatype.org/content/groups/staging")
+scalaVersion := "2.11.8"
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.4.2" % "test",
   "net.liftweb" %% "lift-actor" % "3.0-M8" % "test",
@@ -10,8 +9,7 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-junit" % "2.5-scalaz-7.1.6" % "test",
   "org.hdrhistogram" % "HdrHistogram" % "2.1.8" % "test"
 )
-val javaVersion = sys.props("java.runtime.version").take(3)
-scalacOptions ++= Seq(s"-target:jvm-$javaVersion",
+scalacOptions ++= Seq(s"-target:jvm-1.8", "-Ybackend:GenBCode", "-Ydelambdafy:method",
   "-optimize", "-deprecation", "-unchecked", "-feature", "-language:implicitConversions",
   "-Xlog-reflective-calls", "-Xfuture", "-Xlint")
 parallelExecution in test := false
