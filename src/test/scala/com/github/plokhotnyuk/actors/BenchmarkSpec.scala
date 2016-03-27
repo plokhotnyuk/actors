@@ -78,7 +78,9 @@ object BenchmarkSpec {
     val d = System.nanoTime() - t
     println(f"$n%,d ops")
     println(f"$d%,d ns")
-    List(0.0, 50.0, 90.0, 99.0, 99.9, 99.99, 99.999, 100.0).foreach(x => println(f"${h.getValueAtPercentile(x)}%,d ns/op at $x%%'ile"))
+    List(0.0, 0.5, 0.9, 0.99, 0.999, 0.9999, 0.99999, 1.0).foreach {
+      x => println(f"p($x%1.5f) = ${h.getValueAtPercentile(x * 100)}%8d ns/op")
+    }
     println(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
     r
   }
@@ -117,7 +119,7 @@ object BenchmarkSpec {
 
     @annotation.tailrec
     def getHeapMemoryUsage(prev: Long, i: Int = 10): Long = {
-      Thread.sleep(1)
+      Thread.sleep(10)
       val curr = getUsed
       val diff = prev - curr
       if (diff < 0 || diff > precision * curr) getHeapMemoryUsage(curr)
