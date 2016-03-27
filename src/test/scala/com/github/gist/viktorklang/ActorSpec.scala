@@ -3,25 +3,26 @@ package com.github.gist.viktorklang
 import java.util.concurrent._
 import org.specs2.mutable.Specification
 import com.github.gist.viktorklang.Actor._
+import scala.concurrent.{forkjoin => scfj}
 
 class ActorSpec extends Specification {
   args(sequential = true)
 
-  val NumOfMessages = 1000000
+  val NumOfMessages = 100000
   val NumOfThreads = 4
 
   "actor with Scala fork-join pool executor" should {
-    implicit val e = new scala.concurrent.forkjoin.ForkJoinPool()
+    implicit val e = new scfj.ForkJoinPool(NumOfThreads, scfj.ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
     actorTests(NumOfMessages)
   }
 
   "actor with Java fork-join pool executor" should {
-    implicit val e = new ForkJoinPool()
+    implicit val e = new ForkJoinPool(NumOfThreads, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
     actorTests(NumOfMessages)
   }
 
   "actor with fixed thread pool executor" should {
-    implicit val e = Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors, new ThreadFactory {
+    implicit val e = Executors.newFixedThreadPool(NumOfThreads, new ThreadFactory {
       val defaultThreadFactory = Executors.defaultThreadFactory()
 
       def newThread(r: Runnable) = {
@@ -146,6 +147,25 @@ class ActorSpec extends Specification {
         assertCountDown(l)
       }
     }
+
+    "not starve tasks arriving from external submit under high internal traffic" in {
+      (1 to NumOfThreads).foreach {
+        _ =>
+          lazy val a: Actor.Address = Actor(_ => {
+            case _ =>
+              a ! "loop"
+              Stay
+          })
+          a ! "start"
+      }
+      val l = new CountDownLatch(1)
+      Actor(_ => {
+        case _ =>
+          l.countDown()
+          Stay
+      }) ! "all fine"
+      assertCountDown(l)
+    }
   }
 
   private def withSystemErrRedirect[A](w: Int => Unit)(f: => A): A = {
@@ -158,7 +178,7 @@ class ActorSpec extends Specification {
     } finally System.setErr(err)
   }
 
-  private def assertCountDown(l: CountDownLatch, timeout: Long = 1000): Boolean =
+  private def assertCountDown(l: CountDownLatch, timeout: Long = 3000): Boolean =
     l.await(timeout, TimeUnit.MILLISECONDS) must_== true
 
   private def fork(f: => Unit): Unit = new Thread {
