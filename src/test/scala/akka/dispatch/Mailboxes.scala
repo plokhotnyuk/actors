@@ -47,11 +47,12 @@ final private class NBBQ(capacity: Int) extends AtomicReference(new NodeWithCoun
     val tn = tail
     val n = tn.get
     if ((n ne null) && u.compareAndSwapObject(this, o, tn, n)) {
+      tn.lazySet(null) // prevent nepotism with generational GCs
       val e = n.e
-      n.e = null // to avoid possible memory leak when queue is empty
+      n.e = null // avoid possible memory leak when queue is empty
       e
     } else if (get ne tn) {
-      if (i > 9999) Thread.`yield`()
+      if (i > 9999) Thread.`yield`() // Thread.spinYieldHint() should be here
       poll(i + 1)
     } else null
   }
@@ -105,11 +106,12 @@ final private class UQ extends AtomicReference(new Node) with MessageQueue with 
     val tn = tail
     val n = tn.get
     if ((n ne null) && u.compareAndSwapObject(this, o, tn, n)) {
+      tn.lazySet(null) // prevent nepotism with generational GCs
       val e = n.e
-      n.e = null // to avoid possible memory leak when queue is empty
+      n.e = null // avoid possible memory leak when queue is empty
       e
     } else if (get ne tn) {
-      if (i > 9999) Thread.`yield`()
+      if (i > 9999) Thread.`yield`() // Thread.spinYieldHint() should be here
       poll(i + 1)
     } else null
   }
