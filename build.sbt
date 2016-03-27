@@ -21,8 +21,8 @@ testGrouping in Test <<= definedTests in Test map { tests =>
       tests = Seq(test),
       runPolicy = SubProcess(javaOptions = Seq(
         "-server", "-Xms4096m", "-Xms4096m", "-XX:NewSize=3584m", "-XX:MaxNewSize=3584m", "-Xss256k", "-XX:+UseG1GC",
-        "-XX:+TieredCompilation", "-XX:+UseNUMA", "-XX:-UseBiasedLocking", "-XX:+AlwaysPreTouch",
-        "-XX:+UnlockDiagnosticVMOptions", "-XX:GuaranteedSafepointInterval=30000") ++
+        "-XX:+TieredCompilation", "-XX:+ParallelRefProcEnabled ", "-XX:-UseBiasedLocking",
+        "-XX:+AlwaysPreTouch", "-XX:+UnlockDiagnosticVMOptions", "-XX:GuaranteedSafepointInterval=30000") ++
         sys.props.map { case (k, v) => s"-D$k=$v" }))
   }
 }
