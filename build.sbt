@@ -2,7 +2,7 @@ name := "actors"
 version := "1.0-SNAPSHOT"
 scalaVersion := "2.11.8"
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.4.2" % "test",
+  "com.typesafe.akka" %% "akka-actor" % "2.4.3" % "test",
   "net.liftweb" %% "lift-actor" % "3.0-M8" % "test",
   "org.scala-lang" % "scala-actors" % scalaVersion.value % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.1.7" % "test",
