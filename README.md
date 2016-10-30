@@ -67,7 +67,7 @@ Use `mvnAll.sh` or `sbtAll.sh` scripts (for Windows: `mvnAll.bat` or `sbtAll.bat
 Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS system variables:
 
 ```sh
--server -Xms1g -Xmx1g -Xss1m -XX:NewSize=512m -XX:PermSize=256m -XX:MaxPermSize=256m -XX:+TieredCompilation -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:-UseBiasedLocking -XX:+AlwaysPreTouch
+-server -Xms1g -Xmx1g -Xss1m -XX:NewSize=512m -XX:+TieredCompilation -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:-UseBiasedLocking -XX:+AlwaysPreTouch
 ```
 
 ## Known issues
@@ -82,4 +82,4 @@ Results of running mvnAll.bat or mvnAll.sh scripts on different environments wit
 set to number of available processors, 1, 10 or 100 values accordingly:
 
 #### out0*.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Ubuntu 14.04.1, Linux 3.16.0-60-generic, Oracle JDK build 1.8.0_74-b02 64-bit
+Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Ubuntu 14.04.1, Linux 4.4.0-38-generic, Oracle JDK build 1.8.0_112-b15 64-bit

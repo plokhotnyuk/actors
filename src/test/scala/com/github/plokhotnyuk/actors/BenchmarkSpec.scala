@@ -5,6 +5,7 @@ import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import com.sun.management.OperatingSystemMXBean
 import java.lang.management.ManagementFactory._
 import java.util.concurrent._
+import org.agrona.concurrent.HighResolutionTimer
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import org.specs2.mutable.Specification
@@ -17,7 +18,10 @@ abstract class BenchmarkSpec extends Specification {
   sequential
   xonly
 
-  override def map(fs: => Fragments) = Step(setup()) ^ fs.map {
+  override def map(fs: => Fragments) = Step {
+    println(s"Executor service type: $executorServiceType")
+    HighResolutionTimer.enable()
+  } ^ fs.map {
     case Example(desc, body, _, _, _) => Example(desc, {
       println()
       usedMemory(0.1) // GC
@@ -25,9 +29,10 @@ abstract class BenchmarkSpec extends Specification {
       body()
     })
     case other => other
-  } ^ Step(shutdown())
-
-  def setup(): Unit = println(s"Executor service type: $executorServiceType")
+  } ^ Step {
+    shutdown()
+    HighResolutionTimer.disable()
+  }
 
   def shutdown(): Unit
 }
