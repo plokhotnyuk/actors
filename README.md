@@ -13,7 +13,7 @@ Evaluation of API and performance of in-memory messaging for different actor imp
 This project provides and tests alternative implementations of Minimalist actor and bounded/unbounded mailboxes for Akka:
 [Akka](https://github.com/plokhotnyuk/actors/blob/master/src/test/scala/akka/dispatch/Mailboxes.scala) vs.
 [Minimalist Scala Actor](https://github.com/plokhotnyuk/actors/blob/master/src/test/scala/com/github/gist/viktorklang/Actor.scala)
-also it provides alternative fork-join tasks which greatly increase efficiency of actors and examples of their usage
+also it provides alternative fork-join tasks which increase efficiency of actors and examples of their usage
 with Lift, Scala & Scalaz actors.
 
 [![Travis CI Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
