@@ -2,6 +2,7 @@ name := "actors"
 version := "1.0-SNAPSHOT"
 scalaVersion := "2.11.8"
 libraryDependencies ++= Seq(
+  "com.propensive" %% "rapture-core" % "2.0.0-M7",
   "com.typesafe.akka" %% "akka-actor" % "2.4.12" % "test",
   "net.liftweb" %% "lift-actor" % "3.0-RC4" % "test",
   "org.scala-lang" % "scala-actors" % scalaVersion.value % "test",
