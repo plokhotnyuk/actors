@@ -1,31 +1,29 @@
 package com.github.gist.viktorklang
 
 import java.util.concurrent._
-import org.specs2.mutable.Specification
 import com.github.gist.viktorklang.Actor._
+import org.scalatest.{FreeSpec, Matchers}
 import scala.concurrent.{forkjoin => scfj}
 
-class ActorSpec extends Specification {
-  args(sequential = true)
-
+class ActorSpec extends FreeSpec with Matchers {
   val NumOfMessages = 100000
   val NumOfThreads = 4
 
-  "actor with Scala fork-join pool executor" should {
+  "actor with Scala fork-join pool executor" - {
     implicit val e = new scfj.ForkJoinPool(NumOfThreads, scfj.ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
     actorTests(NumOfMessages)
   }
 
-  "actor with Java fork-join pool executor" should {
+  "actor with Java fork-join pool executor" - {
     implicit val e = new ForkJoinPool(NumOfThreads, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
     actorTests(NumOfMessages)
   }
 
-  "actor with fixed thread pool executor" should {
+  "actor with fixed thread pool executor" - {
     implicit val e = Executors.newFixedThreadPool(NumOfThreads, new ThreadFactory {
-      val defaultThreadFactory = Executors.defaultThreadFactory()
+      private val defaultThreadFactory = Executors.defaultThreadFactory()
 
-      def newThread(r: Runnable) = {
+      def newThread(r: Runnable): Thread = {
         val t = defaultThreadFactory.newThread(r)
         t.setDaemon(true)
         t
@@ -34,7 +32,7 @@ class ActorSpec extends Specification {
     actorTests(NumOfMessages)
   }
 
-  def actorTests(n: Int)(implicit e: Executor) = {
+  def actorTests(n: Int)(implicit e: Executor): Unit = {
     "execute code async" in {
       val l = new CountDownLatch(1)
       Actor(_ => _ => {
@@ -152,7 +150,7 @@ class ActorSpec extends Specification {
       (1 to NumOfThreads).foreach {
         _ =>
           lazy val a: Actor.Address = Actor(_ => {
-            case _ =>
+            _ =>
               a ! "loop"
               Stay
           })
@@ -160,7 +158,7 @@ class ActorSpec extends Specification {
       }
       val l = new CountDownLatch(1)
       Actor(_ => {
-        case _ =>
+        _ =>
           l.countDown()
           Stay
       }) ! "all fine"
@@ -178,8 +176,8 @@ class ActorSpec extends Specification {
     } finally System.setErr(err)
   }
 
-  private def assertCountDown(l: CountDownLatch, timeout: Long = 3000): Boolean =
-    l.await(timeout, TimeUnit.MILLISECONDS) must_== true
+  private def assertCountDown(l: CountDownLatch, timeout: Long = 3000): Unit =
+    l.await(timeout, TimeUnit.MILLISECONDS).shouldBe(true)
 
   private def fork(f: => Unit): Unit = new Thread {
     override def run(): Unit = f

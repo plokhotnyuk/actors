@@ -2,10 +2,8 @@ package com.github.plokhotnyuk.actors
 
 import com.typesafe.config.ConfigFactory._
 import com.typesafe.config.Config
-import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import akka.actor.{Actor, ActorRef, Props}
 import java.util.concurrent.CountDownLatch
-import org.specs2.execute.Success
 
 class AkkaBoundedActorSpec extends AkkaUnboundedActorSpec {
   override def config: Config = load(parseString(
@@ -41,7 +39,6 @@ class AkkaBoundedActorSpec extends AkkaUnboundedActorSpec {
       sendMessages(a, n)
     }
     l.countDown()
-    Success()
   }
 
   private def blockableCountActor2(l: CountDownLatch): ActorRef =

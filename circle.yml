@@ -7,9 +7,9 @@ test:
   - cat /sys/devices/system/clocksource/clocksource0/current_clocksource
   - cat /proc/cpuinfo
   - cat /proc/meminfo
-  - mvn -B -DskipTests test
-  - mvn -B -Dbenchmark.executorServiceType=akka-forkjoin-pool test -Ptravis
-  - mvn -B -Dbenchmark.executorServiceType=scala-forkjoin-pool test -Ptravis
-  - mvn -B -Dbenchmark.executorServiceType=java-forkjoin-pool test -Ptravis
-  - mvn -B -Dbenchmark.executorServiceType=abq-thread-pool test -Ptravis
-  - mvn -B -Dbenchmark.executorServiceType=lbq-thread-pool test -Ptravis
+  - sbt -no-colors clean test:compile >outX.txt
+  - sbt -no-colors -Dbenchmark.executorServiceType=akka-forkjoin-pool test >>outX.txt
+  - sbt -no-colors -Dbenchmark.executorServiceType=scala-forkjoin-pool test >>outX.txt
+  - sbt -no-colors -Dbenchmark.executorServiceType=java-forkjoin-pool test >>outX.txt
+  - sbt -no-colors -Dbenchmark.executorServiceType=abq-thread-pool test >>outX.txt
+  - sbt -no-colors -Dbenchmark.executorServiceType=lbq-thread-pool test >>outX.txt

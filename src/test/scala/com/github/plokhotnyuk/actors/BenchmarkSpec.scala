@@ -6,59 +6,26 @@ import com.sun.management.OperatingSystemMXBean
 import java.lang.management.ManagementFactory._
 import java.util.concurrent._
 import org.agrona.concurrent.HighResolutionTimer
-import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
-import org.specs2.mutable.Specification
-import org.specs2.specification.{Example, Step, Fragments}
 import scala.concurrent.forkjoin.{ForkJoinPool => ScalaForkJoinPool}
 import org.HdrHistogram.Histogram
+import org.scalatest._
 
-@RunWith(classOf[JUnitRunner])
-abstract class BenchmarkSpec extends Specification {
-  sequential
-  xonly
-
-  override def map(fs: => Fragments) = Step {
-    println(s"Executor service type: $executorServiceType")
+abstract class BenchmarkSpec extends FreeSpec with BeforeAndAfterAll with BeforeAndAfterEach {
+  override def beforeAll(): Unit = {
     HighResolutionTimer.enable()
-  } ^ fs.map {
-    case Example(desc, body, _, _, _) => Example(desc, {
-      println()
-      usedMemory(0.1) // GC
-      println(s"$desc:")
-      body()
-    })
-    case other => other
-  } ^ Step {
+  }
+
+  override def afterEach(): Unit = {
+    usedMemory(0.1) // GC
+    info("")
+  }
+
+  override def afterAll(): Unit = {
     shutdown()
     HighResolutionTimer.disable()
   }
 
   def shutdown(): Unit
-}
-
-object BenchmarkSpec {
-  private val processors = Runtime.getRuntime.availableProcessors
-  private val executorServiceType = System.getProperty("benchmark.executorServiceType", "scala-forkjoin-pool")
-  private val poolSize = System.getProperty("benchmark.poolSize", processors.toString).toInt
-  private val osMXBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
-  private val memoryMXBean = getMemoryMXBean
-
-  val parallelism: Int = System.getProperty("benchmark.parallelism", processors.toString).toInt
-
-  def roundToParallelism(n: Int): Int = (n / parallelism) * parallelism
-
-  def createExecutorService(size: Int = poolSize): ExecutorService =
-    executorServiceType match {
-      case "akka-forkjoin-pool" => new AkkaForkJoinPool(size, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null)
-      case "scala-forkjoin-pool" => new ScalaForkJoinPool(size, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
-      case "java-forkjoin-pool" => new ForkJoinPool(size, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
-      case "lbq-thread-pool" => new ThreadPoolExecutor(size, size, 1, TimeUnit.HOURS,
-        new LinkedBlockingQueue[Runnable](), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
-      case "abq-thread-pool" => new ThreadPoolExecutor(size, size, 1, TimeUnit.HOURS,
-        new ArrayBlockingQueue[Runnable](1000000), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
-      case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
-    }
 
   def timed[A](n: Int, printAvgLatency: Boolean = false)(benchmark: => A): A = {
     val t = System.nanoTime()
@@ -66,11 +33,11 @@ object BenchmarkSpec {
     val r = benchmark
     val cd = osMXBean.getProcessCpuTime - ct
     val d = System.nanoTime() - t
-    println(f"$n%,d ops")
-    println(f"$d%,d ns")
-    if (printAvgLatency) println(f"${d / n}%,d ns/op")
-    else println(f"${(n * 1000000000L) / d}%,d ops/s")
-    println(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
+    info(f"$n%,d ops")
+    info(f"$d%,d ns")
+    if (printAvgLatency) info(f"${d / n}%,d ns/op")
+    else info(f"${(n * 1000000000L) / d}%,d ops/s")
+    info(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
     r
   }
 
@@ -81,12 +48,12 @@ object BenchmarkSpec {
     val r = benchmark(h)
     val cd = osMXBean.getProcessCpuTime - ct
     val d = System.nanoTime() - t
-    println(f"$n%,d ops")
-    println(f"$d%,d ns")
+    info(f"$n%,d ops")
+    info(f"$d%,d ns")
     List(0.0, 0.5, 0.9, 0.99, 0.999, 0.9999, 0.99999, 1.0).foreach {
-      x => println(f"p($x%1.5f) = ${h.getValueAtPercentile(x * 100)}%8d ns/op")
+      x => info(f"p($x%1.5f) = ${h.getValueAtPercentile(x * 100)}%8d ns/op")
     }
-    println(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
+    info(f"${(cd * 100.0) / d / processors}%2.1f %% of CPU usage")
     r
   }
 
@@ -95,7 +62,7 @@ object BenchmarkSpec {
     val r = timed(n)(benchmark)
     val m = usedMemory() - u
     val b = bytesPerInstance(m, n)
-    println(f"$b%,d bytes per instance")
+    info(f"$b%,d bytes per instance")
     r
   }
 
@@ -113,9 +80,34 @@ object BenchmarkSpec {
     teardown
     val m = usedMemory() - u
     val b = bytesPerInstance(m, n)
-    println(f"$b%,d bytes per instance")
+    info(f"$b%,d bytes per instance")
     r
   }
+}
+
+object BenchmarkSpec {
+  private val processors = Runtime.getRuntime.availableProcessors
+  private val executorServiceType = System.getProperty("benchmark.executorServiceType", "scala-forkjoin-pool")
+  private val poolSize = System.getProperty("benchmark.poolSize", processors.toString).toInt
+  private val osMXBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
+  private val memoryMXBean = getMemoryMXBean
+  println(s"Executor service type: $executorServiceType")
+
+  val parallelism: Int = System.getProperty("benchmark.parallelism", processors.toString).toInt
+
+  def roundToParallelism(n: Int): Int = (n / parallelism) * parallelism
+
+  def createExecutorService(size: Int = poolSize): ExecutorService =
+    executorServiceType match {
+      case "akka-forkjoin-pool" => new AkkaForkJoinPool(size, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null)
+      case "scala-forkjoin-pool" => new ScalaForkJoinPool(size, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
+      case "java-forkjoin-pool" => new ForkJoinPool(size, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
+      case "lbq-thread-pool" => new ThreadPoolExecutor(size, size, 1, TimeUnit.HOURS,
+        new LinkedBlockingQueue[Runnable](), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
+      case "abq-thread-pool" => new ThreadPoolExecutor(size, size, 1, TimeUnit.HOURS,
+        new ArrayBlockingQueue[Runnable](1000000), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())
+      case _ => throw new IllegalArgumentException("Unsupported value of benchmark.executorServiceType property")
+    }
 
   def bytesPerInstance(m: Long, n: Int): Int = Math.round(m.toDouble / n).toInt
 

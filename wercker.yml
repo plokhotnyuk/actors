@@ -7,9 +7,9 @@ build:
           cat /sys/devices/system/clocksource/clocksource0/current_clocksource
           cat /proc/cpuinfo
           cat /proc/meminfo
-          mvn -B -DskipTests test
-          mvn -B -Dbenchmark.executorServiceType=akka-forkjoin-pool test
-          mvn -B -Dbenchmark.executorServiceType=scala-forkjoin-pool test
-          mvn -B -Dbenchmark.executorServiceType=java-forkjoin-pool test
-          mvn -B -Dbenchmark.executorServiceType=abq-thread-pool test
-          mvn -B -Dbenchmark.executorServiceType=lbq-thread-pool test
+          sbt clean test:compile
+          sbt -Dbenchmark.executorServiceType=akka-forkjoin-pool test
+          sbt -Dbenchmark.executorServiceType=scala-forkjoin-pool test
+          sbt -Dbenchmark.executorServiceType=java-forkjoin-pool test
+          sbt -Dbenchmark.executorServiceType=abq-thread-pool test
+          sbt -Dbenchmark.executorServiceType=lbq-thread-pool test

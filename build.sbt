@@ -6,7 +6,7 @@ libraryDependencies ++= Seq(
   "net.liftweb" %% "lift-actor" % "3.0-RC4" % "test",
   "org.scala-lang" % "scala-actors" % scalaVersion.value % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.1.10" % "test",
-  "org.specs2" %% "specs2-junit" % "2.5-scalaz-7.1.6" % "test",
+  "org.scalatest" %% "scalatest" % "3.0.3" % "test",
   "org.hdrhistogram" % "HdrHistogram" % "2.1.9" % "test",
   "org.agrona" % "Agrona" % "0.5.5" % "test"
 )
@@ -17,7 +17,7 @@ parallelExecution in test := false
 testGrouping in Test <<= definedTests in Test map { tests =>
   tests.sortBy(_.name).map { test =>
     import Tests._
-    new Group(
+    Group(
       name = test.name,
       tests = Seq(test),
       runPolicy = SubProcess(javaOptions = Seq(

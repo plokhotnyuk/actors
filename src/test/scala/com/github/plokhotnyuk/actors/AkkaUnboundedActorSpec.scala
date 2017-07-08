@@ -1,14 +1,13 @@
 package com.github.plokhotnyuk.actors
 
 import akka.actor._
-import akka.dispatch.{ExecutorServiceFactory, ExecutorServiceConfigurator, DispatcherPrerequisites}
+import akka.dispatch.{DispatcherPrerequisites, ExecutorServiceConfigurator, ExecutorServiceFactory}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import com.typesafe.config.ConfigFactory._
 import com.typesafe.config.Config
-import java.util.concurrent.{TimeUnit, ExecutorService, ThreadFactory, CountDownLatch}
-import org.specs2.execute.Success
+import java.util.concurrent.{CountDownLatch, ExecutorService, ThreadFactory, TimeUnit}
 import scala.concurrent.Await
 
 class AkkaUnboundedActorSpec extends BenchmarkSpec {
@@ -28,7 +27,7 @@ class AkkaUnboundedActorSpec extends BenchmarkSpec {
     """))
 
   val actorSystem = ActorSystem("system", config)
-  val root = actorSystem.actorOf(Props(classOf[RootAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher"))
+  val root: ActorRef = actorSystem.actorOf(Props(classOf[RootAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher"))
   implicit val timeout = Timeout(1, TimeUnit.MINUTES)
 
   "Enqueueing" in {
@@ -41,7 +40,6 @@ class AkkaUnboundedActorSpec extends BenchmarkSpec {
     }
     l1.countDown()
     l2.await()
-    Success()
   }
 
   "Dequeueing" in {
@@ -54,12 +52,14 @@ class AkkaUnboundedActorSpec extends BenchmarkSpec {
       l1.countDown()
       l2.await()
     }
-    Success()
   }
 
   "Initiation" in {
-    Await.result(root ? "Initiation", timeout.duration)
-    Success()
+    footprintedAndTimedCollect(100000){
+      val p = Props(classOf[MinimalAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher")
+      val c = Await.result(root ? "context", timeout.duration).asInstanceOf[ActorContext]
+      () => c.actorOf(p)
+    }
   }
 
   "Single-producer sending" in {
@@ -70,7 +70,6 @@ class AkkaUnboundedActorSpec extends BenchmarkSpec {
       sendMessages(a, n)
       l.await()
     }
-    Success()
   }
 
   "Multi-producer sending" in {
@@ -82,7 +81,6 @@ class AkkaUnboundedActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
-    Success()
   }
 
   "Max throughput" in {
@@ -97,17 +95,14 @@ class AkkaUnboundedActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
-    Success()
   }
 
   "Ping latency" in {
     pingLatency(1500000)
-    Success()
   }
 
   "Ping throughput 10K" in {
     pingThroughput(2000000, 10000)
-    Success()
   }
 
   def shutdown(): Unit = {
@@ -225,13 +220,8 @@ private class RootAkkaActor extends Actor {
   def receive: Actor.Receive = {
     case p: Props =>
       sender ! context.actorOf(p)
-    case "Initiation" =>
-      footprintedAndTimedCollect(100000){
-        val p = Props(classOf[MinimalAkkaActor]).withDispatcher("akka.actor.benchmark-dispatcher")
-        val c = context
-        () => c.actorOf(p)
-      }
-      sender ! "Done"
+    case "context" =>
+      sender ! this.context
   }
 }
 

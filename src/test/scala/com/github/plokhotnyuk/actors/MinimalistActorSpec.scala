@@ -4,10 +4,9 @@ import java.util.concurrent.CountDownLatch
 import com.github.gist.viktorklang.Actor
 import com.github.gist.viktorklang.Actor._
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import org.specs2.execute.Success
 
 class MinimalistActorSpec extends BenchmarkSpec {
-  implicit val executorService = createExecutorService()
+  private implicit val executorService = createExecutorService()
 
   "Enqueueing" in {
     val n = 40000000
@@ -19,7 +18,6 @@ class MinimalistActorSpec extends BenchmarkSpec {
     }
     l1.countDown()
     l2.await()
-    Success()
   }
 
   "Dequeueing" in {
@@ -32,7 +30,6 @@ class MinimalistActorSpec extends BenchmarkSpec {
       l1.countDown()
       l2.await()
     }
-    Success()
   }
 
   "Initiation" in {
@@ -41,7 +38,6 @@ class MinimalistActorSpec extends BenchmarkSpec {
       val f = (_: Address) => (_: Any) => Stay
       () => Actor(f)(es)
     }, fullShutdown(es))
-    Success()
   }
 
   "Single-producer sending" in {
@@ -52,7 +48,6 @@ class MinimalistActorSpec extends BenchmarkSpec {
       sendMessages(a, n)
       l.await()
     }
-    Success()
   }
 
   "Multi-producer sending" in {
@@ -64,7 +59,6 @@ class MinimalistActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
-    Success()
   }
 
   "Max throughput" in {
@@ -79,17 +73,14 @@ class MinimalistActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
-    Success()
   }
 
   "Ping latency" in {
     pingLatency(3000000)
-    Success()
   }
 
   "Ping throughput 10K" in {
     pingThroughput(6000000, 10000)
-    Success()
   }
 
   def shutdown(): Unit = fullShutdown(executorService)

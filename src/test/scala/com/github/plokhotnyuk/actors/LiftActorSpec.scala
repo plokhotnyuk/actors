@@ -4,7 +4,6 @@ import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import java.util.concurrent.{ForkJoinPool, CountDownLatch}
 import net.liftweb.actor.{ILAExecute, LAScheduler, LiftActor}
 import net.liftweb.common.Full
-import org.specs2.execute.Success
 
 class LiftActorSpec extends BenchmarkSpec {
   LAScheduler.createExecutor = () => new ILAExecute {
@@ -41,7 +40,6 @@ class LiftActorSpec extends BenchmarkSpec {
     }
     l1.countDown()
     l2.await()
-    Success()
   }
 
   "Dequeueing" in {
@@ -54,7 +52,6 @@ class LiftActorSpec extends BenchmarkSpec {
       l1.countDown()
       l2.await()
     }
-    Success()
   }
 
   "Initiation" in {
@@ -63,7 +60,6 @@ class LiftActorSpec extends BenchmarkSpec {
         case _ =>
       }
     })
-    Success()
   }
 
   "Single-producer sending" in {
@@ -74,7 +70,6 @@ class LiftActorSpec extends BenchmarkSpec {
       sendMessages(a, n)
       l.await()
     }
-    Success()
   }
 
   "Multi-producer sending" in {
@@ -86,7 +81,6 @@ class LiftActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
-    Success()
   }
 
   "Max throughput" in {
@@ -101,17 +95,14 @@ class LiftActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
-    Success()
   }
 
   "Ping latency" in {
     pingLatency(1500000)
-    Success()
   }
 
   "Ping throughput 10K" in {
     pingThroughput(2000000, 10000)
-    Success()
   }
 
   def shutdown(): Unit = LAScheduler.shutdown()
@@ -124,7 +115,7 @@ class LiftActorSpec extends BenchmarkSpec {
         val a2 = new LiftActor {
           private var i = n / 2
 
-          override val highPriorityReceive = Full[PartialFunction[Any, Unit]]({
+          override val highPriorityReceive: Full[PartialFunction[Any, Unit]] = Full[PartialFunction[Any, Unit]]({
             case m =>
               h.record()
               if (i > 0) a1 ! m
@@ -139,7 +130,7 @@ class LiftActorSpec extends BenchmarkSpec {
         a1 = new LiftActor {
           private var i = n / 2
 
-          override val highPriorityReceive = Full[PartialFunction[Any, Unit]]({
+          override val highPriorityReceive: Full[PartialFunction[Any, Unit]] = Full[PartialFunction[Any, Unit]]({
             case m =>
               h.record()
               if (i > 0) a2 ! m
@@ -164,7 +155,7 @@ class LiftActorSpec extends BenchmarkSpec {
         val a2 = new LiftActor {
           private var i = n / p / 2
 
-          override val highPriorityReceive = Full[PartialFunction[Any, Unit]]({
+          override val highPriorityReceive: Full[PartialFunction[Any, Unit]] = Full[PartialFunction[Any, Unit]]({
             case m =>
               if (i > 0) a1 ! m
               i -= 1
@@ -178,7 +169,7 @@ class LiftActorSpec extends BenchmarkSpec {
         a1 = new LiftActor {
           private var i = n / p / 2
 
-          override val highPriorityReceive = Full[PartialFunction[Any, Unit]]({
+          override val highPriorityReceive: Full[PartialFunction[Any, Unit]] = Full[PartialFunction[Any, Unit]]({
             case m =>
               if (i > 0) a2 ! m
               i -= 1
@@ -202,7 +193,7 @@ class LiftActorSpec extends BenchmarkSpec {
       private var blocked = true
       private var i = n - 1
 
-      override val highPriorityReceive = Full[PartialFunction[Any, Unit]]({
+      override val highPriorityReceive: Full[PartialFunction[Any, Unit]] = Full[PartialFunction[Any, Unit]]({
         case _ =>
           if (blocked) {
             l1.await()
@@ -222,7 +213,7 @@ class LiftActorSpec extends BenchmarkSpec {
     new LiftActor {
       private var i = n
 
-      override val highPriorityReceive = Full[PartialFunction[Any, Unit]]({
+      override val highPriorityReceive: Full[PartialFunction[Any, Unit]] = Full[PartialFunction[Any, Unit]]({
         case _ =>
           i -= 1
           if (i == 0) l.countDown()

@@ -2,13 +2,12 @@ package com.github.plokhotnyuk.actors
 
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import java.util.concurrent._
-import org.specs2.execute.Success
 import scalaz.concurrent.{Strategy, Actor}
 import scalaz.concurrent.Actor._
 
 class ScalazActorSpec extends BenchmarkSpec {
-  val executorService = createExecutorService()
-  implicit val actorStrategy = executorService match {
+  private val executorService = createExecutorService()
+  private implicit val actorStrategy = executorService match {
     case p: scala.concurrent.forkjoin.ForkJoinPool => new Strategy {
       def apply[A](a: => A): () => A = {
         new ScalaForkJoinTask(p) {
@@ -51,7 +50,6 @@ class ScalazActorSpec extends BenchmarkSpec {
     }
     l1.countDown()
     l2.await()
-    Success()
   }
 
   "Dequeueing" in {
@@ -64,12 +62,10 @@ class ScalazActorSpec extends BenchmarkSpec {
       l1.countDown()
       l2.await()
     }
-    Success()
   }
 
   "Initiation" in {
     footprintedAndTimedCollect(10000000)(() => actor((_: Message) => ()))
-    Success()
   }
 
   "Single-producer sending" in {
@@ -80,7 +76,6 @@ class ScalazActorSpec extends BenchmarkSpec {
       sendMessages(a, n)
       l.await()
     }
-    Success()
   }
 
   "Multi-producer sending" in {
@@ -92,7 +87,6 @@ class ScalazActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
-    Success()
   }
 
   "Max throughput" in {
@@ -107,17 +101,14 @@ class ScalazActorSpec extends BenchmarkSpec {
       r.start()
       l.await()
     }
-    Success()
   }
 
   "Ping latency" in {
     pingLatency(3000000)
-    Success()
   }
 
   "Ping throughput 10K" in {
     pingThroughput(6000000, 10000)
-    Success()
   }
 
   def shutdown(): Unit = fullShutdown(executorService)
