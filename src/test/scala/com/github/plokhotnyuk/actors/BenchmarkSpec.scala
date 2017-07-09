@@ -6,7 +6,6 @@ import com.sun.management.OperatingSystemMXBean
 import java.lang.management.ManagementFactory._
 import java.util.concurrent._
 import org.agrona.concurrent.HighResolutionTimer
-import scala.concurrent.forkjoin.{ForkJoinPool => ScalaForkJoinPool}
 import org.HdrHistogram.Histogram
 import org.scalatest._
 
@@ -87,7 +86,7 @@ abstract class BenchmarkSpec extends FreeSpec with BeforeAndAfterAll with Before
 
 object BenchmarkSpec {
   private val processors = Runtime.getRuntime.availableProcessors
-  private val executorServiceType = System.getProperty("benchmark.executorServiceType", "scala-forkjoin-pool")
+  private val executorServiceType = System.getProperty("benchmark.executorServiceType", "java-forkjoin-pool")
   private val poolSize = System.getProperty("benchmark.poolSize", processors.toString).toInt
   private val osMXBean = newPlatformMXBeanProxy(getPlatformMBeanServer, OPERATING_SYSTEM_MXBEAN_NAME, classOf[OperatingSystemMXBean])
   private val memoryMXBean = getMemoryMXBean
@@ -100,7 +99,6 @@ object BenchmarkSpec {
   def createExecutorService(size: Int = poolSize): ExecutorService =
     executorServiceType match {
       case "akka-forkjoin-pool" => new AkkaForkJoinPool(size, akka.dispatch.forkjoin.ForkJoinPool.defaultForkJoinWorkerThreadFactory, null)
-      case "scala-forkjoin-pool" => new ScalaForkJoinPool(size, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "java-forkjoin-pool" => new ForkJoinPool(size, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "lbq-thread-pool" => new ThreadPoolExecutor(size, size, 1, TimeUnit.HOURS,
         new LinkedBlockingQueue[Runnable](), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardPolicy())

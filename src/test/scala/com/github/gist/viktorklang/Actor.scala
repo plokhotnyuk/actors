@@ -20,7 +20,6 @@ package com.github.gist.viktorklang
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent._
 import scala.annotation.tailrec
-import scala.concurrent.{forkjoin => scfj}
 
 object Actor {
   type Behavior = Any => Effect
@@ -63,16 +62,6 @@ object Actor {
 
       // Schedule for async execution or suspending
       private def async(b: Behavior, n: Node, running: Boolean): Unit = e match {
-        case p: scfj.ForkJoinPool => p.execute(new scfj.ForkJoinTask[Unit] {
-          def exec(): Boolean = {
-            actOrSuspend(b, n, running)
-            false
-          }
-
-          def getRawResult: Unit = ()
-
-          def setRawResult(unit: Unit): Unit = ()
-        })
         case p: ForkJoinPool => p.execute(new ForkJoinTask[Unit] {
           def exec(): Boolean = {
             actOrSuspend(b, n, running)

@@ -23,13 +23,3 @@ abstract class JavaForkJoinTask(p: ForkJoinPool) extends ForkJoinTask[Unit] {
 
   def setRawResult(unit: Unit): Unit = ()
 }
-
-import scala.concurrent.forkjoin.{ForkJoinPool, ForkJoinTask}
-
-abstract class ScalaForkJoinTask(p: ForkJoinPool) extends ForkJoinTask[Unit] {
-  p.execute(this)
-
-  def getRawResult: Unit = ()
-
-  def setRawResult(unit: Unit): Unit = ()
-}

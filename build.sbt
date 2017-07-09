@@ -1,16 +1,16 @@
 name := "actors"
 version := "1.0-SNAPSHOT"
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.2"
+crossScalaVersions := Seq("2.11.11", "2.12.2")
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.5.3" % "test",
   "net.liftweb" %% "lift-actor" % "3.1.0" % "test",
-  "org.scala-lang" % "scala-actors" % scalaVersion.value % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.3.0-M14" % "test",
   "org.scalatest" %% "scalatest" % "3.0.3" % "test",
   "org.hdrhistogram" % "HdrHistogram" % "2.1.9" % "test",
   "org.agrona" % "agrona" % "0.9.6" % "test"
 )
-scalacOptions ++= Seq(s"-target:jvm-1.8", "-Ybackend:GenBCode", "-Ydelambdafy:method",
+scalacOptions ++= Seq(s"-target:jvm-1.8", "-Ydelambdafy:method",
   "-optimize", "-deprecation", "-unchecked", "-feature", "-language:implicitConversions",
   "-Xlog-reflective-calls", "-Xfuture", "-Xlint")
 parallelExecution in test := false

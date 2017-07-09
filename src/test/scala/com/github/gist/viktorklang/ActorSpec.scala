@@ -3,18 +3,12 @@ package com.github.gist.viktorklang
 import java.util.concurrent._
 import com.github.gist.viktorklang.Actor._
 import org.scalatest.{FreeSpec, Matchers}
-import scala.concurrent.{forkjoin => scfj}
 
 class ActorSpec extends FreeSpec with Matchers {
   val NumOfMessages = 100000
   val NumOfThreads = 4
 
-  "actor with Scala fork-join pool executor" - {
-    implicit val e = new scfj.ForkJoinPool(NumOfThreads, scfj.ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
-    actorTests(NumOfMessages)
-  }
-
-  "actor with Java fork-join pool executor" - {
+  "actor with fork-join pool executor" - {
     implicit val e = new ForkJoinPool(NumOfThreads, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
     actorTests(NumOfMessages)
   }

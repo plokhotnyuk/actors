@@ -10,12 +10,6 @@ class LiftActorSpec extends BenchmarkSpec {
     private val executorService = createExecutorService()
 
     def execute(f: () => Unit): Unit = executorService match {
-      case p: scala.concurrent.forkjoin.ForkJoinPool => new ScalaForkJoinTask(p) {
-        def exec(): Boolean = {
-          f()
-          false
-        }
-      }
       case p: ForkJoinPool => new JavaForkJoinTask(p) {
         def exec(): Boolean = {
           f()

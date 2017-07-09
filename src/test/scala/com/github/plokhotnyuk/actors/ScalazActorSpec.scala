@@ -8,17 +8,6 @@ import scalaz.concurrent.Actor._
 class ScalazActorSpec extends BenchmarkSpec {
   private val executorService = createExecutorService()
   private implicit val actorStrategy = executorService match {
-    case p: scala.concurrent.forkjoin.ForkJoinPool => new Strategy {
-      def apply[A](a: => A): () => A = {
-        new ScalaForkJoinTask(p) {
-          def exec(): Boolean = {
-            a
-            false
-          }
-        }
-        null
-      }
-    }
     case p: ForkJoinPool => new Strategy {
       def apply[A](a: => A): () => A = {
         new JavaForkJoinTask(p) {
