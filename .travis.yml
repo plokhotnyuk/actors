@@ -7,7 +7,7 @@ script:
   - cat /sys/devices/system/clocksource/clocksource0/current_clocksource
   - cat /proc/cpuinfo
   - cat /proc/meminfo
-  - sbt -no-colors clean test:compile
+  - sbt -J-Xss2m -no-colors clean test:compile
   - sbt -no-colors -Dbenchmark.executorServiceType=akka-forkjoin-pool test
   - sbt -no-colors -Dbenchmark.executorServiceType=java-forkjoin-pool test
   - sbt -no-colors -Dbenchmark.executorServiceType=abq-thread-pool test

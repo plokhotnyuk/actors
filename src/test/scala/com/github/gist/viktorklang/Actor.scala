@@ -88,7 +88,7 @@ object Actor {
       }
 
       @tailrec private def act(b: Behavior, n: Node, i: Int): Unit = {
-        val b1 = try b(n.a)(b) catch {
+        val b1 = try b(n.a).apply(b) catch {
           case t: Throwable => asyncSuspendAndRethrow(b, n, t)
         }
         val n1 = n.get
