@@ -1,6 +1,6 @@
 #!/bin/bash
-sbt clean test:compile >outX.txt
-sbt -Dbenchmark.executorServiceType=akka-forkjoin-pool test >>outX.txt
-sbt -Dbenchmark.executorServiceType=java-forkjoin-pool test >>outX.txt
-sbt -Dbenchmark.executorServiceType=abq-thread-pool test >>outX.txt
-sbt -Dbenchmark.executorServiceType=lbq-thread-pool test >>outX.txt
+sbt -no-colors clean test:compile &>outX.txt
+sbt -no-colors -Dbenchmark.executorServiceType=akka-forkjoin-pool test &>>outX.txt
+sbt -no-colors -Dbenchmark.executorServiceType=java-forkjoin-pool test &>>outX.txt
+sbt -no-colors -Dbenchmark.executorServiceType=abq-thread-pool test &>>outX.txt
+sbt -no-colors -Dbenchmark.executorServiceType=lbq-thread-pool test &>>outX.txt

@@ -18,8 +18,6 @@ with Lift, Scala & Scalaz actors.
 
 [![Travis CI Build Status](https://secure.travis-ci.org/plokhotnyuk/actors.png)](http://travis-ci.org/plokhotnyuk/actors)
 
-[![Wercker Build Status](https://app.wercker.com/status/25f11d8f54baf3a84d8ae429465bcbb3/s "wercker status")](https://app.wercker.com/project/bykey/25f11d8f54baf3a84d8ae429465bcbb3)
-
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/plokhotnyuk/actors?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Benchmarks and their goals
@@ -40,28 +38,24 @@ with Lift, Scala & Scalaz actors.
 
 ## Software installed required
 - JDK: 1.8.0_x
-- Maven: 3.x or sbt: 0.13.x
+- sbt: 0.13.x
 
 ## Building & running benchmarks
 Before benchmark running check if your CPU works in most performant mode (not a powersave one). Check it on Linux by following command:
 `cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
 
-Use following command-line instructions to build from sources and run benchmarks with Scala's ForkJoinPool in FIFO mode:
+Use following command-line instructions to build from sources and run benchmarks with Java's ForkJoinPool in FIFO mode:
 ```sh
-mvn -B clean test >outX.txt
-```
-or
-```sh
-sbt clean test >outX.txt
+sbt clean test &>outX.txt
 ```
 
-Use `mvnAll.sh` or `sbtAll.sh` scripts (for Windows: `mvnAll.bat` or `sbtAll.bat`) to run benchmarks for the following types of executor services:
+Use `sbtAll.sh` scripts (for Windows: `sbtAll.bat`) to run benchmarks for the following types of executor services:
 - `akka-forkjoin-pool` for `akka.dispatch.ForkJoinExecutorConfigurator.AkkaForkJoinPool`
 - `java-forkjoin-pool` for `java.util.concurrent.ForkJoinPool`
 - `abq-thread-pool` for `java.util.concurrent.ThreadPoolExecutor` with `java.util.concurrent.ArrayBlockingQueue`
 - `lbq-thread-pool` for `java.util.concurrent.ThreadPoolExecutor` with `java.util.concurrent.LinkedBlockingQueue`
 
-Recommended values of JVM options which can be set for MAVEN_OPTS and SBT_OPTS system variables:
+Recommended values of JVM options which can be set for SBT_OPTS system variables:
 
 ```sh
 -server -Xms1g -Xmx1g -Xss1m -XX:NewSize=512m -XX:+TieredCompilation -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:-UseBiasedLocking -XX:+AlwaysPreTouch
@@ -78,5 +72,5 @@ in working directory with following JVM option to pick it up: `-Xbootclasspath/p
 Results of running mvnAll.bat or mvnAll.sh scripts on different environments with pool size (or number of worker threads)
 set to number of available processors, 1, 10 or 100 values accordingly:
 
-#### out0*.txt
-Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz (max 3.50GHz), RAM 12Gb DDR3-1333, Ubuntu 14.04.1, Linux 4.4.0-38-generic, Oracle JDK build 1.8.0_112-b15 64-bit
+#### out0.txt
+Intel(R) Core(TM) i7-2760QM CPU @ 2.40GHz (max 3.50GHz), RAM 16Gb DDR3-1600, Ubuntu 15.04, Linux 4.4.0-38-generic, Oracle JDK build 1.8.0_112-b15 64-bit
