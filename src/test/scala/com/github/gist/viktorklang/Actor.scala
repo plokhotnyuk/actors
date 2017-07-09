@@ -56,15 +56,14 @@ object Actor {
         val n = new Node(a)
         getAndSet(n) match {
           case h: Node => h.lazySet(n)
-          case b => async(b.asInstanceOf[Behavior], n, running = true)
+          case b => asyncAct(b.asInstanceOf[Behavior], n)
         }
       }
 
-      // Schedule for async execution or suspending
-      private def async(b: Behavior, n: Node, running: Boolean): Unit = e match {
+      private def asyncAct(b: Behavior, n: Node): Unit = e match {
         case p: ForkJoinPool => p.execute(new ForkJoinTask[Unit] {
           def exec(): Boolean = {
-            actOrSuspend(b, n, running)
+            act(b, n, batch)
             false
           }
 
@@ -73,46 +72,58 @@ object Actor {
           def setRawResult(unit: Unit): Unit = ()
         })
         case p => p.execute(new Runnable {
-          def run(): Unit = actOrSuspend(b, n, running)
+          def run(): Unit = act(b, n, batch)
         })
       }
 
-      private def actOrSuspend(b: Behavior, n: Node, running: Boolean): Unit =
-        if (running) act(b, n, batch)
-        else if ((n ne get) || !compareAndSet(n, b)) lastTryToActOrSuspend(b, n)
+      private def asyncTrySuspend(b: Behavior, n: Node): Unit = e match {
+        case p: ForkJoinPool => p.execute(new ForkJoinTask[Unit] {
+          def exec(): Boolean = {
+            trySuspend(b, n)
+            false
+          }
 
-      private def lastTryToActOrSuspend(b: Behavior, n: Node): Unit = {
-        val n1 = n.get
-        if (n1 ne null) act(b, n1, batch)
-        else async(b, n, running = false)
+          def getRawResult: Unit = ()
+
+          def setRawResult(unit: Unit): Unit = ()
+        })
+        case p => p.execute(new Runnable {
+          def run(): Unit = trySuspend(b, n)
+        })
       }
+
+      private def trySuspend(b: Behavior, n: Node): Unit =
+        if (!compareAndSet(n, b)) {
+          val n1 = n.get
+          if (n1 eq null) asyncTrySuspend(b, n)
+          else act(b, n1, batch)
+        }
 
       @tailrec private def act(b: Behavior, n: Node, i: Int): Unit = {
         val b1 = try b(n.a).apply(b) catch {
-          case t: Throwable => asyncSuspendAndRethrow(b, n, t)
+          case t: Throwable =>
+            asyncTrySuspend(b, n)
+            rethrow(t)
         }
         val n1 = n.get
-        if (n1 ne null) {
-          if (i > 0) act(b1, n1, i - 1)
-          else {
-            n.lazySet(null) // to help GC don't fall into nepotism: http://psy-lob-saw.blogspot.com/2016/03/gc-nepotism-and-linked-queues.html
-            async(b1, n1, running = true)
-          }
-        } else async(b1, n, running = false)
+        if (n1 eq null) asyncTrySuspend(b1, n)
+        else if (i > 0) act(b1, n1, i - 1)
+        else {
+          asyncAct(b1, n1)
+          n.lazySet(null) // to help GC don't fall into nepotism: http://psy-lob-saw.blogspot.com/2016/03/gc-nepotism-and-linked-queues.html
+        }
       }
 
-      private def asyncSuspendAndRethrow(b: Behavior, n: Node, t: Throwable): Nothing = {
-        async(b, n, running = false)
+      private def rethrow(t: Throwable): Nothing = {
         val ct = Thread.currentThread()
         if (t.isInstanceOf[InterruptedException]) ct.interrupt()
         ct.getUncaughtExceptionHandler.uncaughtException(ct, t)
         throw t
       }
     }
-
-  private class Node(val a: Any) extends AtomicReference[Node]
 }
 
+private class Node(val a: Any) extends AtomicReference[Node]
 //Usage example that creates an actor that will, after it's first message is received, Die
 //import Actor._
 //implicit val e: java.util.concurrent.Executor = java.util.concurrent.Executors.newCachedThreadPool

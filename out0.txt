@@ -1,7 +1,7 @@
 [info] Loading global plugins from /home/andriy/.sbt/0.13/plugins
 [info] Loading project definition from /home/andriy/Projects/com/github/plokhotnyuk/actors/project
 [info] Set current project to actors (in build file:/home/andriy/Projects/com/github/plokhotnyuk/actors/)
-[success] Total time: 0 s, completed Jul 9, 2017 1:13:56 PM
+[success] Total time: 0 s, completed Jul 9, 2017 6:38:03 PM
 [info] Updating {file:/home/andriy/Projects/com/github/plokhotnyuk/actors/}actors...
 [info] Resolving org.scala-lang#scala-library;2.12.2 ...
 [info] Resolving com.typesafe.akka#akka-actor_2.12;2.5.3 ...
@@ -33,7 +33,7 @@
 [warn]   @volatile private var tail: Node = get
 [warn]                         ^
 [warn] three warnings found
-[success] Total time: 14 s, completed Jul 9, 2017 1:14:10 PM
+[success] Total time: 14 s, completed Jul 9, 2017 6:38:17 PM
 [info] Loading global plugins from /home/andriy/.sbt/0.13/plugins
 [info] Loading project definition from /home/andriy/Projects/com/github/plokhotnyuk/actors/project
 [info] Set current project to actors (in build file:/home/andriy/Projects/com/github/plokhotnyuk/actors/)
@@ -45,390 +45,397 @@
 [info] - handle messages in order of sending by each thread
 [info] - doesn't handle messages in simultaneous threads
 [info] - redirect unhandled errors to uncaught exception handler of thread
-Exception in thread "ForkJoinPool-1-worker-2" java.lang.NullPointerException
+Exception in thread "ForkJoinPool-1-worker-3" java.lang.NullPointerException
 [info] - handle messages with previous behaviour after unhandled errors
-[info] - not starve tasks arriving from external submit under high internal traffic
+[info] - don't starve tasks arriving from external submit under high internal traffic
 [info] actor with fixed thread pool executor
 [info] - execute code async
 [info] - exchange messages with another actor without loss
 [info] - create child actor and send messages to it recursively
 [info] - handle messages in order of sending by each thread
 [info] - doesn't handle messages in simultaneous threads
+Exception in thread "pool-3-thread-1" java.lang.NullPointerException
+	at com.github.gist.viktorklang.ActorSpec.$anonfun$actorTests$30(ActorSpec.scala:115)
+	at com.github.gist.viktorklang.Actor$$anon$1.com$github$gist$viktorklang$Actor$$anon$$act(Actor.scala:103)
+	at com.github.gist.viktorklang.Actor$$anon$1$$anon$4.run(Actor.scala:75)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
 [info] - redirect unhandled errors to uncaught exception handler of thread
 [info] - handle messages with previous behaviour after unhandled errors
-Exception in thread "pool-3-thread-100" java.lang.NullPointerException
-[info] - not starve tasks arriving from external submit under high internal traffic
+[info] - don't starve tasks arriving from external submit under high internal traffic
+Exception in thread "pool-3-thread-102" java.lang.NullPointerException
 [info] AkkaBoundedActorSpec:
 Executor service type: akka-forkjoin-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 546,507,249 ns 
-[info]   + 18,298,018 ops/s 
-[info]   + 14.9 % of CPU usage 
+[info]   + 515,601,370 ns 
+[info]   + 19,394,828 ops/s 
+[info]   + 14.3 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 1,374,200,104 ns 
-[info]   + 7,276,960 ops/s 
-[info]   + 15.0 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 100,000 ops 
-[info]   + 1,203,554,556 ns 
-[info]   + 12,035 ns/op 
-[info]   + 67.3 % of CPU usage 
-[info]   + 587 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 1,442,015,509 ns 
-[info]   + 4,160,842 ops/s 
-[info]   + 25.1 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 1,306,981,296 ns 
-[info]   + 4,590,731 ops/s 
-[info]   + 34.8 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 12,000,000 ops 
-[info]   + 683,268,882 ns 
-[info]   + 17,562,632 ops/s 
-[info]   + 90.4 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 1,500,000 ops 
-[info]   + 1,045,028,072 ns 
-[info]   + p(0.00000) =      360 ns/op 
-[info]   + p(0.50000) =      671 ns/op 
-[info]   + p(0.90000) =      755 ns/op 
-[info]   + p(0.99000) =     1063 ns/op 
-[info]   + p(0.99900) =     2815 ns/op 
-[info]   + p(0.99990) =    11391 ns/op 
-[info]   + p(0.99999) =    43775 ns/op 
-[info]   + p(1.00000) =  1589247 ns/op 
-[info]   + 98.1 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 2,000,000 ops 
-[info]   + 477,055,026 ns 
-[info]   + 4,192,388 ops/s 
-[info]   + 94.3 % of CPU usage 
-[info] +  
-[info] - Overflow throughput
-[info]   + 5,000,000 ops 
-[info]   + 738,092,716 ns 
-[info]   + 6,774,216 ops/s 
-[info]   + 16.8 % of CPU usage 
-[info] +  
-Executor service type: akka-forkjoin-pool
-[info] AkkaMCNonBlockingBoundedActorSpec:
-[info] - Enqueueing
-[info]   + 10,000,000 ops 
-[info]   + 340,655,753 ns 
-[info]   + 29,355,147 ops/s 
-[info]   + 15.0 % of CPU usage 
-[info]   + 48 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 10,000,000 ops 
-[info]   + 835,815,421 ns 
-[info]   + 11,964,364 ops/s 
+[info]   + 1,048,769,811 ns 
+[info]   + 9,534,980 ops/s 
 [info]   + 14.8 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 958,920,921 ns 
-[info]   + 9,589 ns/op 
-[info]   + 68.4 % of CPU usage 
-[info]   + 404 bytes per instance 
+[info]   + 927,829,181 ns 
+[info]   + 9,278 ns/op 
+[info]   + 72.8 % of CPU usage 
+[info]   + 588 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 925,451,068 ns 
-[info]   + 6,483,324 ops/s 
-[info]   + 24.3 % of CPU usage 
+[info]   + 1,463,824,879 ns 
+[info]   + 4,098,850 ops/s 
+[info]   + 24.9 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,179,146,809 ns 
-[info]   + 5,088,424 ops/s 
-[info]   + 78.9 % of CPU usage 
+[info]   + 1,184,177,337 ns 
+[info]   + 5,066,808 ops/s 
+[info]   + 32.2 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 432,318,486 ns 
-[info]   + 27,757,314 ops/s 
+[info]   + 558,431,805 ns 
+[info]   + 21,488,747 ops/s 
 [info]   + 90.2 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 772,797,457 ns 
-[info]   + p(0.00000) =      203 ns/op 
-[info]   + p(0.50000) =      491 ns/op 
-[info]   + p(0.90000) =      599 ns/op 
-[info]   + p(0.99000) =      779 ns/op 
+[info]   + 881,582,763 ns 
+[info]   + p(0.00000) =      270 ns/op 
+[info]   + p(0.50000) =      559 ns/op 
+[info]   + p(0.90000) =      675 ns/op 
+[info]   + p(0.99000) =      939 ns/op 
 [info]   + p(0.99900) =     2559 ns/op 
-[info]   + p(0.99990) =     8319 ns/op 
-[info]   + p(0.99999) =    27903 ns/op 
-[info]   + p(1.00000) =   123903 ns/op 
-[info]   + 98.3 % of CPU usage 
+[info]   + p(0.99990) =     8383 ns/op 
+[info]   + p(0.99999) =    33279 ns/op 
+[info]   + p(1.00000) =   161791 ns/op 
+[info]   + 98.8 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 405,226,553 ns 
-[info]   + 4,935,510 ops/s 
-[info]   + 95.9 % of CPU usage 
+[info]   + 480,966,183 ns 
+[info]   + 4,158,296 ops/s 
+[info]   + 94.6 % of CPU usage 
 [info] +  
 [info] - Overflow throughput
 [info]   + 5,000,000 ops 
-[info]   + 422,158,974 ns 
-[info]   + 11,843,879 ops/s 
-[info]   + 16.9 % of CPU usage 
+[info]   + 531,707,603 ns 
+[info]   + 9,403,664 ops/s 
+[info]   + 15.8 % of CPU usage 
+[info] +  
+[info] AkkaMCNonBlockingBoundedActorSpec:
+Executor service type: akka-forkjoin-pool
+[info] - Enqueueing
+[info]   + 10,000,000 ops 
+[info]   + 466,454,720 ns 
+[info]   + 21,438,308 ops/s 
+[info]   + 14.2 % of CPU usage 
+[info]   + 48 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 10,000,000 ops 
+[info]   + 812,783,329 ns 
+[info]   + 12,303,401 ops/s 
+[info]   + 15.1 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 100,000 ops 
+[info]   + 876,115,671 ns 
+[info]   + 8,761 ns/op 
+[info]   + 67.8 % of CPU usage 
+[info]   + 404 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 900,698,100 ns 
+[info]   + 6,661,499 ops/s 
+[info]   + 25.0 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 1,152,901,671 ns 
+[info]   + 5,204,259 ops/s 
+[info]   + 78.3 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 12,000,000 ops 
+[info]   + 414,623,962 ns 
+[info]   + 28,941,887 ops/s 
+[info]   + 93.2 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 1,500,000 ops 
+[info]   + 729,450,573 ns 
+[info]   + p(0.00000) =      193 ns/op 
+[info]   + p(0.50000) =      467 ns/op 
+[info]   + p(0.90000) =      547 ns/op 
+[info]   + p(0.99000) =      743 ns/op 
+[info]   + p(0.99900) =     2287 ns/op 
+[info]   + p(0.99990) =     8255 ns/op 
+[info]   + p(0.99999) =    31999 ns/op 
+[info]   + p(1.00000) =   811007 ns/op 
+[info]   + 98.5 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 2,000,000 ops 
+[info]   + 428,300,199 ns 
+[info]   + 4,669,621 ops/s 
+[info]   + 96.3 % of CPU usage 
+[info] +  
+[info] - Overflow throughput
+[info]   + 5,000,000 ops 
+[info]   + 607,043,109 ns 
+[info]   + 8,236,647 ops/s 
+[info]   + 15.6 % of CPU usage 
 [info] +  
 [info] AkkaMCUnboundedActorSpec:
 Executor service type: akka-forkjoin-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 658,409,187 ns 
-[info]   + 15,188,123 ops/s 
-[info]   + 13.9 % of CPU usage 
+[info]   + 659,781,403 ns 
+[info]   + 15,156,535 ops/s 
+[info]   + 14.0 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 1,135,077,940 ns 
-[info]   + 8,809,967 ops/s 
-[info]   + 14.5 % of CPU usage 
+[info]   + 829,002,933 ns 
+[info]   + 12,062,683 ops/s 
+[info]   + 14.6 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 848,389,420 ns 
-[info]   + 8,483 ns/op 
-[info]   + 69.2 % of CPU usage 
-[info]   + 383 bytes per instance 
+[info]   + 957,681,703 ns 
+[info]   + 9,576 ns/op 
+[info]   + 76.7 % of CPU usage 
+[info]   + 382 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 787,577,124 ns 
-[info]   + 7,618,301 ops/s 
-[info]   + 21.7 % of CPU usage 
+[info]   + 803,086,458 ns 
+[info]   + 7,471,175 ops/s 
+[info]   + 22.7 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 673,855,814 ns 
-[info]   + 8,903,981 ops/s 
-[info]   + 35.6 % of CPU usage 
+[info]   + 678,928,625 ns 
+[info]   + 8,837,453 ops/s 
+[info]   + 36.8 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 370,452,777 ns 
-[info]   + 32,392,792 ops/s 
-[info]   + 90.4 % of CPU usage 
+[info]   + 354,418,130 ns 
+[info]   + 33,858,313 ops/s 
+[info]   + 94.5 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 691,296,605 ns 
-[info]   + p(0.00000) =      183 ns/op 
-[info]   + p(0.50000) =      447 ns/op 
-[info]   + p(0.90000) =      501 ns/op 
-[info]   + p(0.99000) =      679 ns/op 
-[info]   + p(0.99900) =     2303 ns/op 
-[info]   + p(0.99990) =     8319 ns/op 
-[info]   + p(0.99999) =    31359 ns/op 
-[info]   + p(1.00000) =   112127 ns/op 
-[info]   + 98.5 % of CPU usage 
+[info]   + 774,906,570 ns 
+[info]   + p(0.00000) =      192 ns/op 
+[info]   + p(0.50000) =      483 ns/op 
+[info]   + p(0.90000) =      579 ns/op 
+[info]   + p(0.99000) =      819 ns/op 
+[info]   + p(0.99900) =     2415 ns/op 
+[info]   + p(0.99990) =     8703 ns/op 
+[info]   + p(0.99999) =    36607 ns/op 
+[info]   + p(1.00000) = 13107199 ns/op 
+[info]   + 97.6 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 392,510,835 ns 
-[info]   + 5,095,400 ops/s 
-[info]   + 96.5 % of CPU usage 
+[info]   + 414,573,843 ns 
+[info]   + 4,824,231 ops/s 
+[info]   + 95.9 % of CPU usage 
 [info] +  
 Executor service type: akka-forkjoin-pool
 [info] AkkaSCONonBlockingBoundedActorSpec:
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 340,934,910 ns 
-[info]   + 29,331,111 ops/s 
-[info]   + 14.7 % of CPU usage 
+[info]   + 484,873,772 ns 
+[info]   + 20,623,924 ops/s 
+[info]   + 13.7 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 823,587,721 ns 
-[info]   + 12,141,997 ops/s 
-[info]   + 14.9 % of CPU usage 
+[info]   + 853,612,724 ns 
+[info]   + 11,714,914 ops/s 
+[info]   + 15.4 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 885,560,429 ns 
-[info]   + 8,855 ns/op 
-[info]   + 71.0 % of CPU usage 
-[info]   + 401 bytes per instance 
+[info]   + 952,128,530 ns 
+[info]   + 9,521 ns/op 
+[info]   + 65.9 % of CPU usage 
+[info]   + 382 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 851,863,698 ns 
-[info]   + 7,043,380 ops/s 
-[info]   + 23.5 % of CPU usage 
+[info]   + 825,659,649 ns 
+[info]   + 7,266,916 ops/s 
+[info]   + 22.6 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,226,501,335 ns 
-[info]   + 4,891,963 ops/s 
-[info]   + 79.9 % of CPU usage 
+[info]   + 1,513,316,895 ns 
+[info]   + 3,964,800 ops/s 
+[info]   + 78.4 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 449,202,265 ns 
-[info]   + 26,714,023 ops/s 
-[info]   + 89.6 % of CPU usage 
+[info]   + 451,843,446 ns 
+[info]   + 26,557,871 ops/s 
+[info]   + 94.6 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 776,833,422 ns 
-[info]   + p(0.00000) =      209 ns/op 
-[info]   + p(0.50000) =      483 ns/op 
-[info]   + p(0.90000) =      619 ns/op 
-[info]   + p(0.99000) =      811 ns/op 
-[info]   + p(0.99900) =     2559 ns/op 
-[info]   + p(0.99990) =     8319 ns/op 
-[info]   + p(0.99999) =    44287 ns/op 
-[info]   + p(1.00000) =  4014079 ns/op 
+[info]   + 907,551,229 ns 
+[info]   + p(0.00000) =      253 ns/op 
+[info]   + p(0.50000) =      579 ns/op 
+[info]   + p(0.90000) =      679 ns/op 
+[info]   + p(0.99000) =      955 ns/op 
+[info]   + p(0.99900) =     3023 ns/op 
+[info]   + p(0.99990) =    10367 ns/op 
+[info]   + p(0.99999) =    32255 ns/op 
+[info]   + p(1.00000) =   105471 ns/op 
 [info]   + 98.6 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 404,432,100 ns 
-[info]   + 4,945,205 ops/s 
+[info]   + 536,638,587 ns 
+[info]   + 3,726,903 ops/s 
 [info]   + 94.3 % of CPU usage 
 [info] +  
 [info] - Overflow throughput
 [info]   + 5,000,000 ops 
-[info]   + 404,481,223 ns 
-[info]   + 12,361,513 ops/s 
+[info]   + 512,946,969 ns 
+[info]   + 9,747,596 ops/s 
 [info]   + 19.5 % of CPU usage 
 [info] +  
-Executor service type: akka-forkjoin-pool
 [info] AkkaSCOUnboundedActorSpec:
+Executor service type: akka-forkjoin-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 302,436,452 ns 
-[info]   + 33,064,797 ops/s 
-[info]   + 14.5 % of CPU usage 
+[info]   + 308,573,036 ns 
+[info]   + 32,407,238 ops/s 
+[info]   + 14.6 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 1,159,688,077 ns 
-[info]   + 8,623,008 ops/s 
-[info]   + 15.2 % of CPU usage 
+[info]   + 814,687,543 ns 
+[info]   + 12,274,644 ops/s 
+[info]   + 14.9 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 1,188,323,661 ns 
-[info]   + 11,883 ns/op 
-[info]   + 70.7 % of CPU usage 
-[info]   + 402 bytes per instance 
+[info]   + 932,647,722 ns 
+[info]   + 9,326 ns/op 
+[info]   + 70.6 % of CPU usage 
+[info]   + 383 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,050,471,497 ns 
-[info]   + 5,711,720 ops/s 
+[info]   + 784,397,767 ns 
+[info]   + 7,649,180 ops/s 
 [info]   + 23.3 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 980,167,234 ns 
-[info]   + 6,121,404 ops/s 
-[info]   + 38.5 % of CPU usage 
+[info]   + 690,726,112 ns 
+[info]   + 8,686,511 ops/s 
+[info]   + 35.8 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 371,663,705 ns 
-[info]   + 32,287,252 ops/s 
-[info]   + 92.8 % of CPU usage 
+[info]   + 350,785,205 ns 
+[info]   + 34,208,968 ops/s 
+[info]   + 94.1 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 700,306,360 ns 
-[info]   + p(0.00000) =      198 ns/op 
-[info]   + p(0.50000) =      443 ns/op 
-[info]   + p(0.90000) =      531 ns/op 
-[info]   + p(0.99000) =      783 ns/op 
-[info]   + p(0.99900) =     2735 ns/op 
-[info]   + p(0.99990) =    10879 ns/op 
-[info]   + p(0.99999) =    36863 ns/op 
-[info]   + p(1.00000) =   143359 ns/op 
-[info]   + 98.3 % of CPU usage 
+[info]   + 802,264,980 ns 
+[info]   + p(0.00000) =      199 ns/op 
+[info]   + p(0.50000) =      503 ns/op 
+[info]   + p(0.90000) =      659 ns/op 
+[info]   + p(0.99000) =      863 ns/op 
+[info]   + p(0.99900) =     2463 ns/op 
+[info]   + p(0.99990) =     8447 ns/op 
+[info]   + p(0.99999) =    26751 ns/op 
+[info]   + p(1.00000) =   647167 ns/op 
+[info]   + 98.5 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 391,423,329 ns 
-[info]   + 5,109,557 ops/s 
-[info]   + 96.4 % of CPU usage 
+[info]   + 405,703,932 ns 
+[info]   + 4,929,703 ops/s 
+[info]   + 95.5 % of CPU usage 
 [info] +  
 [info] AkkaUnboundedActorSpec:
 Executor service type: akka-forkjoin-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 474,669,024 ns 
-[info]   + 21,067,311 ops/s 
-[info]   + 15.0 % of CPU usage 
+[info]   + 485,105,877 ns 
+[info]   + 20,614,056 ops/s 
+[info]   + 15.2 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 951,054,948 ns 
-[info]   + 10,514,639 ops/s 
-[info]   + 15.1 % of CPU usage 
+[info]   + 936,697,057 ns 
+[info]   + 10,675,810 ops/s 
+[info]   + 14.9 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 970,310,466 ns 
-[info]   + 9,703 ns/op 
-[info]   + 72.9 % of CPU usage 
+[info]   + 1,118,708,694 ns 
+[info]   + 11,187 ns/op 
+[info]   + 63.9 % of CPU usage 
 [info]   + 404 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 852,074,236 ns 
-[info]   + 7,041,639 ops/s 
-[info]   + 23.3 % of CPU usage 
+[info]   + 1,061,134,525 ns 
+[info]   + 5,654,325 ops/s 
+[info]   + 21.4 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,068,063,312 ns 
-[info]   + 5,617,644 ops/s 
-[info]   + 64.6 % of CPU usage 
+[info]   + 1,064,941,177 ns 
+[info]   + 5,634,114 ops/s 
+[info]   + 74.1 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 404,977,623 ns 
-[info]   + 29,631,266 ops/s 
+[info]   + 396,710,147 ns 
+[info]   + 30,248,785 ops/s 
 [info]   + 92.0 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 771,967,439 ns 
-[info]   + p(0.00000) =      240 ns/op 
-[info]   + p(0.50000) =      493 ns/op 
-[info]   + p(0.90000) =      571 ns/op 
-[info]   + p(0.99000) =      815 ns/op 
-[info]   + p(0.99900) =     2655 ns/op 
-[info]   + p(0.99990) =     8639 ns/op 
-[info]   + p(0.99999) =    34303 ns/op 
-[info]   + p(1.00000) =   115199 ns/op 
-[info]   + 98.6 % of CPU usage 
+[info]   + 851,072,943 ns 
+[info]   + p(0.00000) =      233 ns/op 
+[info]   + p(0.50000) =      531 ns/op 
+[info]   + p(0.90000) =      699 ns/op 
+[info]   + p(0.99000) =      887 ns/op 
+[info]   + p(0.99900) =     2719 ns/op 
+[info]   + p(0.99990) =     9599 ns/op 
+[info]   + p(0.99999) =    34815 ns/op 
+[info]   + p(1.00000) =   168959 ns/op 
+[info]   + 98.0 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 439,972,373 ns 
-[info]   + 4,545,739 ops/s 
-[info]   + 94.6 % of CPU usage 
+[info]   + 458,111,754 ns 
+[info]   + 4,365,746 ops/s 
+[info]   + 95.2 % of CPU usage 
 [info] +  
 SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
 SLF4J: Defaulting to no-operation (NOP) logger implementation
@@ -437,185 +444,185 @@ SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further detail
 Executor service type: akka-forkjoin-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 568,867,742 ns 
-[info]   + 17,578,778 ops/s 
-[info]   + 13.4 % of CPU usage 
+[info]   + 566,272,654 ns 
+[info]   + 17,659,337 ops/s 
+[info]   + 13.5 % of CPU usage 
 [info]   + 23 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 506,837,700 ns 
-[info]   + 19,730,181 ops/s 
-[info]   + 15.5 % of CPU usage 
+[info]   + 457,665,370 ns 
+[info]   + 21,850,025 ops/s 
+[info]   + 15.3 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 10,000,000 ops 
-[info]   + 665,163,683 ns 
-[info]   + 66 ns/op 
-[info]   + 16.2 % of CPU usage 
+[info]   + 649,355,024 ns 
+[info]   + 64 ns/op 
+[info]   + 16.4 % of CPU usage 
 [info]   + 72 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 711,761,945 ns 
-[info]   + 8,429,784 ops/s 
-[info]   + 28.8 % of CPU usage 
+[info]   + 714,788,375 ns 
+[info]   + 8,394,092 ops/s 
+[info]   + 28.9 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 781,169,527 ns 
-[info]   + 7,680,791 ops/s 
-[info]   + 38.4 % of CPU usage 
+[info]   + 733,536,927 ns 
+[info]   + 8,179,547 ops/s 
+[info]   + 37.1 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 303,510,773 ns 
-[info]   + 39,537,311 ops/s 
-[info]   + 88.5 % of CPU usage 
+[info]   + 263,285,366 ns 
+[info]   + 45,577,922 ops/s 
+[info]   + 91.6 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 1,168,433,777 ns 
-[info]   + p(0.00000) =      356 ns/op 
-[info]   + p(0.50000) =      687 ns/op 
-[info]   + p(0.90000) =      831 ns/op 
-[info]   + p(0.99000) =     2383 ns/op 
-[info]   + p(0.99900) =     7711 ns/op 
-[info]   + p(0.99990) =    26367 ns/op 
-[info]   + p(0.99999) =   100863 ns/op 
-[info]   + p(1.00000) =   468991 ns/op 
-[info]   + 95.0 % of CPU usage 
+[info]   + 1,179,202,824 ns 
+[info]   + p(0.00000) =      366 ns/op 
+[info]   + p(0.50000) =      695 ns/op 
+[info]   + p(0.90000) =      827 ns/op 
+[info]   + p(0.99000) =     2175 ns/op 
+[info]   + p(0.99900) =     7679 ns/op 
+[info]   + p(0.99990) =    26239 ns/op 
+[info]   + p(0.99999) =    76799 ns/op 
+[info]   + p(1.00000) =   419839 ns/op 
+[info]   + 93.2 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 727,625,644 ns 
-[info]   + 2,748,666 ops/s 
-[info]   + 66.3 % of CPU usage 
+[info]   + 675,079,203 ns 
+[info]   + 2,962,615 ops/s 
+[info]   + 65.4 % of CPU usage 
 [info] +  
 Executor service type: akka-forkjoin-pool
 [info] MinimalistActorSpec:
 [info] - Enqueueing
 [info]   + 40,000,000 ops 
-[info]   + 901,411,393 ns 
-[info]   + 44,374,855 ops/s 
+[info]   + 636,849,806 ns 
+[info]   + 62,809,157 ops/s 
 [info]   + 12.6 % of CPU usage 
 [info]   + 24 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 40,000,000 ops 
-[info]   + 321,605,678 ns 
-[info]   + 124,375,913 ops/s 
-[info]   + 30.7 % of CPU usage 
+[info]   + 209,069,183 ns 
+[info]   + 191,324,227 ops/s 
+[info]   + 30.5 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 2,000,000 ops 
-[info]   + 507,630,792 ns 
-[info]   + 253 ns/op 
-[info]   + 99.0 % of CPU usage 
+[info]   + 428,314,931 ns 
+[info]   + 214 ns/op 
+[info]   + 96.9 % of CPU usage 
 [info]   + 24 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 15,000,000 ops 
-[info]   + 2,686,313,758 ns 
-[info]   + 5,583,860 ops/s 
-[info]   + 14.2 % of CPU usage 
+[info]   + 239,284,912 ns 
+[info]   + 62,686,777 ops/s 
+[info]   + 39.2 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 15,000,000 ops 
-[info]   + 1,142,407,834 ns 
-[info]   + 13,130,162 ops/s 
-[info]   + 40.8 % of CPU usage 
+[info]   + 563,070,092 ns 
+[info]   + 26,639,667 ops/s 
+[info]   + 95.5 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 30,000,000 ops 
-[info]   + 334,660,573 ns 
-[info]   + 89,643,066 ops/s 
-[info]   + 81.8 % of CPU usage 
+[info]   + 212,870,300 ns 
+[info]   + 140,930,886 ops/s 
+[info]   + 94.0 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 3,000,000 ops 
-[info]   + 1,636,335,315 ns 
-[info]   + p(0.00000) =       86 ns/op 
-[info]   + p(0.50000) =      461 ns/op 
-[info]   + p(0.90000) =      883 ns/op 
-[info]   + p(0.99000) =     1367 ns/op 
-[info]   + p(0.99900) =     2863 ns/op 
-[info]   + p(0.99990) =     8639 ns/op 
-[info]   + p(0.99999) =    40959 ns/op 
-[info]   + p(1.00000) =   378879 ns/op 
-[info]   + 99.0 % of CPU usage 
+[info]   + 1,818,728,919 ns 
+[info]   + p(0.00000) =      124 ns/op 
+[info]   + p(0.50000) =      567 ns/op 
+[info]   + p(0.90000) =      871 ns/op 
+[info]   + p(0.99000) =     1415 ns/op 
+[info]   + p(0.99900) =     2895 ns/op 
+[info]   + p(0.99990) =     8959 ns/op 
+[info]   + p(0.99999) =    36095 ns/op 
+[info]   + p(1.00000) =   794623 ns/op 
+[info]   + 99.2 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 6,000,000 ops 
-[info]   + 844,699,818 ns 
-[info]   + 7,103,115 ops/s 
+[info]   + 785,157,134 ns 
+[info]   + 7,641,782 ops/s 
 [info]   + 99.0 % of CPU usage 
 [info] +  
 Executor service type: akka-forkjoin-pool
 [info] ScalazActorSpec:
 [info] - Enqueueing
 [info]   + 40,000,000 ops 
-[info]   + 630,604,262 ns 
-[info]   + 63,431,223 ops/s 
-[info]   + 12.7 % of CPU usage 
+[info]   + 900,880,576 ns 
+[info]   + 44,401,001 ops/s 
+[info]   + 12.6 % of CPU usage 
 [info]   + 24 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 40,000,000 ops 
-[info]   + 328,670,075 ns 
-[info]   + 121,702,591 ops/s 
-[info]   + 65.4 % of CPU usage 
+[info]   + 213,701,914 ns 
+[info]   + 187,176,610 ops/s 
+[info]   + 39.8 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 10,000,000 ops 
-[info]   + 353,826,401 ns 
-[info]   + 35 ns/op 
-[info]   + 22.3 % of CPU usage 
+[info]   + 278,301,726 ns 
+[info]   + 27 ns/op 
+[info]   + 22.0 % of CPU usage 
 [info]   + 88 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 15,000,000 ops 
-[info]   + 396,139,861 ns 
-[info]   + 37,865,414 ops/s 
-[info]   + 89.3 % of CPU usage 
+[info]   + 394,049,390 ns 
+[info]   + 38,066,294 ops/s 
+[info]   + 88.5 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 15,000,000 ops 
-[info]   + 442,118,403 ns 
-[info]   + 33,927,563 ops/s 
-[info]   + 96.7 % of CPU usage 
+[info]   + 459,672,864 ns 
+[info]   + 32,631,902 ops/s 
+[info]   + 92.7 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 30,000,000 ops 
-[info]   + 273,311,067 ns 
-[info]   + 109,765,039 ops/s 
-[info]   + 96.5 % of CPU usage 
+[info]   + 264,207,181 ns 
+[info]   + 113,547,254 ops/s 
+[info]   + 97.9 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 3,000,000 ops 
-[info]   + 1,222,847,761 ns 
-[info]   + p(0.00000) =      152 ns/op 
-[info]   + p(0.50000) =      327 ns/op 
-[info]   + p(0.90000) =      667 ns/op 
-[info]   + p(0.99000) =      859 ns/op 
-[info]   + p(0.99900) =     2575 ns/op 
-[info]   + p(0.99990) =     7743 ns/op 
-[info]   + p(0.99999) =    32511 ns/op 
-[info]   + p(1.00000) = 16056319 ns/op 
+[info]   + 1,171,153,234 ns 
+[info]   + p(0.00000) =       92 ns/op 
+[info]   + p(0.50000) =      325 ns/op 
+[info]   + p(0.90000) =      627 ns/op 
+[info]   + p(0.99000) =      987 ns/op 
+[info]   + p(0.99900) =     1775 ns/op 
+[info]   + p(0.99990) =     8095 ns/op 
+[info]   + p(0.99999) =    29951 ns/op 
+[info]   + p(1.00000) =  3096575 ns/op 
 [info]   + 99.4 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 6,000,000 ops 
-[info]   + 1,798,722,268 ns 
-[info]   + 3,335,701 ops/s 
-[info]   + 99.3 % of CPU usage 
+[info]   + 1,058,192,674 ns 
+[info]   + 5,670,044 ops/s 
+[info]   + 99.0 % of CPU usage 
 [info] +  
-[info] Run completed in 2 minutes, 36 seconds.
+[info] Run completed in 2 minutes, 27 seconds.
 [info] Total number of tests run: 91
 [info] Suites: completed 10, aborted 0
 [info] Tests: succeeded 91, failed 0, canceled 0, ignored 0, pending 0
 [info] All tests passed.
-[success] Total time: 157 s, completed Jul 9, 2017 1:16:52 PM
+[success] Total time: 148 s, completed Jul 9, 2017 6:40:50 PM
 [info] Loading global plugins from /home/andriy/.sbt/0.13/plugins
 [info] Loading project definition from /home/andriy/Projects/com/github/plokhotnyuk/actors/project
 [info] Set current project to actors (in build file:/home/andriy/Projects/com/github/plokhotnyuk/actors/)
@@ -629,1165 +636,575 @@ Executor service type: akka-forkjoin-pool
 [info] - redirect unhandled errors to uncaught exception handler of thread
 Exception in thread "ForkJoinPool-1-worker-1" java.lang.NullPointerException
 [info] - handle messages with previous behaviour after unhandled errors
-[info] - not starve tasks arriving from external submit under high internal traffic
+[info] - don't starve tasks arriving from external submit under high internal traffic
 [info] actor with fixed thread pool executor
 [info] - execute code async
 [info] - exchange messages with another actor without loss
 [info] - create child actor and send messages to it recursively
 [info] - handle messages in order of sending by each thread
 [info] - doesn't handle messages in simultaneous threads
-java.lang.NullPointerException
 [info] - redirect unhandled errors to uncaught exception handler of thread
-	at com.github.gist.viktorklang.ActorSpec.$anonfun$actorTests$30(ActorSpec.scala:115)
-	at com.github.gist.viktorklang.Actor$$anon$1.com$github$gist$viktorklang$Actor$$anon$$actOrSuspend(Actor.scala:91)
-	at com.github.gist.viktorklang.Actor$$anon$1$$anon$3.run(Actor.scala:76)
-	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
-	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
-	at java.lang.Thread.run(Thread.java:745)
+Exception in thread "pool-3-thread-103" java.lang.NullPointerException
 [info] - handle messages with previous behaviour after unhandled errors
-Exception in thread "pool-3-thread-100" java.lang.NullPointerException
-[info] - not starve tasks arriving from external submit under high internal traffic
-[info] AkkaBoundedActorSpec:
+[info] - don't starve tasks arriving from external submit under high internal traffic
 Executor service type: java-forkjoin-pool
+[info] AkkaBoundedActorSpec:
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 458,196,717 ns 
-[info]   + 21,824,687 ops/s 
-[info]   + 14.7 % of CPU usage 
+[info]   + 916,180,039 ns 
+[info]   + 10,914,885 ops/s 
+[info]   + 13.6 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 1,034,795,617 ns 
-[info]   + 9,663,744 ops/s 
-[info]   + 14.6 % of CPU usage 
+[info]   + 1,040,105,545 ns 
+[info]   + 9,614,408 ops/s 
+[info]   + 14.1 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 1,097,451,151 ns 
-[info]   + 10,974 ns/op 
-[info]   + 44.6 % of CPU usage 
+[info]   + 1,067,768,287 ns 
+[info]   + 10,677 ns/op 
+[info]   + 49.6 % of CPU usage 
 [info]   + 588 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,626,064,212 ns 
-[info]   + 3,689,891 ops/s 
-[info]   + 23.9 % of CPU usage 
+[info]   + 1,824,902,340 ns 
+[info]   + 3,287,847 ops/s 
+[info]   + 24.1 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,909,220,063 ns 
-[info]   + 3,142,644 ops/s 
-[info]   + 37.4 % of CPU usage 
+[info]   + 1,548,514,914 ns 
+[info]   + 3,874,680 ops/s 
+[info]   + 36.8 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 487,704,116 ns 
-[info]   + 24,605,082 ops/s 
-[info]   + 92.0 % of CPU usage 
+[info]   + 551,795,619 ns 
+[info]   + 21,747,182 ops/s 
+[info]   + 94.5 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 1,861,868,128 ns 
-[info]   + p(0.00000) =      243 ns/op 
-[info]   + p(0.50000) =     1135 ns/op 
-[info]   + p(0.90000) =     1991 ns/op 
-[info]   + p(0.99000) =     2767 ns/op 
-[info]   + p(0.99900) =     4575 ns/op 
-[info]   + p(0.99990) =     9343 ns/op 
-[info]   + p(0.99999) =    29823 ns/op 
-[info]   + p(1.00000) =   122367 ns/op 
-[info]   + 32.8 % of CPU usage 
+[info]   + 2,419,925,889 ns 
+[info]   + p(0.00000) =      247 ns/op 
+[info]   + p(0.50000) =     1487 ns/op 
+[info]   + p(0.90000) =     2671 ns/op 
+[info]   + p(0.99000) =     3567 ns/op 
+[info]   + p(0.99900) =     4671 ns/op 
+[info]   + p(0.99990) =    11391 ns/op 
+[info]   + p(0.99999) =    33279 ns/op 
+[info]   + p(1.00000) =   225279 ns/op 
+[info]   + 32.5 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 612,305,136 ns 
-[info]   + 3,266,345 ops/s 
-[info]   + 96.2 % of CPU usage 
+[info]   + 563,882,308 ns 
+[info]   + 3,546,839 ops/s 
+[info]   + 96.9 % of CPU usage 
 [info] +  
 [info] - Overflow throughput
 [info]   + 5,000,000 ops 
-[info]   + 933,733,773 ns 
-[info]   + 5,354,845 ops/s 
-[info]   + 14.9 % of CPU usage 
+[info]   + 544,964,250 ns 
+[info]   + 9,174,913 ops/s 
+[info]   + 15.8 % of CPU usage 
 [info] +  
 Executor service type: java-forkjoin-pool
 [info] AkkaMCNonBlockingBoundedActorSpec:
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 467,213,120 ns 
-[info]   + 21,403,508 ops/s 
-[info]   + 13.9 % of CPU usage 
+[info]   + 465,814,525 ns 
+[info]   + 21,467,771 ops/s 
+[info]   + 13.7 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 1,124,576,417 ns 
-[info]   + 8,892,236 ops/s 
-[info]   + 14.8 % of CPU usage 
+[info]   + 798,355,663 ns 
+[info]   + 12,525,745 ops/s 
+[info]   + 14.4 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 1,235,224,543 ns 
-[info]   + 12,352 ns/op 
-[info]   + 46.8 % of CPU usage 
+[info]   + 1,120,439,990 ns 
+[info]   + 11,204 ns/op 
+[info]   + 44.7 % of CPU usage 
 [info]   + 404 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 927,728,355 ns 
-[info]   + 6,467,410 ops/s 
-[info]   + 24.9 % of CPU usage 
+[info]   + 929,517,386 ns 
+[info]   + 6,454,962 ops/s 
+[info]   + 25.4 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,150,393,556 ns 
-[info]   + 5,215,606 ops/s 
-[info]   + 76.3 % of CPU usage 
+[info]   + 1,517,966,843 ns 
+[info]   + 3,952,655 ops/s 
+[info]   + 77.8 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 509,412,469 ns 
-[info]   + 23,556,549 ops/s 
-[info]   + 93.7 % of CPU usage 
+[info]   + 463,390,482 ns 
+[info]   + 25,896,086 ops/s 
+[info]   + 96.0 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 2,359,263,170 ns 
-[info]   + p(0.00000) =      284 ns/op 
-[info]   + p(0.50000) =     1423 ns/op 
-[info]   + p(0.90000) =     2591 ns/op 
-[info]   + p(0.99000) =     3535 ns/op 
-[info]   + p(0.99900) =     5247 ns/op 
+[info]   + 2,392,293,681 ns 
+[info]   + p(0.00000) =      276 ns/op 
+[info]   + p(0.50000) =     1447 ns/op 
+[info]   + p(0.90000) =     2623 ns/op 
+[info]   + p(0.99000) =     3615 ns/op 
+[info]   + p(0.99900) =     6143 ns/op 
 [info]   + p(0.99990) =    12031 ns/op 
-[info]   + p(0.99999) =    33791 ns/op 
-[info]   + p(1.00000) =    91647 ns/op 
-[info]   + 33.1 % of CPU usage 
+[info]   + p(0.99999) =    33535 ns/op 
+[info]   + p(1.00000) =   232447 ns/op 
+[info]   + 33.4 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 497,608,137 ns 
-[info]   + 4,019,226 ops/s 
-[info]   + 96.0 % of CPU usage 
+[info]   + 535,265,857 ns 
+[info]   + 3,736,461 ops/s 
+[info]   + 96.2 % of CPU usage 
 [info] +  
 [info] - Overflow throughput
 [info]   + 5,000,000 ops 
-[info]   + 497,828,922 ns 
-[info]   + 10,043,610 ops/s 
-[info]   + 16.6 % of CPU usage 
+[info]   + 682,252,707 ns 
+[info]   + 7,328,662 ops/s 
+[info]   + 16.3 % of CPU usage 
 [info] +  
 [info] AkkaMCUnboundedActorSpec:
 Executor service type: java-forkjoin-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 670,348,836 ns 
-[info]   + 14,917,606 ops/s 
-[info]   + 14.0 % of CPU usage 
+[info]   + 306,241,661 ns 
+[info]   + 32,653,950 ops/s 
+[info]   + 14.3 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 805,209,788 ns 
-[info]   + 12,419,123 ops/s 
+[info]   + 1,155,403,542 ns 
+[info]   + 8,654,984 ops/s 
 [info]   + 14.7 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 903,572,472 ns 
-[info]   + 9,035 ns/op 
+[info]   + 896,825,291 ns 
+[info]   + 8,968 ns/op 
+[info]   + 50.3 % of CPU usage 
+[info]   + 383 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 787,649,875 ns 
+[info]   + 7,617,597 ops/s 
+[info]   + 22.9 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 903,559,906 ns 
+[info]   + 6,640,400 ops/s 
+[info]   + 31.8 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 12,000,000 ops 
+[info]   + 450,301,928 ns 
+[info]   + 26,648,786 ops/s 
+[info]   + 93.0 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 1,500,000 ops 
+[info]   + 2,109,121,942 ns 
+[info]   + p(0.00000) =      209 ns/op 
+[info]   + p(0.50000) =     1247 ns/op 
+[info]   + p(0.90000) =     2367 ns/op 
+[info]   + p(0.99000) =     3391 ns/op 
+[info]   + p(0.99900) =     5407 ns/op 
+[info]   + p(0.99990) =    11775 ns/op 
+[info]   + p(0.99999) =    34815 ns/op 
+[info]   + p(1.00000) =   143359 ns/op 
+[info]   + 33.5 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 2,000,000 ops 
+[info]   + 450,361,955 ns 
+[info]   + 4,440,872 ops/s 
+[info]   + 95.5 % of CPU usage 
+[info] +  
+[info] AkkaSCONonBlockingBoundedActorSpec:
+Executor service type: java-forkjoin-pool
+[info] - Enqueueing
+[info]   + 10,000,000 ops 
+[info]   + 519,328,478 ns 
+[info]   + 19,255,635 ops/s 
+[info]   + 14.7 % of CPU usage 
+[info]   + 48 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 10,000,000 ops 
+[info]   + 831,214,589 ns 
+[info]   + 12,030,587 ops/s 
+[info]   + 15.0 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 100,000 ops 
+[info]   + 941,263,465 ns 
+[info]   + 9,412 ns/op 
 [info]   + 47.5 % of CPU usage 
 [info]   + 404 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 779,549,418 ns 
-[info]   + 7,696,753 ops/s 
-[info]   + 22.3 % of CPU usage 
+[info]   + 1,168,029,057 ns 
+[info]   + 5,136,858 ops/s 
+[info]   + 23.2 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 664,315,323 ns 
-[info]   + 9,031,855 ops/s 
-[info]   + 37.1 % of CPU usage 
+[info]   + 1,787,801,108 ns 
+[info]   + 3,356,078 ops/s 
+[info]   + 80.2 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 369,610,123 ns 
-[info]   + 32,466,643 ops/s 
-[info]   + 90.3 % of CPU usage 
+[info]   + 400,665,446 ns 
+[info]   + 29,950,174 ops/s 
+[info]   + 93.3 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 1,643,321,450 ns 
-[info]   + p(0.00000) =      192 ns/op 
-[info]   + p(0.50000) =      959 ns/op 
-[info]   + p(0.90000) =     1831 ns/op 
-[info]   + p(0.99000) =     2543 ns/op 
-[info]   + p(0.99900) =     4079 ns/op 
-[info]   + p(0.99990) =     8895 ns/op 
-[info]   + p(0.99999) =    30719 ns/op 
-[info]   + p(1.00000) =   133119 ns/op 
-[info]   + 33.7 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 2,000,000 ops 
-[info]   + 386,146,956 ns 
-[info]   + 5,179,375 ops/s 
-[info]   + 97.1 % of CPU usage 
-[info] +  
-[info] AkkaSCONonBlockingBoundedActorSpec:
-Executor service type: java-forkjoin-pool
-[info] - Enqueueing
-[info]   + 10,000,000 ops 
-[info]   + 681,661,297 ns 
-[info]   + 14,670,042 ops/s 
-[info]   + 13.6 % of CPU usage 
-[info]   + 48 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 10,000,000 ops 
-[info]   + 1,135,994,066 ns 
-[info]   + 8,802,862 ops/s 
-[info]   + 14.3 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 100,000 ops 
-[info]   + 1,057,234,819 ns 
-[info]   + 10,572 ns/op 
-[info]   + 44.9 % of CPU usage 
-[info]   + 404 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 848,105,757 ns 
-[info]   + 7,074,589 ops/s 
-[info]   + 23.3 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 1,896,596,139 ns 
-[info]   + 3,163,562 ops/s 
-[info]   + 71.7 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 12,000,000 ops 
-[info]   + 522,286,642 ns 
-[info]   + 22,975,889 ops/s 
-[info]   + 94.8 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 1,500,000 ops 
-[info]   + 2,005,130,801 ns 
-[info]   + p(0.00000) =      250 ns/op 
-[info]   + p(0.50000) =     1223 ns/op 
-[info]   + p(0.90000) =     2207 ns/op 
-[info]   + p(0.99000) =     3247 ns/op 
-[info]   + p(0.99900) =     5599 ns/op 
-[info]   + p(0.99990) =    10879 ns/op 
-[info]   + p(0.99999) =    34559 ns/op 
-[info]   + p(1.00000) =    77311 ns/op 
-[info]   + 33.0 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 2,000,000 ops 
-[info]   + 425,362,842 ns 
-[info]   + 4,701,868 ops/s 
-[info]   + 97.9 % of CPU usage 
-[info] +  
-[info] - Overflow throughput
-[info]   + 5,000,000 ops 
-[info]   + 730,127,706 ns 
-[info]   + 6,848,117 ops/s 
-[info]   + 17.1 % of CPU usage 
-[info] +  
-[info] AkkaSCOUnboundedActorSpec:
-Executor service type: java-forkjoin-pool
-[info] - Enqueueing
-[info]   + 10,000,000 ops 
-[info]   + 312,508,362 ns 
-[info]   + 31,999,143 ops/s 
-[info]   + 15.2 % of CPU usage 
-[info]   + 48 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 10,000,000 ops 
-[info]   + 813,023,197 ns 
-[info]   + 12,299,772 ops/s 
-[info]   + 14.3 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 100,000 ops 
-[info]   + 1,188,436,185 ns 
-[info]   + 11,884 ns/op 
-[info]   + 44.8 % of CPU usage 
-[info]   + 404 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 1,054,318,328 ns 
-[info]   + 5,690,880 ops/s 
-[info]   + 22.6 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 1,018,194,870 ns 
-[info]   + 5,892,781 ops/s 
-[info]   + 37.3 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 12,000,000 ops 
-[info]   + 434,373,825 ns 
-[info]   + 27,625,974 ops/s 
-[info]   + 96.7 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 1,500,000 ops 
-[info]   + 2,311,871,277 ns 
-[info]   + p(0.00000) =      272 ns/op 
-[info]   + p(0.50000) =     1399 ns/op 
-[info]   + p(0.90000) =     2527 ns/op 
-[info]   + p(0.99000) =     3487 ns/op 
-[info]   + p(0.99900) =     6143 ns/op 
-[info]   + p(0.99990) =    11775 ns/op 
-[info]   + p(0.99999) =    34047 ns/op 
-[info]   + p(1.00000) =   203775 ns/op 
-[info]   + 33.6 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 2,000,000 ops 
-[info]   + 457,027,128 ns 
-[info]   + 4,376,107 ops/s 
-[info]   + 97.1 % of CPU usage 
-[info] +  
-Executor service type: java-forkjoin-pool
-[info] AkkaUnboundedActorSpec:
-[info] - Enqueueing
-[info]   + 10,000,000 ops 
-[info]   + 495,181,806 ns 
-[info]   + 20,194,603 ops/s 
-[info]   + 15.4 % of CPU usage 
-[info]   + 48 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 10,000,000 ops 
-[info]   + 945,022,872 ns 
-[info]   + 10,581,754 ops/s 
-[info]   + 14.2 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 100,000 ops 
-[info]   + 950,715,013 ns 
-[info]   + 9,507 ns/op 
-[info]   + 50.8 % of CPU usage 
-[info]   + 404 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 851,398,691 ns 
-[info]   + 7,047,227 ops/s 
-[info]   + 23.3 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 921,301,890 ns 
-[info]   + 6,512,523 ops/s 
-[info]   + 67.0 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 12,000,000 ops 
-[info]   + 401,858,333 ns 
-[info]   + 29,861,269 ops/s 
-[info]   + 90.5 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 1,500,000 ops 
-[info]   + 1,714,926,975 ns 
-[info]   + p(0.00000) =      222 ns/op 
-[info]   + p(0.50000) =     1015 ns/op 
-[info]   + p(0.90000) =     1911 ns/op 
-[info]   + p(0.99000) =     2607 ns/op 
-[info]   + p(0.99900) =     3871 ns/op 
-[info]   + p(0.99990) =     8959 ns/op 
-[info]   + p(0.99999) =    29311 ns/op 
-[info]   + p(1.00000) =   105983 ns/op 
+[info]   + 1,756,791,473 ns 
+[info]   + p(0.00000) =      252 ns/op 
+[info]   + p(0.50000) =     1047 ns/op 
+[info]   + p(0.90000) =     1935 ns/op 
+[info]   + p(0.99000) =     2639 ns/op 
+[info]   + p(0.99900) =     4191 ns/op 
+[info]   + p(0.99990) =     8767 ns/op 
+[info]   + p(0.99999) =    27135 ns/op 
+[info]   + p(1.00000) =   434175 ns/op 
 [info]   + 32.9 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 431,902,161 ns 
-[info]   + 4,630,678 ops/s 
-[info]   + 95.8 % of CPU usage 
-[info] +  
-SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
-SLF4J: Defaulting to no-operation (NOP) logger implementation
-SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
-[info] LiftActorSpec:
-Executor service type: java-forkjoin-pool
-[info] - Enqueueing
-[info]   + 10,000,000 ops 
-[info]   + 564,211,656 ns 
-[info]   + 17,723,845 ops/s 
-[info]   + 13.7 % of CPU usage 
-[info]   + 23 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 10,000,000 ops 
-[info]   + 655,508,562 ns 
-[info]   + 15,255,330 ops/s 
-[info]   + 14.9 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 10,000,000 ops 
-[info]   + 915,906,913 ns 
-[info]   + 91 ns/op 
-[info]   + 15.8 % of CPU usage 
-[info]   + 72 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 708,627,508 ns 
-[info]   + 8,467,071 ops/s 
-[info]   + 28.9 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 791,419,476 ns 
-[info]   + 7,581,314 ops/s 
-[info]   + 37.1 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 12,000,000 ops 
-[info]   + 389,355,782 ns 
-[info]   + 30,820,140 ops/s 
-[info]   + 81.5 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 1,500,000 ops 
-[info]   + 3,416,961,288 ns 
-[info]   + p(0.00000) =      378 ns/op 
-[info]   + p(0.50000) =     2095 ns/op 
-[info]   + p(0.90000) =     3567 ns/op 
-[info]   + p(0.99000) =     4991 ns/op 
-[info]   + p(0.99900) =    13375 ns/op 
-[info]   + p(0.99990) =    30719 ns/op 
-[info]   + p(0.99999) =    81407 ns/op 
-[info]   + p(1.00000) =   378879 ns/op 
-[info]   + 30.2 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 2,000,000 ops 
-[info]   + 609,508,115 ns 
-[info]   + 3,281,334 ops/s 
-[info]   + 70.5 % of CPU usage 
-[info] +  
-Executor service type: java-forkjoin-pool
-[info] MinimalistActorSpec:
-[info] - Enqueueing
-[info]   + 40,000,000 ops 
-[info]   + 642,247,887 ns 
-[info]   + 62,281,248 ops/s 
-[info]   + 12.7 % of CPU usage 
-[info]   + 24 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 40,000,000 ops 
-[info]   + 284,317,921 ns 
-[info]   + 140,687,579 ops/s 
-[info]   + 19.3 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 2,000,000 ops 
-[info]   + 398,652,569 ns 
-[info]   + 199 ns/op 
-[info]   + 97.2 % of CPU usage 
-[info]   + 25 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 15,000,000 ops 
-[info]   + 229,545,140 ns 
-[info]   + 65,346,624 ops/s 
-[info]   + 30.0 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 15,000,000 ops 
-[info]   + 443,713,849 ns 
-[info]   + 33,805,570 ops/s 
-[info]   + 90.7 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 30,000,000 ops 
-[info]   + 246,809,256 ns 
-[info]   + 121,551,357 ops/s 
-[info]   + 93.7 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 3,000,000 ops 
-[info]   + 2,258,038,122 ns 
-[info]   + p(0.00000) =       92 ns/op 
-[info]   + p(0.50000) =      591 ns/op 
-[info]   + p(0.90000) =     1343 ns/op 
-[info]   + p(0.99000) =     3583 ns/op 
-[info]   + p(0.99900) =     5439 ns/op 
-[info]   + p(0.99990) =    11775 ns/op 
-[info]   + p(0.99999) =    33791 ns/op 
-[info]   + p(1.00000) =  1409023 ns/op 
-[info]   + 78.2 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 6,000,000 ops 
-[info]   + 485,602,324 ns 
-[info]   + 12,355,789 ops/s 
-[info]   + 96.5 % of CPU usage 
-[info] +  
-Executor service type: java-forkjoin-pool
-[info] ScalazActorSpec:
-[info] - Enqueueing
-[info]   + 40,000,000 ops 
-[info]   + 628,084,037 ns 
-[info]   + 63,685,745 ops/s 
-[info]   + 12.7 % of CPU usage 
-[info]   + 24 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 40,000,000 ops 
-[info]   + 254,371,848 ns 
-[info]   + 157,250,105 ops/s 
-[info]   + 22.1 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 10,000,000 ops 
-[info]   + 281,383,271 ns 
-[info]   + 28 ns/op 
-[info]   + 21.3 % of CPU usage 
-[info]   + 88 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 15,000,000 ops 
-[info]   + 293,008,689 ns 
-[info]   + 51,193,021 ops/s 
-[info]   + 55.5 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 15,000,000 ops 
-[info]   + 614,624,968 ns 
-[info]   + 24,405,126 ops/s 
-[info]   + 87.2 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 30,000,000 ops 
-[info]   + 299,218,808 ns 
-[info]   + 100,261,077 ops/s 
-[info]   + 91.5 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 3,000,000 ops 
-[info]   + 2,578,043,254 ns 
-[info]   + p(0.00000) =       78 ns/op 
-[info]   + p(0.50000) =      667 ns/op 
-[info]   + p(0.90000) =     1607 ns/op 
-[info]   + p(0.99000) =     3727 ns/op 
-[info]   + p(0.99900) =     5631 ns/op 
-[info]   + p(0.99990) =    12735 ns/op 
-[info]   + p(0.99999) =    42495 ns/op 
-[info]   + p(1.00000) =   610303 ns/op 
-[info]   + 74.1 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 6,000,000 ops 
-[info]   + 485,413,382 ns 
-[info]   + 12,360,598 ops/s 
-[info]   + 95.8 % of CPU usage 
-[info] +  
-[info] Run completed in 2 minutes, 47 seconds.
-[info] Total number of tests run: 91
-[info] Suites: completed 10, aborted 0
-[info] Tests: succeeded 91, failed 0, canceled 0, ignored 0, pending 0
-[info] All tests passed.
-[success] Total time: 169 s, completed Jul 9, 2017 1:19:45 PM
-[info] Loading global plugins from /home/andriy/.sbt/0.13/plugins
-[info] Loading project definition from /home/andriy/Projects/com/github/plokhotnyuk/actors/project
-[info] Set current project to actors (in build file:/home/andriy/Projects/com/github/plokhotnyuk/actors/)
-[info] ActorSpec:
-[info] actor with fork-join pool executor
-[info] - execute code async
-[info] - exchange messages with another actor without loss
-[info] - create child actor and send messages to it recursively
-[info] - handle messages in order of sending by each thread
-[info] - doesn't handle messages in simultaneous threads
-[info] - redirect unhandled errors to uncaught exception handler of thread
-Exception in thread "ForkJoinPool-1-worker-0" java.lang.NullPointerException
-[info] - handle messages with previous behaviour after unhandled errors
-[info] - not starve tasks arriving from external submit under high internal traffic
-[info] actor with fixed thread pool executor
-[info] - execute code async
-[info] - exchange messages with another actor without loss
-[info] - create child actor and send messages to it recursively
-[info] - handle messages in order of sending by each thread
-[info] - doesn't handle messages in simultaneous threads
-[info] - redirect unhandled errors to uncaught exception handler of thread
-[info] - handle messages with previous behaviour after unhandled errors
-[info] - not starve tasks arriving from external submit under high internal traffic
-Exception in thread "pool-3-thread-104" java.lang.NullPointerException
-Exception in thread "pool-3-thread-104" java.lang.NullPointerException
-Executor service type: abq-thread-pool
-[info] AkkaBoundedActorSpec:
-[info] - Enqueueing
-[info]   + 10,000,000 ops 
-[info]   + 916,325,527 ns 
-[info]   + 10,913,152 ops/s 
-[info]   + 13.9 % of CPU usage 
-[info]   + 48 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 10,000,000 ops 
-[info]   + 1,074,059,080 ns 
-[info]   + 9,310,474 ops/s 
-[info]   + 16.6 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 100,000 ops 
-[info]   + 975,970,306 ns 
-[info]   + 9,759 ns/op 
-[info]   + 48.9 % of CPU usage 
-[info]   + 563 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 1,663,949,069 ns 
-[info]   + 3,605,879 ops/s 
-[info]   + 23.6 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 1,621,623,504 ns 
-[info]   + 3,699,995 ops/s 
-[info]   + 33.0 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 12,000,000 ops 
-[info]   + 486,808,696 ns 
-[info]   + 24,650,340 ops/s 
-[info]   + 95.3 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 1,500,000 ops 
-[info]   + 3,840,051,284 ns 
-[info]   + p(0.00000) =      344 ns/op 
-[info]   + p(0.50000) =      603 ns/op 
-[info]   + p(0.90000) =     3039 ns/op 
-[info]   + p(0.99000) =    31743 ns/op 
-[info]   + p(0.99900) =    33535 ns/op 
-[info]   + p(0.99990) =    42495 ns/op 
-[info]   + p(0.99999) =    65023 ns/op 
-[info]   + p(1.00000) =   261119 ns/op 
-[info]   + 19.8 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 2,000,000 ops 
-[info]   + 2,001,899,977 ns 
-[info]   + 999,050 ops/s 
-[info]   + 38.2 % of CPU usage 
+[info]   + 519,489,179 ns 
+[info]   + 3,849,935 ops/s 
+[info]   + 96.0 % of CPU usage 
 [info] +  
 [info] - Overflow throughput
 [info]   + 5,000,000 ops 
-[info]   + 888,241,702 ns 
-[info]   + 5,629,098 ops/s 
-[info]   + 16.6 % of CPU usage 
+[info]   + 876,448,385 ns 
+[info]   + 5,704,842 ops/s 
+[info]   + 18.7 % of CPU usage 
 [info] +  
-Executor service type: abq-thread-pool
-[info] AkkaMCNonBlockingBoundedActorSpec:
-[info] - Enqueueing
-[info]   + 10,000,000 ops 
-[info]   + 483,531,227 ns 
-[info]   + 20,681,187 ops/s 
-[info]   + 14.5 % of CPU usage 
-[info]   + 48 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 10,000,000 ops 
-[info]   + 851,845,573 ns 
-[info]   + 11,739,216 ops/s 
-[info]   + 16.9 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 100,000 ops 
-[info]   + 1,231,861,996 ns 
-[info]   + 12,318 ns/op 
-[info]   + 46.2 % of CPU usage 
-[info]   + 379 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 1,168,802,320 ns 
-[info]   + 5,133,460 ops/s 
-[info]   + 24.1 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 1,366,859,189 ns 
-[info]   + 4,389,625 ops/s 
-[info]   + 82.6 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 12,000,000 ops 
-[info]   + 388,356,249 ns 
-[info]   + 30,899,464 ops/s 
-[info]   + 90.1 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 1,500,000 ops 
-[info]   + 6,111,919,887 ns 
-[info]   + p(0.00000) =      274 ns/op 
-[info]   + p(0.50000) =      675 ns/op 
-[info]   + p(0.90000) =    15743 ns/op 
-[info]   + p(0.99000) =    32255 ns/op 
-[info]   + p(0.99900) =    34047 ns/op 
-[info]   + p(0.99990) =    45567 ns/op 
-[info]   + p(0.99999) =    79359 ns/op 
-[info]   + p(1.00000) =   452607 ns/op 
-[info]   + 18.5 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 2,000,000 ops 
-[info]   + 1,681,956,238 ns 
-[info]   + 1,189,091 ops/s 
-[info]   + 37.6 % of CPU usage 
-[info] +  
-[info] - Overflow throughput
-[info]   + 5,000,000 ops 
-[info]   + 428,414,439 ns 
-[info]   + 11,670,941 ops/s 
-[info]   + 18.4 % of CPU usage 
-[info] +  
-[info] AkkaMCUnboundedActorSpec:
-Executor service type: abq-thread-pool
-[info] - Enqueueing
-[info]   + 10,000,000 ops 
-[info]   + 443,082,289 ns 
-[info]   + 22,569,171 ops/s 
-[info]   + 14.1 % of CPU usage 
-[info]   + 48 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 10,000,000 ops 
-[info]   + 844,053,691 ns 
-[info]   + 11,847,587 ops/s 
-[info]   + 17.2 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 100,000 ops 
-[info]   + 958,671,653 ns 
-[info]   + 9,586 ns/op 
-[info]   + 46.7 % of CPU usage 
-[info]   + 463 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 789,246,561 ns 
-[info]   + 7,602,187 ops/s 
-[info]   + 22.2 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 685,521,097 ns 
-[info]   + 8,752,465 ops/s 
-[info]   + 37.4 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 12,000,000 ops 
-[info]   + 328,952,767 ns 
-[info]   + 36,479,401 ops/s 
-[info]   + 92.7 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 1,500,000 ops 
-[info]   + 5,154,184,226 ns 
-[info]   + p(0.00000) =      252 ns/op 
-[info]   + p(0.50000) =      499 ns/op 
-[info]   + p(0.90000) =    15423 ns/op 
-[info]   + p(0.99000) =    31871 ns/op 
-[info]   + p(0.99900) =    33535 ns/op 
-[info]   + p(0.99990) =    44799 ns/op 
-[info]   + p(0.99999) =    93695 ns/op 
-[info]   + p(1.00000) =   497663 ns/op 
-[info]   + 18.2 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 2,000,000 ops 
-[info]   + 2,083,771,589 ns 
-[info]   + 959,798 ops/s 
-[info]   + 38.2 % of CPU usage 
-[info] +  
-Executor service type: abq-thread-pool
-[info] AkkaSCONonBlockingBoundedActorSpec:
-[info] - Enqueueing
-[info]   + 10,000,000 ops 
-[info]   + 481,544,305 ns 
-[info]   + 20,766,521 ops/s 
-[info]   + 13.8 % of CPU usage 
-[info]   + 48 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 10,000,000 ops 
-[info]   + 1,163,101,573 ns 
-[info]   + 8,597,701 ops/s 
-[info]   + 15.9 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 100,000 ops 
-[info]   + 1,149,503,476 ns 
-[info]   + 11,495 ns/op 
-[info]   + 47.4 % of CPU usage 
-[info]   + 379 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 863,806,177 ns 
-[info]   + 6,946,002 ops/s 
-[info]   + 23.3 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 1,416,788,077 ns 
-[info]   + 4,234,931 ops/s 
-[info]   + 80.3 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 12,000,000 ops 
-[info]   + 442,439,383 ns 
-[info]   + 27,122,359 ops/s 
-[info]   + 88.1 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 1,500,000 ops 
-[info]   + 3,311,957,100 ns 
-[info]   + p(0.00000) =      270 ns/op 
-[info]   + p(0.50000) =      413 ns/op 
-[info]   + p(0.90000) =     2639 ns/op 
-[info]   + p(0.99000) =    24447 ns/op 
-[info]   + p(0.99900) =    26367 ns/op 
-[info]   + p(0.99990) =    37631 ns/op 
-[info]   + p(0.99999) =    68095 ns/op 
-[info]   + p(1.00000) =   577535 ns/op 
-[info]   + 19.6 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 2,000,000 ops 
-[info]   + 1,704,895,606 ns 
-[info]   + 1,173,092 ops/s 
-[info]   + 39.0 % of CPU usage 
-[info] +  
-[info] - Overflow throughput
-[info]   + 5,000,000 ops 
-[info]   + 489,415,821 ns 
-[info]   + 10,216,261 ops/s 
-[info]   + 17.1 % of CPU usage 
-[info] +  
-Executor service type: abq-thread-pool
 [info] AkkaSCOUnboundedActorSpec:
+Executor service type: java-forkjoin-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 436,921,701 ns 
-[info]   + 22,887,396 ops/s 
-[info]   + 14.3 % of CPU usage 
+[info]   + 309,084,093 ns 
+[info]   + 32,353,654 ops/s 
+[info]   + 14.6 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 1,107,782,827 ns 
-[info]   + 9,027,040 ops/s 
-[info]   + 16.5 % of CPU usage 
+[info]   + 1,129,879,367 ns 
+[info]   + 8,850,502 ops/s 
+[info]   + 14.6 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 1,040,344,023 ns 
-[info]   + 10,403 ns/op 
-[info]   + 47.2 % of CPU usage 
-[info]   + 379 bytes per instance 
+[info]   + 1,469,746,538 ns 
+[info]   + 14,697 ns/op 
+[info]   + 45.0 % of CPU usage 
+[info]   + 403 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 815,744,780 ns 
-[info]   + 7,355,241 ops/s 
-[info]   + 22.8 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 1,004,631,904 ns 
-[info]   + 5,972,336 ops/s 
-[info]   + 37.8 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 12,000,000 ops 
-[info]   + 402,428,282 ns 
-[info]   + 29,818,977 ops/s 
-[info]   + 91.0 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 1,500,000 ops 
-[info]   + 5,519,218,952 ns 
-[info]   + p(0.00000) =      249 ns/op 
-[info]   + p(0.50000) =      515 ns/op 
-[info]   + p(0.90000) =    17151 ns/op 
-[info]   + p(0.99000) =    31359 ns/op 
-[info]   + p(0.99900) =    33279 ns/op 
-[info]   + p(0.99990) =    44031 ns/op 
-[info]   + p(0.99999) =    86527 ns/op 
-[info]   + p(1.00000) =   425983 ns/op 
-[info]   + 18.1 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 2,000,000 ops 
-[info]   + 2,031,405,542 ns 
-[info]   + 984,539 ops/s 
-[info]   + 36.9 % of CPU usage 
-[info] +  
-[info] AkkaUnboundedActorSpec:
-Executor service type: abq-thread-pool
-[info] - Enqueueing
-[info]   + 10,000,000 ops 
-[info]   + 353,391,111 ns 
-[info]   + 28,297,259 ops/s 
-[info]   + 15.2 % of CPU usage 
-[info]   + 48 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 10,000,000 ops 
-[info]   + 1,312,968,846 ns 
-[info]   + 7,616,326 ops/s 
-[info]   + 16.5 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 100,000 ops 
-[info]   + 945,604,269 ns 
-[info]   + 9,456 ns/op 
-[info]   + 47.6 % of CPU usage 
-[info]   + 400 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 853,357,508 ns 
-[info]   + 7,031,050 ops/s 
+[info]   + 746,854,307 ns 
+[info]   + 8,033,695 ops/s 
 [info]   + 22.9 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,385,093,792 ns 
-[info]   + 4,331,836 ops/s 
-[info]   + 63.8 % of CPU usage 
+[info]   + 673,482,421 ns 
+[info]   + 8,908,918 ops/s 
+[info]   + 36.6 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 463,740,351 ns 
-[info]   + 25,876,549 ops/s 
-[info]   + 92.7 % of CPU usage 
+[info]   + 368,319,051 ns 
+[info]   + 32,580,448 ops/s 
+[info]   + 89.3 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 4,845,154,771 ns 
-[info]   + p(0.00000) =      270 ns/op 
-[info]   + p(0.50000) =      535 ns/op 
-[info]   + p(0.90000) =    14591 ns/op 
-[info]   + p(0.99000) =    31487 ns/op 
-[info]   + p(0.99900) =    33535 ns/op 
-[info]   + p(0.99990) =    43263 ns/op 
-[info]   + p(0.99999) =    74751 ns/op 
-[info]   + p(1.00000) =   479231 ns/op 
-[info]   + 18.5 % of CPU usage 
+[info]   + 2,239,899,333 ns 
+[info]   + p(0.00000) =      254 ns/op 
+[info]   + p(0.50000) =     1319 ns/op 
+[info]   + p(0.90000) =     2479 ns/op 
+[info]   + p(0.99000) =     3423 ns/op 
+[info]   + p(0.99900) =     5375 ns/op 
+[info]   + p(0.99990) =    11455 ns/op 
+[info]   + p(0.99999) =    30207 ns/op 
+[info]   + p(1.00000) =   434175 ns/op 
+[info]   + 33.6 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 2,230,320,963 ns 
-[info]   + 896,731 ops/s 
-[info]   + 36.9 % of CPU usage 
+[info]   + 479,246,335 ns 
+[info]   + 4,173,219 ops/s 
+[info]   + 96.0 % of CPU usage 
+[info] +  
+[info] AkkaUnboundedActorSpec:
+Executor service type: java-forkjoin-pool
+[info] - Enqueueing
+[info]   + 10,000,000 ops 
+[info]   + 338,524,421 ns 
+[info]   + 29,539,966 ops/s 
+[info]   + 15.1 % of CPU usage 
+[info]   + 48 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 10,000,000 ops 
+[info]   + 1,154,111,816 ns 
+[info]   + 8,664,671 ops/s 
+[info]   + 15.1 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 100,000 ops 
+[info]   + 856,198,223 ns 
+[info]   + 8,561 ns/op 
+[info]   + 51.2 % of CPU usage 
+[info]   + 383 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 836,723,547 ns 
+[info]   + 7,170,827 ops/s 
+[info]   + 22.4 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 1,056,681,712 ns 
+[info]   + 5,678,152 ops/s 
+[info]   + 65.4 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 12,000,000 ops 
+[info]   + 409,273,721 ns 
+[info]   + 29,320,230 ops/s 
+[info]   + 92.5 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 1,500,000 ops 
+[info]   + 1,786,029,418 ns 
+[info]   + p(0.00000) =      218 ns/op 
+[info]   + p(0.50000) =     1071 ns/op 
+[info]   + p(0.90000) =     1975 ns/op 
+[info]   + p(0.99000) =     2735 ns/op 
+[info]   + p(0.99900) =     4543 ns/op 
+[info]   + p(0.99990) =    10367 ns/op 
+[info]   + p(0.99999) =    30207 ns/op 
+[info]   + p(1.00000) =   589823 ns/op 
+[info]   + 34.1 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 2,000,000 ops 
+[info]   + 452,383,442 ns 
+[info]   + 4,421,028 ops/s 
+[info]   + 93.9 % of CPU usage 
 [info] +  
 SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
 SLF4J: Defaulting to no-operation (NOP) logger implementation
 SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
 [info] LiftActorSpec:
-Executor service type: abq-thread-pool
+Executor service type: java-forkjoin-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 381,018,840 ns 
-[info]   + 26,245,421 ops/s 
-[info]   + 13.1 % of CPU usage 
-[info]   + 24 bytes per instance 
+[info]   + 558,407,323 ns 
+[info]   + 17,908,074 ops/s 
+[info]   + 13.2 % of CPU usage 
+[info]   + 23 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 658,952,741 ns 
-[info]   + 15,175,595 ops/s 
-[info]   + 14.8 % of CPU usage 
+[info]   + 559,816,514 ns 
+[info]   + 17,862,995 ops/s 
+[info]   + 15.6 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 10,000,000 ops 
-[info]   + 916,575,125 ns 
-[info]   + 91 ns/op 
-[info]   + 16.4 % of CPU usage 
+[info]   + 931,007,283 ns 
+[info]   + 93 ns/op 
+[info]   + 15.7 % of CPU usage 
 [info]   + 72 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 706,996,001 ns 
-[info]   + 8,486,610 ops/s 
-[info]   + 28.5 % of CPU usage 
+[info]   + 751,940,209 ns 
+[info]   + 7,979,357 ops/s 
+[info]   + 27.9 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 740,110,085 ns 
-[info]   + 8,106,902 ops/s 
-[info]   + 37.7 % of CPU usage 
+[info]   + 731,133,114 ns 
+[info]   + 8,206,439 ops/s 
+[info]   + 36.9 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 364,013,339 ns 
-[info]   + 32,965,824 ops/s 
-[info]   + 92.0 % of CPU usage 
+[info]   + 305,740,323 ns 
+[info]   + 39,248,993 ops/s 
+[info]   + 85.9 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 4,262,824,174 ns 
-[info]   + p(0.00000) =      442 ns/op 
-[info]   + p(0.50000) =      919 ns/op 
-[info]   + p(0.90000) =     4319 ns/op 
-[info]   + p(0.99000) =    33791 ns/op 
-[info]   + p(0.99900) =    37887 ns/op 
-[info]   + p(0.99990) =    54527 ns/op 
-[info]   + p(0.99999) =   115711 ns/op 
-[info]   + p(1.00000) =   602111 ns/op 
-[info]   + 24.2 % of CPU usage 
+[info]   + 3,727,008,188 ns 
+[info]   + p(0.00000) =      386 ns/op 
+[info]   + p(0.50000) =     2319 ns/op 
+[info]   + p(0.90000) =     3823 ns/op 
+[info]   + p(0.99000) =     5695 ns/op 
+[info]   + p(0.99900) =    12607 ns/op 
+[info]   + p(0.99990) =    31359 ns/op 
+[info]   + p(0.99999) =    93183 ns/op 
+[info]   + p(1.00000) =   428031 ns/op 
+[info]   + 30.1 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 1,416,246,797 ns 
-[info]   + 1,412,183 ops/s 
-[info]   + 48.6 % of CPU usage 
+[info]   + 575,290,699 ns 
+[info]   + 3,476,503 ops/s 
+[info]   + 62.8 % of CPU usage 
 [info] +  
-Executor service type: abq-thread-pool
+Executor service type: java-forkjoin-pool
 [info] MinimalistActorSpec:
 [info] - Enqueueing
 [info]   + 40,000,000 ops 
-[info]   + 903,665,227 ns 
-[info]   + 44,264,179 ops/s 
+[info]   + 636,492,030 ns 
+[info]   + 62,844,463 ops/s 
 [info]   + 12.6 % of CPU usage 
 [info]   + 24 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 40,000,000 ops 
-[info]   + 287,506,061 ns 
-[info]   + 139,127,501 ops/s 
-[info]   + 18.3 % of CPU usage 
+[info]   + 281,699,851 ns 
+[info]   + 141,995,105 ops/s 
+[info]   + 20.0 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 2,000,000 ops 
-[info]   + 4,593,232,572 ns 
-[info]   + 2,296 ns/op 
-[info]   + 20.4 % of CPU usage 
+[info]   + 426,206,427 ns 
+[info]   + 213 ns/op 
+[info]   + 97.4 % of CPU usage 
 [info]   + 24 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 15,000,000 ops 
-[info]   + 242,559,798 ns 
-[info]   + 61,840,420 ops/s 
-[info]   + 35.6 % of CPU usage 
+[info]   + 221,381,063 ns 
+[info]   + 67,756,472 ops/s 
+[info]   + 33.9 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 15,000,000 ops 
-[info]   + 445,569,050 ns 
-[info]   + 33,664,815 ops/s 
-[info]   + 90.6 % of CPU usage 
+[info]   + 429,495,066 ns 
+[info]   + 34,924,731 ops/s 
+[info]   + 94.0 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 30,000,000 ops 
-[info]   + 310,375,210 ns 
-[info]   + 96,657,204 ops/s 
-[info]   + 95.9 % of CPU usage 
+[info]   + 221,286,509 ns 
+[info]   + 135,570,849 ops/s 
+[info]   + 95.5 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 3,000,000 ops 
-[info]   + 9,225,008,544 ns 
-[info]   + p(0.00000) =      137 ns/op 
-[info]   + p(0.50000) =      453 ns/op 
-[info]   + p(0.90000) =     3487 ns/op 
-[info]   + p(0.99000) =    29951 ns/op 
-[info]   + p(0.99900) =    31871 ns/op 
-[info]   + p(0.99990) =    45311 ns/op 
-[info]   + p(0.99999) =    81407 ns/op 
-[info]   + p(1.00000) =  1425407 ns/op 
-[info]   + 18.6 % of CPU usage 
+[info]   + 2,047,926,727 ns 
+[info]   + p(0.00000) =       80 ns/op 
+[info]   + p(0.50000) =      501 ns/op 
+[info]   + p(0.90000) =     1271 ns/op 
+[info]   + p(0.99000) =     2991 ns/op 
+[info]   + p(0.99900) =     4863 ns/op 
+[info]   + p(0.99990) =    10175 ns/op 
+[info]   + p(0.99999) =    36607 ns/op 
+[info]   + p(1.00000) = 15728639 ns/op 
+[info]   + 89.7 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 6,000,000 ops 
-[info]   + 3,665,555,608 ns 
-[info]   + 1,636,859 ops/s 
-[info]   + 25.4 % of CPU usage 
+[info]   + 907,711,001 ns 
+[info]   + 6,610,033 ops/s 
+[info]   + 99.3 % of CPU usage 
 [info] +  
-Executor service type: abq-thread-pool
+Executor service type: java-forkjoin-pool
 [info] ScalazActorSpec:
 [info] - Enqueueing
 [info]   + 40,000,000 ops 
-[info]   + 638,052,766 ns 
-[info]   + 62,690,739 ops/s 
-[info]   + 12.7 % of CPU usage 
+[info]   + 699,098,581 ns 
+[info]   + 57,216,537 ops/s 
+[info]   + 12.9 % of CPU usage 
 [info]   + 24 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 40,000,000 ops 
-[info]   + 227,262,770 ns 
-[info]   + 176,007,711 ops/s 
-[info]   + 21.5 % of CPU usage 
+[info]   + 250,692,668 ns 
+[info]   + 159,557,917 ops/s 
+[info]   + 22.4 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 10,000,000 ops 
-[info]   + 294,974,356 ns 
-[info]   + 29 ns/op 
-[info]   + 22.0 % of CPU usage 
+[info]   + 351,763,096 ns 
+[info]   + 35 ns/op 
+[info]   + 22.4 % of CPU usage 
 [info]   + 88 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 15,000,000 ops 
-[info]   + 286,680,333 ns 
-[info]   + 52,323,086 ops/s 
-[info]   + 41.0 % of CPU usage 
+[info]   + 507,020,903 ns 
+[info]   + 29,584,579 ops/s 
+[info]   + 27.4 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 15,000,000 ops 
-[info]   + 551,071,522 ns 
-[info]   + 27,219,697 ops/s 
-[info]   + 95.7 % of CPU usage 
+[info]   + 521,123,074 ns 
+[info]   + 28,783,987 ops/s 
+[info]   + 90.9 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 30,000,000 ops 
-[info]   + 197,207,547 ns 
-[info]   + 152,123,995 ops/s 
-[info]   + 84.3 % of CPU usage 
+[info]   + 289,268,117 ns 
+[info]   + 103,710,012 ops/s 
+[info]   + 90.3 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 3,000,000 ops 
-[info]   + 9,118,281,373 ns 
-[info]   + p(0.00000) =      157 ns/op 
-[info]   + p(0.50000) =      477 ns/op 
-[info]   + p(0.90000) =    14079 ns/op 
-[info]   + p(0.99000) =    30079 ns/op 
-[info]   + p(0.99900) =    31615 ns/op 
-[info]   + p(0.99990) =    44031 ns/op 
-[info]   + p(0.99999) =    74751 ns/op 
-[info]   + p(1.00000) =  3670015 ns/op 
-[info]   + 18.4 % of CPU usage 
+[info]   + 1,555,447,909 ns 
+[info]   + p(0.00000) =      102 ns/op 
+[info]   + p(0.50000) =      369 ns/op 
+[info]   + p(0.90000) =      799 ns/op 
+[info]   + p(0.99000) =     2735 ns/op 
+[info]   + p(0.99900) =     5183 ns/op 
+[info]   + p(0.99990) =    13503 ns/op 
+[info]   + p(0.99999) =    44031 ns/op 
+[info]   + p(1.00000) = 10616831 ns/op 
+[info]   + 89.7 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 6,000,000 ops 
-[info]   + 3,420,924,263 ns 
-[info]   + 1,753,911 ops/s 
-[info]   + 25.8 % of CPU usage 
+[info]   + 562,001,208 ns 
+[info]   + 10,676,133 ops/s 
+[info]   + 98.1 % of CPU usage 
 [info] +  
-[info] Run completed in 3 minutes, 41 seconds.
+[info] Run completed in 2 minutes, 48 seconds.
 [info] Total number of tests run: 91
 [info] Suites: completed 10, aborted 0
 [info] Tests: succeeded 91, failed 0, canceled 0, ignored 0, pending 0
 [info] All tests passed.
-[success] Total time: 222 s, completed Jul 9, 2017 1:23:33 PM
+[success] Total time: 170 s, completed Jul 9, 2017 6:43:45 PM
 [info] Loading global plugins from /home/andriy/.sbt/0.13/plugins
 [info] Loading project definition from /home/andriy/Projects/com/github/plokhotnyuk/actors/project
 [info] Set current project to actors (in build file:/home/andriy/Projects/com/github/plokhotnyuk/actors/)
@@ -1800,397 +1217,979 @@ Executor service type: abq-thread-pool
 [info] - doesn't handle messages in simultaneous threads
 [info] - redirect unhandled errors to uncaught exception handler of thread
 java.lang.NullPointerException
-	at com.github.gist.viktorklang.ActorSpec.$anonfun$actorTests$30(ActorSpec.scala:115)
-	at com.github.gist.viktorklang.Actor$$anon$1.com$github$gist$viktorklang$Actor$$anon$$actOrSuspend(Actor.scala:91)
-	at com.github.gist.viktorklang.Actor$$anon$1$$anon$2.exec(Actor.scala:67)
-	at java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:289)
-	at java.util.concurrent.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1056)
-	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1692)
-	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:157)
-Exception in thread "ForkJoinPool-1-worker-0" java.lang.NullPointerException
 [info] - handle messages with previous behaviour after unhandled errors
-[info] - not starve tasks arriving from external submit under high internal traffic
+[info] - don't starve tasks arriving from external submit under high internal traffic
 [info] actor with fixed thread pool executor
 [info] - execute code async
 [info] - exchange messages with another actor without loss
 [info] - create child actor and send messages to it recursively
 [info] - handle messages in order of sending by each thread
 [info] - doesn't handle messages in simultaneous threads
-Exception in thread "pool-3-thread-4" [info] - redirect unhandled errors to uncaught exception handler of thread
-[info] - handle messages with previous behaviour after unhandled errorsException in thread "pool-3-thread-102" java.lang.NullPointerException
-
-[info] - not starve tasks arriving from external submit under high internal traffic
-Executor service type: lbq-thread-pool
+Exception in thread "pool-3-thread-4" java.lang.NullPointerException
+	at com.github.gist.viktorklang.ActorSpec.$anonfun$actorTests$30(ActorSpec.scala:115)
+	at com.github.gist.viktorklang.Actor$$anon$1.com$github$gist$viktorklang$Actor$$anon$$act(Actor.scala:103)
+	at com.github.gist.viktorklang.Actor$$anon$1$$anon$4.run(Actor.scala:75)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+[info] - redirect unhandled errors to uncaught exception handler of thread
+Exception in thread "pool-3-thread-104" java.lang.NullPointerException
+[info] - handle messages with previous behaviour after unhandled errors
+[info] - don't starve tasks arriving from external submit under high internal traffic
 [info] AkkaBoundedActorSpec:
+Executor service type: abq-thread-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 521,321,968 ns 
-[info]   + 19,182,003 ops/s 
+[info]   + 513,213,979 ns 
+[info]   + 19,485,049 ops/s 
 [info]   + 14.9 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 1,032,483,037 ns 
-[info]   + 9,685,389 ops/s 
-[info]   + 16.5 % of CPU usage 
+[info]   + 1,320,472,821 ns 
+[info]   + 7,573,044 ops/s 
+[info]   + 15.8 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 946,084,475 ns 
-[info]   + 9,460 ns/op 
-[info]   + 51.9 % of CPU usage 
-[info]   + 563 bytes per instance 
+[info]   + 1,018,513,130 ns 
+[info]   + 10,185 ns/op 
+[info]   + 45.8 % of CPU usage 
+[info]   + 584 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,397,798,776 ns 
-[info]   + 4,292,463 ops/s 
-[info]   + 27.4 % of CPU usage 
+[info]   + 1,299,070,081 ns 
+[info]   + 4,618,688 ops/s 
+[info]   + 25.6 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,373,630,220 ns 
-[info]   + 4,367,987 ops/s 
-[info]   + 31.3 % of CPU usage 
+[info]   + 1,746,217,129 ns 
+[info]   + 3,435,998 ops/s 
+[info]   + 33.6 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 532,055,370 ns 
-[info]   + 22,554,043 ops/s 
-[info]   + 92.1 % of CPU usage 
+[info]   + 601,260,213 ns 
+[info]   + 19,958,080 ops/s 
+[info]   + 95.4 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 4,342,883,318 ns 
-[info]   + p(0.00000) =      478 ns/op 
-[info]   + p(0.50000) =      795 ns/op 
-[info]   + p(0.90000) =     6399 ns/op 
-[info]   + p(0.99000) =    29823 ns/op 
-[info]   + p(0.99900) =    31487 ns/op 
-[info]   + p(0.99990) =    45055 ns/op 
-[info]   + p(0.99999) =    72703 ns/op 
-[info]   + p(1.00000) =   655359 ns/op 
-[info]   + 20.2 % of CPU usage 
+[info]   + 3,955,804,940 ns 
+[info]   + p(0.00000) =      322 ns/op 
+[info]   + p(0.50000) =      497 ns/op 
+[info]   + p(0.90000) =    11263 ns/op 
+[info]   + p(0.99000) =    24831 ns/op 
+[info]   + p(0.99900) =    31871 ns/op 
+[info]   + p(0.99990) =    37887 ns/op 
+[info]   + p(0.99999) =    82943 ns/op 
+[info]   + p(1.00000) =  1933311 ns/op 
+[info]   + 18.9 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 1,798,166,991 ns 
-[info]   + 1,112,243 ops/s 
-[info]   + 39.1 % of CPU usage 
+[info]   + 2,088,852,978 ns 
+[info]   + 957,463 ops/s 
+[info]   + 37.9 % of CPU usage 
 [info] +  
 [info] - Overflow throughput
 [info]   + 5,000,000 ops 
-[info]   + 517,671,543 ns 
-[info]   + 9,658,634 ops/s 
-[info]   + 26.1 % of CPU usage 
+[info]   + 869,796,299 ns 
+[info]   + 5,748,472 ops/s 
+[info]   + 16.2 % of CPU usage 
 [info] +  
 [info] AkkaMCNonBlockingBoundedActorSpec:
-Executor service type: lbq-thread-pool
+Executor service type: abq-thread-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 661,922,217 ns 
-[info]   + 15,107,515 ops/s 
-[info]   + 13.6 % of CPU usage 
+[info]   + 666,409,910 ns 
+[info]   + 15,005,779 ops/s 
+[info]   + 13.7 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 850,845,916 ns 
-[info]   + 11,753,009 ops/s 
-[info]   + 17.2 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 100,000 ops 
-[info]   + 959,795,543 ns 
-[info]   + 9,597 ns/op 
-[info]   + 48.7 % of CPU usage 
-[info]   + 379 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 762,853,036 ns 
-[info]   + 7,865,210 ops/s 
-[info]   + 24.6 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 6,000,000 ops 
-[info]   + 1,295,164,384 ns 
-[info]   + 4,632,616 ops/s 
-[info]   + 76.8 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 12,000,000 ops 
-[info]   + 405,625,951 ns 
-[info]   + 29,583,905 ops/s 
-[info]   + 91.2 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 1,500,000 ops 
-[info]   + 3,866,154,512 ns 
-[info]   + p(0.00000) =      322 ns/op 
-[info]   + p(0.50000) =      687 ns/op 
-[info]   + p(0.90000) =     9279 ns/op 
-[info]   + p(0.99000) =    22527 ns/op 
-[info]   + p(0.99900) =    23679 ns/op 
-[info]   + p(0.99990) =    31231 ns/op 
-[info]   + p(0.99999) =    68095 ns/op 
-[info]   + p(1.00000) =  1044479 ns/op 
-[info]   + 19.4 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 2,000,000 ops 
-[info]   + 1,446,912,821 ns 
-[info]   + 1,382,253 ops/s 
-[info]   + 42.0 % of CPU usage 
-[info] +  
-[info] - Overflow throughput
-[info]   + 5,000,000 ops 
-[info]   + 467,365,367 ns 
-[info]   + 10,698,268 ops/s 
+[info]   + 856,255,910 ns 
+[info]   + 11,678,751 ops/s 
 [info]   + 17.1 % of CPU usage 
 [info] +  
-Executor service type: lbq-thread-pool
-[info] AkkaMCUnboundedActorSpec:
-[info] - Enqueueing
-[info]   + 10,000,000 ops 
-[info]   + 467,095,850 ns 
-[info]   + 21,408,882 ops/s 
-[info]   + 13.9 % of CPU usage 
-[info]   + 48 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 10,000,000 ops 
-[info]   + 1,131,489,067 ns 
-[info]   + 8,837,911 ops/s 
-[info]   + 15.4 % of CPU usage 
-[info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 1,193,057,222 ns 
-[info]   + 11,930 ns/op 
-[info]   + 51.8 % of CPU usage 
+[info]   + 1,015,288,798 ns 
+[info]   + 10,152 ns/op 
+[info]   + 46.3 % of CPU usage 
 [info]   + 400 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,000,103,630 ns 
-[info]   + 5,999,378 ops/s 
-[info]   + 21.5 % of CPU usage 
+[info]   + 750,446,529 ns 
+[info]   + 7,995,239 ops/s 
+[info]   + 23.0 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 915,804,533 ns 
-[info]   + 6,551,616 ops/s 
-[info]   + 35.9 % of CPU usage 
+[info]   + 1,248,817,467 ns 
+[info]   + 4,804,545 ops/s 
+[info]   + 79.5 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 352,323,022 ns 
-[info]   + 34,059,653 ops/s 
-[info]   + 92.2 % of CPU usage 
+[info]   + 378,167,669 ns 
+[info]   + 31,731,956 ops/s 
+[info]   + 92.6 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 4,028,436,270 ns 
-[info]   + p(0.00000) =      298 ns/op 
-[info]   + p(0.50000) =      651 ns/op 
-[info]   + p(0.90000) =     8575 ns/op 
-[info]   + p(0.99000) =    25599 ns/op 
-[info]   + p(0.99900) =    30463 ns/op 
-[info]   + p(0.99990) =    38399 ns/op 
-[info]   + p(0.99999) =    80895 ns/op 
-[info]   + p(1.00000) =   589823 ns/op 
-[info]   + 19.5 % of CPU usage 
+[info]   + 4,843,833,848 ns 
+[info]   + p(0.00000) =      274 ns/op 
+[info]   + p(0.50000) =      519 ns/op 
+[info]   + p(0.90000) =    14463 ns/op 
+[info]   + p(0.99000) =    24831 ns/op 
+[info]   + p(0.99900) =    32639 ns/op 
+[info]   + p(0.99990) =    39935 ns/op 
+[info]   + p(0.99999) =    75263 ns/op 
+[info]   + p(1.00000) =  1417215 ns/op 
+[info]   + 18.4 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 1,740,626,565 ns 
-[info]   + 1,149,011 ops/s 
-[info]   + 44.0 % of CPU usage 
+[info]   + 2,152,149,236 ns 
+[info]   + 929,303 ops/s 
+[info]   + 36.7 % of CPU usage 
 [info] +  
-[info] AkkaSCONonBlockingBoundedActorSpec:
-Executor service type: lbq-thread-pool
+[info] - Overflow throughput
+[info]   + 5,000,000 ops 
+[info]   + 672,674,950 ns 
+[info]   + 7,433,010 ops/s 
+[info]   + 16.9 % of CPU usage 
+[info] +  
+[info] AkkaMCUnboundedActorSpec:
+Executor service type: abq-thread-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 475,529,901 ns 
-[info]   + 21,029,171 ops/s 
+[info]   + 308,925,995 ns 
+[info]   + 32,370,212 ops/s 
 [info]   + 14.2 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 1,110,278,877 ns 
-[info]   + 9,006,746 ops/s 
+[info]   + 1,127,069,152 ns 
+[info]   + 8,872,570 ops/s 
+[info]   + 15.9 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 100,000 ops 
+[info]   + 1,223,112,421 ns 
+[info]   + 12,231 ns/op 
+[info]   + 51.2 % of CPU usage 
+[info]   + 379 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 839,745,061 ns 
+[info]   + 7,145,025 ops/s 
+[info]   + 22.9 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 709,930,948 ns 
+[info]   + 8,451,526 ops/s 
+[info]   + 37.5 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 12,000,000 ops 
+[info]   + 363,294,591 ns 
+[info]   + 33,031,045 ops/s 
+[info]   + 92.9 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 1,500,000 ops 
+[info]   + 4,722,945,601 ns 
+[info]   + p(0.00000) =      253 ns/op 
+[info]   + p(0.50000) =      551 ns/op 
+[info]   + p(0.90000) =    14143 ns/op 
+[info]   + p(0.99000) =    31999 ns/op 
+[info]   + p(0.99900) =    34047 ns/op 
+[info]   + p(0.99990) =    45823 ns/op 
+[info]   + p(0.99999) =    94207 ns/op 
+[info]   + p(1.00000) =  1433599 ns/op 
+[info]   + 18.9 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 2,000,000 ops 
+[info]   + 1,723,477,961 ns 
+[info]   + 1,160,444 ops/s 
+[info]   + 38.6 % of CPU usage 
+[info] +  
+Executor service type: abq-thread-pool
+[info] AkkaSCONonBlockingBoundedActorSpec:
+[info] - Enqueueing
+[info]   + 10,000,000 ops 
+[info]   + 685,039,068 ns 
+[info]   + 14,597,707 ops/s 
+[info]   + 13.9 % of CPU usage 
+[info]   + 48 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 10,000,000 ops 
+[info]   + 875,973,440 ns 
+[info]   + 11,415,871 ops/s 
 [info]   + 16.8 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 1,020,337,002 ns 
-[info]   + 10,203 ns/op 
-[info]   + 49.0 % of CPU usage 
-[info]   + 400 bytes per instance 
+[info]   + 1,168,231,185 ns 
+[info]   + 11,682 ns/op 
+[info]   + 45.3 % of CPU usage 
+[info]   + 379 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 871,879,085 ns 
-[info]   + 6,881,688 ops/s 
-[info]   + 23.4 % of CPU usage 
+[info]   + 1,095,025,370 ns 
+[info]   + 5,479,325 ops/s 
+[info]   + 23.2 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,797,859,967 ns 
-[info]   + 3,337,301 ops/s 
-[info]   + 76.6 % of CPU usage 
+[info]   + 1,491,358,489 ns 
+[info]   + 4,023,177 ops/s 
+[info]   + 79.5 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 491,931,765 ns 
-[info]   + 24,393,627 ops/s 
-[info]   + 94.0 % of CPU usage 
+[info]   + 422,128,906 ns 
+[info]   + 28,427,335 ops/s 
+[info]   + 87.7 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 3,878,755,382 ns 
-[info]   + p(0.00000) =      318 ns/op 
-[info]   + p(0.50000) =      727 ns/op 
-[info]   + p(0.90000) =     9023 ns/op 
-[info]   + p(0.99000) =    22399 ns/op 
-[info]   + p(0.99900) =    29439 ns/op 
-[info]   + p(0.99990) =    35583 ns/op 
-[info]   + p(0.99999) =    78335 ns/op 
-[info]   + p(1.00000) =  1212415 ns/op 
-[info]   + 19.5 % of CPU usage 
+[info]   + 5,913,900,757 ns 
+[info]   + p(0.00000) =      276 ns/op 
+[info]   + p(0.50000) =      583 ns/op 
+[info]   + p(0.90000) =    18431 ns/op 
+[info]   + p(0.99000) =    31999 ns/op 
+[info]   + p(0.99900) =    34047 ns/op 
+[info]   + p(0.99990) =    46079 ns/op 
+[info]   + p(0.99999) =    81407 ns/op 
+[info]   + p(1.00000) =   565247 ns/op 
+[info]   + 18.3 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 1,752,770,208 ns 
-[info]   + 1,141,050 ops/s 
-[info]   + 41.9 % of CPU usage 
+[info]   + 1,704,737,303 ns 
+[info]   + 1,173,201 ops/s 
+[info]   + 38.6 % of CPU usage 
 [info] +  
 [info] - Overflow throughput
 [info]   + 5,000,000 ops 
-[info]   + 965,467,333 ns 
-[info]   + 5,178,839 ops/s 
-[info]   + 15.1 % of CPU usage 
+[info]   + 502,210,348 ns 
+[info]   + 9,955,987 ops/s 
+[info]   + 16.9 % of CPU usage 
 [info] +  
 [info] AkkaSCOUnboundedActorSpec:
-Executor service type: lbq-thread-pool
+Executor service type: abq-thread-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 302,451,294 ns 
-[info]   + 33,063,174 ops/s 
+[info]   + 431,967,204 ns 
+[info]   + 23,149,905 ops/s 
 [info]   + 14.5 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 1,144,817,530 ns 
-[info]   + 8,735,016 ops/s 
-[info]   + 16.5 % of CPU usage 
+[info]   + 865,356,935 ns 
+[info]   + 11,555,925 ops/s 
+[info]   + 15.9 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 936,035,144 ns 
-[info]   + 9,360 ns/op 
-[info]   + 48.9 % of CPU usage 
+[info]   + 968,088,637 ns 
+[info]   + 9,680 ns/op 
+[info]   + 48.0 % of CPU usage 
 [info]   + 400 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 773,902,899 ns 
-[info]   + 7,752,910 ops/s 
-[info]   + 23.1 % of CPU usage 
+[info]   + 773,324,521 ns 
+[info]   + 7,758,709 ops/s 
+[info]   + 22.8 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 702,949,212 ns 
-[info]   + 8,535,467 ops/s 
-[info]   + 34.5 % of CPU usage 
+[info]   + 703,804,008 ns 
+[info]   + 8,525,100 ops/s 
+[info]   + 36.9 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 322,607,039 ns 
-[info]   + 37,196,956 ops/s 
-[info]   + 93.8 % of CPU usage 
+[info]   + 333,475,406 ns 
+[info]   + 35,984,662 ops/s 
+[info]   + 92.6 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 3,804,760,045 ns 
+[info]   + 3,867,201,221 ns 
+[info]   + p(0.00000) =      246 ns/op 
+[info]   + p(0.50000) =      429 ns/op 
+[info]   + p(0.90000) =    11263 ns/op 
+[info]   + p(0.99000) =    25855 ns/op 
+[info]   + p(0.99900) =    32511 ns/op 
+[info]   + p(0.99990) =    40703 ns/op 
+[info]   + p(0.99999) =    65023 ns/op 
+[info]   + p(1.00000) =   581631 ns/op 
+[info]   + 18.7 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 2,000,000 ops 
+[info]   + 2,177,989,728 ns 
+[info]   + 918,277 ops/s 
+[info]   + 36.2 % of CPU usage 
+[info] +  
+[info] AkkaUnboundedActorSpec:
+Executor service type: abq-thread-pool
+[info] - Enqueueing
+[info]   + 10,000,000 ops 
+[info]   + 482,726,480 ns 
+[info]   + 20,715,664 ops/s 
+[info]   + 15.3 % of CPU usage 
+[info]   + 48 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 10,000,000 ops 
+[info]   + 982,775,336 ns 
+[info]   + 10,175,265 ops/s 
+[info]   + 16.5 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 100,000 ops 
+[info]   + 977,179,722 ns 
+[info]   + 9,771 ns/op 
+[info]   + 47.1 % of CPU usage 
+[info]   + 379 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 787,058,933 ns 
+[info]   + 7,623,317 ops/s 
+[info]   + 22.1 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 1,053,808,452 ns 
+[info]   + 5,693,634 ops/s 
+[info]   + 66.5 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 12,000,000 ops 
+[info]   + 365,074,413 ns 
+[info]   + 32,870,011 ops/s 
+[info]   + 91.1 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 1,500,000 ops 
+[info]   + 5,779,074,885 ns 
+[info]   + p(0.00000) =      284 ns/op 
+[info]   + p(0.50000) =      655 ns/op 
+[info]   + p(0.90000) =    15295 ns/op 
+[info]   + p(0.99000) =    32639 ns/op 
+[info]   + p(0.99900) =    34303 ns/op 
+[info]   + p(0.99990) =    46847 ns/op 
+[info]   + p(0.99999) =   109055 ns/op 
+[info]   + p(1.00000) =   638975 ns/op 
+[info]   + 18.6 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 2,000,000 ops 
+[info]   + 2,242,870,139 ns 
+[info]   + 891,714 ops/s 
+[info]   + 37.3 % of CPU usage 
+[info] +  
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+[info] LiftActorSpec:
+Executor service type: abq-thread-pool
+[info] - Enqueueing
+[info]   + 10,000,000 ops 
+[info]   + 386,852,314 ns 
+[info]   + 25,849,657 ops/s 
+[info]   + 13.6 % of CPU usage 
+[info]   + 24 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 10,000,000 ops 
+[info]   + 574,791,332 ns 
+[info]   + 17,397,617 ops/s 
+[info]   + 15.7 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 10,000,000 ops 
+[info]   + 920,458,343 ns 
+[info]   + 92 ns/op 
+[info]   + 15.8 % of CPU usage 
+[info]   + 72 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 694,595,983 ns 
+[info]   + 8,638,115 ops/s 
+[info]   + 28.8 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 774,617,569 ns 
+[info]   + 7,745,757 ops/s 
+[info]   + 39.4 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 12,000,000 ops 
+[info]   + 347,010,481 ns 
+[info]   + 34,581,088 ops/s 
+[info]   + 89.3 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 1,500,000 ops 
+[info]   + 4,701,205,029 ns 
+[info]   + p(0.00000) =      416 ns/op 
+[info]   + p(0.50000) =      763 ns/op 
+[info]   + p(0.90000) =     5823 ns/op 
+[info]   + p(0.99000) =    33023 ns/op 
+[info]   + p(0.99900) =    36351 ns/op 
+[info]   + p(0.99990) =    52735 ns/op 
+[info]   + p(0.99999) =   168959 ns/op 
+[info]   + p(1.00000) =  3555327 ns/op 
+[info]   + 22.4 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 2,000,000 ops 
+[info]   + 1,304,272,179 ns 
+[info]   + 1,533,422 ops/s 
+[info]   + 52.7 % of CPU usage 
+[info] +  
+Executor service type: abq-thread-pool
+[info] MinimalistActorSpec:
+[info] - Enqueueing
+[info]   + 40,000,000 ops 
+[info]   + 901,127,211 ns 
+[info]   + 44,388,849 ops/s 
+[info]   + 12.6 % of CPU usage 
+[info]   + 24 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 40,000,000 ops 
+[info]   + 364,426,904 ns 
+[info]   + 109,761,380 ops/s 
+[info]   + 18.5 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 2,000,000 ops 
+[info]   + 3,781,304,024 ns 
+[info]   + 1,890 ns/op 
+[info]   + 20.4 % of CPU usage 
+[info]   + 24 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 15,000,000 ops 
+[info]   + 194,349,345 ns 
+[info]   + 77,180,604 ops/s 
+[info]   + 32.2 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 15,000,000 ops 
+[info]   + 393,022,902 ns 
+[info]   + 38,165,714 ops/s 
+[info]   + 93.5 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 30,000,000 ops 
+[info]   + 191,926,266 ns 
+[info]   + 156,310,027 ops/s 
+[info]   + 83.4 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 3,000,000 ops 
+[info]   + 9,004,411,283 ns 
+[info]   + p(0.00000) =      129 ns/op 
+[info]   + p(0.50000) =      445 ns/op 
+[info]   + p(0.90000) =     2959 ns/op 
+[info]   + p(0.99000) =    29823 ns/op 
+[info]   + p(0.99900) =    31615 ns/op 
+[info]   + p(0.99990) =    45311 ns/op 
+[info]   + p(0.99999) =    69119 ns/op 
+[info]   + p(1.00000) =  4046847 ns/op 
+[info]   + 18.2 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 6,000,000 ops 
+[info]   + 3,143,001,576 ns 
+[info]   + 1,909,003 ops/s 
+[info]   + 26.0 % of CPU usage 
+[info] +  
+Executor service type: abq-thread-pool
+[info] ScalazActorSpec:
+[info] - Enqueueing
+[info]   + 40,000,000 ops 
+[info]   + 627,996,142 ns 
+[info]   + 63,694,658 ops/s 
+[info]   + 12.7 % of CPU usage 
+[info]   + 24 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 40,000,000 ops 
+[info]   + 228,072,882 ns 
+[info]   + 175,382,534 ops/s 
+[info]   + 24.1 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 10,000,000 ops 
+[info]   + 270,715,681 ns 
+[info]   + 27 ns/op 
+[info]   + 22.2 % of CPU usage 
+[info]   + 88 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 15,000,000 ops 
+[info]   + 262,758,469 ns 
+[info]   + 57,086,647 ops/s 
+[info]   + 37.1 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 15,000,000 ops 
+[info]   + 573,631,206 ns 
+[info]   + 26,149,204 ops/s 
+[info]   + 92.4 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 30,000,000 ops 
+[info]   + 226,059,683 ns 
+[info]   + 132,708,316 ops/s 
+[info]   + 70.8 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 3,000,000 ops 
+[info]   + 7,983,455,195 ns 
+[info]   + p(0.00000) =      128 ns/op 
+[info]   + p(0.50000) =      437 ns/op 
+[info]   + p(0.90000) =     2575 ns/op 
+[info]   + p(0.99000) =    29567 ns/op 
+[info]   + p(0.99900) =    30847 ns/op 
+[info]   + p(0.99990) =    41471 ns/op 
+[info]   + p(0.99999) =    83455 ns/op 
+[info]   + p(1.00000) =   485375 ns/op 
+[info]   + 18.8 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 6,000,000 ops 
+[info]   + 3,167,314,910 ns 
+[info]   + 1,894,349 ops/s 
+[info]   + 26.3 % of CPU usage 
+[info] +  
+[info] Run completed in 3 minutes, 37 seconds.
+[info] Total number of tests run: 91
+[info] Suites: completed 10, aborted 0
+[info] Tests: succeeded 91, failed 0, canceled 0, ignored 0, pending 0
+[info] All tests passed.
+[success] Total time: 219 s, completed Jul 9, 2017 6:47:29 PM
+[info] Loading global plugins from /home/andriy/.sbt/0.13/plugins
+[info] Loading project definition from /home/andriy/Projects/com/github/plokhotnyuk/actors/project
+[info] Set current project to actors (in build file:/home/andriy/Projects/com/github/plokhotnyuk/actors/)
+[info] ActorSpec:
+[info] actor with fork-join pool executor
+[info] - execute code async
+[info] - exchange messages with another actor without loss
+[info] - create child actor and send messages to it recursively
+[info] - handle messages in order of sending by each thread
+[info] - doesn't handle messages in simultaneous threads
+[info] - redirect unhandled errors to uncaught exception handler of thread
+Exception in thread "ForkJoinPool-1-worker-1" java.lang.NullPointerException
+[info] - handle messages with previous behaviour after unhandled errors
+[info] - don't starve tasks arriving from external submit under high internal traffic
+[info] actor with fixed thread pool executor
+[info] - execute code async
+[info] - exchange messages with another actor without loss
+[info] - create child actor and send messages to it recursively
+[info] - handle messages in order of sending by each thread
+[info] - doesn't handle messages in simultaneous threads
+[info] - redirect unhandled errors to uncaught exception handler of thread
+[info] - handle messages with previous behaviour after unhandled errors
+Exception in thread "pool-3-thread-98" [info] - don't starve tasks arriving from external submit under high internal traffic
+java.lang.NullPointerException
+Exception in thread "pool-3-thread-98" java.lang.NullPointerException
+[info] AkkaBoundedActorSpec:
+Executor service type: lbq-thread-pool
+[info] - Enqueueing
+[info]   + 10,000,000 ops 
+[info]   + 654,409,443 ns 
+[info]   + 15,280,953 ops/s 
+[info]   + 15.1 % of CPU usage 
+[info]   + 48 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 10,000,000 ops 
+[info]   + 1,087,388,364 ns 
+[info]   + 9,196,346 ops/s 
+[info]   + 16.4 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 100,000 ops 
+[info]   + 1,280,656,591 ns 
+[info]   + 12,806 ns/op 
+[info]   + 50.7 % of CPU usage 
+[info]   + 563 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 1,803,780,081 ns 
+[info]   + 3,326,347 ops/s 
+[info]   + 25.8 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 1,291,978,019 ns 
+[info]   + 4,644,041 ops/s 
+[info]   + 33.9 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 12,000,000 ops 
+[info]   + 523,639,963 ns 
+[info]   + 22,916,509 ops/s 
+[info]   + 91.2 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 1,500,000 ops 
+[info]   + 4,627,959,841 ns 
+[info]   + p(0.00000) =      388 ns/op 
+[info]   + p(0.50000) =      967 ns/op 
+[info]   + p(0.90000) =     7391 ns/op 
+[info]   + p(0.99000) =    29951 ns/op 
+[info]   + p(0.99900) =    31487 ns/op 
+[info]   + p(0.99990) =    40959 ns/op 
+[info]   + p(0.99999) =    74239 ns/op 
+[info]   + p(1.00000) =   647167 ns/op 
+[info]   + 20.5 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 2,000,000 ops 
+[info]   + 1,566,416,973 ns 
+[info]   + 1,276,799 ops/s 
+[info]   + 46.5 % of CPU usage 
+[info] +  
+[info] - Overflow throughput
+[info]   + 5,000,000 ops 
+[info]   + 912,308,001 ns 
+[info]   + 5,480,605 ops/s 
+[info]   + 14.7 % of CPU usage 
+[info] +  
+Executor service type: lbq-thread-pool
+[info] AkkaMCNonBlockingBoundedActorSpec:
+[info] - Enqueueing
+[info]   + 10,000,000 ops 
+[info]   + 476,516,235 ns 
+[info]   + 20,985,643 ops/s 
+[info]   + 13.9 % of CPU usage 
+[info]   + 48 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 10,000,000 ops 
+[info]   + 1,124,927,863 ns 
+[info]   + 8,889,458 ops/s 
+[info]   + 17.4 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 100,000 ops 
+[info]   + 1,178,112,535 ns 
+[info]   + 11,781 ns/op 
+[info]   + 50.6 % of CPU usage 
+[info]   + 379 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 1,139,157,204 ns 
+[info]   + 5,267,051 ops/s 
+[info]   + 25.1 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 1,292,029,995 ns 
+[info]   + 4,643,855 ops/s 
+[info]   + 76.1 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 12,000,000 ops 
+[info]   + 396,684,872 ns 
+[info]   + 30,250,712 ops/s 
+[info]   + 91.7 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 1,500,000 ops 
+[info]   + 3,099,300,250 ns 
+[info]   + p(0.00000) =      320 ns/op 
+[info]   + p(0.50000) =      523 ns/op 
+[info]   + p(0.90000) =     2623 ns/op 
+[info]   + p(0.99000) =    22015 ns/op 
+[info]   + p(0.99900) =    23295 ns/op 
+[info]   + p(0.99990) =    33023 ns/op 
+[info]   + p(0.99999) =    62207 ns/op 
+[info]   + p(1.00000) =   444415 ns/op 
+[info]   + 19.8 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 2,000,000 ops 
+[info]   + 1,449,340,049 ns 
+[info]   + 1,379,938 ops/s 
+[info]   + 39.8 % of CPU usage 
+[info] +  
+[info] - Overflow throughput
+[info]   + 5,000,000 ops 
+[info]   + 475,216,894 ns 
+[info]   + 10,521,511 ops/s 
+[info]   + 16.8 % of CPU usage 
+[info] +  
+Executor service type: lbq-thread-pool
+[info] AkkaMCUnboundedActorSpec:
+[info] - Enqueueing
+[info]   + 10,000,000 ops 
+[info]   + 658,040,691 ns 
+[info]   + 15,196,628 ops/s 
+[info]   + 13.9 % of CPU usage 
+[info]   + 48 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 10,000,000 ops 
+[info]   + 1,145,948,608 ns 
+[info]   + 8,726,394 ops/s 
+[info]   + 16.7 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 100,000 ops 
+[info]   + 925,083,660 ns 
+[info]   + 9,250 ns/op 
+[info]   + 47.8 % of CPU usage 
+[info]   + 379 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 717,886,445 ns 
+[info]   + 8,357,867 ops/s 
+[info]   + 22.5 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 707,038,344 ns 
+[info]   + 8,486,102 ops/s 
+[info]   + 34.8 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 12,000,000 ops 
+[info]   + 402,236,361 ns 
+[info]   + 29,833,205 ops/s 
+[info]   + 92.6 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 1,500,000 ops 
+[info]   + 4,882,728,627 ns 
 [info]   + p(0.00000) =      298 ns/op 
-[info]   + p(0.50000) =      595 ns/op 
-[info]   + p(0.90000) =     9151 ns/op 
-[info]   + p(0.99000) =    22271 ns/op 
-[info]   + p(0.99900) =    23423 ns/op 
-[info]   + p(0.99990) =    31871 ns/op 
-[info]   + p(0.99999) =    73727 ns/op 
-[info]   + p(1.00000) =  1433599 ns/op 
+[info]   + p(0.50000) =      755 ns/op 
+[info]   + p(0.90000) =    11327 ns/op 
+[info]   + p(0.99000) =    28543 ns/op 
+[info]   + p(0.99900) =    30463 ns/op 
+[info]   + p(0.99990) =    40191 ns/op 
+[info]   + p(0.99999) =    94719 ns/op 
+[info]   + p(1.00000) =   436223 ns/op 
 [info]   + 19.1 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 1,315,663,369 ns 
-[info]   + 1,520,145 ops/s 
-[info]   + 48.2 % of CPU usage 
+[info]   + 1,414,179,342 ns 
+[info]   + 1,414,247 ops/s 
+[info]   + 48.0 % of CPU usage 
+[info] +  
+[info] AkkaSCONonBlockingBoundedActorSpec:
+Executor service type: lbq-thread-pool
+[info] - Enqueueing
+[info]   + 10,000,000 ops 
+[info]   + 652,036,178 ns 
+[info]   + 15,336,572 ops/s 
+[info]   + 13.8 % of CPU usage 
+[info]   + 48 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 10,000,000 ops 
+[info]   + 1,152,224,780 ns 
+[info]   + 8,678,862 ops/s 
+[info]   + 16.9 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 100,000 ops 
+[info]   + 1,124,428,914 ns 
+[info]   + 11,244 ns/op 
+[info]   + 49.1 % of CPU usage 
+[info]   + 379 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 1,157,734,665 ns 
+[info]   + 5,182,534 ops/s 
+[info]   + 23.9 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 1,338,496,199 ns 
+[info]   + 4,482,642 ops/s 
+[info]   + 78.7 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 12,000,000 ops 
+[info]   + 416,792,966 ns 
+[info]   + 28,791,272 ops/s 
+[info]   + 93.3 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 1,500,000 ops 
+[info]   + 3,958,672,068 ns 
+[info]   + p(0.00000) =      312 ns/op 
+[info]   + p(0.50000) =      687 ns/op 
+[info]   + p(0.90000) =     9087 ns/op 
+[info]   + p(0.99000) =    22399 ns/op 
+[info]   + p(0.99900) =    23423 ns/op 
+[info]   + p(0.99990) =    31999 ns/op 
+[info]   + p(0.99999) =    60927 ns/op 
+[info]   + p(1.00000) =   423935 ns/op 
+[info]   + 19.2 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 2,000,000 ops 
+[info]   + 1,409,637,071 ns 
+[info]   + 1,418,804 ops/s 
+[info]   + 44.3 % of CPU usage 
+[info] +  
+[info] - Overflow throughput
+[info]   + 5,000,000 ops 
+[info]   + 416,790,977 ns 
+[info]   + 11,996,420 ops/s 
+[info]   + 18.9 % of CPU usage 
+[info] +  
+[info] AkkaSCOUnboundedActorSpec:
+Executor service type: lbq-thread-pool
+[info] - Enqueueing
+[info]   + 10,000,000 ops 
+[info]   + 436,974,785 ns 
+[info]   + 22,884,615 ops/s 
+[info]   + 14.6 % of CPU usage 
+[info]   + 48 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 10,000,000 ops 
+[info]   + 1,141,954,520 ns 
+[info]   + 8,756,916 ops/s 
+[info]   + 16.0 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 100,000 ops 
+[info]   + 951,613,427 ns 
+[info]   + 9,516 ns/op 
+[info]   + 51.2 % of CPU usage 
+[info]   + 400 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 783,885,647 ns 
+[info]   + 7,654,177 ops/s 
+[info]   + 23.9 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 6,000,000 ops 
+[info]   + 848,354,284 ns 
+[info]   + 7,072,516 ops/s 
+[info]   + 36.1 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 12,000,000 ops 
+[info]   + 402,601,776 ns 
+[info]   + 29,806,127 ops/s 
+[info]   + 92.5 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 1,500,000 ops 
+[info]   + 3,721,515,285 ns 
+[info]   + p(0.00000) =      294 ns/op 
+[info]   + p(0.50000) =      627 ns/op 
+[info]   + p(0.90000) =     4575 ns/op 
+[info]   + p(0.99000) =    29183 ns/op 
+[info]   + p(0.99900) =    30719 ns/op 
+[info]   + p(0.99990) =    39423 ns/op 
+[info]   + p(0.99999) =    66559 ns/op 
+[info]   + p(1.00000) =  1015807 ns/op 
+[info]   + 19.6 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 2,000,000 ops 
+[info]   + 1,417,900,770 ns 
+[info]   + 1,410,535 ops/s 
+[info]   + 45.9 % of CPU usage 
 [info] +  
 [info] AkkaUnboundedActorSpec:
 Executor service type: lbq-thread-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 477,033,361 ns 
-[info]   + 20,962,894 ops/s 
-[info]   + 15.2 % of CPU usage 
+[info]   + 481,139,257 ns 
+[info]   + 20,784,003 ops/s 
+[info]   + 15.1 % of CPU usage 
 [info]   + 48 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 1,192,293,205 ns 
-[info]   + 8,387,198 ops/s 
-[info]   + 16.1 % of CPU usage 
+[info]   + 1,220,174,737 ns 
+[info]   + 8,195,547 ops/s 
+[info]   + 17.2 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 100,000 ops 
-[info]   + 973,480,760 ns 
-[info]   + 9,734 ns/op 
-[info]   + 50.5 % of CPU usage 
-[info]   + 379 bytes per instance 
+[info]   + 1,193,210,207 ns 
+[info]   + 11,932 ns/op 
+[info]   + 50.9 % of CPU usage 
+[info]   + 400 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 784,185,648 ns 
-[info]   + 7,651,249 ops/s 
-[info]   + 22.6 % of CPU usage 
+[info]   + 1,053,113,290 ns 
+[info]   + 5,697,392 ops/s 
+[info]   + 21.4 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,065,131,027 ns 
-[info]   + 5,633,109 ops/s 
-[info]   + 65.4 % of CPU usage 
+[info]   + 1,073,433,024 ns 
+[info]   + 5,589,542 ops/s 
+[info]   + 63.6 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 381,906,553 ns 
-[info]   + 31,421,299 ops/s 
-[info]   + 91.3 % of CPU usage 
+[info]   + 393,176,347 ns 
+[info]   + 30,520,655 ops/s 
+[info]   + 93.5 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 3,741,288,623 ns 
-[info]   + p(0.00000) =      326 ns/op 
-[info]   + p(0.50000) =      659 ns/op 
-[info]   + p(0.90000) =     6559 ns/op 
-[info]   + p(0.99000) =    22527 ns/op 
-[info]   + p(0.99900) =    23807 ns/op 
-[info]   + p(0.99990) =    31103 ns/op 
-[info]   + p(0.99999) =    53247 ns/op 
-[info]   + p(1.00000) =   532479 ns/op 
-[info]   + 19.7 % of CPU usage 
+[info]   + 3,866,492,938 ns 
+[info]   + p(0.00000) =      318 ns/op 
+[info]   + p(0.50000) =      671 ns/op 
+[info]   + p(0.90000) =     3679 ns/op 
+[info]   + p(0.99000) =    29183 ns/op 
+[info]   + p(0.99900) =    30591 ns/op 
+[info]   + p(0.99990) =    39679 ns/op 
+[info]   + p(0.99999) =    94207 ns/op 
+[info]   + p(1.00000) =   651263 ns/op 
+[info]   + 19.8 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 1,647,444,902 ns 
-[info]   + 1,214,001 ops/s 
-[info]   + 44.3 % of CPU usage 
+[info]   + 1,409,361,154 ns 
+[info]   + 1,419,082 ops/s 
+[info]   + 45.9 % of CPU usage 
 [info] +  
 SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
 SLF4J: Defaulting to no-operation (NOP) logger implementation
@@ -2199,182 +2198,182 @@ SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further detail
 Executor service type: lbq-thread-pool
 [info] - Enqueueing
 [info]   + 10,000,000 ops 
-[info]   + 553,343,580 ns 
-[info]   + 18,071,954 ops/s 
-[info]   + 13.1 % of CPU usage 
+[info]   + 387,073,554 ns 
+[info]   + 25,834,883 ops/s 
+[info]   + 13.9 % of CPU usage 
 [info]   + 23 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 10,000,000 ops 
-[info]   + 573,372,299 ns 
-[info]   + 17,440,675 ops/s 
-[info]   + 15.7 % of CPU usage 
+[info]   + 360,259,767 ns 
+[info]   + 27,757,748 ops/s 
+[info]   + 16.7 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 10,000,000 ops 
-[info]   + 663,269,697 ns 
+[info]   + 666,274,747 ns 
 [info]   + 66 ns/op 
-[info]   + 16.2 % of CPU usage 
+[info]   + 15.9 % of CPU usage 
 [info]   + 72 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,009,273,689 ns 
-[info]   + 5,944,869 ops/s 
-[info]   + 27.7 % of CPU usage 
+[info]   + 725,784,141 ns 
+[info]   + 8,266,920 ops/s 
+[info]   + 28.4 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 6,000,000 ops 
-[info]   + 1,036,683,404 ns 
-[info]   + 5,787,687 ops/s 
-[info]   + 38.0 % of CPU usage 
+[info]   + 973,232,435 ns 
+[info]   + 6,165,022 ops/s 
+[info]   + 39.0 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 12,000,000 ops 
-[info]   + 370,929,133 ns 
-[info]   + 32,351,193 ops/s 
-[info]   + 91.3 % of CPU usage 
+[info]   + 396,126,078 ns 
+[info]   + 30,293,385 ops/s 
+[info]   + 88.4 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 1,500,000 ops 
-[info]   + 3,248,367,846 ns 
-[info]   + p(0.00000) =      460 ns/op 
-[info]   + p(0.50000) =      703 ns/op 
-[info]   + p(0.90000) =     3103 ns/op 
-[info]   + p(0.99000) =    22527 ns/op 
-[info]   + p(0.99900) =    24063 ns/op 
-[info]   + p(0.99990) =    39167 ns/op 
-[info]   + p(0.99999) =    93183 ns/op 
-[info]   + p(1.00000) =   503807 ns/op 
-[info]   + 23.1 % of CPU usage 
+[info]   + 4,420,289,718 ns 
+[info]   + p(0.00000) =      668 ns/op 
+[info]   + p(0.50000) =      967 ns/op 
+[info]   + p(0.90000) =     4511 ns/op 
+[info]   + p(0.99000) =    29695 ns/op 
+[info]   + p(0.99900) =    31487 ns/op 
+[info]   + p(0.99990) =    48383 ns/op 
+[info]   + p(0.99999) =    95743 ns/op 
+[info]   + p(1.00000) =   385023 ns/op 
+[info]   + 23.7 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 2,000,000 ops 
-[info]   + 1,428,167,580 ns 
-[info]   + 1,400,395 ops/s 
-[info]   + 40.8 % of CPU usage 
+[info]   + 1,322,756,929 ns 
+[info]   + 1,511,993 ops/s 
+[info]   + 43.3 % of CPU usage 
 [info] +  
 Executor service type: lbq-thread-pool
 [info] MinimalistActorSpec:
 [info] - Enqueueing
 [info]   + 40,000,000 ops 
-[info]   + 903,372,054 ns 
-[info]   + 44,278,544 ops/s 
-[info]   + 12.7 % of CPU usage 
-[info]   + 24 bytes per instance 
-[info] +  
-[info] - Dequeueing
-[info]   + 40,000,000 ops 
-[info]   + 383,311,839 ns 
-[info]   + 104,353,677 ops/s 
-[info]   + 18.3 % of CPU usage 
-[info] +  
-[info] - Initiation
-[info]   + 2,000,000 ops 
-[info]   + 1,295,290,829 ns 
-[info]   + 647 ns/op 
-[info]   + 37.3 % of CPU usage 
-[info]   + 36 bytes per instance 
-[info] +  
-[info] - Single-producer sending
-[info]   + 15,000,000 ops 
-[info]   + 214,133,986 ns 
-[info]   + 70,049,599 ops/s 
-[info]   + 34.4 % of CPU usage 
-[info] +  
-[info] - Multi-producer sending
-[info]   + 15,000,000 ops 
-[info]   + 468,453,354 ns 
-[info]   + 32,020,263 ops/s 
-[info]   + 90.7 % of CPU usage 
-[info] +  
-[info] - Max throughput
-[info]   + 30,000,000 ops 
-[info]   + 162,672,738 ns 
-[info]   + 184,419,346 ops/s 
-[info]   + 90.7 % of CPU usage 
-[info] +  
-[info] - Ping latency
-[info]   + 3,000,000 ops 
-[info]   + 1,488,402,297 ns 
-[info]   + p(0.00000) =      164 ns/op 
-[info]   + p(0.50000) =      241 ns/op 
-[info]   + p(0.90000) =     1679 ns/op 
-[info]   + p(0.99000) =     2111 ns/op 
-[info]   + p(0.99900) =     3759 ns/op 
-[info]   + p(0.99990) =    23423 ns/op 
-[info]   + p(0.99999) =    32127 ns/op 
-[info]   + p(1.00000) =   440319 ns/op 
-[info]   + 25.4 % of CPU usage 
-[info] +  
-[info] - Ping throughput 10K
-[info]   + 6,000,000 ops 
-[info]   + 3,534,735,155 ns 
-[info]   + 1,697,439 ops/s 
-[info]   + 28.9 % of CPU usage 
-[info] +  
-Executor service type: lbq-thread-pool
-[info] ScalazActorSpec:
-[info] - Enqueueing
-[info]   + 40,000,000 ops 
-[info]   + 626,718,052 ns 
-[info]   + 63,824,553 ops/s 
+[info]   + 636,442,560 ns 
+[info]   + 62,849,348 ops/s 
 [info]   + 12.8 % of CPU usage 
 [info]   + 24 bytes per instance 
 [info] +  
 [info] - Dequeueing
 [info]   + 40,000,000 ops 
-[info]   + 279,658,617 ns 
-[info]   + 143,031,530 ops/s 
-[info]   + 20.6 % of CPU usage 
+[info]   + 299,261,887 ns 
+[info]   + 133,662,192 ops/s 
+[info]   + 21.7 % of CPU usage 
+[info] +  
+[info] - Initiation
+[info]   + 2,000,000 ops 
+[info]   + 922,848,444 ns 
+[info]   + 461 ns/op 
+[info]   + 40.6 % of CPU usage 
+[info]   + 38 bytes per instance 
+[info] +  
+[info] - Single-producer sending
+[info]   + 15,000,000 ops 
+[info]   + 466,878,641 ns 
+[info]   + 32,128,263 ops/s 
+[info]   + 29.2 % of CPU usage 
+[info] +  
+[info] - Multi-producer sending
+[info]   + 15,000,000 ops 
+[info]   + 589,704,384 ns 
+[info]   + 25,436,473 ops/s 
+[info]   + 92.8 % of CPU usage 
+[info] +  
+[info] - Max throughput
+[info]   + 30,000,000 ops 
+[info]   + 262,147,386 ns 
+[info]   + 114,439,439 ops/s 
+[info]   + 90.6 % of CPU usage 
+[info] +  
+[info] - Ping latency
+[info]   + 3,000,000 ops 
+[info]   + 2,191,499,176 ns 
+[info]   + p(0.00000) =      168 ns/op 
+[info]   + p(0.50000) =      355 ns/op 
+[info]   + p(0.90000) =     2351 ns/op 
+[info]   + p(0.99000) =     2767 ns/op 
+[info]   + p(0.99900) =     4079 ns/op 
+[info]   + p(0.99990) =    13567 ns/op 
+[info]   + p(0.99999) =    39423 ns/op 
+[info]   + p(1.00000) =  1228799 ns/op 
+[info]   + 24.6 % of CPU usage 
+[info] +  
+[info] - Ping throughput 10K
+[info]   + 6,000,000 ops 
+[info]   + 2,738,976,354 ns 
+[info]   + 2,190,599 ops/s 
+[info]   + 31.1 % of CPU usage 
+[info] +  
+Executor service type: lbq-thread-pool
+[info] ScalazActorSpec:
+[info] - Enqueueing
+[info]   + 40,000,000 ops 
+[info]   + 628,121,148 ns 
+[info]   + 63,681,982 ops/s 
+[info]   + 12.7 % of CPU usage 
+[info]   + 24 bytes per instance 
+[info] +  
+[info] - Dequeueing
+[info]   + 40,000,000 ops 
+[info]   + 220,102,870 ns 
+[info]   + 181,733,205 ops/s 
+[info]   + 20.4 % of CPU usage 
 [info] +  
 [info] - Initiation
 [info]   + 10,000,000 ops 
-[info]   + 277,401,370 ns 
-[info]   + 27 ns/op 
-[info]   + 21.6 % of CPU usage 
+[info]   + 288,879,710 ns 
+[info]   + 28 ns/op 
+[info]   + 21.2 % of CPU usage 
 [info]   + 88 bytes per instance 
 [info] +  
 [info] - Single-producer sending
 [info]   + 15,000,000 ops 
-[info]   + 272,423,231 ns 
-[info]   + 55,061,383 ops/s 
-[info]   + 50.0 % of CPU usage 
+[info]   + 364,778,401 ns 
+[info]   + 41,120,855 ops/s 
+[info]   + 46.3 % of CPU usage 
 [info] +  
 [info] - Multi-producer sending
 [info]   + 15,000,000 ops 
-[info]   + 506,616,938 ns 
-[info]   + 29,608,169 ops/s 
-[info]   + 88.6 % of CPU usage 
+[info]   + 585,602,487 ns 
+[info]   + 25,614,645 ops/s 
+[info]   + 91.4 % of CPU usage 
 [info] +  
 [info] - Max throughput
 [info]   + 30,000,000 ops 
-[info]   + 192,660,606 ns 
-[info]   + 155,714,240 ops/s 
-[info]   + 81.1 % of CPU usage 
+[info]   + 191,704,241 ns 
+[info]   + 156,491,060 ops/s 
+[info]   + 86.1 % of CPU usage 
 [info] +  
 [info] - Ping latency
 [info]   + 3,000,000 ops 
-[info]   + 1,663,038,829 ns 
-[info]   + p(0.00000) =      189 ns/op 
-[info]   + p(0.50000) =      271 ns/op 
-[info]   + p(0.90000) =     1759 ns/op 
-[info]   + p(0.99000) =     2207 ns/op 
-[info]   + p(0.99900) =     3407 ns/op 
-[info]   + p(0.99990) =    16319 ns/op 
-[info]   + p(0.99999) =    31871 ns/op 
-[info]   + p(1.00000) =   423935 ns/op 
-[info]   + 25.0 % of CPU usage 
+[info]   + 2,125,131,310 ns 
+[info]   + p(0.00000) =      131 ns/op 
+[info]   + p(0.50000) =      357 ns/op 
+[info]   + p(0.90000) =     2367 ns/op 
+[info]   + p(0.99000) =     2799 ns/op 
+[info]   + p(0.99900) =     3823 ns/op 
+[info]   + p(0.99990) =    12095 ns/op 
+[info]   + p(0.99999) =    37119 ns/op 
+[info]   + p(1.00000) =   120831 ns/op 
+[info]   + 24.5 % of CPU usage 
 [info] +  
 [info] - Ping throughput 10K
 [info]   + 6,000,000 ops 
-[info]   + 2,861,936,802 ns 
-[info]   + 2,096,482 ops/s 
-[info]   + 29.5 % of CPU usage 
+[info]   + 3,013,373,048 ns 
+[info]   + 1,991,124 ops/s 
+[info]   + 29.8 % of CPU usage 
 [info] +  
-[info] Run completed in 3 minutes, 11 seconds.
+[info] Run completed in 3 minutes, 13 seconds.
 [info] Total number of tests run: 91
 [info] Suites: completed 10, aborted 0
 [info] Tests: succeeded 91, failed 0, canceled 0, ignored 0, pending 0
 [info] All tests passed.
-[success] Total time: 193 s, completed Jul 9, 2017 1:26:51 PM
+[success] Total time: 195 s, completed Jul 9, 2017 6:50:49 PM

@@ -140,7 +140,7 @@ class ActorSpec extends FreeSpec with Matchers {
       }
     }
 
-    "not starve tasks arriving from external submit under high internal traffic" in {
+    "don't starve tasks arriving from external submit under high internal traffic" in {
       (1 to NumOfThreads).foreach {
         _ =>
           lazy val a: Actor.Address = Actor(_ => {
