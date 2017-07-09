@@ -99,7 +99,7 @@ object BenchmarkSpec {
 
   def createExecutorService(size: Int = poolSize): ExecutorService =
     executorServiceType match {
-      case "akka-forkjoin-pool" => new AkkaForkJoinPool(size, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null)
+      case "akka-forkjoin-pool" => new AkkaForkJoinPool(size, akka.dispatch.forkjoin.ForkJoinPool.defaultForkJoinWorkerThreadFactory, null)
       case "scala-forkjoin-pool" => new ScalaForkJoinPool(size, ScalaForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "java-forkjoin-pool" => new ForkJoinPool(size, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true)
       case "lbq-thread-pool" => new ThreadPoolExecutor(size, size, 1, TimeUnit.HOURS,
