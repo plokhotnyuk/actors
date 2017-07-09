@@ -1,4 +1,5 @@
 package com.github.gist.viktorklang
+
 /*
    Copyright 2012 Viktor Klang
 
@@ -23,33 +24,103 @@ import scala.concurrent.{forkjoin => scfj}
 
 object Actor {
   type Behavior = Any => Effect
+
   sealed trait Effect extends (Behavior => Behavior)
-  case object Stay extends Effect { def apply(old: Behavior): Behavior = old }
-  case class Become(like: Behavior) extends Effect { def apply(old: Behavior): Behavior = like }
-  case object Die extends Effect { def apply(old: Behavior): Behavior = msg => sys.error("Dropping of message due to severe case of death: " + msg) }
-  trait Address { def !(a: Any): Unit } // The notion of an Address to where you can post messages to
-  def apply(initial: Address => Behavior, batch: Int = 5)(implicit e: Executor): Address = // Seeded by the self-reference that yields the initial behavior
-    new AtomicReference[AnyRef]((self: Address) => Become(initial(self))) with Address { // Memory visibility of behavior is guarded by volatile piggybacking or provided by executor
-      this ! this // Make the actor self aware by seeding its address to the initial behavior
-      def !(a: Any): Unit = { val n = new Node(a); getAndSet(n) match { case h: Node => h.lazySet(n); case b => async(b.asInstanceOf[Behavior], n, true) } } // Enqueue the message onto the mailbox and schedule for execution if the actor was suspended
-      private def async(b: Behavior, n: Node, x: Boolean): Unit = e match {
+
+  case object Stay extends Effect {
+    def apply(old: Behavior): Behavior = old
+  }
+
+  case class Become(like: Behavior) extends Effect {
+    def apply(old: Behavior): Behavior = like
+  }
+
+  case object Die extends Effect {
+    def apply(old: Behavior): Behavior = msg => sys.error("Dropping of message due to severe case of death: " + msg)
+  }
+
+  // The notion of an Address to where you can post messages to
+  trait Address {
+    def !(a: Any): Unit
+  }
+
+  // Seeded by the self-reference that yields the initial behavior
+  // Reduces messages asynchronously by executor to behaviour in batch loop with configurable number of iterations
+  // Memory visibility of behavior is guarded by volatile piggybacking or provided by executor
+  def apply(initial: Address => Behavior, batch: Int = 5)(implicit e: Executor): Address =
+    new AtomicReference[AnyRef]((self: Address) => Become(initial(self))) with Address {
+      // Make the actor self aware by seeding its address to the initial behavior
+      this ! this
+
+      // Enqueue the message onto the mailbox and schedule for execution if the actor was suspended
+      def !(a: Any): Unit = {
+        val n = new Node(a)
+        getAndSet(n) match {
+          case h: Node => h.lazySet(n)
+          case b => async(b.asInstanceOf[Behavior], n, running = true)
+        }
+      }
+
+      // Schedule for async execution or suspending
+      private def async(b: Behavior, n: Node, running: Boolean): Unit = e match {
         case p: scfj.ForkJoinPool => p.execute(new scfj.ForkJoinTask[Unit] {
-          def exec(): Boolean = { tryAct(b, n, x); false }
+          def exec(): Boolean = {
+            actOrSuspend(b, n, running)
+            false
+          }
+
           def getRawResult: Unit = ()
+
           def setRawResult(unit: Unit): Unit = ()
         })
         case p: ForkJoinPool => p.execute(new ForkJoinTask[Unit] {
-          def exec(): Boolean = { tryAct(b, n, x); false }
+          def exec(): Boolean = {
+            actOrSuspend(b, n, running)
+            false
+          }
+
           def getRawResult: Unit = ()
+
           def setRawResult(unit: Unit): Unit = ()
         })
-        case p => p.execute(new Runnable { def run(): Unit = tryAct(b, n, x) })
+        case p => p.execute(new Runnable {
+          def run(): Unit = actOrSuspend(b, n, running)
+        })
       }
-      private def tryAct(b: Behavior, n: Node, x: Boolean): Unit = if (x) act(b, n, batch) else if ((n ne get) || !compareAndSet(n, b)) actOrAsync(b, n) // Act or suspend or stop
-      private def actOrAsync(b: Behavior, n: Node): Unit = { val n1 = n.get; if (n1 ne null) act(b, n1, batch) else async(b, n, false) } // Act or suspend
-      @tailrec private def act(b: Behavior, n: Node, i: Int): Unit = { val b1 = try b(n.a)(b) catch { case t: Throwable => asyncAndRethrow(b, n, t) }; val n1 = n.get; if (n1 ne null) { if (i > 0) act(b1, n1, i - 1) else { n.lazySet(null); async(b1, n1, true) } } else async(b1, n, false) } // Reduce messages to behaviour in batch loop then suspend
-      private def asyncAndRethrow(b: Behavior, n: Node, t: Throwable): Nothing = { async(b, n, false); val ct = Thread.currentThread(); if (t.isInstanceOf[InterruptedException]) ct.interrupt(); ct.getUncaughtExceptionHandler.uncaughtException(ct, t); throw t }
+
+      private def actOrSuspend(b: Behavior, n: Node, running: Boolean): Unit =
+        if (running) act(b, n, batch)
+        else if ((n ne get) || !compareAndSet(n, b)) lastTryToActOrSuspend(b, n)
+
+      private def lastTryToActOrSuspend(b: Behavior, n: Node): Unit = {
+        val n1 = n.get
+        if (n1 ne null) act(b, n1, batch)
+        else async(b, n, running = false)
+      }
+
+      @tailrec private def act(b: Behavior, n: Node, i: Int): Unit = {
+        val b1 = try b(n.a)(b) catch {
+          case t: Throwable => asyncSuspendAndRethrow(b, n, t)
+        }
+        val n1 = n.get
+        if (n1 ne null) {
+          if (i > 0) act(b1, n1, i - 1)
+          else {
+            n.lazySet(null) // to help GC don't fall into nepotism: http://psy-lob-saw.blogspot.com/2016/03/gc-nepotism-and-linked-queues.html
+            async(b1, n1, running = true)
+          }
+        } else async(b1, n, running = false)
+      }
+
+      private def asyncSuspendAndRethrow(b: Behavior, n: Node, t: Throwable): Nothing = {
+        async(b, n, running = false)
+        val ct = Thread.currentThread()
+        if (t.isInstanceOf[InterruptedException]) ct.interrupt()
+        ct.getUncaughtExceptionHandler.uncaughtException(ct, t)
+        throw t
+      }
     }
+
   private class Node(val a: Any) extends AtomicReference[Node]
 }
 
