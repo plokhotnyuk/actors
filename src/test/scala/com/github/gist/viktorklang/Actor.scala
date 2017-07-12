@@ -19,6 +19,7 @@ package com.github.gist.viktorklang
 // Initial version from Viktor Klang: https://gist.github.com/viktorklang/2362563
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent._
+import akka.dispatch.ForkJoinExecutorConfigurator.AkkaForkJoinPool
 import scala.annotation.tailrec
 
 object Actor {
@@ -61,6 +62,16 @@ object Actor {
       }
 
       private def asyncAct(b: Behavior, n: Node): Unit = e match {
+        case p: AkkaForkJoinPool => p.execute(new akka.dispatch.forkjoin.ForkJoinTask[Unit] {
+          def exec(): Boolean = {
+            act(b, n, batch)
+            false
+          }
+
+          def getRawResult: Unit = ()
+
+          def setRawResult(unit: Unit): Unit = ()
+        })
         case p: ForkJoinPool => p.execute(new ForkJoinTask[Unit] {
           def exec(): Boolean = {
             act(b, n, batch)

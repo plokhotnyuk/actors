@@ -69,8 +69,8 @@ W/A is to upgrade to latest Java 8 build (8u60-b27 or above) or to use latest js
 in working directory with following JVM option to pick it up: `-Xbootclasspath/p:jsr166.jar`
 
 ## Test result descriptions
-Results of running mvnAll.bat or mvnAll.sh scripts on different environments with pool size (or number of worker threads)
-set to number of available processors, 1, 10 or 100 values accordingly:
+Results of running sbtAll.sh scripts on different environments with pool size (or number of worker threads)
+set to number of available processors, 1 or 100 values accordingly:
 
 #### out0.txt
 Intel(R) Core(TM) i7-2760QM CPU @ 2.40GHz (max 3.50GHz), RAM 16Gb DDR3-1600, Ubuntu 15.04, Linux 4.4.0-38-generic, Oracle JDK build 1.8.0_112-b15 64-bit

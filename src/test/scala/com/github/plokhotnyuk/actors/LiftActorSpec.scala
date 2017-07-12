@@ -1,7 +1,8 @@
 package com.github.plokhotnyuk.actors
 
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
-import java.util.concurrent.{ForkJoinPool, CountDownLatch}
+import java.util.concurrent.{CountDownLatch, ForkJoinPool}
+import akka.dispatch.ForkJoinExecutorConfigurator.AkkaForkJoinPool
 import net.liftweb.actor.{ILAExecute, LAScheduler, LiftActor}
 import net.liftweb.common.Full
 
@@ -10,6 +11,12 @@ class LiftActorSpec extends BenchmarkSpec {
     private val executorService = createExecutorService()
 
     def execute(f: () => Unit): Unit = executorService match {
+      case p: AkkaForkJoinPool => new AkkaForkJoinTask(p) {
+        def exec(): Boolean = {
+          f()
+          false
+        }
+      }
       case p: ForkJoinPool => new JavaForkJoinTask(p) {
         def exec(): Boolean = {
           f()

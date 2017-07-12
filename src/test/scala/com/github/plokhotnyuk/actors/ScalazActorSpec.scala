@@ -2,12 +2,24 @@ package com.github.plokhotnyuk.actors
 
 import com.github.plokhotnyuk.actors.BenchmarkSpec._
 import java.util.concurrent._
-import scalaz.concurrent.{Strategy, Actor}
+import akka.dispatch.ForkJoinExecutorConfigurator.AkkaForkJoinPool
+import scalaz.concurrent.{Actor, Strategy}
 import scalaz.concurrent.Actor._
 
 class ScalazActorSpec extends BenchmarkSpec {
   private val executorService = createExecutorService()
   private implicit val actorStrategy = executorService match {
+    case p: AkkaForkJoinPool => new Strategy {
+      def apply[A](a: => A): () => A = {
+        new AkkaForkJoinTask(p) {
+          def exec(): Boolean = {
+            a
+            false
+          }
+        }
+        null
+      }
+    }
     case p: ForkJoinPool => new Strategy {
       def apply[A](a: => A): () => A = {
         new JavaForkJoinTask(p) {
