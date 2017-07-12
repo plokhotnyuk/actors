@@ -3,6 +3,7 @@ version := "1.0-SNAPSHOT"
 scalaVersion := "2.12.2"
 crossScalaVersions := Seq("2.11.11", "2.12.2")
 libraryDependencies ++= Seq(
+  "com.propensive" %% "impromptu" % "1.1.0",
   "com.typesafe.akka" %% "akka-actor" % "2.5.3" % "test",
   "net.liftweb" %% "lift-actor" % "3.1.0" % "test",
   "org.scalaz" %% "scalaz-concurrent" % "7.3.0-M14" % "test",
